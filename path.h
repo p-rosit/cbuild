@@ -3,18 +3,18 @@
 
 #include "dstr.h"
 
-typedef struct path {
-    string str;
-} path;
+typedef struct bld_path {
+    bld_string str;
+} bld_path;
 
-path new_path();
-path copy_path(path*);
-void free_path(path*);
+bld_path new_path();
+bld_path copy_path(bld_path*);
+void free_path(bld_path*);
 
-path path_from_string(char*);
-char* path_to_string(path*);
+bld_path path_from_string(char*);
+char* path_to_string(bld_path*);
 
-void append_dir(path*, char*);
-void append_path(path*, path*);
+void append_dir(bld_path*, char*);
+void append_path(bld_path*, bld_path*);
 
 #endif

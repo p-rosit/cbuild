@@ -2,15 +2,15 @@
 #include "build.h"
 #include "dstr.h"
 
-string new_string() {
-    return (string) {
+bld_string new_string() {
+    return (bld_string) {
         .capacity = 0,
         .size = 0,
         .chars = NULL,
     };
 }
 
-string copy_string(string* str) {
+bld_string copy_string(bld_string* str) {
     char* chars;
 
     chars = malloc(str->size + 1);
@@ -20,18 +20,18 @@ string copy_string(string* str) {
 
     memcpy(chars, str->chars, str->size);
 
-    return (string) {
+    return (bld_string) {
         .capacity = str->capacity + 1,
         .size = str->size,
         .chars = chars,
     };
 }
 
-void free_string(string* str) {
+void free_string(bld_string* str) {
     free(str->chars);
 }
 
-int push_character(string* str, char c) {
+int push_character(bld_string* str, char c) {
     size_t capacity = str->capacity;
     char* chars;
     
@@ -53,13 +53,13 @@ int push_character(string* str, char c) {
     return 0;
 }
 
-void append_space(string* str) {
+void append_space(bld_string* str) {
     if (!push_character(str, ' ')) {
         log_fatal("Could not append space to string.");
     }
 }
 
-void append_string(string* str, char* s) {
+void append_string(bld_string* str, char* s) {
     char *temp = s, c;
 
     while ((c = *temp++) != '\0') {
@@ -69,7 +69,7 @@ void append_string(string* str, char* s) {
     }
 }
 
-char* make_string(string* str) {
+char* make_string(bld_string* str) {
     if (!push_character(str, '\0')) {
         log_fatal("Could not null terminate string \"%*s\".", (int) str->size, str->chars);
     }

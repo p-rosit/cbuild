@@ -3,18 +3,18 @@
 
 #include <stdlib.h>
 
-typedef struct string {
+typedef struct bld_string {
     size_t capacity;
     size_t size;
     char* chars;
-} string;
+} bld_string;
 
-string new_string();
-string copy_string(string*);
-char* make_string(string*);
-void free_string(string*);
+bld_string new_string();
+bld_string copy_string(bld_string*);
+char* make_string(bld_string*);
+void free_string(bld_string*);
 
-void append_space(string*);
-void append_string(string*, char*);
+void append_space(bld_string*);
+void append_string(bld_string*, char*);
 
 #endif
