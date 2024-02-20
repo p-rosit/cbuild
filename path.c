@@ -31,11 +31,12 @@ char* path_to_string(bld_path* path) {
 }
 
 void append_dir(bld_path* path, char* str) {
+    append_string(&path->str, BLD_PATH_SEP);
     append_string(&path->str, str);
 }
 
 void append_path(bld_path* root, bld_path* path) {
-    append_string(&root->str, make_string(&path->str));
+    append_dir(root, make_string(&path->str));
 }
 
 void remove_last_dir(bld_path* path) {

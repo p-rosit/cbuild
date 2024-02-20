@@ -1,13 +1,13 @@
 #include <string.h>
 #include "build.h"
+#include "file.h"
 #include "project.h"
 
 
 
 bld_path extract_root(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
-    bld_path path = new_path();
-    append_dir(&path, argv[0]);
+    bld_path path = path_from_string(argv[0]);
     remove_last_dir(&path);
     log_info("Extracted path to root: \"%.*s\"", (int) path.str.size, path.str.chars);
     return path;
@@ -27,6 +27,7 @@ bld_project new_project(bld_path path, bld_compiler compiler) {
 
     return (bld_project) {
         .root = path,
+        .extra_paths = e,
         .compiler = c,
         .files = f,
         .cache = NULL,
@@ -35,6 +36,12 @@ bld_project new_project(bld_path path, bld_compiler compiler) {
 
 void free_project(bld_project project) {
     free_path(&project.root);
+
+    for (size_t i = 0; i < project.extra_paths->size; i++) {
+        free_path(&project.extra_paths->paths[i]);
+    }
+    free(project.extra_paths->paths);
+    free(project.extra_paths);
 
     free_compiler(project.compiler);
     free(project.compiler);
@@ -78,8 +85,61 @@ void save_cache(bld_project project) {
     log_warn("save_cache: not implemented.");
 }
 
+void index_recursive(bld_project project, bld_path* path) {
+    char *str_path, *file_ending;
+    bld_path sub_path;
+    DIR* dir;
+    bld_dirent* file_ptr;
+    bld_file file;
+
+    log_info("Indexing at: \"%.*s\"", (int) path->str.size, path->str.chars);
+
+    str_path = path_to_string(path);
+    dir = opendir(str_path);
+    if (dir == NULL) {return;}
+
+    while ((file_ptr = readdir(dir)) != NULL) {
+        file_ending = file_ptr->d_name;
+        if (file_ending[0] == '.') {continue;}
+
+        sub_path = copy_path(path);
+        append_dir(&sub_path, file_ptr->d_name);
+
+        file_ending = strrchr(file_ending, '.');
+        if (file_ending == NULL) {
+            index_recursive(project, &sub_path);
+            free_path(&sub_path);
+            continue;
+        }
+
+        if (strncmp(file_ptr->d_name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
+            file = make_test(&sub_path, file_ptr);
+        } else if (strcmp(file_ending, ".c") == 0) {
+            file = make_impl(&sub_path, file_ptr);
+        } else if (strcmp(file_ending, ".h") == 0) {
+            file = make_header(&sub_path, file_ptr);
+        } else {
+            free_path(&sub_path);
+            continue;
+        }
+
+        append_file(project.files, file);
+    }
+    
+    closedir(dir);
+}
+
 void index_project(bld_project project) {
-    log_warn("index_project: not implemented.");
+    char* str;
+    DIR* dir;
+
+    str = path_to_string(&project.root);
+    dir = opendir(str);
+    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", str);}
+    closedir(dir);
+
+    index_recursive(project, &project.root);
+    log_info("Indexed project");
 }
 
 int compile_project(bld_project project) {

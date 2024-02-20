@@ -14,6 +14,7 @@ bld_compiler new_compiler(bld_compiler_type type, char* executable) {
 }
 
 void free_compiler(bld_compiler* compiler) {
+    if (compiler == NULL) {return;}
     free(compiler->executable);
     free_options(&compiler->options);
 }

@@ -21,7 +21,7 @@ bld_string copy_string(bld_string* str) {
     memcpy(chars, str->chars, str->size);
 
     return (bld_string) {
-        .capacity = str->capacity + 1,
+        .capacity = str->size + 1,
         .size = str->size,
         .chars = chars,
     };
@@ -71,7 +71,7 @@ void append_string(bld_string* str, char* s) {
 
 char* make_string(bld_string* str) {
     if (!push_character(str, '\0')) {
-        log_fatal("Could not null terminate string \"%*s\".", (int) str->size, str->chars);
+        log_fatal("Could not null terminate string \"%.*s\".", (int) str->size, str->chars);
     }
     str->size -= 1;
     return str->chars;
