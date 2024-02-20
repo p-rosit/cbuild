@@ -6,8 +6,15 @@
 #include "file.h"
 #include "cache.h"
 
+typedef struct bld_extra {
+    size_t capacity;
+    size_t size;
+    bld_path* paths;
+} bld_extra;
+
 typedef struct bld_project {
     bld_path root;
+    bld_extra* extra_paths;
     bld_compiler* compiler;
     bld_files* files;
     bld_cache* cache;
@@ -17,6 +24,7 @@ bld_project new_project(bld_path, bld_compiler);
 void        free_project(bld_project);
 
 bld_path    extract_root(int, char**);
+void        add_path(bld_project, char*);
 void        load_cache(bld_project, char*);
 void        save_cache(bld_project);
 

@@ -1,3 +1,4 @@
+#include <string.h>
 #include "build.h"
 #include "project.h"
 
@@ -15,11 +16,14 @@ bld_path extract_root(int argc, char** argv) {
 bld_project new_project(bld_path path, bld_compiler compiler) {
     bld_files* f = malloc(sizeof(bld_files));
     bld_compiler* c = malloc(sizeof(bld_compiler));
+    bld_extra* e = malloc(sizeof(bld_extra));
 
     if (f == NULL) {log_fatal("Could not allocate files to project.");}
     *f = new_files();
     if (c == NULL) {log_fatal("Could not allocate compiler to project.");}
     *c = compiler;
+    if (e == NULL) {log_fatal("Could not allocate extra paths to project.");}
+    *e = (bld_extra) {.capacity = 0, .size = 0, .paths = NULL};
 
     return (bld_project) {
         .root = path,
@@ -40,6 +44,30 @@ void free_project(bld_project project) {
     
     free_cache(project.cache);
     free(project.cache);
+}
+
+void append_extra_path(bld_extra* extra, char* path) {
+    size_t capacity = extra->capacity;
+    bld_path* paths;
+
+    if (extra->size >= extra->capacity) {
+        capacity += (capacity / 2) + 2 * (capacity < 2);
+
+        paths = malloc(capacity * sizeof(bld_path));
+        if (paths == NULL) {log_fatal("Could not add path \"%s\"", path);}
+
+        memcpy(paths, extra->paths, extra->size * sizeof(bld_path));
+        free(extra->paths);
+
+        extra->paths = paths;
+        extra->capacity = capacity;
+    }
+
+    extra->paths[extra->size++] = path_from_string(path);
+}
+
+void add_path(bld_project project, char* path) {
+    append_extra_path(project.extra_paths, path);
 }
 
 void load_cache(bld_project project, char* cache_path) {
