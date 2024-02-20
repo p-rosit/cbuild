@@ -16,5 +16,6 @@ char* path_to_string(bld_path*);
 
 void append_dir(bld_path*, char*);
 void append_path(bld_path*, bld_path*);
+void remove_last_dir(bld_path*);
 
 #endif

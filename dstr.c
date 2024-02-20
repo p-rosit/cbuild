@@ -39,7 +39,7 @@ int push_character(bld_string* str, char c) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
         chars = malloc(capacity);
         if (chars == NULL) {
-            return -1;
+            return 0;
         }
 
         memcpy(chars, str->chars, str->size);
@@ -50,7 +50,7 @@ int push_character(bld_string* str, char c) {
     }
 
     str->chars[str->size++] = c;
-    return 0;
+    return 1;
 }
 
 void append_space(bld_string* str) {

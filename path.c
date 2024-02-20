@@ -1,4 +1,8 @@
+#include <string.h>
+#include "build.h"
 #include "path.h"
+
+#define BLD_PATH_SEP ("/")
 
 bld_path new_path() {
     return (bld_path) {
@@ -32,5 +36,20 @@ void append_dir(bld_path* path, char* str) {
 
 void append_path(bld_path* root, bld_path* path) {
     append_string(&root->str, make_string(&path->str));
+}
+
+void remove_last_dir(bld_path* path) {
+    size_t sep_len = sizeof(BLD_PATH_SEP) - 1;
+    char* str;
+
+    for (size_t i = 0; i < path->str.size; i++) {
+        str = path->str.chars + path->str.size - i - 1;
+        if (strncmp(str, BLD_PATH_SEP, sep_len) == 0) {
+            path->str.size -= i + 1;
+            return;
+        }
+    }
+
+    log_fatal("remove_last_dir: directory contains only one name...");
 }
 

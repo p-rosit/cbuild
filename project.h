@@ -1,0 +1,28 @@
+#ifndef PROJECT_H
+#define PROJECT_H
+
+#include "path.h"
+#include "compiler.h"
+#include "file.h"
+#include "cache.h"
+
+typedef struct bld_project {
+    bld_path root;
+    bld_compiler* compiler;
+    bld_files* files;
+    bld_cache* cache;
+} bld_project;
+
+bld_project new_project(bld_path, bld_compiler);
+void        free_project(bld_project);
+
+bld_path    extract_root(int, char**);
+void        load_cache(bld_project, char*);
+void        save_cache(bld_project);
+
+void        index_project(bld_project);
+int         compile_project(bld_project);
+int         make_executable(bld_project, char*);
+int         test_project(bld_project, char*);
+
+#endif

@@ -1,4 +1,5 @@
 #include <string.h>
+#include "build.h"
 #include "compiler.h"
 
 bld_compiler new_compiler(bld_compiler_type type, char* executable) {
@@ -7,9 +8,19 @@ bld_compiler new_compiler(bld_compiler_type type, char* executable) {
 
     return (bld_compiler) {
         .type = type,
-        .executable = str,
+        .executable = make_string(&str),
         .options = new_options(),
     };
+}
+
+void free_compiler(bld_compiler* compiler) {
+    free(compiler->executable);
+    free_options(&compiler->options);
+}
+
+void add_option(bld_compiler* compiler, char* option) {
+    append_option(&compiler->options, option);
+    log_info("Added option: \"%s\"", option);
 }
 
 bld_options new_options() {
@@ -37,6 +48,7 @@ void append_option(bld_options* options, char* str) {
 
         opts = malloc(capacity * sizeof(char*));
         memcpy(opts, options->options, options->size * sizeof(char*));
+        free(options->options);
 
         options->capacity = capacity;
         options->options = opts;

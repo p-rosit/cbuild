@@ -16,7 +16,7 @@ typedef enum bld_compiler_type {
 
 typedef struct bld_compiler {
     bld_compiler_type type;
-    bld_string executable;
+    char* executable;
     bld_options options;
 } bld_compiler;
 
