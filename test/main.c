@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "test.h"
+#include "directory/file.h"
 
 int main() {
     int a = 5;
