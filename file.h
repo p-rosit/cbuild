@@ -14,10 +14,15 @@ typedef enum bld_file_type {
     BLD_TEST,
 } bld_file_type;
 
+typedef struct bld_file_identifier {
+    ino_t id;
+} bld_file_identifier;
+
 typedef struct bld_file {
     bld_file_type type;
-    bld_path path;
+    bld_file_identifier identifier;
     bld_string name;
+    bld_path path;
     bld_compiler* compiler;
 } bld_file;
 
@@ -31,10 +36,11 @@ bld_file    make_header(bld_path*, bld_dirent*);
 bld_file    make_impl(bld_path*, bld_dirent*);
 bld_file    make_test(bld_path*, bld_dirent*);
 void        free_file(bld_file*);
+int         file_eq(bld_file*, bld_file*);
 
 bld_files   new_files();
 void        clear_files(bld_files*);
 void        free_files(bld_files*);
-void        append_file(bld_files*, bld_file);
+int         append_file(bld_files*, bld_file);
 
 #endif

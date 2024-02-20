@@ -17,11 +17,12 @@ typedef struct bld_project {
     bld_extra* extra_paths;
     bld_compiler* compiler;
     bld_files* files;
-    bld_cache* cache;
+    bld_cache** cache;
 } bld_project;
 
 bld_project new_project(bld_path, bld_compiler);
 void        free_project(bld_project);
+void        print_project(bld_project);
 
 bld_path    extract_root(int, char**);
 void        add_path(bld_project, char*);

@@ -8,11 +8,20 @@ bld_string extract_name(bld_dirent* file) {
     return str;
 }
 
+bld_file_identifier get_identifier(bld_dirent* file) {
+    return (bld_file_identifier) {.id = file->d_ino};
+}
+
+int file_eq(bld_file* f1, bld_file* f2) {
+    return f1->identifier.id == f2->identifier.id;
+}
+
 bld_file make_file(bld_file_type type, bld_path* path, bld_dirent* file) {
     return (bld_file) {
         .type = type,
-        .path = *path,
+        .identifier = get_identifier(file),
         .name = extract_name(file),
+        .path = *path,
         .compiler = NULL,
     };
 }
@@ -57,9 +66,16 @@ void free_files(bld_files* files) {
     free(files->files);
 }
 
-void append_file(bld_files* files, bld_file file) {
+int append_file(bld_files* files, bld_file file) {
     bld_file* fs;
     size_t capacity = files->capacity;
+
+    for (size_t i = 0; i < files->size; i++) {
+        if (file_eq(&files->files[i], &file)) {
+            return 1;
+        }
+    }
+
 
     if (files->size >= files->capacity) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
@@ -77,4 +93,5 @@ void append_file(bld_files* files, bld_file file) {
     }
 
     files->files[files->size++] = file;
+    return 0;
 }

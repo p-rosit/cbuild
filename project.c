@@ -17,6 +17,7 @@ bld_project new_project(bld_path path, bld_compiler compiler) {
     bld_files* f = malloc(sizeof(bld_files));
     bld_compiler* c = malloc(sizeof(bld_compiler));
     bld_extra* e = malloc(sizeof(bld_extra));
+    bld_cache** cache = malloc(sizeof(bld_cache*));
 
     if (f == NULL) {log_fatal("Could not allocate files to project.");}
     *f = new_files();
@@ -24,13 +25,15 @@ bld_project new_project(bld_path path, bld_compiler compiler) {
     *c = compiler;
     if (e == NULL) {log_fatal("Could not allocate extra paths to project.");}
     *e = (bld_extra) {.capacity = 0, .size = 0, .paths = NULL};
+    if (cache == NULL) {log_fatal("Could not allocate cache.");}
+    *cache = NULL;
 
     return (bld_project) {
         .root = path,
         .extra_paths = e,
         .compiler = c,
         .files = f,
-        .cache = NULL,
+        .cache = cache,
     };
 }
 
@@ -49,7 +52,8 @@ void free_project(bld_project project) {
     free_files(project.files);
     free(project.files);
     
-    free_cache(project.cache);
+    free_cache(*(project.cache));
+    free(*(project.cache));
     free(project.cache);
 }
 
@@ -77,22 +81,13 @@ void add_path(bld_project project, char* path) {
     append_extra_path(project.extra_paths, path);
 }
 
-void load_cache(bld_project project, char* cache_path) {
-    log_warn("load_cache: not implemented.");
-}
-
-void save_cache(bld_project project) {
-    log_warn("save_cache: not implemented.");
-}
-
 void index_recursive(bld_project project, bld_path* path) {
+    int exists;
     char *str_path, *file_ending;
     bld_path sub_path;
     DIR* dir;
     bld_dirent* file_ptr;
     bld_file file;
-
-    log_info("Indexing at: \"%.*s\"", (int) path->str.size, path->str.chars);
 
     str_path = path_to_string(path);
     dir = opendir(str_path);
@@ -123,23 +118,34 @@ void index_recursive(bld_project project, bld_path* path) {
             continue;
         }
 
-        append_file(project.files, file);
+        exists = append_file(project.files, file);
+        if (exists) {
+            free_file(&file);
+            break;
+        }
     }
     
     closedir(dir);
 }
 
 void index_project(bld_project project) {
-    char* str;
+    bld_path extra_path;
     DIR* dir;
 
-    str = path_to_string(&project.root);
-    dir = opendir(str);
-    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", str);}
+    dir = opendir(path_to_string(&project.root));
+    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&project.root));}
     closedir(dir);
 
+    log_info("Indexing project under root");
     index_recursive(project, &project.root);
-    log_info("Indexed project");
+
+    for (size_t i = 0; i < project.extra_paths->size; i++) {
+        extra_path = copy_path(&project.root);
+        append_path(&extra_path, &project.extra_paths->paths[i]);
+        log_info("Indexing project under \"%s\"", path_to_string(&extra_path));
+        index_recursive(project, &extra_path);
+        free_path(&extra_path);
+    }
 }
 
 int compile_project(bld_project project) {
@@ -155,4 +161,92 @@ int make_executable(bld_project project, char* name) {
 int test_project(bld_project project, char* path) {
     log_warn("test_project: not implemented.");
     return -1;
+}
+
+void print_project(bld_project project) {
+    /* TODO: make good :) */
+    printf("Project:\n");
+    
+    printf("  root: \"%s\"\n", path_to_string(&project.root));
+    
+    printf("  extra_paths:");
+    if (project.extra_paths->size == 0) {
+        printf(" None\n");
+    } else {
+        printf("\n");
+        for (size_t i = 0; i < project.extra_paths->size; i++) {
+            printf("    \"%s\"\n", path_to_string(&project.extra_paths->paths[i]));
+        }
+    }
+
+    printf("  compiler:\n");
+    printf("    type: ");
+    switch (project.compiler->type) {
+        case (BLD_GCC): {
+            printf("gcc\n");
+        } break;
+        case (BLD_CLANG): {
+            printf("clang\n");
+        } break;
+        default: log_fatal("print_project: unknown compiler type.");
+    }
+    printf("    executable: \"%s\"\n", project.compiler->executable);
+    printf("    options:");
+    if (project.compiler->options.size == 0) {
+        printf(" None\n");
+    } else {
+        printf("\n");
+        for (size_t i = 0; i < project.compiler->options.size; i++) {
+            printf("      \"%s\"\n", project.compiler->options.options[i]);
+        }
+    }
+
+    printf("  files:");
+    if (project.files->size == 0) {
+        printf(" None\n");
+    } else {
+        printf("\n");
+        for (size_t i = 0; i < project.files->size; i++) {
+            printf("    File: \"%s\"\n", make_string(&project.files->files[i].name));
+            printf("      type: ");
+            switch (project.files->files[i].type) {
+                case (BLD_IMPL): {
+                    printf("implementation");
+                } break;
+                case (BLD_HEADER): {
+                    printf("header");
+                } break;
+                case (BLD_TEST): {
+                    printf("test");
+                } break;
+                default: log_fatal("print_project: unknown file_type");
+            }
+            printf("\n");
+            printf("      path: \"%s\"\n", path_to_string(&project.files->files[i].path));
+            if (project.files->files[i].compiler != NULL) {
+                printf("      compiler:\n");
+                printf("        type: ");
+                switch (project.files->files[i].compiler->type) {
+                    case (BLD_GCC): {
+                        printf("gcc\n");
+                    } break;
+                    case (BLD_CLANG): {
+                        printf("clang\n");
+                    } break;
+                    default: log_fatal("print_project: unknown compiler type.");
+                }
+                printf("        executable: \"%s\"\n", project.files->files[i].compiler->executable);
+                printf("        options:");
+                if (project.files->files[i].compiler->options.size == 0) {
+                    printf(" None\n");
+                } else {
+                    printf("\n");
+                    for (size_t i = 0; i < project.files->files[i].compiler->options.size; i++) {
+                        printf("          \"%s\"\n", project.files->files[i].compiler->options.options[i]);
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -21,6 +21,8 @@ int main(int argc, char** argv) {
         compile_project(project);
         make_executable(project, "a.out");
 
+        // print_project(project);
+
         save_cache(project);
     }
 
