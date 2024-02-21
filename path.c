@@ -54,3 +54,19 @@ void remove_last_dir(bld_path* path) {
     log_fatal("remove_last_dir: directory contains only one name...");
 }
 
+int path_ends_with(bld_path* path, bld_path* suffix) {
+    size_t suffix_start = path->str.size - suffix->str.size;
+    char a, b;
+
+    if (suffix->str.size > path->str.size) {return 0;}
+
+    for (size_t i = 0; i < suffix->str.size; i++) {
+        a = path->str.chars[suffix_start + i];
+        b = suffix->str.chars[i];
+        if (a != b) {
+            return 0;
+        }
+    }
+
+    return 1;
+}

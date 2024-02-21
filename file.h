@@ -27,6 +27,7 @@ typedef struct bld_file {
 } bld_file;
 
 typedef struct bld_files {
+    /* TODO: hash set for faster lookup */
     size_t capacity;
     size_t size;
     bld_file* files;
@@ -37,6 +38,7 @@ bld_file    make_impl(bld_path*, bld_dirent*);
 bld_file    make_test(bld_path*, bld_dirent*);
 void        free_file(bld_file*);
 int         file_eq(bld_file*, bld_file*);
+void        serialize_identifier(char[256], bld_file*);
 
 bld_files   new_files();
 void        clear_files(bld_files*);

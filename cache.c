@@ -19,8 +19,16 @@ void serialize_cache(bld_cache* cache) {
     log_warn("serialize_cache: Serialization not implemented.");
 }
 
-bld_cache parse_cache(FILE* file) {
+void parse_cache(bld_cache* cache, bld_path* root) {
+    bld_path path = copy_path(root);
+    FILE* f;
+
+    append_path(&path, &cache->path);
+    append_dir(&path, BLD_CACHE_NAME);
+    f = fopen(path_to_string(&path), "r");
+
     log_warn("parse_cache: not implemented");
-    bld_path path = path_from_string(".");
-    return new_cache(&path);
+    
+    fclose(f);
+    free_path(&path);
 }

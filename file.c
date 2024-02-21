@@ -1,4 +1,5 @@
 #include <string.h>
+#include <inttypes.h>
 #include "build.h"
 #include "file.h"
 
@@ -14,6 +15,10 @@ bld_file_identifier get_identifier(bld_dirent* file) {
 
 int file_eq(bld_file* f1, bld_file* f2) {
     return f1->identifier.id == f2->identifier.id;
+}
+
+void serialize_identifier(char name[256], bld_file* file) {
+    sprintf(name, "%ju", (uintmax_t) file->identifier.id);
 }
 
 bld_file make_file(bld_file_type type, bld_path* path, bld_dirent* file) {

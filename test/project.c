@@ -9,17 +9,19 @@ int main(int argc, char** argv) {
 
     add_path(project, "..");
 
+    add_option(project.compiler, "-lm");
     add_option(project.compiler, "-fsanitize=address");
-    add_option(project.compiler, "-Wall");
-    add_option(project.compiler, "-Wextra");
-    add_option(project.compiler, "-pedantic");
+    // add_option(project.compiler, "-Wall");
+    // add_option(project.compiler, "-Wextra");
+    // add_option(project.compiler, "-pedantic");
 
     {
         load_cache(project, ".build_cache");
 
         index_project(project);
-        compile_project(project);
-        make_executable(project, "a.out");
+        set_main_file(project, "main.c");
+
+        compile_project(project, "b.out");
 
         save_cache(project);
     }

@@ -15,6 +15,7 @@ char* make_string(bld_string*);
 void free_string(bld_string*);
 
 void append_space(bld_string*);
+void append_char(bld_string*, char);
 void append_string(bld_string*, char*);
 
 #endif
