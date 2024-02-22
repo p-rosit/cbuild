@@ -205,19 +205,19 @@ int compile_file(bld_project project, bld_file* file) {
         append_space(&cmd);
     }
 
+    append_string(&cmd, "-c ");
+    append_string(&cmd, path_to_string(&file->path));
+
+    append_string(&cmd, " -o ");
+
     path = copy_path(&project.root);
     append_path(&path, &(**project.cache).path);
     serialize_identifier(name, file);
     append_dir(&path, name);
-
-    append_string(&cmd, "-c ");
-    append_string(&cmd, "-o ");
     append_string(&cmd, path_to_string(&path));
+
     append_string(&cmd, ".o");
     free_path(&path);
-
-    append_space(&cmd);
-    append_string(&cmd, path_to_string(&file->path));
 
     result = system(make_string(&cmd));
     free_string(&cmd);
