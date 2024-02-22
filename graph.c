@@ -266,6 +266,8 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
         populate_node(graph, cache_path, &symbol_path, &graph->files->files[i]);
     }
 
+    remove(path_to_string(&symbol_path));
+
     for (size_t i = 0; i < graph->size; i++) {
         connect_node(graph, &graph->nodes[i]);
     }
