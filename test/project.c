@@ -15,17 +15,23 @@ int main(int argc, char** argv) {
     // add_option(project.compiler, "-Wextra");
     // add_option(project.compiler, "-pedantic");
 
+    bld_compiler* c = malloc(sizeof(bld_compiler));
     {
         load_cache(project, ".build_cache");
 
         index_project(project);
         set_main_file(project, "main.c");
+        
+        *c = new_compiler(BLD_GCC, "/usr/bin/clang");
+        add_option(c, "-LL");
+        project.files->files[2].compiler = c;
 
-        compile_project(project, "b.out");
+        compile_project(project, "a.out");
 
         save_cache(project);
     }
 
     free_project(project);
+    free(c);
     return 0;
 }
