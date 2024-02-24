@@ -105,3 +105,15 @@ int path_ends_with(bld_path* path, bld_path* suffix) {
 
     return 1;
 }
+
+void remove_file_ending(bld_path* path) {
+    size_t i;
+
+    for (i = path->str.size; 0 < i; i--) {
+        if (path->str.chars[i - 1] == '.') {
+            path->str.size = i - 1;
+            path->str.chars[i - 1] = '\0';
+            return;
+        }
+    }
+}
