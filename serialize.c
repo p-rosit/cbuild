@@ -202,15 +202,14 @@ void serialize_edges(FILE* cache, bld_edges* edges, int depth) {
         fprintf(cache, "[]");
         return;
     } else if (edges->size == 1) {
-        fprintf(cache, "[%ju]", (uintmax_t) 0);
+        fprintf(cache, "[%ju]", edges->nodes[0]->file->identifier.id);
         return;
     }
     fprintf(cache, "[\n");
 
     for (size_t i = 0; i < edges->size; i++) {
         if (i > 0) {fprintf(cache, ",\n");};
-        fprintf(cache, "%*c%p", 2 * (depth + 1), ' ', edges->nodes[i]);
-        // fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', (uintmax_t) edges->nodes[i]->file->identifier.id);
+        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', edges->nodes[i]->file->identifier.id);
     }
 
     fprintf(cache, "\n");
