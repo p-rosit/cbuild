@@ -121,7 +121,34 @@ void parse_cache(bld_project* cache, bld_path* root) {
     free_path(&path);
 }
 
-int parse_compiler(FILE* file, bld_compiler* compiler) {
+int parse_graph(FILE* file, bld_project* project) {
+    log_fatal("parse_graph: unimplemented");
+}
+
+int parse_node(FILE* file, bld_project* project) {
+    int amount_parsed;
+    int size = 4;
+    int parsed[4];
+    char keys[4][15] = {"file", "defined", "undefined", "edges"};
+    bld_parse_func funcs[4] = {
+        (bld_parse_func) parse_node_file,
+        (bld_parse_func) parse_defined_functions,
+        (bld_parse_func) parse_undefined_functions,
+        (bld_parse_func) parse_edges
+    };
+
+    amount_parsed = parse_map(file, project, size, parsed, (char**) keys, funcs);
+
+    if (amount_parsed != size) {
+        log_warn("Could not parse node, expected all keys to be present: [");
+        for (int i = 0; i < size; i++) {
+            if (i > 0) {printf(",\n");}
+            printf("\"%s\"", keys[i]);
+        }
+        printf("]\n");
+        return -1;
+    }
+
     return 0;
 }
 
