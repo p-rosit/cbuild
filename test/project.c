@@ -16,16 +16,15 @@ int main(int argc, char** argv) {
     // add_option(project.compiler, "-pedantic");
 
     bld_compiler cc = new_compiler(BLD_CLANG, "/usr/bin/clang");
-    bld_compiler* c = &cc;
     {
-        add_option(c, "-LL");
+        add_option(&cc, "-LL");
 
         load_cache(&project, ".build_cache");
 
         index_project(&project);
         set_main_file(&project, "main.c");
         
-        project.files.files[1].compiler = c;
+        project.files.files[1].compiler = &cc;
 
         compile_project(&project, "a.out");
 
