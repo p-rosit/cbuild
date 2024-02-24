@@ -147,6 +147,17 @@ void index_recursive(bld_project* project, bld_path* path) {
 
     while ((file_ptr = readdir(dir)) != NULL) {
         file_ending = file_ptr->d_name;
+        if (strcmp(file_ptr->d_name, ".") == 0 || strcmp(file_ptr->d_name, "..") == 0) {
+            continue;
+        }
+        
+        for (size_t i = 0; i < project->ignore_paths.size; i++) {
+            if (file_ptr->d_ino == project->ignore_paths.ids[i]) {
+                log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name); /* TODO: print better */
+                goto next_file;
+            }
+        }
+
         if (file_ending[0] == '.') {continue;}
 
         sub_path = copy_path(path);
@@ -156,7 +167,7 @@ void index_recursive(bld_project* project, bld_path* path) {
         if (file_ending == NULL) {
             index_recursive(project, &sub_path);
             free_path(&sub_path);
-            continue;
+            goto next_file;
         }
 
         if (strncmp(file_ptr->d_name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
@@ -167,7 +178,7 @@ void index_recursive(bld_project* project, bld_path* path) {
             file = make_header(&sub_path, file_ptr);
         } else {
             free_path(&sub_path);
-            continue;
+            goto next_file;
         }
 
         exists = append_file(&project->files, file);
@@ -175,6 +186,8 @@ void index_recursive(bld_project* project, bld_path* path) {
             free_file(&file);
             break;
         }
+
+        next_file:;
     }
     
     closedir(dir);
