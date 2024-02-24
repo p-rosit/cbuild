@@ -68,12 +68,8 @@ void load_cache(bld_project* project, char* cache_path) {
 }
 
 void parse_cache(bld_project* cache, bld_path* root) {
-    size_t key_num;
-    int result, parse_complete, parsed_compiler, parsed_graph;
     bld_path path = copy_path(root);
     FILE* f;
-    bld_string str;
-    char c;
 
     append_path(&path, &cache->root);
     append_dir(&path, BLD_CACHE_NAME);
