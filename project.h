@@ -29,7 +29,7 @@ bld_project new_project(bld_path, bld_compiler);
 void        free_project(bld_project*);
 void        print_project(bld_project*);
 
-bld_path    extract_root(int, char**);
+bld_path    extract_path(int, char**);
 void        set_main_file(bld_project*, char*);
 void        add_build(bld_project*, char*);
 void        add_path(bld_project*, char*);
