@@ -1,8 +1,8 @@
 #ifndef REBUILD_H
 #define REBUILD_H
 
-#define REBUILD_BUILDER(argc, argv) \
-    do { \
-    } while (0)
+#include "project.h"
+
+void rebuild_builder(bld_project*, int, char**);
 
 #endif

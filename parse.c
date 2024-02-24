@@ -27,33 +27,34 @@ void ensure_directory_exists(bld_path* directory_path) {
     }
 }
 
-void load_cache(bld_project project, char* cache_path) {
+void load_cache(bld_project* project, char* cache_path) {
     FILE* file;
     bld_path path, temp;
     bld_cache* cache;
 
-    path = copy_path(&project.root);
+    path = copy_path(&project->root);
     append_dir(&path, cache_path);
     ensure_directory_exists(&path);
 
     append_dir(&path, BLD_CACHE_NAME);
+    log_warn("Opening file: \"%s\"", path_to_string(&path));
     file = fopen(path_to_string(&path), "r");
+    log_warn("Opened file");
+
+    cache = malloc(sizeof(bld_cache));
+    if (cache == NULL) {log_fatal("Could not allocate cache.");}
+    temp = path_from_string(cache_path);
+    *cache = new_cache(&temp);
+
     if (file == NULL) {
         log_info("No cache file found.");
-        log_fatal("load_cache: unimplemented path");
+        // log_fatal("load_cache: unimplemented path");
     } else {
         fclose(file);
-
         log_info("Found cache file, loading.");
-        cache = malloc(sizeof(bld_cache));
-        if (cache == NULL) {log_fatal("Could not allocate cache.");}
-
-        temp = path_from_string(cache_path);
-        *cache = new_cache(&temp);
-        parse_cache(cache, &project.root);
-
-        *(project.cache) = cache;
+        parse_cache(cache, &project->root);
     }
 
+    project->cache = cache;
     free_path(&path);
 }

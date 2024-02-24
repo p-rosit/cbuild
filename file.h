@@ -2,6 +2,7 @@
 #define FILE_H
 
 #include <dirent.h>
+#include <inttypes.h>
 #include "path.h"
 #include "compiler.h"
 
@@ -15,7 +16,8 @@ typedef enum bld_file_type {
 } bld_file_type;
 
 typedef struct bld_file_identifier {
-    ino_t id;
+    uintmax_t id;
+    uintmax_t hash;
 } bld_file_identifier;
 
 typedef struct bld_file {

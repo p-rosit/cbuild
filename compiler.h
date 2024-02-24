@@ -22,6 +22,7 @@ typedef struct bld_compiler {
 
 bld_compiler    new_compiler(bld_compiler_type, char*);
 void            free_compiler(bld_compiler*);
+bld_compiler    copy_compiler(bld_compiler*);
 void            add_option(bld_compiler*, char*);
 
 bld_options     new_options();

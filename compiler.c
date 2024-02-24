@@ -19,6 +19,23 @@ void free_compiler(bld_compiler* compiler) {
     free_options(&compiler->options);
 }
 
+bld_compiler copy_compiler(bld_compiler* compiler) {
+    bld_options options;
+    bld_string executable = new_string();
+    append_string(&executable, compiler->executable);
+
+    options = new_options();
+    for (size_t i = 0; i < compiler->options.size; i++) {
+        append_option(&options, compiler->options.options[i]);
+    }
+
+    return (bld_compiler) {
+        .type = compiler->type,
+        .executable = make_string(&executable),
+        .options = options,
+    };
+}
+
 void add_option(bld_compiler* compiler, char* option) {
     append_option(&compiler->options, option);
     log_info("Added option: \"%s\"", option);

@@ -7,8 +7,9 @@ bld_edges   new_edges();
 void        free_edges(bld_edges*);
 void        add_edge(bld_node*, bld_node*);
 
-bld_node*   new_nodes(bld_files*);
-void        free_nodes(size_t, bld_node*);
+bld_nodes   new_nodes();
+void        free_nodes(bld_nodes*);
+void        push_node(bld_nodes*, bld_node);
 bld_node    new_node(bld_file*);
 void        free_node(bld_node*);
 
@@ -71,8 +72,8 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
         .nodes = NULL,
     };
 
-    for (size_t i = 0; i < graph->size; i++) {
-        node = &graph->nodes[i];
+    for (size_t i = 0; i < graph->nodes.size; i++) {
+        node = &graph->nodes.nodes[i];
         if (file_eq(node->file, main)) {
             node_push(&info->stack, node);
             break;
@@ -121,21 +122,35 @@ int next_file(bld_search_info* info, bld_file** file) {
 }
 
 bld_graph new_graph(bld_files* files) {
+    size_t capacity;
+    if (files == NULL) {
+        capacity = 0;
+    } else {
+        capacity = files->size;
+    }
+
     return (bld_graph) {
         .files = files,
-        .size = files->size,
-        .nodes = new_nodes(files),
+        .nodes = new_nodes(capacity),
     };
 }
 
 void free_graph(bld_graph* graph) {
-    free_nodes(graph->size, graph->nodes);
+    free_nodes(&graph->nodes);
 }
 
-void parse_symbols(bld_node* node, bld_path* symbol_path) {
+bld_node parse_symbols(bld_file* file, bld_path* symbol_path) {
     FILE* f;
     int c, func_type;
     bld_string func;
+    bld_node node;
+
+    node = (bld_node) {
+        .file = file,
+        .defined_funcs = new_funcs(),
+        .used_funcs = new_funcs(),
+        .edges = new_edges(),
+    };
 
     f = fopen(path_to_string(symbol_path), "r");
     if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
@@ -143,18 +158,18 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
     while (1) {
         c = fgetc(f);
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node.file->path));
             break;
         }
 
         while (c != EOF && c != ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node.file->path));
             break;
         }
         while (c != EOF && c == ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node.file->path));
             break;
         }
 
@@ -175,9 +190,9 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
         }
 
         if (func_type == 'T') {
-            add_func(&node->defined_funcs, &func);
+            add_func(&node.defined_funcs, &func);
         } else if (func_type == 'U') {
-            add_func(&node->used_funcs, &func);
+            add_func(&node.used_funcs, &func);
         } else {
             log_fatal("parse_symbols: unreachable error");
         }
@@ -189,13 +204,14 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
     }
 
     fclose(f);
+    return node;
 }
 
 void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path, bld_file* file) {
     int result;
     char name[256];
     bld_string cmd = new_string();
-    bld_path path, symbols_path;
+    bld_path path;
     bld_node* node;
 
     if (file->type == BLD_HEADER) {
@@ -221,10 +237,8 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
     }
 
-    node = &graph->nodes[graph->size++];
-
-    node->file = file;
-    parse_symbols(node, symbol_path);
+    push_node(&graph->nodes, parse_symbols(file, symbol_path));
+    node = &graph->nodes.nodes[graph->nodes.size - 1];
     log_info("Populating: \"%s\", %lu functions, %lu references", path_to_string(&file->path), node->defined_funcs.size, node->used_funcs.size);
 
     free_string(&cmd);
@@ -234,8 +248,8 @@ void connect_node(bld_graph* graph, bld_node* node) {
     char *undef, *def;
     bld_node* to_node;
 
-    for (size_t i = 0; i < graph->size; i++) {
-        to_node = &graph->nodes[i];
+    for (size_t i = 0; i < graph->nodes.size; i++) {
+        to_node = &graph->nodes.nodes[i];
 
         for (size_t j = 0; j < node->used_funcs.size; j++) {
             undef = node->used_funcs.funcs[j];
@@ -254,10 +268,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
 
 void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
-
-    free_nodes(graph->size, graph->nodes);
-    graph->size = 0;
-    graph->nodes = new_nodes(graph->files);
+    log_warn("Generating graph");
 
     symbol_path = copy_path(cache_path);
     append_dir(&symbol_path, "symbols");
@@ -268,12 +279,12 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
 
     remove(path_to_string(&symbol_path));
 
-    for (size_t i = 0; i < graph->size; i++) {
-        connect_node(graph, &graph->nodes[i]);
+    for (size_t i = 0; i < graph->nodes.size; i++) {
+        connect_node(graph, &graph->nodes.nodes[i]);
     }
 
     free_path(&symbol_path);
-    log_info("Populated %lu nodes", graph->size);
+    log_info("Populated %lu nodes", graph->nodes.size);
 }
 
 bld_edges new_edges() {
@@ -299,7 +310,7 @@ void add_edge(bld_node* from, bld_node* to) {
         nodes = malloc(capacity * sizeof(bld_node*));
         if (nodes == NULL) {log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&from->file->name), make_string(&to->file->name));}
 
-        memcpy(nodes, edges->nodes, edges->size);
+        memcpy(nodes, edges->nodes, edges->size * sizeof(bld_node));
         free(edges->nodes);
 
         edges->nodes = nodes;
@@ -309,21 +320,39 @@ void add_edge(bld_node* from, bld_node* to) {
     edges->nodes[edges->size++] = to;
 }
 
-bld_node* new_nodes(bld_files* files) {
-    bld_node* nodes = malloc(files->size * sizeof(bld_node));
-
-    for (size_t i = 0; i < files->size; i++) {
-        nodes[i] = new_node(&files->files[i]);
-    }
-
-    return nodes;
+bld_nodes new_nodes() {
+    return (bld_nodes) {
+        .capacity = 0,
+        .size = 0,
+        .nodes = NULL,
+    };
 }
 
-void free_nodes(size_t size, bld_node* nodes) {
-    for (size_t i = 0; i < size; i++) {
-        free_node(&nodes[i]);
+void free_nodes(bld_nodes* nodes) {
+    for (size_t i = 0; i < nodes->size; i++) {
+        free_node(&nodes->nodes[i]);
     }
-    free(nodes);
+    free(nodes->nodes);
+}
+
+void push_node(bld_nodes* nodes, bld_node node) {
+    size_t capacity = nodes->capacity;
+    bld_node* temp;
+
+    if (nodes->size >= nodes->capacity) {
+        capacity += (capacity / 2) + 2 * (capacity < 2);
+
+        temp = malloc(capacity * sizeof(bld_node));
+        if (temp == NULL) {log_fatal("Could not push node");}
+
+        memcpy(temp, nodes->nodes, nodes->size * sizeof(bld_node));
+        free(nodes->nodes);
+
+        nodes->capacity = capacity;
+        nodes->nodes = temp;
+    }
+
+    nodes->nodes[nodes->size++] = node;
 }
 
 bld_node new_node(bld_file* file) {
@@ -366,10 +395,7 @@ void add_func(bld_funcs* funcs, bld_string* func) {
         names = malloc(capacity * sizeof(char*));
         if (names == NULL) {log_fatal("Could not add function \"%s\"", make_string(func));}
 
-        for (size_t i = 0; i < funcs->size; i++) {
-            names[i] = funcs->funcs[i];
-        } /* TODO: why no memcpy? */
-        // memcpy(names, funcs->funcs, funcs->size);
+        memcpy(names, funcs->funcs, funcs->size * sizeof(char*));
         free(funcs->funcs);
 
         funcs->funcs = names;

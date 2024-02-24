@@ -28,17 +28,22 @@ struct bld_node {
     bld_edges edges;
 };
 
+typedef struct bld_nodes {
+    size_t capacity;
+    size_t size;
+    bld_node* nodes;
+} bld_nodes;
+
 typedef struct bld_graph {
     bld_files* files;
-    size_t size;
-    bld_node* nodes; /* TODO: growable array? */
+    bld_nodes nodes;
 } bld_graph;
 
-bld_graph   new_graph(bld_files*);
-void        free_graph(bld_graph*);
+bld_graph           new_graph(bld_files*);
+void                free_graph(bld_graph*);
 
-void generate_graph(bld_graph*, bld_path*);
-bld_search_info* graph_dfs_from(bld_graph*, bld_file*);
-int next_file(bld_search_info*, bld_file**);
+void                generate_graph(bld_graph*, bld_path*);
+bld_search_info*    graph_dfs_from(bld_graph*, bld_file*);
+int                 next_file(bld_search_info*, bld_file**);
 
 #endif

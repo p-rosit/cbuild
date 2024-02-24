@@ -4,6 +4,41 @@
 
 #define BLD_PATH_SEP ("/")
 
+bld_paths new_paths() {
+    return (bld_paths) {
+        .capacity = 0,
+        .size = 0,
+        .paths = NULL,
+    };
+}
+
+void free_paths(bld_paths* paths) {
+    for (size_t i = 0; i < paths->size; i++) {
+        free_path(&paths->paths[i]);
+    }
+    free(paths->paths);
+}
+
+void push_path(bld_paths* paths, bld_path path) {
+    size_t capacity = paths->capacity;
+    bld_path* temp;
+
+    if (paths->size >= paths->capacity) {
+        capacity += (capacity / 2) + 2 * (capacity < 2);
+
+        temp = malloc(capacity * sizeof(bld_path));
+        if (temp == NULL) {log_fatal("Could not append path \"%s\"", path_to_string(&path));}
+
+        memcpy(temp, paths->paths, paths->size * sizeof(bld_path));
+        free(paths->paths);
+
+        paths->capacity = capacity;
+        paths->paths = temp;
+    }
+
+    paths->paths[paths->size++] = path;
+}
+
 bld_path new_path() {
     return (bld_path) {
         .str = new_string(),
