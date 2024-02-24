@@ -103,7 +103,7 @@ int next_file(bld_search_info* info, bld_file** file) {
         for (size_t i = 0; i < info->visited.size; i++) {
             if (node == info->visited.nodes[i]) {
                 visited = 1;
-                continue;
+                goto next_node;
             }
         }
 
@@ -112,6 +112,8 @@ int next_file(bld_search_info* info, bld_file** file) {
         for (size_t i = 0; i < node->edges.size; i++) {
             node_push(&info->stack, node->edges.nodes[i]);
         }
+
+        next_node:;
     }
 
     *file = node->file;
