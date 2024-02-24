@@ -117,7 +117,7 @@ void serialize_file(FILE* cache, bld_file* file, int depth) {
     serialize_file_id(cache, file->identifier);
     fprintf(cache, ",\n");
 
-    fprintf(cache, "%*c\"hash\": 0,\n", 2 * (depth + 1), ' ');
+    fprintf(cache, "%*c\"hash\": %ju,\n", 2 * (depth + 1), ' ', file->identifier.hash);
 
     fprintf(cache, "%*c\"name\": \"%s\"", 2 * (depth + 1), ' ', make_string(&file->name));
 
