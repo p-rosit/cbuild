@@ -33,6 +33,11 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
         .cache = NULL,
     };
 
+    f = fopen(path_to_string(&build_file_path), "r");
+    if (f == NULL) {
+        log_fatal("Expected executable to have same name (and be in same directory) as build file. Could not find \"%s\"", path_to_string(&build_file_path));
+    }
+    fclose(f);
     ignore_path(&project, path_to_string(&build_file_path));
     free_path(&build_file_path);
 
