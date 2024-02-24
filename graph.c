@@ -284,7 +284,7 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     }
 
     free_path(&symbol_path);
-    log_info("Populated %lu nodes", graph->nodes.size);
+    log_info("Generated dependency graph with %lu nodes", graph->nodes.size);
 }
 
 bld_edges new_edges() {
