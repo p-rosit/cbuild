@@ -4,6 +4,8 @@
 #include "path.h"
 #include "project.h"
 
+typedef int (*bld_parse_func)(FILE*, void*);
+
 bld_project make_project(bld_path, bld_compiler);
 void parse_cache(bld_project*, bld_path*);
 
@@ -61,15 +63,110 @@ void load_cache(bld_project* project, char* cache_path) {
 }
 
 void parse_cache(bld_project* cache, bld_path* root) {
+    size_t key_num;
+    int result, parse_complete, parsed_compiler, parsed_graph;
     bld_path path = copy_path(root);
     FILE* f;
+    bld_string str;
+    char c;
 
     append_path(&path, &cache->root);
     append_dir(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
-    log_warn("parse_cache: not implemented");
-    
+    log_warn("parse_cache: unimplemented");
+
     fclose(f);
     free_path(&path);
+}
+
+int parse_compiler(FILE* file, bld_compiler* compiler) {
+    return 0;
+}
+
+int parse_string(FILE* file, bld_string* str) {
+    return 0;
+}
+
+int next_character(FILE* file) {
+    int c = getc(file);
+    while (c != EOF && isspace(c)) {getc(file);}
+    return c;
+}
+
+int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
+    int exists, index, key_num = 0;
+    int result, parse_complete;
+    bld_string str = new_string();
+    char c, *temp;
+
+    c = next_character(file);
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
+    if (c != '{') {log_warn("Unexpected starting character: \'%c\'", c); goto parse_failed;}
+
+    while (!parse_complete) {
+        key_num += 1;
+        str = new_string();
+        result = parse_string(file, &str);
+        if (result) {
+            log_warn("Key %d could not be parsed, expected: [", key_num);
+            for (int i = 0; i < entries; i++) {
+                if (i > 0) {printf(",\n");}
+                printf("  \"%s\"", keys[i]);
+            }
+            printf("]");
+            goto parse_failed;
+        }
+
+        exists = 0;
+        temp = make_string(&str);
+        for (int i = 0; i < entries; i++) {
+            if (strcmp(temp, keys[i]) == 0) {
+                exists = 1;
+                index = i;
+            }
+        }
+
+        if (!exists) {
+            log_warn("\"%s\" is not a valid key, expected: [", temp);
+            for (int i = 0; i < entries; i++) {
+                if (i > 0) {printf(",\n");}
+                printf("  \"%s\"", keys[i]);
+            }
+            printf("]");
+            goto parse_failed;
+        }
+
+        c = next_character(file);
+        if (c != ':') {
+            log_warn("Expected \':\', got \'%c\'", c);
+            goto parse_failed;
+        }
+
+        parse_funcs[index](file, obj);
+
+        free_string(&str);
+        str = new_string();
+        c = next_character(file);
+        switch (c) {
+            case ('}'): {
+                parse_complete = 1;
+            } break;
+            case (','): {
+                continue;
+            } break;
+            case (EOF): {
+                log_warn("Unexpected EOF");
+                goto parse_failed;
+            } break;
+            default: {
+                log_warn("Unexpected character, got \'%c\'", c);
+            } break;
+        }
+    }
+
+    return key_num;
+    parse_failed:
+    free_string(&str);
+    return -1;
 }
