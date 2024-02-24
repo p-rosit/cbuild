@@ -137,6 +137,11 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
             printf("]");
             goto parse_failed;
         }
+        if (parsed[index]) {
+            log_warn("Duplicate key \"%s\" encountered", keys[index]);
+            goto parse_failed;
+        }
+        parsed[index] = 1;
 
         c = next_character(file);
         if (c != ':') {
