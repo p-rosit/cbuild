@@ -5,6 +5,10 @@
 #include "project.h"
 
 
+bld_ignore  new_ignore_ids();
+void        append_ignore_id(bld_ignore*, uintmax_t);
+void        free_ignore_ids(bld_ignore*);
+
 
 bld_path extract_path(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
@@ -25,7 +29,7 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
         .root = root,
         .build = new_path(),
         .extra_paths = new_paths(),
-        .ignore_paths = new_paths(),
+        .ignore_paths = new_ignore_ids(),
         .main_file = (bld_file) {.type = BLD_INVALID},
         .compiler = compiler,
         .files = new_files(),
@@ -48,7 +52,7 @@ void free_project(bld_project* project) {
     free_path(&project->root);
     free_path(&project->build);
     free_paths(&project->extra_paths);
-    free_paths(&project->ignore_paths);
+    free_ignore_ids(&project->ignore_paths);
     free_compiler(&project->compiler);
     free_graph(&project->graph);
     free_files(&project->files);
@@ -81,12 +85,51 @@ void add_build(bld_project* project, char* path) {
     ignore_path(project, path);
 }
 
+uintmax_t test_open(bld_path* path) {
+    DIR* d;
+    bld_dirent* file;
+    int exists = 0;
+    uintmax_t id;
+    char* name;
+    bld_path test = copy_path(path);
+    
+    name = remove_last_dir(&test);
+    d = opendir(path_to_string(&test));
+
+    while ((file = readdir(d)) != NULL) {
+        if (strcmp(file->d_name, name) == 0) {
+            exists = 1;
+            id = file->d_ino;
+            break;
+        }
+    }
+
+    if (!exists) {
+        log_fatal("\"%s\" is not a valid path under the root", path_to_string(path));
+    }
+
+    closedir(d);
+    free_path(&test);
+    return id;
+}
+
 void add_path(bld_project* project, char* path) {
+    bld_path test = copy_path(&project->root);
+    append_dir(&test, path);
+    test_open(&test);
+
     push_path(&project->extra_paths, path_from_string(path));
+
+    free_path(&test);
 }
 
 void ignore_path(bld_project* project, char* path) {
-    push_path(&project->ignore_paths, path_from_string(path));
+    bld_path test = copy_path(&project->root);
+    append_dir(&test, path);
+
+    append_ignore_id(&project->ignore_paths, test_open(&test));
+
+    free_path(&test);
 }
 
 void index_recursive(bld_project* project, bld_path* path) {
@@ -291,6 +334,38 @@ int compile_project(bld_project* project, char* name) {
 int test_project(bld_project* project, char* path) {
     log_warn("test_project: not implemented.");
     return -1;
+}
+
+bld_ignore new_ignore_ids() {
+    return (bld_ignore) {
+        .capacity = 0,
+        .size = 0,
+        .ids = NULL,
+    };
+}
+
+void free_ignore_ids(bld_ignore* ignore) {
+    free(ignore->ids);
+}
+
+void append_ignore_id(bld_ignore* ignore, uintmax_t id) {
+    size_t capacity = ignore->capacity;
+    uintmax_t* ids;
+
+    if (ignore->size >= ignore->capacity) {
+        capacity += (capacity / 2) + 2 * (capacity < 2);
+
+        ids = malloc(capacity * sizeof(uintmax_t));
+        if (ids == NULL) {log_fatal("Could not append id to ignore path");}
+
+        memcpy(ids, ignore->ids, ignore->size * sizeof(uintmax_t));
+        free(ignore->ids);
+
+        ignore->capacity = capacity;
+        ignore->ids = ids;
+    }
+
+    ignore->ids[ignore->size++] = id;
 }
 
 void print_project(bld_project* project) {

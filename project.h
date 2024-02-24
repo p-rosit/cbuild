@@ -13,11 +13,17 @@ typedef struct bld_extra {
     bld_path* paths;
 } bld_extra;
 
+typedef struct bld_ignore {
+    size_t capacity;
+    size_t size;
+    uintmax_t* ids;
+} bld_ignore;
+
 typedef struct bld_project {
     bld_path root;
     bld_path build;
     bld_paths extra_paths;
-    bld_paths ignore_paths;
+    bld_ignore ignore_paths;
     bld_file main_file;
     bld_compiler compiler;
     bld_files files;
