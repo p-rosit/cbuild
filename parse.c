@@ -57,7 +57,6 @@ void load_cache(bld_project* project, char* cache_path) {
 
     if (file == NULL) {
         log_debug("No cache file found.");
-        // log_fatal("load_cache: unimplemented path");
     } else {
         fclose(file);
         log_debug("Found cache file, loading.");
