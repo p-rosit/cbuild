@@ -18,15 +18,8 @@ bld_path extract_path(int argc, char** argv) {
     return path;
 }
 
-bld_project new_project(bld_path root, bld_compiler compiler) {
-    FILE* f;
-    char* file_ending;
-    bld_path build_file_path = copy_path(&root);
-    remove_file_ending(&build_file_path);
-    append_string(&build_file_path.str, ".c");
-    
-    remove_last_dir(&root);
-    bld_project project = (bld_project) {
+bld_project make_project(bld_path root, bld_compiler compiler) {
+    return (bld_project) {
         .root = root,
         .build = new_path(),
         .extra_paths = new_paths(),
@@ -37,6 +30,19 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
         .graph = new_graph(NULL),
         .cache = NULL,
     };
+}
+
+bld_project new_project(bld_path root, bld_compiler compiler) {
+    FILE* f;
+    char* file_ending;
+    bld_path build_file_path = copy_path(&root);
+    bld_project project;
+
+    remove_file_ending(&build_file_path);
+    append_string(&build_file_path.str, ".c");
+    
+    remove_last_dir(&root);
+    project = make_project(root, compiler);
 
     f = fopen(path_to_string(&build_file_path), "r");
     if (f == NULL) {
