@@ -4,6 +4,7 @@
 #include "file.h"
 #include "project.h"
 
+int         cached_compilation(bld_project*, bld_file*);
 
 bld_ignore  new_ignore_ids();
 void        append_ignore_id(bld_ignore*, uintmax_t);
@@ -312,6 +313,10 @@ int compile_project(bld_project* project, char* name) {
         if (file->type == BLD_HEADER) {continue;}
 
         file->identifier.hash = hash_file(file, hash);
+        if (cached_compilation(project, file)) {
+            continue;
+        }
+
         temp = compile_file(project, file);
         if (temp) {
             log_warn("Compiled \"%s\" with errors", make_string(&file->name));
@@ -342,6 +347,11 @@ int compile_project(bld_project* project, char* name) {
     }
 
     return result;
+}
+
+int cached_compilation(bld_project* project, bld_file* file) {
+    log_warn("Searching cache for \"%s\", not found...", make_string(&file->name));
+    return 0;
 }
 
 int test_project(bld_project* project, char* path) {
