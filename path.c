@@ -74,15 +74,16 @@ void append_path(bld_path* root, bld_path* path) {
     append_dir(root, make_string(&path->str));
 }
 
-void remove_last_dir(bld_path* path) {
+char* remove_last_dir(bld_path* path) {
     size_t sep_len = sizeof(BLD_PATH_SEP) - 1;
     char* str;
 
+    path_to_string(path);
     for (size_t i = 0; i < path->str.size; i++) {
         str = path->str.chars + path->str.size - i - 1;
         if (strncmp(str, BLD_PATH_SEP, sep_len) == 0) {
             path->str.size -= i + 1;
-            return;
+            return path->str.chars + path->str.size - 1 + sizeof(BLD_PATH_SEP);
         }
     }
 
