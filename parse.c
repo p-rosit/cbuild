@@ -10,9 +10,29 @@ typedef int (*bld_parse_func)(FILE*, void*);
 
 bld_project make_project(bld_path, bld_compiler);
 void parse_cache(bld_project*, bld_path*);
+int parse_project_compiler(FILE*, bld_project*);
+
+int parse_graph(FILE*, bld_project*);
+int parse_node(FILE*, bld_project*);
+int parse_node_file(FILE*, bld_project*);
+int parse_file(FILE*, bld_file*);
+int parse_file_type(FILE*, bld_file*);
+int parse_file_id(FILE*, bld_file*);
+int parse_file_hash(FILE*, bld_file*);
+int parse_file_name(FILE*, bld_file*);
+int parse_file_compiler(FILE*, bld_file*);
+int parse_defined_functions(FILE*, bld_project*);
+int parse_undefined_functions(FILE*, bld_project*);
+int parse_edges(FILE*, bld_project*);
+
 int parse_compiler(FILE*, bld_compiler*);
+int parse_compiler_type(FILE*, bld_compiler*);
+int parse_compiler_executable(FILE*, bld_compiler*);
+int parse_compiler_options(FILE*, bld_compiler*);
+
 int parse_string(FILE*, bld_string*);
 
+int parse_map(FILE*, void*, int, int*, char**, bld_parse_func*);
 int next_character(FILE*);
 
 void ensure_directory_exists(bld_path* directory_path) {
