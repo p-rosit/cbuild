@@ -309,7 +309,7 @@ void add_edge(bld_node* from, bld_node* to) {
         nodes = malloc(capacity * sizeof(bld_node*));
         if (nodes == NULL) {log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&from->file->name), make_string(&to->file->name));}
 
-        memcpy(nodes, edges->nodes, edges->size * sizeof(bld_node));
+        memcpy(nodes, edges->nodes, edges->size * sizeof(bld_node*));
         free(edges->nodes);
 
         edges->nodes = nodes;
