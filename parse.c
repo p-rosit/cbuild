@@ -152,6 +152,31 @@ int parse_node(FILE* file, bld_project* project) {
     return 0;
 }
 
+int parse_project_compiler(FILE* file, bld_project* project) {
+    int parsed = parse_compiler(file, &project->compiler);
+    if (!parsed) {log_warn("Could not parse compiler for project.");}
+    return parsed;
+}
+
+int parse_compiler(FILE* file, bld_compiler* compiler) {
+    int amount_parsed;
+    int size = 3;
+    int parsed[3];
+    char keys[3][10] = {"type", "executable", "options"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_compiler_type,
+        (bld_parse_func) parse_compiler_executable,
+        (bld_parse_func) parse_compiler_options
+    };
+
+    amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
+
+    if (amount_parsed != size) {
+        return -1;
+    }
+    return -1;
+}
+
 int parse_string(FILE* file, bld_string* str) {
     return 0;
 }
