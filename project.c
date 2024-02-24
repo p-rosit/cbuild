@@ -160,19 +160,15 @@ void index_recursive(bld_project* project, bld_path* path) {
         }
 
         if (strncmp(file_ptr->d_name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-            log_info("Making test");
             file = make_test(&sub_path, file_ptr);
         } else if (strcmp(file_ending, ".c") == 0) {
-            log_info("Making impl");
             file = make_impl(&sub_path, file_ptr);
         } else if (strcmp(file_ending, ".h") == 0) {
-            log_info("Making header");
             file = make_header(&sub_path, file_ptr);
         } else {
             free_path(&sub_path);
             continue;
         }
-        log_info("Made file \"%s\"", file_ptr->d_name);
 
         exists = append_file(&project->files, file);
         if (exists) {
@@ -312,7 +308,6 @@ int compile_project(bld_project* project, char* name) {
 
     path = copy_path(&project->root);
     append_path(&path, &(*project->cache).path);
-    log_info("Path: \"%s\"", path_to_string(&path));
 
     free_graph(&project->graph);
     project->graph = new_graph(&project->files);
