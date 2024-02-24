@@ -20,6 +20,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     add_option(&build.compiler, "-std=c99");
     add_option(&build.compiler, "-Wall");
     add_option(&build.compiler, "-Wextra");
+    add_option(&build.compiler, "-Werror");
     add_option(&build.compiler, "-pedantic");
 
     load_cache(&build, ".build_cache");
