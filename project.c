@@ -139,7 +139,7 @@ void index_recursive(bld_project* project, bld_path* path) {
     DIR* dir;
     bld_dirent* file_ptr;
     bld_file file;
-    log_warn("Searching under: \"%s\"", path_to_string(path));
+    log_debug("Searching under: \"%s\"", path_to_string(path));
 
     str_path = path_to_string(path);
     dir = opendir(str_path);

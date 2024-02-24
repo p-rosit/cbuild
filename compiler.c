@@ -38,7 +38,7 @@ bld_compiler copy_compiler(bld_compiler* compiler) {
 
 void add_option(bld_compiler* compiler, char* option) {
     append_option(&compiler->options, option);
-    log_info("Added option: \"%s\"", option);
+    log_debug("Added option: \"%s\"", option);
 }
 
 bld_options new_options() {

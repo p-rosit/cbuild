@@ -9,13 +9,13 @@ void ensure_directory_exists(bld_path* directory_path) {
     mkdir(path_to_string(directory_path), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     switch (errno) {
         case 0: {
-            log_info("Creating cache directory.");
+            log_debug("Creating cache directory.");
         } break;
         case EACCES: {
             log_fatal("No access to create cache directory.");
         } break;
         case EEXIST: {
-            log_info("Found cache directory.");
+            log_debug("Found cache directory.");
         } break;
         case ENAMETOOLONG: {
             log_fatal("Name of cache directory too long.");
@@ -47,11 +47,11 @@ void load_cache(bld_project* project, char* cache_path) {
     *cache = new_cache(&temp);
 
     if (file == NULL) {
-        log_info("No cache file found.");
+        log_debug("No cache file found.");
         // log_fatal("load_cache: unimplemented path");
     } else {
         fclose(file);
-        log_info("Found cache file, loading.");
+        log_debug("Found cache file, loading.");
         parse_cache(cache, &project->root);
     }
 

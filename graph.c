@@ -239,7 +239,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 
     push_node(&graph->nodes, parse_symbols(file, symbol_path));
     node = &graph->nodes.nodes[graph->nodes.size - 1];
-    log_info("Populating: \"%s\", %lu functions, %lu references", path_to_string(&file->path), node->defined_funcs.size, node->used_funcs.size);
+    log_debug("Populating: \"%s\", %lu functions, %lu references", path_to_string(&file->path), node->defined_funcs.size, node->used_funcs.size);
 
     free_string(&cmd);
 }
