@@ -4,8 +4,9 @@
 #include "path.h"
 #include "compiler.h"
 #include "file.h"
-#include "cache.h"
 #include "graph.h"
+
+#define BLD_CACHE_NAME ("cache.json")
 
 typedef struct bld_extra {
     size_t capacity;
@@ -19,7 +20,8 @@ typedef struct bld_ignore {
     uintmax_t* ids;
 } bld_ignore;
 
-typedef struct bld_project {
+typedef struct bld_project bld_project;
+struct bld_project {
     bld_path root;
     bld_path build;
     bld_paths extra_paths;
@@ -28,8 +30,8 @@ typedef struct bld_project {
     bld_compiler compiler;
     bld_files files;
     bld_graph graph;
-    bld_cache* cache;
-} bld_project;
+    bld_project* cache;
+};
 
 bld_project new_project(bld_path, bld_compiler);
 void        free_project(bld_project*);

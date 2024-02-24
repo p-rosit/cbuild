@@ -49,6 +49,7 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
 }
 
 void free_project(bld_project* project) {
+    if (project == NULL) {return;}
     free_path(&project->root);
     free_path(&project->build);
     free_paths(&project->extra_paths);
@@ -56,7 +57,8 @@ void free_project(bld_project* project) {
     free_compiler(&project->compiler);
     free_graph(&project->graph);
     free_files(&project->files);
-    free_cache(project->cache);
+    free_project(project->cache);
+    free(project->cache);
 }
 
 void set_main_file(bld_project* project, char* str) {
@@ -242,7 +244,7 @@ int compile_file(bld_project* project, bld_file* file) {
     append_string(&cmd, " -o ");
 
     path = copy_path(&project->root);
-    append_path(&path, &(*project->cache).path);
+    append_path(&path, &(*project->cache).root);
     serialize_identifier(name, file);
     append_dir(&path, name);
     append_string(&cmd, path_to_string(&path));
@@ -282,7 +284,7 @@ int compile_total(bld_project* project, char* executable_name) {
     bfs = graph_dfs_from(&project->graph, &project->main_file);
     while (next_file(bfs, &file)) {
         path = copy_path(&project->root);
-        append_path(&path, &(*project->cache).path);
+        append_path(&path, &(*project->cache).root);
         serialize_identifier(name, file);
         append_dir(&path, name);
         
@@ -323,7 +325,7 @@ int compile_project(bld_project* project, char* name) {
     }
 
     path = copy_path(&project->root);
-    append_path(&path, &(*project->cache).path);
+    append_path(&path, &(*project->cache).root);
 
     free_graph(&project->graph);
     project->graph = new_graph(&project->files);

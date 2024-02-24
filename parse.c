@@ -4,6 +4,9 @@
 #include "path.h"
 #include "project.h"
 
+bld_project make_project(bld_path, bld_compiler);
+void parse_cache(bld_project*, bld_path*);
+
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
     mkdir(path_to_string(directory_path), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -30,7 +33,7 @@ void ensure_directory_exists(bld_path* directory_path) {
 void load_cache(bld_project* project, char* cache_path) {
     FILE* file;
     bld_path path, temp;
-    bld_cache* cache;
+    bld_project* cache;
 
     path = copy_path(&project->root);
     append_dir(&path, cache_path);
@@ -39,10 +42,10 @@ void load_cache(bld_project* project, char* cache_path) {
     append_dir(&path, BLD_CACHE_NAME);
     file = fopen(path_to_string(&path), "r");
 
-    cache = malloc(sizeof(bld_cache));
+    cache = malloc(sizeof(bld_project));
     if (cache == NULL) {log_fatal("Could not allocate cache.");}
     temp = path_from_string(cache_path);
-    *cache = new_cache(&temp);
+    *cache = make_project(temp, new_compiler(BLD_INVALID_COMPILER, ""));
 
     if (file == NULL) {
         log_debug("No cache file found.");
