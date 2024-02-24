@@ -6,19 +6,23 @@
 
 
 
-bld_path extract_root(int argc, char** argv) {
+bld_path extract_path(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
     bld_path path = path_from_string(argv[0]);
-    remove_last_dir(&path);
-    log_info("Extracted path to root: \"%.*s\"", (int) path.str.size, path.str.chars);
+    log_info("Extracted path to executable: \"%.*s\"", (int) path.str.size, path.str.chars);
     return path;
 }
 
-bld_project new_project(bld_path path, bld_compiler compiler) {
-    bld_path build_file_path = copy_path(&path);
+bld_project new_project(bld_path root, bld_compiler compiler) {
+    FILE* f;
+    char* file_ending;
+    bld_path build_file_path = copy_path(&root);
+    remove_file_ending(&build_file_path);
     append_string(&build_file_path.str, ".c");
+    
+    remove_last_dir(&root);
     bld_project project = (bld_project) {
-        .root = path,
+        .root = root,
         .build = new_path(),
         .extra_paths = new_paths(),
         .ignore_paths = new_paths(),
