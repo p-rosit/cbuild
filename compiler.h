@@ -10,6 +10,7 @@ typedef struct bld_options {
 } bld_options;
 
 typedef enum bld_compiler_type {
+    BLD_INVALID_COMPILER,
     BLD_GCC,
     BLD_CLANG,
 } bld_compiler_type;
