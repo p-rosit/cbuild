@@ -299,14 +299,17 @@ int compile_total(bld_project* project, char* executable_name) {
 
 int compile_project(bld_project* project, char* name) {
     int result = 0, temp;
+    uintmax_t hash;
     bld_path path;
     bld_files files = project->files;
     bld_file* file;
 
+    hash = hash_compiler(&project->compiler, 5031);
     for (size_t i = 0; i < files.size; i++) {
         file = &files.files[i];
         if (file->type == BLD_HEADER) {continue;}
 
+        file->identifier.hash = hash_file(file, hash);
         temp = compile_file(project, file);
         if (temp) {
             log_warn("Compiled \"%s\" with errors", make_string(&file->name));
