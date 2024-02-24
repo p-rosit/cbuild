@@ -34,7 +34,6 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
 
 bld_project new_project(bld_path root, bld_compiler compiler) {
     FILE* f;
-    char* file_ending;
     bld_path build_file_path = copy_path(&root);
     bld_project project;
 
