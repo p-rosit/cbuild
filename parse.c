@@ -59,3 +59,17 @@ void load_cache(bld_project* project, char* cache_path) {
     project->cache = cache;
     free_path(&path);
 }
+
+void parse_cache(bld_project* cache, bld_path* root) {
+    bld_path path = copy_path(root);
+    FILE* f;
+
+    append_path(&path, &cache->root);
+    append_dir(&path, BLD_CACHE_NAME);
+    f = fopen(path_to_string(&path), "r");
+
+    log_warn("parse_cache: not implemented");
+    
+    fclose(f);
+    free_path(&path);
+}
