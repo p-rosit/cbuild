@@ -268,7 +268,6 @@ void connect_node(bld_graph* graph, bld_node* node) {
 
 void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
-    log_warn("Generating graph");
 
     symbol_path = copy_path(cache_path);
     append_dir(&symbol_path, "symbols");
