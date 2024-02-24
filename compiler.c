@@ -36,6 +36,14 @@ bld_compiler copy_compiler(bld_compiler* compiler) {
     };
 }
 
+uintmax_t hash_compiler(bld_compiler* compiler, uintmax_t seed) {
+    seed = hash_string(compiler->executable, seed);
+    for (size_t i = 0; i < compiler->options.size; i++) {
+        seed = hash_string(compiler->options.options[i], seed);
+    }
+    return seed;
+}
+
 void add_option(bld_compiler* compiler, char* option) {
     append_option(&compiler->options, option);
     log_debug("Added option: \"%s\"", option);
