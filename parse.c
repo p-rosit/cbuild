@@ -37,9 +37,7 @@ void load_cache(bld_project* project, char* cache_path) {
     ensure_directory_exists(&path);
 
     append_dir(&path, BLD_CACHE_NAME);
-    log_warn("Opening file: \"%s\"", path_to_string(&path));
     file = fopen(path_to_string(&path), "r");
-    log_warn("Opened file");
 
     cache = malloc(sizeof(bld_cache));
     if (cache == NULL) {log_fatal("Could not allocate cache.");}
