@@ -1,5 +1,7 @@
 #include <errno.h>
+#include <ctype.h>
 #include <sys/stat.h>
+#include <string.h>
 #include "build.h"
 #include "path.h"
 #include "project.h"
@@ -8,6 +10,10 @@ typedef int (*bld_parse_func)(FILE*, void*);
 
 bld_project make_project(bld_path, bld_compiler);
 void parse_cache(bld_project*, bld_path*);
+int parse_compiler(FILE*, bld_compiler*);
+int parse_string(FILE*, bld_string*);
+
+int next_character(FILE*);
 
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
