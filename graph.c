@@ -36,12 +36,10 @@ void node_push(bld_stack* stack, bld_node* node) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
 
         nodes = malloc(capacity * sizeof(bld_node*));
-        if (nodes == NULL) {
-            log_fatal("Could not push node");
-        }
-        memcpy(nodes, stack->nodes, stack->size);
-
+        if (nodes == NULL) {log_fatal("Could not push node");}
+        memcpy(nodes, stack->nodes, stack->size * sizeof(bld_node*));
         free(stack->nodes);
+
         stack->nodes = nodes;
         stack->capacity = capacity;
     }
