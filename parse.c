@@ -149,7 +149,8 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
             goto parse_failed;
         }
 
-        parse_funcs[index](file, obj);
+        result = parse_funcs[index](file, obj);
+        if (result) {goto parse_failed;}
 
         free_string(&str);
         str = new_string();
