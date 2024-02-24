@@ -88,6 +88,14 @@ void load_cache(bld_project* project, char* cache_path) {
 }
 
 void parse_cache(bld_project* cache, bld_path* root) {
+    int amount_parsed;
+    int size = 2;
+    int parsed[2];
+    char keys[2][15] = {"compiler", "project_graph"};
+    bld_parse_func funcs[2] = {
+        (bld_parse_func) parse_project_compiler,
+        (bld_parse_func) parse_graph
+    };
     bld_path path = copy_path(root);
     FILE* f;
 
@@ -95,7 +103,19 @@ void parse_cache(bld_project* cache, bld_path* root) {
     append_dir(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
-    log_warn("parse_cache: unimplemented");
+    amount_parsed = parse_map(f, cache, size, parsed, (char**) keys, funcs);
+
+    if (amount_parsed != size) {
+        log_warn("Parse failed, expected all keys to be present in cache: [");
+        for (int i = 0; i < size; i++) {
+            if (i > 0) {printf(",\n");}
+            printf("\"%s\"", keys[i]);
+        }
+        printf("]\n");
+        fclose(f);
+        free_path(&path);
+        return;
+    }
 
     fclose(f);
     free_path(&path);
