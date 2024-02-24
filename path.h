@@ -3,6 +3,8 @@
 
 #include "dstr.h"
 
+#define BLD_PATH_SEP "/"
+
 typedef struct bld_path {
     bld_string str;
 } bld_path;

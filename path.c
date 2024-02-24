@@ -2,8 +2,6 @@
 #include "build.h"
 #include "path.h"
 
-#define BLD_PATH_SEP ("/")
-
 bld_paths new_paths() {
     return (bld_paths) {
         .capacity = 0,
