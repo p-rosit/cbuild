@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv) {
     bld_project project = new_project(
-        extract_root(argc, argv),
+        extract_path(argc, argv),
         new_compiler(BLD_GCC, "/usr/bin/gcc")
     );
 
