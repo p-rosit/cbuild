@@ -52,6 +52,14 @@ void free_file(bld_file* file) {
     free_compiler(file->compiler);
 }
 
+uintmax_t hash_file(bld_file* file, uintmax_t seed) {
+    seed += file->identifier.id;
+    if (file->compiler != NULL) {
+        seed = hash_compiler(file->compiler, seed);
+    }
+    return seed;
+}
+
 bld_files new_files() {
     return (bld_files) {
         .capacity = 0,

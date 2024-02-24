@@ -39,6 +39,7 @@ bld_file    make_header(bld_path*, bld_dirent*);
 bld_file    make_impl(bld_path*, bld_dirent*);
 bld_file    make_test(bld_path*, bld_dirent*);
 void        free_file(bld_file*);
+uintmax_t   hash_file(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
 void        serialize_identifier(char[256], bld_file*);
 
