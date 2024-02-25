@@ -54,6 +54,16 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
     return project;
 }
 
+void free_cache(bld_project* cache) {
+    if (cache == NULL) {return;}
+    free_path(&cache->root);
+    free_path(&cache->build);
+    free_compiler(&cache->compiler);
+    free_graph(&cache->graph);
+    free_files(&cache->files);
+    free(cache);
+}
+
 void free_project(bld_project* project) {
     if (project == NULL) {return;}
     free_path(&project->root);
@@ -63,8 +73,31 @@ void free_project(bld_project* project) {
     free_compiler(&project->compiler);
     free_graph(&project->graph);
     free_files(&project->files);
-    free_project(project->cache);
-    free(project->cache);
+    free_cache(project->cache);
+}
+
+void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
+    int match_found = 0;
+    bld_path path = path_from_string(str);
+    bld_files files = project->files;
+    bld_compiler* c_ptr = malloc(sizeof(bld_compiler));
+    if (c_ptr == NULL) {log_fatal("Could not add compiler to \"%s\"", str);}
+    *c_ptr = compiler;
+
+    for (size_t i = 0; i < files.size; i++) {
+        if (path_ends_with(&files.files[i].path, &path)) {
+            if (match_found) {
+                log_fatal("Name of main file \"%s\" is ambiguous, found several matches.", str);
+            }
+            match_found = 1;
+            files.files[i].compiler = c_ptr;
+        }
+    }
+
+    free_path(&path);
+    if (!match_found) {
+        log_fatal("No file matching \"%s\" could be found.", str);
+    }
 }
 
 void set_main_file(bld_project* project, char* str) {
