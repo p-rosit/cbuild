@@ -25,6 +25,7 @@ typedef struct bld_stack {
 } bld_stack;
 
 struct bld_search_info {
+    bld_graph* graph;
     bld_stack stack;
     bld_stack visited; /* TODO: hash set for faster lookup */
 };
@@ -60,6 +61,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
         log_fatal("Could not allocate info to start search.");
     }
 
+    info->graph = graph;
     info->stack = (bld_stack) {
         .capacity = 0,
         .size = 0,
