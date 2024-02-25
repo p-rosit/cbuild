@@ -402,9 +402,9 @@ int parse_file_compiler(FILE* file, bld_file* f) {
 }
 
 int parse_project_compiler(FILE* file, bld_project* project) {
-    int parsed = parse_compiler(file, &project->compiler);
-    if (!parsed) {log_warn("Could not parse compiler for project.");}
-    return parsed;
+    int result = parse_compiler(file, &project->compiler);
+    if (result) {log_warn("Could not parse compiler for project.");}
+    return result;
 }
 
 int parse_compiler(FILE* file, bld_compiler* compiler) {
