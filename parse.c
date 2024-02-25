@@ -203,7 +203,7 @@ int parse_string(FILE* file, bld_string* str) {
 
 int next_character(FILE* file) {
     int c = getc(file);
-    while (c != EOF && isspace(c)) {getc(file);}
+    while (c != EOF && isspace(c)) {c = getc(file);}
     return c;
 }
 
