@@ -423,7 +423,77 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     if (amount_parsed != size) {
         return -1;
     }
-    return -1;
+    return 0;
+}
+
+int parse_compiler_type(FILE* file, bld_compiler* compiler) {
+    bld_string str = new_string();
+    char* temp;
+    int result = parse_string(file, &str);
+    if (result) {
+        free_string(&str);
+        log_warn("Could not parse compiler type");
+        return -1;
+    }
+    
+    temp = make_string(&str);
+    if (strcmp(temp, "gcc") == 0) {
+        compiler->type = BLD_GCC;
+    } else if (strcmp(temp, "clang") == 0) {
+        compiler->type = BLD_CLANG;
+    } else {
+        log_warn("Not a valid compiler type: \"%s\"", temp);
+        result = -1;
+    }
+
+    free_string(&str);
+    return result;
+}
+
+int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
+    bld_string str = new_string();
+    char* temp;
+    int result = parse_string(file, &str);
+    if (result) {
+        free_string(&str);
+        log_warn("Could not parse compiler executable");
+        return -1;
+    }
+    
+    temp = make_string(&str);
+    compiler->executable = temp;
+    return result;
+}
+
+int parse_compiler_options(FILE* file, bld_compiler* compiler) {
+    int values;
+    bld_options options = new_options();
+
+    values = parse_array(file, &options, (bld_parse_func) parse_compiler_option);
+    if (values < 0) {
+        log_warn("Could not parse compiler options");
+        return -1;
+    }
+    compiler->options = options;
+    return 0;
+}
+
+void append_option(bld_options*, char*);
+int parse_compiler_option(FILE* file, bld_options* options) {
+    bld_string str = new_string();
+    char* temp;
+    int result = parse_string(file, &str);
+    if (result) {
+        free_string(&str);
+        log_warn("Could not parse compiler option");
+        return -1;
+    }
+    
+    temp = make_string(&str);
+    append_option(options, temp);
+
+    free(temp);
+    return result;
 }
 
 int parse_string(FILE* file, bld_string* str) {
