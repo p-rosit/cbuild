@@ -46,6 +46,8 @@ void        load_cache(bld_project*, char*);
 void        save_cache(bld_project*);
 
 void        index_project(bld_project*);
+void        generate_dependency_graph(bld_project*);
+void        set_compiler(bld_project*, char*, bld_compiler);
 int         compile_project(bld_project*, char*);
 int         test_project(bld_project*, char*);
 
