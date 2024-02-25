@@ -162,6 +162,7 @@ int parse_graph(FILE* file, bld_project* project) {
     return 0;
 }
 
+void push_node(bld_nodes*, bld_node);
 int parse_node(FILE* file, bld_project* project) {
     int amount_parsed;
     int size = 4;
@@ -173,19 +174,185 @@ int parse_node(FILE* file, bld_project* project) {
         (bld_parse_func) parse_undefined_functions,
         (bld_parse_func) parse_edges
     };
+    bld_nodes* nodes = &project->graph.nodes;
+    bld_files* files = &project->files;
+    bld_node node;
 
-    amount_parsed = parse_map(file, project, size, parsed, (char**) keys, funcs);
+    amount_parsed = parse_map(file, &node, size, parsed, keys, funcs);
+    append_file(files, *node.file);
+    push_node(nodes, node);
+    free(node.file);
 
     if (amount_parsed != size) {
         log_warn("Could not parse node, expected all keys to be present: [");
         for (int i = 0; i < size; i++) {
             if (i > 0) {printf(",\n");}
-            printf("\"%s\"", keys[i]);
+            printf("  \"%s\"", keys[i]);
         }
-        printf("]\n");
+        printf("\n]\n");
         return -1;
     }
 
+    return 0;
+}
+
+bld_funcs new_funcs();
+int parse_functions(FILE* file, bld_funcs* funcs) {
+    int values;
+    bld_funcs f = new_funcs();
+
+    values = parse_array(file, &f, (bld_parse_func) parse_function);
+    if (values < 0) {
+        log_warn("Could not parse functions");
+        return -1;
+    }
+    *funcs = f;
+
+    return 0;
+}
+
+void add_func(bld_funcs*, bld_string*);
+int parse_function(FILE* file, bld_funcs* funcs) {
+    bld_string str = new_string();
+    int result = parse_string(file, &str);
+    if (result) {
+        free_string(&str);
+        log_warn("Could not parse function");
+        return -1;
+    }
+    
+    add_func(funcs, &str);
+    return result;
+}
+
+int parse_defined_functions(FILE* file, bld_node* node) {
+    bld_funcs funcs;
+    int result = parse_functions(file, &funcs);
+    if (result) {
+        log_warn("Could not parse defined functions.");
+        return -1;
+    }
+    node->defined_funcs = funcs;
+    return 0;
+}
+
+int parse_undefined_functions(FILE* file, bld_node* node) {
+    bld_funcs funcs;
+    int result = parse_functions(file, &funcs);
+    if (result) {
+        log_warn("Could not parse defined functions.");
+        return -1;
+    }
+    node->used_funcs = funcs;
+    return 0;
+}
+
+bld_edges new_edges();
+int parse_edges(FILE* file, bld_node* node) {
+    int values;
+    bld_edges edges = new_edges();
+
+    values = parse_array(file, &edges, (bld_parse_func) parse_edge);
+    if (values < 0) {
+        log_warn("Could not parse edges");
+        return -1;
+    }
+    node->edges = edges;
+    return 0;
+}
+
+int append_edge(bld_edges*, uintmax_t);
+int parse_edge(FILE* file, bld_edges* edges) {
+    uintmax_t num;
+    int result = parse_uintmax(file, &num);
+    if (result) {
+        log_warn("Could not parse edge");
+        return -1;
+    }
+    append_edge(edges, num);
+    return 0;
+}
+
+int parse_node_file(FILE* file, bld_node* node) {
+    bld_file* f = malloc(sizeof(bld_file));
+    int result = parse_file(file, f);
+    if (result) {
+        free(f);
+        log_fatal("Free correctly");
+        log_warn("Could not parse file of node.");
+        return -1;
+    }
+    node->file = f;
+    return 0;
+}
+
+int parse_file(FILE* file, bld_file* f) {
+    int amount_parsed;
+    int size = 5;
+    int parsed[5];
+    char *keys[5] = {"type", "id", "hash", "name", "compiler"};
+    bld_parse_func funcs[5] = {
+        (bld_parse_func) parse_file_type,
+        (bld_parse_func) parse_file_id,
+        (bld_parse_func) parse_file_hash,
+        (bld_parse_func) parse_file_name,
+        (bld_parse_func) parse_file_compiler
+    };
+
+    f->compiler = NULL;
+    amount_parsed = parse_map(file, f, size, parsed, keys, funcs);
+
+    if (amount_parsed < size && parsed[4]) {
+        return -1;
+    }
+    f->path = new_path();
+    return 0;
+}
+
+int parse_file_type(FILE* file, bld_file* f) {
+    bld_string str = new_string();
+    char* temp;
+    int result = parse_string(file, &str);
+    if (result) {
+        free_string(&str);
+        log_warn("Could not parse compiler type");
+        return -1;
+    }
+    
+    temp = make_string(&str);
+    if (strcmp(temp, "implementation") == 0) {
+        f->type = BLD_IMPL;
+    } else if (strcmp(temp, "header") == 0) {
+        f->type = BLD_HEADER;
+    } else if (strcmp(temp, "test") == 0) {
+        f->type = BLD_TEST;
+    } else {
+        log_warn("Not a valid file type: \"%s\"", temp);
+        result = -1;
+    }
+
+    free_string(&str);
+    return result;
+}
+
+int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
+    uintmax_t num = 0;
+    int c;
+
+    c = next_character(file);
+    if (!isdigit(c)) {
+        log_warn("Expected number, got: \'%c\'", c);
+        return -1;
+    }
+
+    while (c != EOF && isdigit(c)) {
+        /* Warning: number is assumed to be valid, no overflow etc. */
+        num = 10 * num + (c - '0');
+        c = getc(file);
+    }
+    ungetc(c, file);
+
+    *num_ptr = num;
     return 0;
 }
 
