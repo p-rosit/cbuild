@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
         /* Mandatory */
         result = compile_project(&project, "a.out");
         if (result > 0) {
-            log_warn("Could not compiler project");
+            log_warn("Could not compile project");
         } else if (result < 0) {
             log_info("Entire project existed in cache");
         }
