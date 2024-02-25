@@ -8,6 +8,8 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
 
     {
         log_warn("Rebuilding not implemented.");
+        (void)(argc); /* Suppress unused parameter */
+        (void)(argv);
         return;
     }
 

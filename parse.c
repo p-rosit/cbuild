@@ -133,7 +133,6 @@ int parse_graph(FILE* file, bld_project* project) {
     int amount_parsed;
     bld_files* files = &project->files;
     bld_nodes* nodes = &project->graph.nodes;
-    bld_node* node;
 
     project->files = new_files();
     project->graph = new_graph(&project->files); 

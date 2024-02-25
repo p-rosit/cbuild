@@ -15,6 +15,7 @@ bld_path extract_path(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
     bld_path path = path_from_string(argv[0]);
     log_info("Extracted path to executable: \"%.*s\"", (int) path.str.size, path.str.chars);
+    (void)(argc); /* Unused parameter, might be used later? */
     return path;
 }
 
@@ -394,6 +395,8 @@ int cached_compilation(bld_project* project, bld_file* file) {
 
 int test_project(bld_project* project, char* path) {
     log_warn("test_project: not implemented.");
+    (void)(project); /* Suppress unused parameter warning */
+    (void)(path);
     return -1;
 }
 
