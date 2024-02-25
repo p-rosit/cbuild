@@ -374,6 +374,7 @@ int compile_project(bld_project* project, char* name) {
     free_graph(&project->graph);
     project->graph = new_graph(&project->files);
 
+    /* TODO: move to separate function */
     generate_graph(&project->graph, &path);
     free_path(&path);
 
