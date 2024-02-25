@@ -18,7 +18,7 @@ typedef struct bld_edges {
     /* TODO: hash set for faster lookup */
     size_t capacity;
     size_t size;
-    bld_node** nodes;
+    uintmax_t* indices;
 } bld_edges;
 
 struct bld_node {
