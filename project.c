@@ -108,7 +108,7 @@ void set_main_file(bld_project* project, char* str) {
     for (size_t i = 0; i < files.size; i++) {
         if (path_ends_with(&files.files[i].path, &path)) {
             if (match_found) {
-                log_fatal("Name of main file \"%s\" is ambigiuous, found several matches.", str);
+                log_fatal("Name of main file \"%s\" is ambiguous, found several matches.", str);
             }
             match_found = 1;
             project->main_file = files.files[i];
