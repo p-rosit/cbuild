@@ -25,7 +25,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .build = new_path(),
         .extra_paths = new_paths(),
         .ignore_paths = new_ignore_ids(),
-        .main_file = (bld_file) {.type = BLD_INVALID},
+        .main_file = (bld_file) {.type = BLD_INVALID}, /* TODO: Needs to be something that can be freed by free_file... */
         .compiler = compiler,
         .files = new_files(),
         .graph = new_graph(NULL),
