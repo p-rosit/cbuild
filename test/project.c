@@ -19,13 +19,19 @@ int main(int argc, char** argv) {
     {
         add_option(&cc, "-LL");
 
+        /* Optional */
         load_cache(&project, ".build_cache");
 
-        index_project(&project);
-        set_main_file(&project, "main.c");
-        
-        project.files.files[1].compiler = &cc;
+        /* Mandatory */
+        index_project(&project); 
+        /* Optional, mandatory if main file set */
+        // generate_dependency_graph(&project);
+        /* Optional */
+        set_compiler(&project, "file.c", cc);
 
+        /* Optional */
+        set_main_file(&project, "main.c");
+        /* Mandatory */
         compile_project(&project, "a.out");
 
         save_cache(&project);
