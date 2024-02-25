@@ -418,9 +418,10 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
         (bld_parse_func) parse_compiler_options
     };
 
+    compiler->options = new_options();
     amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
 
-    if (amount_parsed != size) {
+    if (amount_parsed < size && parsed[2]) {
         return -1;
     }
     return 0;
