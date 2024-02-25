@@ -11,9 +11,10 @@ int main(int argc, char** argv) {
 
     add_option(&project.compiler, "-lm");
     add_option(&project.compiler, "-fsanitize=address");
-    // add_option(project.compiler, "-Wall");
-    // add_option(project.compiler, "-Wextra");
-    // add_option(project.compiler, "-pedantic");
+    add_option(&project.compiler, "-std=c99");
+    add_option(&project.compiler, "-Wall");
+    add_option(&project.compiler, "-Wextra");
+    add_option(&project.compiler, "-pedantic");
 
     bld_compiler cc = new_compiler(BLD_CLANG, "/usr/bin/clang");
     add_option(&cc, "-Weverything");
