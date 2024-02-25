@@ -390,8 +390,26 @@ int compile_project(bld_project* project, char* name) {
 }
 
 int cached_compilation(bld_project* project, bld_file* file) {
-    log_warn("Searching cache for \"%s\", not found...", make_string(&file->name));
-    return 0;
+    int exists = 0, new_options = 0;
+    bld_files* files = &project->cache->files;
+
+    for (size_t i = 0; i < files->size; i++) {
+        if (file->identifier.id == files->files[i].identifier.id) {
+            exists = 1;
+            new_options = (file->identifier.hash != files->files[i].identifier.hash);
+            break;
+        }
+    }
+
+    if (exists && !new_options) {
+        log_debug("Found \"%s\" in cache", make_string(&file->name));
+    } else if (exists && new_options) {
+        log_debug("Invalidated cache of \"%s\"", make_string(&file->name));
+    } else {
+        log_debug("Did not find \"%s\" in cache", make_string(&file->name));
+    }
+
+    return exists && !new_options;
 }
 
 int test_project(bld_project* project, char* path) {
