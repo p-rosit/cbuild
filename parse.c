@@ -9,7 +9,7 @@
 typedef int (*bld_parse_func)(FILE*, void*);
 
 bld_project make_project(bld_path, bld_compiler);
-void parse_cache(bld_project*, bld_path*);
+int parse_cache(bld_project*, bld_path*);
 int parse_project_compiler(FILE*, bld_project*);
 
 int parse_graph(FILE*, bld_project*);
@@ -83,17 +83,25 @@ void load_cache(bld_project* project, char* cache_path) {
     if (file == NULL) {
         log_debug("No cache file found.");
     } else {
+        int result;
+
         fclose(file);
-        log_debug("Found cache file, loading.");
+        log_debug("Found cache file, attempting to parse.");
         free_compiler(&cache->compiler);
-        parse_cache(cache, &project->root);
+        result = parse_cache(cache, &project->root);
+
+        if (result) {
+            log_warn("Could not parse cache, ignoring.");
+        } else {
+            log_info("Loaded cache.");
+        }
     }
 
     project->cache = cache;
     free_path(&path);
 }
 
-void parse_cache(bld_project* cache, bld_path* root) {
+int parse_cache(bld_project* cache, bld_path* root) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
@@ -112,19 +120,14 @@ void parse_cache(bld_project* cache, bld_path* root) {
     amount_parsed = parse_map(f, cache, size, parsed, keys, funcs);
 
     if (amount_parsed != size) {
-        log_warn("Parse failed, expected all keys to be present in cache: [");
-        for (int i = 0; i < size; i++) {
-            if (i > 0) {printf(",\n");}
-            printf("  \"%s\"", keys[i]);
-        }
-        printf("\n]\n");
         fclose(f);
         free_path(&path);
-        return;
+        return -1;
     }
 
     fclose(f);
     free_path(&path);
+    return 0;
 }
 
 bld_nodes new_nodes();
