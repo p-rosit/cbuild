@@ -114,9 +114,9 @@ void parse_cache(bld_project* cache, bld_path* root) {
         log_warn("Parse failed, expected all keys to be present in cache: [");
         for (int i = 0; i < size; i++) {
             if (i > 0) {printf(",\n");}
-            printf("\"%s\"", keys[i]);
+            printf("  \"%s\"", keys[i]);
         }
-        printf("]\n");
+        printf("\n]\n");
         fclose(f);
         free_path(&path);
         return;
