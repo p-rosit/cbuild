@@ -260,6 +260,9 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
     bld_string str = new_string();
     char c, *temp;
 
+    memset(parsed, 0, entries * sizeof(int));
+
+    parse_complete = 0;
     c = next_character(file);
     if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
     if (c != '{') {log_warn("Unexpected starting character: \'%c\'", c); goto parse_failed;}
