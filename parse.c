@@ -192,6 +192,53 @@ int next_character(FILE* file) {
     return c;
 }
 
+int parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
+    int value_num = 0;
+    int result, parse_complete;
+    int c;
+
+    parse_complete = 0;
+    c = next_character(file);
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
+    if (c != '[') {log_warn("Unexpected starting character: \'%c\'", c); goto parse_failed;}
+
+    c = next_character(file);
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
+    if (c == ']') {
+        parse_complete = 1;
+    } else {
+        ungetc(c, file);
+    }
+
+    while (!parse_complete) {
+        value_num += 1;
+        result = parse_func(file, obj);
+        if (result) {goto parse_failed;}
+        
+        c = next_character(file);
+        switch (c) {
+            case (']'): {
+                parse_complete = 1;
+            } break;
+            case (','): {
+                continue;
+            } break;
+            case (EOF): {
+                log_warn("Unexpected EOF");
+                goto parse_failed;
+            } break;
+            default: {
+                log_warn("Unexpected character, got \'%c\'", c);
+                goto parse_failed;
+            } break;
+        }
+    }
+
+    return value_num;
+    parse_failed:
+    return -1;
+}
+
 int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
     int exists, index, key_num = 0;
     int result, parse_complete;
