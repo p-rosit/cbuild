@@ -348,7 +348,7 @@ int compile_total(bld_project* project, char* executable_name) {
 }
 
 int compile_project(bld_project* project, char* name) {
-    int result = 0, temp;
+    int result = 0, any_compiled = 0, temp;
     uintmax_t hash;
     bld_path path;
     bld_files files = project->files;
@@ -364,6 +364,7 @@ int compile_project(bld_project* project, char* name) {
             continue;
         }
 
+        any_compiled = 1;
         temp = compile_file(project, file);
         if (temp) {
             log_warn("Compiled \"%s\" with errors", make_string(&file->name));
@@ -386,6 +387,10 @@ int compile_project(bld_project* project, char* name) {
     generate_graph(&project->graph, &path);
     free_path(&path);
 
+    if (!any_compiled) {
+        log_debug("Entire project existed in cache, generating executable");
+    }
+
     temp = compile_total(project, name);
     if (temp) {
         log_warn("Could not compile final executable");
@@ -394,7 +399,11 @@ int compile_project(bld_project* project, char* name) {
         log_info("Compiled executable: \"%s\"", name);
     }
 
-    return result;
+    if (!any_compiled && !result) {
+        return -1;
+    } else {
+        return result;
+    }
 }
 
 int cached_compilation(bld_project* project, bld_file* file) {
