@@ -1,6 +1,7 @@
 #include "../cbuild.h"
 
 int main(int argc, char** argv) {
+    int result = 0;
     bld_project project = new_project(
         extract_path(argc, argv),
         new_compiler(BLD_GCC, "/usr/bin/gcc")
@@ -33,7 +34,12 @@ int main(int argc, char** argv) {
         /* Optional */
         set_main_file(&project, "main.c");
         /* Mandatory */
-        compile_project(&project, "a.out");
+        result = compile_project(&project, "a.out");
+        if (result > 0) {
+            log_warn("Could not compiler project");
+        } else if (result < 0) {
+            log_info("Entire project existed in cache");
+        }
 
         save_cache(&project);
     }
