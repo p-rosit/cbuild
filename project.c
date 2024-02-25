@@ -180,6 +180,7 @@ void index_recursive(bld_project* project, bld_path* path) {
     bld_path sub_path;
     DIR* dir;
     bld_dirent* file_ptr;
+    bld_stat file_stat;
     bld_file file;
     log_debug("Searching under: \"%s\"", path_to_string(path));
 
@@ -212,12 +213,16 @@ void index_recursive(bld_project* project, bld_path* path) {
             goto next_file;
         }
 
+        if (stat(path_to_string(&sub_path), &file_stat) < 0) {
+            log_fatal("Could not extract information about \"%s\"", path_to_string(&sub_path));
+        }
+
         if (strncmp(file_ptr->d_name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-            file = make_test(&sub_path, file_ptr);
+            file = make_test(&sub_path, file_ptr, &file_stat);
         } else if (strcmp(file_ending, ".c") == 0) {
-            file = make_impl(&sub_path, file_ptr);
+            file = make_impl(&sub_path, file_ptr, &file_stat);
         } else if (strcmp(file_ending, ".h") == 0) {
-            file = make_header(&sub_path, file_ptr);
+            file = make_header(&sub_path, file_ptr, &file_stat);
         } else {
             free_path(&sub_path);
             goto next_file;
@@ -334,6 +339,9 @@ int compile_total(bld_project* project, char* executable_name) {
     }
 
     result = system(make_string(&cmd));
+    if (result < 0) {
+        log_fatal("Expected return value of compiler to be non-negative.");
+    }
 
     free_string(&cmd);
     return result;
