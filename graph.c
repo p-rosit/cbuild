@@ -275,6 +275,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
 
 void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
+    /* TODO: utilize cache if present */
 
     symbol_path = copy_path(cache_path);
     append_dir(&symbol_path, "symbols");
