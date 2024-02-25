@@ -285,7 +285,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
                 if (i > 0) {printf(",\n");}
                 printf("  \"%s\"", keys[i]);
             }
-            printf("]");
+            printf("\n]\n");
             goto parse_failed;
         }
 
@@ -304,7 +304,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
                 if (i > 0) {printf(",\n");}
                 printf("  \"%s\"", keys[i]);
             }
-            printf("]");
+            printf("\n]\n");
             goto parse_failed;
         }
         if (parsed[index]) {
