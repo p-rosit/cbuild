@@ -50,6 +50,7 @@ void free_file(bld_file* file) {
     free_path(&file->path);
     free_string(&file->name);
     free_compiler(file->compiler);
+    free(file->compiler);
 }
 
 uintmax_t hash_file(bld_file* file, uintmax_t seed) {
