@@ -126,8 +126,40 @@ void parse_cache(bld_project* cache, bld_path* root) {
     free_path(&path);
 }
 
+bld_nodes new_nodes();
 int parse_graph(FILE* file, bld_project* project) {
-    log_fatal("parse_graph: unimplemented");
+    uintmax_t forward_id, file_id;
+    int amount_parsed;
+    bld_files* files = &project->files;
+    bld_nodes* nodes = &project->graph.nodes;
+    bld_node* node;
+
+    project->files = new_files();
+    project->graph = new_graph(&project->files); 
+    amount_parsed = parse_array(file, project, (bld_parse_func) parse_node);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse graph");
+        return -1;
+    }
+
+    for (size_t i = 0; i < files->size; i++) {
+        nodes->nodes[i].file = &files->files[i];
+    }
+
+    for (size_t i = 0; i < nodes->size; i++) {
+        for (size_t j = 0; j < nodes->nodes[i].edges.size; j++) {
+            forward_id = nodes->nodes[i].edges.indices[j];
+            for (size_t k = 0; k < nodes->size; k++) {
+                file_id = nodes->nodes[k].file->identifier.id;
+                if (forward_id == file_id) {
+                    nodes->nodes[i].edges.indices[j] = k;
+                    break;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 int parse_node(FILE* file, bld_project* project) {
