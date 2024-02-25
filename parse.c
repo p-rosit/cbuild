@@ -338,6 +338,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
             } break;
             default: {
                 log_warn("Unexpected character, got \'%c\'", c);
+                goto parse_failed;
             } break;
         }
     }
