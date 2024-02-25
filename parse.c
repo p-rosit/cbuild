@@ -356,6 +356,51 @@ int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
     return 0;
 }
 
+int parse_file_id(FILE* file, bld_file* f) {
+    uintmax_t num;
+    int result = parse_uintmax(file, &num);
+    if (result) {
+        log_warn("Could not parse file id");
+        return -1;
+    }
+    f->identifier.id = num;
+    return 0;
+}
+
+int parse_file_hash(FILE* file, bld_file* f) {
+    uintmax_t num;
+    int result = parse_uintmax(file, &num);
+    if (result) {
+        log_warn("Could not parse file id");
+        return -1;
+    }
+    f->identifier.hash = num;
+    return 0;
+}
+
+int parse_file_name(FILE* file, bld_file* f) {
+    bld_string str = new_string();
+    int result = parse_string(file, &str);
+    if (result) {
+        free_string(&str);
+        log_warn("Could not parse file name");
+        return -1;
+    }
+    
+    f->name = str;
+    return result;
+}
+
+int parse_file_compiler(FILE* file, bld_file* f) {
+    int result;
+    f->compiler = malloc(sizeof(bld_compiler));
+    if (f->compiler == NULL) {log_fatal("Could not allocate compiler for file");}
+
+    result = parse_compiler(file, f->compiler);
+    if (result) {log_warn("Could not parse compiler for file.");}
+    return result;
+}
+
 int parse_project_compiler(FILE* file, bld_project* project) {
     int parsed = parse_compiler(file, &project->compiler);
     if (!parsed) {log_warn("Could not parse compiler for project.");}
