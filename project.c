@@ -13,9 +13,13 @@ void        free_ignore_ids(bld_ignore*);
 
 bld_path extract_path(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
-    bld_path path = path_from_string(argv[0]);
+    bld_path path;
+    if (argc < 1) {
+        log_fatal("Not enough input arguments???");
+    }
+
+    path = path_from_string(argv[0]);
     log_info("Extracted path to executable: \"%.*s\"", (int) path.str.size, path.str.chars);
-    (void)(argc); /* Unused parameter, might be used later? */
     return path;
 }
 
