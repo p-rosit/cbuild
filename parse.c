@@ -108,7 +108,7 @@ void parse_cache(bld_project* cache, bld_path* root) {
     append_dir(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
-    amount_parsed = parse_map(f, cache, size, parsed, (char**) keys, funcs);
+    amount_parsed = parse_map(f, cache, size, parsed, keys, funcs);
 
     if (amount_parsed != size) {
         log_warn("Parse failed, expected all keys to be present in cache: [");
