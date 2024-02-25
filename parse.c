@@ -96,7 +96,7 @@ void parse_cache(bld_project* cache, bld_path* root) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
-    char keys[2][15] = {"compiler", "project_graph"};
+    char *keys[2] = {"compiler", "project_graph"};
     bld_parse_func funcs[2] = {
         (bld_parse_func) parse_project_compiler,
         (bld_parse_func) parse_graph
@@ -134,7 +134,7 @@ int parse_node(FILE* file, bld_project* project) {
     int amount_parsed;
     int size = 4;
     int parsed[4];
-    char keys[4][15] = {"file", "defined", "undefined", "edges"};
+    char *keys[4] = {"file", "defined", "undefined", "edges"};
     bld_parse_func funcs[4] = {
         (bld_parse_func) parse_node_file,
         (bld_parse_func) parse_defined_functions,
@@ -167,7 +167,7 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
     int size = 3;
     int parsed[3];
-    char keys[3][10] = {"type", "executable", "options"};
+    char *keys[3] = {"type", "executable", "options"};
     bld_parse_func funcs[3] = {
         (bld_parse_func) parse_compiler_type,
         (bld_parse_func) parse_compiler_executable,
