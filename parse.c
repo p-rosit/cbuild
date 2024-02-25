@@ -267,6 +267,14 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
     if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
     if (c != '{') {log_warn("Unexpected starting character: \'%c\'", c); goto parse_failed;}
 
+    c = next_character(file);
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
+    if (c == '}') {
+        parse_complete = 1;
+    } else {
+        ungetc(c, file);
+    }
+
     while (!parse_complete) {
         key_num += 1;
         str = new_string();
