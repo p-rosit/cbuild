@@ -254,21 +254,27 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
 
 void index_project(bld_project* project) {
     bld_path extra_path;
+    char* name;
     DIR* dir;
 
     dir = opendir(path_to_string(&project->root));
     if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&project->root));}
     closedir(dir);
 
-    log_info("Indexing project under root");
-    index_recursive(project, &project->root);
+    if (!project->ignore_root) {
+        log_info("Indexing project under root");
+        index_recursive(project, &project->root, NULL);
+    } else {
+        log_info("Ignoring root");
+    }
 
     for (size_t i = 0; i < project->extra_paths.size; i++) {
         extra_path = copy_path(&project->root);
         append_path(&extra_path, &project->extra_paths.paths[i]);
+        name = get_last_dir(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
-        index_recursive(project, &extra_path);
+        index_recursive(project, &extra_path, name);
         free_path(&extra_path);
     }
 
