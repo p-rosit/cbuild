@@ -38,6 +38,7 @@ char* infer_build_name(char* name) {
     return path_to_string(&path);
 }
 
+void index_possible_file(bld_project*, bld_path*, char*);
 void rebuild_builder(bld_project* project, int argc, char** argv) {
     int result;
     char *executable, *old_executable, *main_name;
@@ -54,10 +55,10 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
 
     build_root = copy_path(&project->root);
     append_path(&build_root, &project->build);
-
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
     build = new_rebuild(build_root, compiler);
+    ignore_path(&build, "./test");
 
     add_option(&build.compiler, "-std=c99");
     add_option(&build.compiler, "-Wall");
@@ -66,13 +67,15 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     add_option(&build.compiler, "-pedantic");
 
     load_cache(&build, ".build_cache");
-    index_project(&build);
 
     main = copy_path(&project->root);
     append_dir(&main, main_name);
-    set_main_file(&build, path_to_string(&main)); /* TODO: specify main correctly */
+    index_possible_file(&build, &main, main_name);
+    index_project(&build);
 
-    result = compile_project(&build, "b.out");
+    build.main_file = build.files.files[0];
+
+    result = compile_project(&build, "./test/b.out");
     if (result > 0) {
         log_warn("Could not compile build script");
     } else if (result < 0) {
