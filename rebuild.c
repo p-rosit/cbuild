@@ -50,10 +50,11 @@ char* infer_build_name(char* name) {
 }
 
 void index_possible_file(bld_project*, bld_path*, char*);
+int compile_with_absolute_path(bld_project*, char*);
 void rebuild_builder(bld_project* project, int argc, char** argv) {
     int result;
     char *executable, *old_executable, *main_name;
-    bld_path build_root, main;
+    bld_path build_root, main, executable_path;
     bld_compiler compiler = new_compiler(BLD_GCC, "/usr/bin/gcc"); /* TODO: don't hardcode compiler */
     bld_project build;
 
@@ -86,21 +87,31 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
 
     build.main_file = build.files.files[0];
 
-    result = compile_project(&build, "./test/b.out");
+    executable_path = copy_path(&project->root);
+    append_dir(&executable_path, executable);
+    rename(executable, old_executable);
+    result = compile_with_absolute_path(&build, path_to_string(&executable_path));
+
     if (result > 0) {
-        log_warn("Could not compile build script");
+        log_fatal("Could not compile build script");
     } else if (result < 0) {
-        log_warn("No rebuild neccessary");
-    } else {
-        log_warn("Recompiled build script");
+        // log_warn("No rebuild neccessary");
     }
 
     save_cache(&build);
 
+    if (result == 0) {
+        log_info("Recompiled build script");
+        exit(run_new_build(&project->root, executable));
+    }
+    log_debug("");
+    log_debug("");
+    log_debug("");
+
     free(executable);
     free(old_executable);
     free(main_name);
+    free_path(&executable_path);
     free_path(&main);
     free_project(&build);
-    log_fatal("rebuild: not implemented");
 }
