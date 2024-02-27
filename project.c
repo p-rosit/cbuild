@@ -92,7 +92,7 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     for (size_t i = 0; i < files.size; i++) {
         if (path_ends_with(&files.files[i].path, &path)) {
             if (match_found) {
-                log_fatal("Name of main file \"%s\" is ambiguous, found several matches.", str);
+                log_fatal("Name of file \"%s\" is ambiguous, found several matches.", str);
             }
             match_found = 1;
             files.files[i].compiler = c_ptr;
