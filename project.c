@@ -206,7 +206,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     bld_path file_path;
     bld_file file;
     bld_stat file_stat;
-    log_warn("Indexing: \"%s\", name \"%s\"", path_to_string(path), name);
+    // log_warn("Indexing: \"%s\", name \"%s\"", path_to_string(path), name);
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
@@ -332,6 +332,7 @@ int compile_file(bld_project* project, bld_file* file) {
     append_string(&cmd, ".o");
     free_path(&path);
 
+    // log_warn("File: \"%s\"", make_string(&cmd));
     result = system(make_string(&cmd));
     free_string(&cmd);
     return result;
@@ -373,6 +374,7 @@ int compile_total(bld_project* project, char* executable_name) {
         free_path(&path);
     }
 
+    // log_warn("Final: \"%s\"", make_string(&cmd));
     result = system(make_string(&cmd));
     if (result < 0) {
         log_fatal("Expected return value of compiler to be non-negative.");
