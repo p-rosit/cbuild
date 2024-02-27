@@ -22,6 +22,7 @@ typedef struct bld_ignore {
 
 typedef struct bld_project bld_project;
 struct bld_project {
+    int ignore_root;
     bld_path root;
     bld_path build;
     bld_paths extra_paths;
@@ -42,6 +43,7 @@ void        set_main_file(bld_project*, char*);
 void        add_build(bld_project*, char*);
 void        add_path(bld_project*, char*);
 void        ignore_path(bld_project*, char*);
+void        ignore_root(bld_project*);
 void        load_cache(bld_project*, char*);
 void        save_cache(bld_project*);
 

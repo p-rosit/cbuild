@@ -25,6 +25,7 @@ bld_path extract_path(int argc, char** argv) {
 
 bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
+        .ignore_root = 0,
         .root = root,
         .build = new_path(),
         .extra_paths = new_paths(),
