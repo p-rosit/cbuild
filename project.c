@@ -179,26 +179,61 @@ void ignore_path(bld_project* project, char* path) {
     free_path(&test);
 }
 
-void index_recursive(bld_project* project, bld_path* path) {
+void ignore_root(bld_project* project) {
+    project->ignore_root = 1;
+}
+
+void index_possible_file(bld_project* project, bld_path* path, char* name) {
     int exists;
-    char *str_path, *file_ending;
+    char* file_ending;
+    bld_path file_path;
+    bld_file file;
+    bld_stat file_stat;
+    log_warn("Indexing: \"%s\", name \"%s\"", path_to_string(path), name);
+
+    file_ending = strrchr(name, '.');
+    if (file_ending == NULL) {return;}
+
+    if (stat(path_to_string(path), &file_stat) < 0) {
+        log_fatal("Could not extract information about \"%s\"", path_to_string(path));
+    }
+
+    file_path = copy_path(path);
+    if (strncmp(name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
+        file = make_test(&file_path, name, &file_stat);
+    } else if (strcmp(file_ending, ".c") == 0) {
+        file = make_impl(&file_path, name, &file_stat);
+    } else if (strcmp(file_ending, ".h") == 0) {
+        file = make_header(&file_path, name, &file_stat);
+    } else {
+        free_path(&file_path);
+        return;
+    }
+
+    exists = append_file(&project->files, file);
+    if (exists) {free_file(&file);}
+}
+
+void index_recursive(bld_project* project, bld_path* path, char* name) {
+    char* str_path;
     bld_path sub_path;
     DIR* dir;
     bld_dirent* file_ptr;
-    bld_stat file_stat;
-    bld_file file;
-    log_debug("Searching under: \"%s\"", path_to_string(path));
 
     str_path = path_to_string(path);
     dir = opendir(str_path);
-    if (dir == NULL) {return;}
+    if (dir == NULL) {
+        index_possible_file(project, path, name);
+        return;
+    }
+
+    log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
 
     while ((file_ptr = readdir(dir)) != NULL) {
-        file_ending = file_ptr->d_name;
         if (strcmp(file_ptr->d_name, ".") == 0 || strcmp(file_ptr->d_name, "..") == 0) {
             continue;
         }
-        
+        if (file_ptr->d_name[0] == '.') {goto next_file;}
         for (size_t i = 0; i < project->ignore_paths.size; i++) {
             if (file_ptr->d_ino == project->ignore_paths.ids[i]) {
                 log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name); /* TODO: print better */
@@ -206,38 +241,10 @@ void index_recursive(bld_project* project, bld_path* path) {
             }
         }
 
-        if (file_ending[0] == '.') {continue;}
-
         sub_path = copy_path(path);
         append_dir(&sub_path, file_ptr->d_name);
-
-        file_ending = strrchr(file_ending, '.');
-        if (file_ending == NULL) {
-            index_recursive(project, &sub_path);
-            free_path(&sub_path);
-            goto next_file;
-        }
-
-        if (stat(path_to_string(&sub_path), &file_stat) < 0) {
-            log_fatal("Could not extract information about \"%s\"", path_to_string(&sub_path));
-        }
-
-        if (strncmp(file_ptr->d_name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-            file = make_test(&sub_path, file_ptr, &file_stat);
-        } else if (strcmp(file_ending, ".c") == 0) {
-            file = make_impl(&sub_path, file_ptr, &file_stat);
-        } else if (strcmp(file_ending, ".h") == 0) {
-            file = make_header(&sub_path, file_ptr, &file_stat);
-        } else {
-            free_path(&sub_path);
-            goto next_file;
-        }
-
-        exists = append_file(&project->files, file);
-        if (exists) {
-            free_file(&file);
-            break;
-        }
+        index_recursive(project, &sub_path, file_ptr->d_name);
+        free_path(&sub_path);
 
         next_file:;
     }
