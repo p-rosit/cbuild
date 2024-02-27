@@ -22,6 +22,10 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
     char* name;
     
     name = remove_last_dir(&path);
+    if (strncmp(name, "old_", 4) == 0) {
+        name += 4;
+    }
+
     str = new_string();
     append_string(&str, name);
     *file = make_string(&str);
