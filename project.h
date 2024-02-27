@@ -6,7 +6,7 @@
 #include "file.h"
 #include "graph.h"
 
-#define BLD_CACHE_NAME ("cache.json")
+#define BLD_CACHE_NAME "cache.json"
 
 typedef struct bld_extra {
     size_t capacity;
