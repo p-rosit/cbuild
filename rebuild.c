@@ -2,6 +2,13 @@
 #include "build.h"
 #include "rebuild.h"
 
+int run_new_build(bld_path* root, char* executable) {
+    bld_path cmd = copy_path(root);
+    append_dir(&cmd, executable);
+    log_warn("Rebuild command: \"%s\"", path_to_string(&cmd));
+    return system(path_to_string(&cmd));
+}
+
 bld_project make_project(bld_path, bld_compiler);
 bld_project new_rebuild(bld_path root, bld_compiler compiler) {
     bld_project build;
