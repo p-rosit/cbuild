@@ -39,9 +39,9 @@ typedef struct bld_files {
     bld_file* files;
 } bld_files;
 
-bld_file    make_header(bld_path*, bld_dirent*, bld_stat*);
-bld_file    make_impl(bld_path*, bld_dirent*, bld_stat*);
-bld_file    make_test(bld_path*, bld_dirent*, bld_stat*);
+bld_file    make_header(bld_path*, char*, bld_stat*);
+bld_file    make_impl(bld_path*, char*, bld_stat*);
+bld_file    make_test(bld_path*, char*, bld_stat*);
 void        free_file(bld_file*);
 uintmax_t   hash_file(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);

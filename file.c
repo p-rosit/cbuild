@@ -3,12 +3,6 @@
 #include "build.h"
 #include "file.h"
 
-bld_string extract_name(bld_dirent* file) {
-    bld_string str = new_string();
-    append_string(&str, file->d_name);
-    return str;
-}
-
 bld_file_identifier get_identifier(bld_stat* file) {
     return (bld_file_identifier) {
         .id = file->st_ino,
@@ -25,28 +19,30 @@ void serialize_identifier(char name[256], bld_file* file) {
     sprintf(name, "%ju", (uintmax_t) file->identifier.id);
 }
 
-bld_file make_file(bld_file_type type, bld_path* path, bld_dirent* info, bld_stat* stat) {
+bld_file make_file(bld_file_type type, bld_path* path, char* name, bld_stat* stat) {
+    bld_string str = new_string();
+    append_string(&str, name);
     return (bld_file) {
         .type = type,
         .identifier = get_identifier(stat),
-        .name = extract_name(info),
+        .name = str,
         .path = *path,
         .compiler = NULL,
     };
 }
 
-bld_file make_header(bld_path* path, bld_dirent* file, bld_stat* stat) {
-    bld_file header = make_file(BLD_HEADER, path, file, stat);
+bld_file make_header(bld_path* path, char* name, bld_stat* stat) {
+    bld_file header = make_file(BLD_HEADER, path, name, stat);
     return header;
 }
 
-bld_file make_impl(bld_path* path, bld_dirent* file, bld_stat* stat) {
-    bld_file impl = make_file(BLD_IMPL, path, file, stat);
+bld_file make_impl(bld_path* path, char* name, bld_stat* stat) {
+    bld_file impl = make_file(BLD_IMPL, path, name, stat);
     return impl;
 }
 
-bld_file make_test(bld_path* path, bld_dirent* file, bld_stat* stat) {
-    bld_file test = make_file(BLD_TEST, path, file, stat);
+bld_file make_test(bld_path* path, char* name, bld_stat* stat) {
+    bld_file test = make_file(BLD_TEST, path, name, stat);
     return test;
 }
 
