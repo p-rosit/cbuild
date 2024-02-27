@@ -72,7 +72,7 @@ void append_path(bld_path* root, bld_path* path) {
     append_dir(root, make_string(&path->str));
 }
 
-char* remove_last_dir(bld_path* path) {
+char* get_last_dir(bld_path* path) {
     size_t sep_len = sizeof(BLD_PATH_SEP) - 1;
     char* str;
 
@@ -80,12 +80,17 @@ char* remove_last_dir(bld_path* path) {
     for (size_t i = 0; i < path->str.size; i++) {
         str = path->str.chars + path->str.size - i - 1;
         if (strncmp(str, BLD_PATH_SEP, sep_len) == 0) {
-            path->str.size -= i + 1;
-            return path->str.chars + path->str.size - 1 + sizeof(BLD_PATH_SEP);
+            return &path->str.chars[path->str.size - i + sizeof(BLD_PATH_SEP) - 2];
         }
     }
 
     log_fatal("remove_last_dir: directory contains only one name...");
+}
+
+char* remove_last_dir(bld_path* path) {
+    char* name = get_last_dir(path);
+    path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    return name;
 }
 
 int path_ends_with(bld_path* path, bld_path* suffix) {
