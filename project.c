@@ -356,11 +356,8 @@ int compile_total(bld_project* project, char* executable_name) {
     }
 
     append_string(&cmd, "-o ");
-    path = copy_path(&project->root);
-    append_dir(&path, executable_name);
-    append_string(&cmd, path_to_string(&path));
+    append_string(&cmd, executable_name);
     append_space(&cmd);
-    free_path(&path);
 
     bfs = graph_dfs_from(&project->graph, &project->main_file);
     while (next_file(bfs, &file)) {
@@ -384,7 +381,7 @@ int compile_total(bld_project* project, char* executable_name) {
     return result;
 }
 
-int compile_project(bld_project* project, char* name) {
+int compile_with_absolute_path(bld_project* project, char* name) {
     int result = 0, any_compiled = 0, temp;
     uintmax_t hash;
     bld_path path;
@@ -441,6 +438,15 @@ int compile_project(bld_project* project, char* name) {
     } else {
         return result;
     }
+}
+
+int compile_project(bld_project* project, char* name) {
+    int result;
+    bld_path executable_path = copy_path(&project->root);
+    append_dir(&executable_path, name);
+    result = compile_with_absolute_path(project, path_to_string(&executable_path));
+    free_path(&executable_path);
+    return result;
 }
 
 int cached_compilation(bld_project* project, bld_file* file) {
