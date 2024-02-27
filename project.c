@@ -23,6 +23,24 @@ bld_path extract_path(int argc, char** argv) {
     return path;
 }
 
+bld_path extract_build_path(bld_path* root) {
+    bld_path build_path = copy_path(root);
+    bld_string str = new_string();
+    char* name;
+    append_string(&str, get_last_dir(root));
+    remove_last_dir(&build_path);
+
+    make_string(&str);
+    if (strncmp(str.chars, "old_", 4) == 0) {
+        name = str.chars + 4;
+    } else {
+        name = str.chars;
+    }
+
+    append_dir(&build_path, name);
+    return build_path;
+}
+
 bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
         .ignore_root = 0,
@@ -43,8 +61,7 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
     bld_path build_file_path = copy_path(&root);
     bld_project project;
 
-    remove_file_ending(&build_file_path);
-    append_string(&build_file_path.str, ".c");
+    build_file_path = extract_build_path(&root);
     
     remove_last_dir(&root);
     project = make_project(root, compiler);
