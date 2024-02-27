@@ -111,9 +111,8 @@ int path_ends_with(bld_path* path, bld_path* suffix) {
 }
 
 void remove_file_ending(bld_path* path) {
-    size_t i;
-
-    for (i = path->str.size; 0 < i; i--) {
+    /* TODO: make sure we don't pass a path separator */
+    for (size_t i = path->str.size; 0 < i; i--) {
         if (path->str.chars[i - 1] == '.') {
             path->str.size = i - 1;
             path->str.chars[i - 1] = '\0';
