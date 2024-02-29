@@ -58,11 +58,13 @@ char* infer_build_name(char* name) {
 void index_possible_file(bld_project*, bld_path*, char*);
 int compile_with_absolute_path(bld_project*, char*);
 void rebuild_builder(bld_project* project, int argc, char** argv) {
-    int result;
+    int result, new_result, log_level;
     char *executable, *old_executable, *main_name;
     bld_path build_root, main, executable_path;
     bld_compiler compiler = new_compiler(BLD_GCC, "/usr/bin/gcc"); /* TODO: don't hardcode compiler */
     bld_project build;
+
+    log_level = set_log_level(BLD_WARN);
 
     extract_names(argc, argv, &executable, &old_executable);
     main_name = infer_build_name(executable);
@@ -107,12 +109,10 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     save_cache(&build);
 
     if (result == 0) {
+        set_log_level(BLD_INFO);
         log_info("Recompiled build script");
-        exit(run_new_build(&project->root, executable));
+        new_result = run_new_build(&project->root, executable);
     }
-    log_debug("");
-    log_debug("");
-    log_debug("");
 
     free(executable);
     free(old_executable);
@@ -120,4 +120,11 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     free_path(&executable_path);
     free_path(&main);
     free_project(&build);
+
+    if (result == 0) {
+        free_project(project);
+        exit(new_result);
+    }
+
+    set_log_level(log_level);
 }
