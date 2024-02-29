@@ -38,8 +38,10 @@ int main(int argc, char** argv) {
 
         /* Mandatory */
         index_project(&project); 
+
         /* Optional, mandatory if main file set */
         // generate_dependency_graph(&project);
+
         /* Optional */
         set_compiler(&project, "file.c", cc);
 
