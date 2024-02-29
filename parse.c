@@ -60,7 +60,7 @@ void ensure_directory_exists(bld_path* directory_path) {
         case EROFS: {
             log_fatal("Cache directory cannot be created in a read-only file system.");
         } break;
-        default: {log_fatal("load_cache: unreachable error???");}
+        default: {perror("Unreachable error?"); log_fatal("load_cache: unreachable error???");}
     }
 }
 
