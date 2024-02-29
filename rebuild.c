@@ -4,10 +4,16 @@
 #include "rebuild.h"
 
 int run_new_build(bld_path* root, char* executable) {
+    int result;
     bld_path cmd = copy_path(root);
     append_dir(&cmd, executable);
-    log_warn("Rebuild command: \"%s\"", path_to_string(&cmd));
-    return system(path_to_string(&cmd));
+
+    log_info("Running new build script");
+    log_debug("Rebuild command: \"%s\"", path_to_string(&cmd));
+    result = system(path_to_string(&cmd));
+
+    free_path(&cmd);
+    return result;
 }
 
 bld_project make_project(bld_path, bld_compiler);
