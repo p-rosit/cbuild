@@ -52,7 +52,6 @@ char* infer_build_name(char* name) {
     remove_file_ending(&path);
     append_string(&path.str, ".c");
 
-    log_debug("Build name: \"%s\"", path_to_string(&path));
     return path_to_string(&path);
 }
 
