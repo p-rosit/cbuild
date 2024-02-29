@@ -155,31 +155,13 @@ void add_build(bld_project* project, char* path) {
 }
 
 uintmax_t test_open(bld_path* path) {
-    DIR* d;
-    bld_dirent* file;
-    int exists = 0;
-    uintmax_t id;
-    char* name;
-    bld_path test = copy_path(path);
+    bld_stat file_stat;
     
-    name = remove_last_dir(&test);
-    d = opendir(path_to_string(&test));
-
-    while ((file = readdir(d)) != NULL) {
-        if (strcmp(file->d_name, name) == 0) {
-            exists = 1;
-            id = file->d_ino;
-            break;
-        }
-    }
-
-    if (!exists) {
+    if (stat(path_to_string(path), &file_stat) < 0) {
         log_fatal("\"%s\" is not a valid path under the root", path_to_string(path));
     }
 
-    closedir(d);
-    free_path(&test);
-    return id;
+    return file_stat.st_ino;
 }
 
 void add_path(bld_project* project, char* path) {
