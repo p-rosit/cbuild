@@ -62,7 +62,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
 
 bld_project new_project(bld_path root, bld_compiler compiler) {
     FILE* f;
-    bld_path build_file_path = copy_path(&root);
+    bld_path build_file_path;
     bld_project project;
 
     build_file_path = extract_build_path(&root);
