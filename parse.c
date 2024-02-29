@@ -1,8 +1,9 @@
+#include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include <string.h>
-#include "build.h"
+#include "logging.h"
 #include "path.h"
 #include "project.h"
 

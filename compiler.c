@@ -1,5 +1,5 @@
 #include <string.h>
-#include "build.h"
+#include "logging.h"
 #include "compiler.h"
 
 bld_compiler new_compiler(bld_compiler_type type, char* executable) {

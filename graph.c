@@ -1,6 +1,7 @@
+#include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include "build.h"
+#include "logging.h"
 #include "graph.h"
 
 bld_edges   new_edges();

@@ -1,5 +1,5 @@
 #include <string.h>
-#include "build.h"
+#include "logging.h"
 #include "dstr.h"
 
 bld_string new_string() {

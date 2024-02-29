@@ -1,5 +1,6 @@
+#include <stdio.h>
 #include <inttypes.h>
-#include "build.h"
+#include "logging.h"
 #include "project.h"
 
 void serialize_compiler(FILE*, bld_compiler*, int);

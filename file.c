@@ -1,6 +1,7 @@
+#include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
-#include "build.h"
+#include "logging.h"
 #include "file.h"
 
 bld_file_identifier get_identifier(bld_stat* file) {

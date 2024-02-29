@@ -1,5 +1,6 @@
+#include <stdio.h>
 #include <string.h>
-#include "build.h"
+#include "logging.h"
 #include "rebuild.h"
 
 int run_new_build(bld_path* root, char* executable) {

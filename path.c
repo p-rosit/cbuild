@@ -1,5 +1,5 @@
 #include <string.h>
-#include "build.h"
+#include "logging.h"
 #include "path.h"
 
 bld_paths new_paths() {
@@ -85,6 +85,7 @@ char* get_last_dir(bld_path* path) {
     }
 
     log_fatal("remove_last_dir: directory contains only one name...");
+    return NULL; /* Unreachable */
 }
 
 char* remove_last_dir(bld_path* path) {
