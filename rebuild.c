@@ -81,6 +81,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     ignore_path(&build, "./test");
 
     add_option(&build.compiler, "-std=c99");
+    add_option(&build.compiler, "-fsanitize=address");
     add_option(&build.compiler, "-Wall");
     add_option(&build.compiler, "-Wextra");
     add_option(&build.compiler, "-Werror");
