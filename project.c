@@ -25,11 +25,10 @@ bld_path extract_path(int argc, char** argv) {
 }
 
 bld_path extract_build_path(bld_path* root) {
-    bld_path build_path = copy_path(root);
+    bld_path build_path = new_path();
     bld_string str = new_string();
     char* name;
     append_string(&str, get_last_dir(root));
-    remove_last_dir(&build_path);
 
     make_string(&str);
     if (strncmp(str.chars, "old_", 4) == 0) {
@@ -38,7 +37,11 @@ bld_path extract_build_path(bld_path* root) {
         name = str.chars;
     }
 
-    append_dir(&build_path, name);
+    build_path = path_from_string(name);
+    remove_file_ending(&build_path);
+    append_string(&build_path.str, ".c");
+
+    free_string(&str);
     return build_path;
 }
 
