@@ -20,7 +20,7 @@ bld_path extract_path(int argc, char** argv) {
     }
 
     path = path_from_string(argv[0]);
-    log_info("Extracted path to executable: \"%.*s\"", (int) path.str.size, path.str.chars);
+    log_debug("Extracted path to executable: \"%.*s\"", (int) path.str.size, path.str.chars);
     return path;
 }
 

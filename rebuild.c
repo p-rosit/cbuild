@@ -104,7 +104,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     if (result > 0) {
         log_fatal("Could not compile build script");
     } else if (result < 0) {
-        // log_warn("No rebuild neccessary");
+        log_debug("No rebuild neccessary");
     }
 
     save_cache(&build);
