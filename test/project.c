@@ -10,6 +10,7 @@
  *  TODO: detect when .c file was included and disregard when compiling
  *  TODO: detect if .h file is header only
  *  TODO: use hash maps where appropriate
+ *  TODO: remove duplication in growable arrays
  */
 
 int main(int argc, char** argv) {
