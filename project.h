@@ -1,6 +1,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "container.h"
 #include "path.h"
 #include "compiler.h"
 #include "file.h"
@@ -9,9 +10,7 @@
 #define BLD_CACHE_NAME "cache.json"
 
 typedef struct bld_extra {
-    size_t capacity;
-    size_t size;
-    bld_path* paths;
+    bld_array array;
 } bld_extra;
 
 typedef struct bld_ignore {

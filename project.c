@@ -257,7 +257,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
 }
 
 void index_project(bld_project* project) {
-    bld_path extra_path;
+    bld_path *paths, extra_path;
     char* name;
     DIR* dir;
 
@@ -272,9 +272,10 @@ void index_project(bld_project* project) {
         log_info("Ignoring root");
     }
 
-    for (size_t i = 0; i < project->extra_paths.size; i++) {
+    paths = project->extra_paths.array.values;
+    for (size_t i = 0; i < project->extra_paths.array.size; i++) {
         extra_path = copy_path(&project->root);
-        append_path(&extra_path, &project->extra_paths.paths[i]);
+        append_path(&extra_path, &paths[i]);
         name = get_last_dir(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
