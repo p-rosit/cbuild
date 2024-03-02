@@ -3,38 +3,19 @@
 #include "path.h"
 
 bld_paths new_paths() {
-    return (bld_paths) {
-        .capacity = 0,
-        .size = 0,
-        .paths = NULL,
-    };
+    return (bld_paths) {.array = bld_array_new()};
 }
 
 void free_paths(bld_paths* paths) {
-    for (size_t i = 0; i < paths->size; i++) {
-        free_path(&paths->paths[i]);
+    bld_path* ps = paths->array.values;
+    for (size_t i = 0; i < paths->array.size; i++) {
+        free_path(&ps[i]);
     }
-    free(paths->paths);
+    bld_array_free(&paths->array);
 }
 
 void push_path(bld_paths* paths, bld_path path) {
-    size_t capacity = paths->capacity;
-    bld_path* temp;
-
-    if (paths->size >= paths->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        temp = malloc(capacity * sizeof(bld_path));
-        if (temp == NULL) {log_fatal("Could not append path \"%s\"", path_to_string(&path));}
-
-        memcpy(temp, paths->paths, paths->size * sizeof(bld_path));
-        free(paths->paths);
-
-        paths->capacity = capacity;
-        paths->paths = temp;
-    }
-
-    paths->paths[paths->size++] = path;
+    bld_array_push(&paths->array, &path, sizeof(bld_path));
 }
 
 bld_path new_path() {

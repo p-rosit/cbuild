@@ -1,6 +1,7 @@
 #ifndef PATH_H
 #define PATH_H
 
+#include "container.h"
 #include "dstr.h"
 
 #define BLD_PATH_SEP "/"
@@ -10,9 +11,7 @@ typedef struct bld_path {
 } bld_path;
 
 typedef struct bld_paths {
-    size_t capacity;
-    size_t size;
-    bld_path* paths;
+    bld_array array;
 } bld_paths;
 
 bld_path new_path();
