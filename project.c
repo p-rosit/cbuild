@@ -287,7 +287,7 @@ void index_project(bld_project* project) {
 
 int compile_file(bld_project* project, bld_file* file) {
     int result;
-    char name[256];
+    char name[256], **flags;
     bld_compiler compiler;
     bld_string cmd = new_string();
     bld_path path;
@@ -301,8 +301,9 @@ int compile_file(bld_project* project, bld_file* file) {
     append_string(&cmd, compiler.executable);
     append_space(&cmd);
 
-    for (size_t i = 0; i < compiler.options.size; i++) {
-        append_string(&cmd, compiler.options.options[i]);
+    flags = compiler.options.array.values;
+    for (size_t i = 0; i < compiler.options.array.size; i++) {
+        append_string(&cmd, flags[i]);
         append_space(&cmd);
     }
 
@@ -328,7 +329,7 @@ int compile_file(bld_project* project, bld_file* file) {
 
 int compile_total(bld_project* project, char* executable_name) {
     int result;
-    char name[256];
+    char name[256], **flags;
     bld_path path;
     bld_compiler compiler = project->compiler;
     bld_file* file;
@@ -338,8 +339,9 @@ int compile_total(bld_project* project, char* executable_name) {
     append_string(&cmd, compiler.executable);
     append_space(&cmd);
 
-    for (size_t i = 0; i < compiler.options.size; i++) {
-        append_string(&cmd, compiler.options.options[i]);
+    flags = compiler.options.array.values;
+    for (size_t i = 0; i < compiler.options.array.size; i++) {
+        append_string(&cmd, flags[i]);
         append_space(&cmd);
     }
 

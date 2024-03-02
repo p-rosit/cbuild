@@ -60,7 +60,7 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
 
     fprintf(cache, "%*c\"executable\": \"%s\"", 2 * (depth + 1), ' ', compiler->executable);
 
-    if (compiler->options.size > 0) {
+    if (compiler->options.array.size > 0) {
         fprintf(cache, ",\n");
         fprintf(cache, "%*c\"options\": ", 2 * (depth + 1), ' ');
         serialize_compiler_options(cache, &compiler->options, depth + 1);
@@ -83,11 +83,12 @@ void serialize_compiler_type(FILE* cache, bld_compiler_type type) {
 }
 
 void serialize_compiler_options(FILE* cache, bld_options* options, int depth) {
+    char** flags = options->array.values;
     fprintf(cache, "[\n");
     
-    for (size_t i = 0; i < options->size; i++) {
+    for (size_t i = 0; i < options->array.size; i++) {
         if (i > 0) {fprintf(cache, ",\n");}
-        fprintf(cache, "%*c\"%s\"", 2 * (depth + 1), ' ', options->options[i]);
+        fprintf(cache, "%*c\"%s\"", 2 * (depth + 1), ' ', flags[i]);
     }
 
     fprintf(cache, "\n");
