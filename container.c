@@ -52,6 +52,11 @@ void bld_array_push(bld_array* array, void* value, size_t value_size) {
     memcpy(ptr + value_size * array->size++, value, value_size);
 }
 
+void bld_array_pop(bld_array* array, void* ret_value, size_t value_size) {
+    if (array->size <= 0) {log_fatal("Trying to pop from empty array");}
+    memcpy(ret_value, ((char*)array->values) + --array->size * value_size, value_size);
+}
+
 bld_set bld_set_new() {
     return (bld_set) {
         .capacity = 0,
