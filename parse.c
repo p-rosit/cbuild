@@ -135,6 +135,7 @@ bld_nodes new_nodes();
 int parse_graph(FILE* file, bld_project* project) {
     uintmax_t forward_id, file_id;
     int amount_parsed;
+    bld_node* ns;
     bld_files* files = &project->files;
     bld_nodes* nodes = &project->graph.nodes;
 
@@ -146,17 +147,18 @@ int parse_graph(FILE* file, bld_project* project) {
         return -1;
     }
 
+    ns = nodes->array.values;
     for (size_t i = 0; i < files->size; i++) {
-        nodes->nodes[i].file = &files->files[i];
+        ns[i].file = &files->files[i];
     }
 
-    for (size_t i = 0; i < nodes->size; i++) {
-        for (size_t j = 0; j < nodes->nodes[i].edges.size; j++) {
-            forward_id = nodes->nodes[i].edges.indices[j];
-            for (size_t k = 0; k < nodes->size; k++) {
-                file_id = nodes->nodes[k].file->identifier.id;
+    for (size_t i = 0; i < nodes->array.size; i++) {
+        for (size_t j = 0; j < ns[i].edges.size; j++) {
+            forward_id = ns[i].edges.indices[j];
+            for (size_t k = 0; k < nodes->array.size; k++) {
+                file_id = ns[k].file->identifier.id;
                 if (forward_id == file_id) {
-                    nodes->nodes[i].edges.indices[j] = k;
+                    ns[i].edges.indices[j] = k;
                     break;
                 }
             }

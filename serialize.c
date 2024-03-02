@@ -153,12 +153,14 @@ void serialize_file_id(FILE* cache, bld_file_identifier id) {
 }
 
 void serialize_graph(FILE* cache, bld_graph* graph, int depth) {
+    bld_node* nodes;
     fprintf(cache, "[\n");
 
-    for (size_t i = 0; i < graph->nodes.size; i++) {
+    nodes = graph->nodes.array.values;
+    for (size_t i = 0; i < graph->nodes.array.size; i++) {
         if (i > 0) {fprintf(cache, ",\n");}
         fprintf(cache, "%*c", 2 * (depth + 1), ' ');
-        serialize_node(cache, graph, &graph->nodes.nodes[i], depth + 1);
+        serialize_node(cache, graph, &nodes[i], depth + 1);
     }
 
     fprintf(cache, "\n");
@@ -200,18 +202,19 @@ void serialize_functions(FILE* cache, bld_funcs* funcs, int depth) {
 }
 
 void serialize_edges(FILE* cache, bld_graph* graph, bld_edges* edges, int depth) {
+    bld_node* nodes = graph->nodes.array.values;
     if (edges->size == 0) {
         fprintf(cache, "[]");
         return;
     } else if (edges->size == 1) {
-        fprintf(cache, "[%ju]", graph->nodes.nodes[edges->indices[0]].file->identifier.id);
+        fprintf(cache, "[%ju]", nodes[edges->indices[0]].file->identifier.id);
         return;
     }
     fprintf(cache, "[\n");
 
     for (size_t i = 0; i < edges->size; i++) {
         if (i > 0) {fprintf(cache, ",\n");};
-        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', graph->nodes.nodes[edges->indices[i]].file->identifier.id);
+        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', nodes[edges->indices[i]].file->identifier.id);
     }
 
     fprintf(cache, "\n");

@@ -41,7 +41,7 @@ bld_node* node_pop(bld_stack* stack) {
 }
 
 bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
-    bld_node* node;
+    bld_node *node, *nodes;
     bld_search_info* info = malloc(sizeof(bld_search_info));
     if (info == NULL) {
         log_fatal("Could not allocate info to start search.");
@@ -51,8 +51,9 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
     info->stack = (bld_stack) {.array = bld_array_new()};
     info->visited = (bld_stack) {.array = bld_array_new()};
 
-    for (size_t i = 0; i < graph->nodes.size; i++) {
-        node = &graph->nodes.nodes[i];
+    nodes = graph->nodes.array.values;
+    for (size_t i = 0; i < graph->nodes.array.size; i++) {
+        node = &nodes[i];
         if (file_eq(node->file, main)) {
             node_push(&info->stack, node);
             break;
@@ -69,11 +70,11 @@ void free_info(bld_search_info* info) {
 }
 
 int next_file(bld_search_info* info, bld_file** file) {
-    int visited = 1;
+    int node_visited = 1;
     uintmax_t index;
-    bld_node *node, **nodes;
+    bld_node *node, **visited, *nodes;
 
-    while (visited) {
+    while (node_visited) {
         if (info->stack.array.size <= 0) {
             free_info(info);
             return 0;
@@ -81,20 +82,21 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         node = node_pop(&info->stack);
 
-        visited = 0;
-        nodes = info->visited.array.values;
+        node_visited = 0;
+        visited = info->visited.array.values;
         for (size_t i = 0; i < info->visited.array.size; i++) {
-            if (node == nodes[i]) {
-                visited = 1;
+            if (node == visited[i]) {
+                node_visited = 1;
                 goto next_node;
             }
         }
 
         node_push(&info->visited, node);
 
+        nodes = info->graph->nodes.array.values;
         for (size_t i = 0; i < node->edges.size; i++) {
             index = node->edges.indices[i];
-            node_push(&info->stack, &info->graph->nodes.nodes[index]);
+            node_push(&info->stack, &nodes[index]);
         }
 
         next_node:;
@@ -196,7 +198,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     char name[256];
     bld_string cmd = new_string();
     bld_path path;
-    bld_node* node;
+    bld_node *node, *nodes;
 
     if (file->type == BLD_HEADER) {
         return;
@@ -222,7 +224,8 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     }
 
     push_node(&graph->nodes, parse_symbols(file, symbol_path));
-    node = &graph->nodes.nodes[graph->nodes.size - 1];
+    nodes = graph->nodes.array.values;
+    node = &nodes[graph->nodes.array.size - 1];
     log_debug("Populating: \"%s\", %lu function(s), %lu reference(s)", path_to_string(&file->path), node->defined_funcs.size, node->used_funcs.size);
 
     free_string(&cmd);
@@ -230,10 +233,11 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 
 void connect_node(bld_graph* graph, bld_node* node) {
     char *undef, *def;
-    bld_node* to_node;
+    bld_node *to_node, *nodes;
 
-    for (size_t i = 0; i < graph->nodes.size; i++) {
-        to_node = &graph->nodes.nodes[i];
+    nodes = graph->nodes.array.values;
+    for (size_t i = 0; i < graph->nodes.array.size; i++) {
+        to_node = &nodes[i];
 
         for (size_t j = 0; j < node->used_funcs.size; j++) {
             undef = node->used_funcs.funcs[j];
@@ -254,6 +258,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
 
 void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
+    bld_node* nodes;
     /* TODO: utilize cache if present */
 
     symbol_path = copy_path(cache_path);
@@ -265,12 +270,13 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
 
     remove(path_to_string(&symbol_path));
 
-    for (size_t i = 0; i < graph->nodes.size; i++) {
-        connect_node(graph, &graph->nodes.nodes[i]);
+    nodes = graph->nodes.array.values;
+    for (size_t i = 0; i < graph->nodes.array.size; i++) {
+        connect_node(graph, &nodes[i]);
     }
 
     free_path(&symbol_path);
-    log_info("Generated dependency graph with %lu nodes", graph->nodes.size);
+    log_info("Generated dependency graph with %lu nodes", graph->nodes.array.size);
 }
 
 bld_edges new_edges() {
@@ -311,38 +317,19 @@ int append_edge(bld_edges* edges, uintmax_t to_index) {
 }
 
 bld_nodes new_nodes() {
-    return (bld_nodes) {
-        .capacity = 0,
-        .size = 0,
-        .nodes = NULL,
-    };
+    return (bld_nodes) {.array = bld_array_new()};
 }
 
 void free_nodes(bld_nodes* nodes) {
-    for (size_t i = 0; i < nodes->size; i++) {
-        free_node(&nodes->nodes[i]);
+    bld_node* ns = nodes->array.values;
+    for (size_t i = 0; i < nodes->array.size; i++) {
+        free_node(&ns[i]);
     }
-    free(nodes->nodes);
+    bld_array_free(&nodes->array);
 }
 
 void push_node(bld_nodes* nodes, bld_node node) {
-    size_t capacity = nodes->capacity;
-    bld_node* temp;
-
-    if (nodes->size >= nodes->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        temp = malloc(capacity * sizeof(bld_node));
-        if (temp == NULL) {log_fatal("Could not push node");}
-
-        memcpy(temp, nodes->nodes, nodes->size * sizeof(bld_node));
-        free(nodes->nodes);
-
-        nodes->capacity = capacity;
-        nodes->nodes = temp;
-    }
-
-    nodes->nodes[nodes->size++] = node;
+    bld_array_push(&nodes->array, &node, sizeof(bld_node));
 }
 
 bld_node new_node(bld_file* file) {

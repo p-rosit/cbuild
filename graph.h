@@ -29,9 +29,7 @@ struct bld_node {
 };
 
 typedef struct bld_nodes {
-    size_t capacity;
-    size_t size;
-    bld_node* nodes;
+    bld_array array;
 } bld_nodes;
 
 typedef struct bld_graph {
