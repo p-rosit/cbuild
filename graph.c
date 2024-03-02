@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include "container.h"
 #include "logging.h"
 #include "graph.h"
 
@@ -20,9 +21,7 @@ void        free_funcs(bld_funcs*);
 void        add_func(bld_funcs*, bld_string*);
 
 typedef struct bld_stack {
-    size_t capacity;
-    size_t size;
-    bld_node** nodes;
+    bld_array array;
 } bld_stack;
 
 struct bld_search_info {
@@ -32,27 +31,13 @@ struct bld_search_info {
 };
 
 void node_push(bld_stack* stack, bld_node* node) {
-    size_t capacity = stack->capacity;
-    bld_node** nodes;
-
-    if (stack->size >= stack->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        nodes = malloc(capacity * sizeof(bld_node*));
-        if (nodes == NULL) {log_fatal("Could not push node");}
-        memcpy(nodes, stack->nodes, stack->size * sizeof(bld_node*));
-        free(stack->nodes);
-
-        stack->nodes = nodes;
-        stack->capacity = capacity;
-    }
-
-    stack->nodes[stack->size++] = node;
+    bld_array_push(&stack->array, &node, sizeof(bld_node*));
 }
 
 bld_node* node_pop(bld_stack* stack) {
-    if (stack->size <= 0) {log_fatal("Trying to pop from empty stack");}
-    return stack->nodes[--stack->size];
+    bld_node* node;
+    bld_array_pop(&stack->array, &node, sizeof(bld_node*));
+    return node;
 }
 
 bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
@@ -63,16 +48,8 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
     }
 
     info->graph = graph;
-    info->stack = (bld_stack) {
-        .capacity = 0,
-        .size = 0,
-        .nodes = NULL,
-    };
-    info->visited = (bld_stack) {
-        .capacity = 0,
-        .size = 0,
-        .nodes = NULL,
-    };
+    info->stack = (bld_stack) {.array = bld_array_new()};
+    info->visited = (bld_stack) {.array = bld_array_new()};
 
     for (size_t i = 0; i < graph->nodes.size; i++) {
         node = &graph->nodes.nodes[i];
@@ -86,18 +63,18 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
 }
 
 void free_info(bld_search_info* info) {
-    free(info->stack.nodes);
-    free(info->visited.nodes);
+    bld_array_free(&info->stack.array);
+    bld_array_free(&info->visited.array);
     free(info);
 }
 
 int next_file(bld_search_info* info, bld_file** file) {
     int visited = 1;
     uintmax_t index;
-    bld_node* node;
+    bld_node *node, **nodes;
 
     while (visited) {
-        if (info->stack.size <= 0) {
+        if (info->stack.array.size <= 0) {
             free_info(info);
             return 0;
         }
@@ -105,8 +82,9 @@ int next_file(bld_search_info* info, bld_file** file) {
         node = node_pop(&info->stack);
 
         visited = 0;
-        for (size_t i = 0; i < info->visited.size; i++) {
-            if (node == info->visited.nodes[i]) {
+        nodes = info->visited.array.values;
+        for (size_t i = 0; i < info->visited.array.size; i++) {
+            if (node == nodes[i]) {
                 visited = 1;
                 goto next_node;
             }
