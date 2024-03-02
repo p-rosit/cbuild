@@ -292,10 +292,10 @@ int compile_file(bld_project* project, bld_file* file) {
     bld_string cmd = new_string();
     bld_path path;
 
-    if (file->compiler == NULL) {
-        compiler = project->compiler;
-    } else {
+    if (file->compiler != NULL) {
         compiler = *(file->compiler);
+    } else {
+        compiler = project->compiler;
     }
 
     append_string(&cmd, compiler.executable);
