@@ -24,10 +24,7 @@ bld_compiler copy_compiler(bld_compiler* compiler) {
     bld_string executable = new_string();
     append_string(&executable, compiler->executable);
 
-    options = new_options();
-    for (size_t i = 0; i < compiler->options.size; i++) {
-        append_option(&options, compiler->options.options[i]);
-    }
+    options = copy_options(&compiler->options);
 
     return (bld_compiler) {
         .type = compiler->type,
@@ -38,8 +35,8 @@ bld_compiler copy_compiler(bld_compiler* compiler) {
 
 uintmax_t hash_compiler(bld_compiler* compiler, uintmax_t seed) {
     seed = hash_string(compiler->executable, seed);
-    for (size_t i = 0; i < compiler->options.size; i++) {
-        seed = hash_string(compiler->options.options[i], seed);
+    for (size_t i = 0; i < compiler->options.array.size; i++) {
+        seed = hash_string(((char**) compiler->options.array.values)[i], seed);
     }
     return seed;
 }
@@ -50,37 +47,25 @@ void add_option(bld_compiler* compiler, char* option) {
 }
 
 bld_options new_options() {
-    return (bld_options) {
-        .capacity = 0,
-        .size = 0,
-        .options = NULL,
-    };
+    return (bld_options) {.array = bld_array_new()};
 }
 
 void free_options(bld_options* options) {
-    for (size_t i = 0; i < options->size; i++) {
-        free(options->options[i]);
+    for (size_t i = 0; i < options->array.size; i++) {
+        free(((char**) options->array.values)[i]);
     }
-    free(options->options);
+    bld_array_free(&options->array);
+}
+
+bld_options copy_options(bld_options* options) {
+    return (bld_options) {.array = bld_array_copy(&options->array, sizeof(char*))};
 }
 
 void append_option(bld_options* options, char* str) {
-    size_t capacity = options->capacity;
-    char** opts;
-    bld_string s;
+    char* temp;
+    bld_string s = new_string();
 
-    if (options->size >= options->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        opts = malloc(capacity * sizeof(char*));
-        memcpy(opts, options->options, options->size * sizeof(char*));
-        free(options->options);
-
-        options->capacity = capacity;
-        options->options = opts;
-    }
-
-    s = new_string();
     append_string(&s, str);
-    options->options[options->size++] = make_string(&s);
+    temp = make_string(&s);
+    bld_array_push(&options->array, &temp, sizeof(char*));
 }

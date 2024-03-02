@@ -2,11 +2,10 @@
 #define COMPILER_H
 
 #include "dstr.h"
+#include "container.h"
 
 typedef struct bld_options {
-    size_t capacity;
-    size_t size;
-    char** options;
+    bld_array array;
 } bld_options;
 
 typedef enum bld_compiler_type {
@@ -28,6 +27,7 @@ uintmax_t       hash_compiler(bld_compiler*, uintmax_t);
 void            add_option(bld_compiler*, char*);
 
 bld_options     new_options();
+bld_options     copy_options(bld_options*);
 void            free_options(bld_options*);
 void            append_option(bld_options*, char*);
 
