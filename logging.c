@@ -40,7 +40,7 @@ void log_debug(const char* fmt, ...) {
 
 void log_info(const char* fmt, ...) {
     if (log_level > BLD_INFO) {return;}
-    printf("[      INFO] ");
+    printf(     "[      INFO] ");
     BLD_LOG_STRING(fmt);
     printf("\n");
 }
