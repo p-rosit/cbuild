@@ -325,7 +325,8 @@ bld_iter bld_iter_set(bld_set* set, size_t value_size) {
 }
 
 int bld_set_next(bld_iter* iter, void* value_ptr) {
-    int i, has_next = 0;
+    int has_next = 0;
+    size_t i;
     size_t value_size = iter->set.value_size;
     bld_set* set = iter->set.set;
     char* values = set->values;
