@@ -251,6 +251,10 @@ void bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
     size_t target;
     size_t new_capacity = set->capacity;
     bld_offset offset = 0;
+    void* temp = malloc(value_size);
+
+    if (temp == NULL) {log_fatal("Cannot add value");}
+    memcpy(temp, value, value_size);
 
     if (set->capacity > 0) {
         error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
@@ -258,6 +262,7 @@ void bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
 
         if (!error && set->hash[target] == hash && set->offset[target] < set->max_offset) {
             log_warn("Trying to add value twice");
+            free(temp);
             return;
         }
     } else {
@@ -282,14 +287,15 @@ void bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
         if (error) {continue;}
 
         place_value:
-        bld_set_swap_value(set, target, &offset, &hash, value, value_size);
+        bld_set_swap_value(set, target, &offset, &hash, temp, value_size);
         if (offset < set->max_offset) {
             target += 1; offset += 1;
-            error = bld_set_add_value(set, target, &offset, &hash, value, value_size);
+            error = bld_set_add_value(set, target, &offset, &hash, temp, value_size);
             if (!error) {break;}
         }
     } while (error);
 
+    free(temp);
     if (error) {
         log_fatal("Unable to add value to set");
     }
