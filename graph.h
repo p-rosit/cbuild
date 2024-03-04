@@ -8,10 +8,7 @@ typedef struct bld_search_info bld_search_info;
 typedef struct bld_node bld_node;
 
 typedef struct bld_funcs {
-    /* TODO: Hash set for faster lookup*/
-    size_t capacity;
-    size_t size;
-    char** funcs;
+    bld_set set;
 } bld_funcs;
 
 typedef struct bld_edges {
