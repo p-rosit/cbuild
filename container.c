@@ -361,20 +361,3 @@ void bld_map_free(bld_map* map) {
     free(map->keys);
     free(map->values);
 }
-
-bld_iter bld_iter_array(bld_array* array, size_t value_size) {
-    return (bld_iter) {
-        .as = (bld_container) {.array = array},
-        .key_size = 0,
-        .value_size = value_size,
-        .index = 0,
-    };
-}
-
-int bld_array_next(bld_iter* iter, void** value_ptr) {
-    if (iter->index >= iter->as.array->size) {
-        return 0;
-    }
-    *value_ptr = ((char*) iter->as.array->values) + iter->index++ * iter->value_size;
-    return 1;
-}
