@@ -1,8 +1,10 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 #include <stdlib.h>
+#include <inttypes.h>
 
-typedef size_t bld_hash;
+typedef uintmax_t bld_hash;
+typedef size_t bld_offset;
 
 typedef struct bld_array {
     size_t capacity;
@@ -14,7 +16,7 @@ typedef struct bld_set {
     size_t capacity;
     size_t size;
     size_t max_offset;
-    size_t* offset;
+    bld_offset* offset;
     bld_hash* hash;
     void* values;
 } bld_set;
@@ -23,7 +25,7 @@ typedef struct bld_map {
     size_t capacity;
     size_t size;
     size_t max_offset;
-    size_t* offset;
+    bld_offset* offset;
     bld_hash* hash;
     void* keys;
     void* values;
@@ -52,7 +54,7 @@ bld_set     bld_set_new();
 void        bld_set_free(bld_set*);
 void        bld_set_add(bld_set*, bld_hash, void*, size_t);
 int         bld_set_remove(bld_set*, bld_hash, void*, size_t);
-int         bld_set_has(bld_set*, bld_hash, void*, size_t);
+int         bld_set_has(bld_set*, bld_hash);
 
 bld_map     bld_map_new();
 void        bld_map_free(bld_map*);
