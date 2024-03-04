@@ -27,7 +27,7 @@ typedef struct bld_stack {
 struct bld_search_info {
     bld_graph* graph;
     bld_stack stack;
-    bld_stack visited; /* TODO: hash set for faster lookup */
+    bld_set visited;
 };
 
 void node_push(bld_stack* stack, bld_node* node) {
@@ -49,7 +49,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
 
     info->graph = graph;
     info->stack = (bld_stack) {.array = bld_array_new()};
-    info->visited = (bld_stack) {.array = bld_array_new()};
+    info->visited = bld_set_new();
 
     nodes = graph->nodes.array.values;
     for (size_t i = 0; i < graph->nodes.array.size; i++) {
@@ -65,14 +65,14 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
 
 void free_info(bld_search_info* info) {
     bld_array_free(&info->stack.array);
-    bld_array_free(&info->visited.array);
+    bld_set_free(&info->visited);
     free(info);
 }
 
 int next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
     uintmax_t index;
-    bld_node *node, **visited, *nodes;
+    bld_node *node, *nodes;
 
     while (node_visited) {
         if (info->stack.array.size <= 0) {
@@ -83,15 +83,12 @@ int next_file(bld_search_info* info, bld_file** file) {
         node = node_pop(&info->stack);
 
         node_visited = 0;
-        visited = info->visited.array.values;
-        for (size_t i = 0; i < info->visited.array.size; i++) {
-            if (node == visited[i]) {
-                node_visited = 1;
-                goto next_node;
-            }
+        if (bld_set_has(&info->visited, node->file->identifier.hash)) {
+            node_visited = 1;
+            goto next_node;
         }
 
-        node_push(&info->visited, node);
+        bld_set_add(&info->visited, node->file->identifier.hash, &node, sizeof(bld_node*));
 
         nodes = info->graph->nodes.array.values;
         for (size_t i = 0; i < node->edges.size; i++) {
