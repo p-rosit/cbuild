@@ -308,6 +308,34 @@ int bld_set_has(bld_set* set, bld_hash hash) {
     return 0;
 }
 
+bld_iter bld_iter_set(bld_set* set, size_t value_size) {
+    return (bld_iter) {
+        .set = (struct bld_iter_set) {
+            .set = set,
+            .value_size = value_size,
+            .index = 0,
+        }
+    };
+}
+
+int bld_set_next(bld_iter* iter, void* value_ptr) {
+    int i, has_next = 0;
+    size_t value_size = iter->set.value_size;
+    bld_set* set = iter->set.set;
+    char* values = set->values;
+    
+    for (i = iter->set.index; i < set->capacity + set->max_offset; i++) {
+        if (set->offset[i] < set->max_offset) {
+            has_next = 1;
+            memcpy(value_ptr, values + iter->set.index++ * value_size, value_size);
+            break;
+        }
+    }
+
+    iter->set.index = i;
+    return has_next;
+}
+
 bld_map bld_map_new() {
     return (bld_map) {
         .capacity = 0,
