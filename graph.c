@@ -226,32 +226,30 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     push_node(&graph->nodes, parse_symbols(file, symbol_path));
     nodes = graph->nodes.array.values;
     node = &nodes[graph->nodes.array.size - 1];
-    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s)", path_to_string(&file->path), node->defined_funcs.size, node->used_funcs.size);
+    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s)", path_to_string(&file->path), node->defined_funcs.set.size, node->used_funcs.set.size);
 
     free_string(&cmd);
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
-    char *undef, *def;
     bld_node *to_node, *nodes;
+    bld_funcs used, defined;
 
     nodes = graph->nodes.array.values;
+    used = node->used_funcs;
     for (size_t i = 0; i < graph->nodes.array.size; i++) {
         to_node = &nodes[i];
+        defined = to_node->defined_funcs;
 
-        for (size_t j = 0; j < node->used_funcs.size; j++) {
-            undef = node->used_funcs.funcs[j];
-            for (size_t k = 0; k < to_node->defined_funcs.size; k++) {
-                def = to_node->defined_funcs.funcs[k];
-                if (strcmp(undef, def) == 0) {
-                    if (add_edge(node, i)) {
-                        log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&node->file->name), make_string(&to_node->file->name));
-                    }
-                    goto next_node;
-                }
+        for (size_t j = 0; j < used.set.capacity + used.set.max_offset; j++) {
+            if (used.set.offset[j] >= used.set.max_offset) {continue;}
+            if (!bld_set_has(&defined.set, used.set.hash[j])) {continue;}
+
+            if (add_edge(node, i)) {
+                log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&node->file->name), make_string(&to_node->file->name));
             }
+            goto next_node;
         }
-
         next_node:;
     }
 }
@@ -348,36 +346,19 @@ void free_node(bld_node* node) {
 }
 
 bld_funcs new_funcs() {
-    return (bld_funcs) {
-        .capacity = 0,
-        .size = 0,
-        .funcs = NULL,
-    };
+    return (bld_funcs) {.set = bld_set_new()};
 }
 
 void free_funcs(bld_funcs* funcs) {
-    for (size_t i = 0; i < funcs->size; i++) {
-        free(funcs->funcs[i]);
+    char** func_ptr = funcs->set.values;
+    for (size_t i = 0; i < funcs->set.capacity + funcs->set.max_offset; i++) {
+        if (funcs->set.offset[i] >= funcs->set.max_offset) {continue;}
+        free(func_ptr[i]);
     }
-    free(funcs->funcs);
+    bld_set_free(&funcs->set);
 }
 
 void add_func(bld_funcs* funcs, bld_string* func) {
-    size_t capacity = funcs->capacity;
-    char** names;
-
-    if (funcs->size >= funcs->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        names = malloc(capacity * sizeof(char*));
-        if (names == NULL) {log_fatal("Could not add function \"%s\"", make_string(func));}
-
-        memcpy(names, funcs->funcs, funcs->size * sizeof(char*));
-        free(funcs->funcs);
-
-        funcs->funcs = names;
-        funcs->capacity = capacity;
-    }
-
-    funcs->funcs[funcs->size++] = make_string(func);
+    char* str = make_string(func);
+    bld_set_add(&funcs->set, hash_string(str, 0), &str, sizeof(char*));
 }
