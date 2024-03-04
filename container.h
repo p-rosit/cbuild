@@ -31,17 +31,29 @@ typedef struct bld_map {
     void* values;
 } bld_map;
 
-typedef union bld_container {
+struct bld_iter_array {
     bld_array* array;
-    bld_set* set;
-    bld_map* map;
-} bld_container;
+    size_t value_size;
+    size_t index;
+};
 
-typedef struct bld_iter {
-    bld_container as;
+struct bld_iter_set {
+    bld_set* set;
+    size_t value_size;
+    size_t index;
+};
+
+struct bld_iter_map {
+    bld_map* map;
     size_t key_size;
     size_t value_size;
     size_t index;
+};
+
+typedef union bld_iter {
+    struct bld_iter_array array;
+    struct bld_iter_set set;
+    struct bld_iter_map map;
 } bld_iter;
 
 bld_array   bld_array_new();
@@ -64,7 +76,7 @@ void        bld_map_remove(bld_map*, bld_hash, void*, size_t, size_t);
 bld_iter    bld_iter_array(bld_array*, size_t);
 bld_iter    bld_iter_set(bld_set*, size_t);
 bld_iter    bld_iter_map(bld_map*, size_t);
-int         bld_array_next(bld_iter*, void**);
-int         bld_set_next(bld_iter*, void**);
-int         bld_map_next(bld_iter*, void**, void**);
+int         bld_array_next(bld_iter*, void*);
+int         bld_set_next(bld_iter*, void*);
+int         bld_map_next(bld_iter*, void*, void*);
 #endif

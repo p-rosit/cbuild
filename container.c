@@ -57,6 +57,28 @@ void bld_array_pop(bld_array* array, void* ret_value, size_t value_size) {
     memcpy(ret_value, ((char*)array->values) + --array->size * value_size, value_size);
 }
 
+bld_iter bld_iter_array(bld_array* array, size_t value_size) {
+    return (bld_iter) {
+        .array = (struct bld_iter_array) {
+            .array = array,
+            .value_size = value_size,
+            .index = 0,
+        }
+    };
+}
+
+int bld_array_next(bld_iter* iter, void* value_ptr) {
+    size_t value_size = iter->array.value_size;
+    bld_array* array = iter->array.array;
+    char* values = array->values;
+    if (iter->array.index >= array->size) {
+        return 0;
+    }
+
+    memcpy(value_ptr, values + iter->array.index++ * value_size, value_size);
+    return 1;
+}
+
 bld_offset bld_hash_compute_offset(size_t capacity) {
     bld_offset max_offset = 0;
 
