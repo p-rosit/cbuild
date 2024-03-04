@@ -190,11 +190,17 @@ void serialize_node(FILE* cache, bld_graph* graph, bld_node* node, int depth) {
 }
 
 void serialize_functions(FILE* cache, bld_funcs* funcs, int depth) {
+    int first = 1;
+    char** func_ptr = funcs->set.values;
     fprintf(cache, "[\n");
 
-    for (size_t i = 0; i < funcs->size; i++) {
-        if (i > 0) {fprintf(cache, ",\n");}
-        fprintf(cache, "%*c\"%s\"", 2 * (depth + 1), ' ', funcs->funcs[i]);
+    func_ptr = funcs->set.values;
+    for (size_t i = 0; i < funcs->set.capacity + funcs->set.max_offset; i++) {
+        if (funcs->set.offset[i] >= funcs->set.max_offset) {continue;}
+        if (!first) {fprintf(cache, ",\n");}
+
+        fprintf(cache, "%*c\"%s\"", 2 * (depth + 1), ' ', func_ptr[i]);
+        first = 0;
     }
 
     fprintf(cache, "\n");
