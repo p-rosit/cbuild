@@ -229,25 +229,20 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
-    bld_node *to_node, *nodes;
-    bld_funcs used, defined;
+    size_t i = 0;
+    bld_iter iter = bld_iter_array(&graph->nodes.array, sizeof(bld_node));
+    bld_node to_node;
 
-    nodes = graph->nodes.array.values;
-    used = node->used_funcs;
-    for (size_t i = 0; i < graph->nodes.array.size; i++) {
-        to_node = &nodes[i];
-        defined = to_node->defined_funcs;
-
-        for (size_t j = 0; j < used.set.capacity + used.set.max_offset; j++) {
-            if (used.set.offset[j] >= used.set.max_offset) {continue;}
-            if (!bld_set_has(&defined.set, used.set.hash[j])) {continue;}
-
-            if (add_edge(node, i)) {
-                log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&node->file->name), make_string(&to_node->file->name));
-            }
+    while (bld_array_next(&iter, &to_node)) {
+        if (bld_set_empty_intersection(&node->used_funcs.set, &to_node.defined_funcs.set)) {
             goto next_node;
         }
-        next_node:;
+        if (add_edge(node, i)) {
+            log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&node->file->name), make_string(&to_node.file->name));
+        }
+
+        next_node:
+        i++;
     }
 }
 
