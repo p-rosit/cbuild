@@ -67,6 +67,7 @@ void        bld_set_free(bld_set*);
 void        bld_set_add(bld_set*, bld_hash, void*, size_t);
 int         bld_set_remove(bld_set*, bld_hash, void*, size_t);
 int         bld_set_has(bld_set*, bld_hash);
+int         bld_set_empty_intersection(bld_set*, bld_set*);
 
 bld_map     bld_map_new();
 void        bld_map_free(bld_map*);

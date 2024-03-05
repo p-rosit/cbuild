@@ -314,6 +314,16 @@ int bld_set_has(bld_set* set, bld_hash hash) {
     return 0;
 }
 
+int bld_set_empty_intersection(bld_set* set1, bld_set* set2) {
+    for (size_t i = 0; i < set1->capacity + set1->max_offset; i++) {
+        if (set1->offset[i] >= set1->max_offset) {continue;}
+        if (bld_set_has(set2, set1->hash[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 bld_iter bld_iter_set(bld_set* set, size_t value_size) {
     return (bld_iter) {
         .set = (struct bld_iter_set) {
