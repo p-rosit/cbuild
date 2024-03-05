@@ -580,7 +580,7 @@ int parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
 int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
     int exists, index, key_num = 0;
     int result, parse_complete;
-    bld_string str = new_string();
+    bld_string str;
     char c, *temp;
 
     memset(parsed, 0, entries * sizeof(int));
@@ -646,7 +646,6 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
         if (result) {goto parse_failed;}
 
         free_string(&str);
-        str = new_string();
         c = next_character(file);
         switch (c) {
             case ('}'): {

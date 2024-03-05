@@ -199,6 +199,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     bld_node *node, *nodes;
 
     if (file->type == BLD_HEADER) {
+        free_string(&cmd);
         return;
     }
 

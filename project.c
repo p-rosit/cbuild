@@ -25,7 +25,7 @@ bld_path extract_path(int argc, char** argv) {
 }
 
 bld_path extract_build_path(bld_path* root) {
-    bld_path build_path = new_path();
+    bld_path build_path;
     bld_string str = new_string();
     char* name;
     append_string(&str, get_last_dir(root));
@@ -150,6 +150,7 @@ void set_main_file(bld_project* project, char* str) {
 }
 
 void add_build(bld_project* project, char* path) {
+    free_path(&project->build);
     project->build = path_from_string(path);
     ignore_path(project, path);
 }
