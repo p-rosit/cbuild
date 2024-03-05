@@ -3,10 +3,13 @@
 #include "dstr.h"
 
 bld_string new_string() {
+    char* chars = malloc(1);
+    if (chars == NULL) {log_fatal("Could not allocate minimal string.");}
+
     return (bld_string) {
-        .capacity = 0,
+        .capacity = 1,
         .size = 0,
-        .chars = NULL,
+        .chars = chars,
     };
 }
 
@@ -43,7 +46,7 @@ int push_character(bld_string* str, char c) {
     size_t capacity = str->capacity;
     char* chars;
     
-    if (str->size >= str->capacity) {
+    if (str->capacity == 0 || str->size >= str->capacity - 1) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
         chars = malloc(capacity);
         if (chars == NULL) {
@@ -84,9 +87,6 @@ void append_string(bld_string* str, char* s) {
 }
 
 char* make_string(bld_string* str) {
-    if (!push_character(str, '\0')) {
-        log_fatal("Could not null terminate string \"%.*s\".", (int) str->size, str->chars);
-    }
-    str->size -= 1;
+    str->chars[str->size] = '\0';
     return str->chars;
 }
