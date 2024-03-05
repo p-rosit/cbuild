@@ -7,8 +7,8 @@
 
 bld_edges   new_edges();
 void        free_edges(bld_edges*);
-int         append_edge(bld_edges*, uintmax_t);
-int         add_edge(bld_node*, uintmax_t);
+void        append_edge(bld_edges*, uintmax_t);
+void        add_edge(bld_node*, uintmax_t);
 
 bld_nodes   new_nodes();
 void        free_nodes(bld_nodes*);
@@ -73,6 +73,7 @@ int next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
     uintmax_t index;
     bld_node *node, *nodes;
+    bld_iter iter;
 
     while (node_visited) {
         if (info->stack.array.size <= 0) {
@@ -91,8 +92,8 @@ int next_file(bld_search_info* info, bld_file** file) {
         bld_set_add(&info->visited, node->file->identifier.hash, &node, sizeof(bld_node*));
 
         nodes = info->graph->nodes.array.values;
-        for (size_t i = 0; i < node->edges.size; i++) {
-            index = node->edges.indices[i];
+        iter = bld_iter_array(&node->edges.array, sizeof(uintmax_t));
+        while (bld_array_next(&iter, &index)) {
             node_push(&info->stack, &nodes[index]);
         }
 
@@ -237,9 +238,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
         if (bld_set_empty_intersection(&node->used_funcs.set, &to_node.defined_funcs.set)) {
             goto next_node;
         }
-        if (add_edge(node, i)) {
-            log_fatal("Could not add edge from \"%s\" to \"%s\"", make_string(&node->file->name), make_string(&to_node.file->name));
-        }
+        add_edge(node, i);
 
         next_node:
         i++;
@@ -270,40 +269,19 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
 }
 
 bld_edges new_edges() {
-    return (bld_edges) {
-        .capacity = 0,
-        .size = 0,
-        .indices = NULL,
-    };
+    return (bld_edges) {.array = bld_array_new()};
 }
 
 void free_edges(bld_edges* edges) {
-    free(edges->indices);
+    bld_array_free(&edges->array);
 }
 
-int add_edge(bld_node* from, uintmax_t to_index) {
-    return append_edge(&from->edges, to_index);
+void add_edge(bld_node* from, uintmax_t to_index) {
+    append_edge(&from->edges, to_index);
 }
 
-int append_edge(bld_edges* edges, uintmax_t to_index) {
-    size_t capacity = edges->capacity;
-    uintmax_t* indices;
-
-    if (edges->size >= edges->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        indices = malloc(capacity * sizeof(bld_node*));
-        if (indices == NULL) {return -1;}
-
-        memcpy(indices, edges->indices, edges->size * sizeof(uintmax_t));
-        free(edges->indices);
-
-        edges->indices = indices;
-        edges->capacity = capacity;
-    }
-
-    edges->indices[edges->size++] = to_index;
-    return 0;
+void append_edge(bld_edges* edges, uintmax_t to_index) {
+    bld_array_push(&edges->array, &to_index, sizeof(uintmax_t));
 }
 
 bld_nodes new_nodes() {

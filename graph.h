@@ -13,9 +13,10 @@ typedef struct bld_funcs {
 
 typedef struct bld_edges {
     /* TODO: hash set for faster lookup */
-    size_t capacity;
-    size_t size;
-    uintmax_t* indices;
+    // size_t capacity;
+    // size_t size;
+    // uintmax_t* indices;
+    bld_array array;
 } bld_edges;
 
 struct bld_node {
