@@ -133,7 +133,7 @@ int parse_cache(bld_project* cache, bld_path* root) {
 
 bld_nodes new_nodes();
 int parse_graph(FILE* file, bld_project* project) {
-    uintmax_t forward_id, file_id;
+    uintmax_t forward_id, file_id, *indices;
     int amount_parsed;
     bld_node* ns;
     bld_files* files = &project->files;
@@ -153,12 +153,14 @@ int parse_graph(FILE* file, bld_project* project) {
     }
 
     for (size_t i = 0; i < nodes->array.size; i++) {
-        for (size_t j = 0; j < ns[i].edges.size; j++) {
-            forward_id = ns[i].edges.indices[j];
+        indices = ns[i].edges.array.values;
+
+        for (size_t j = 0; j < ns[i].edges.array.size; j++) {
+            forward_id = indices[j];
             for (size_t k = 0; k < nodes->array.size; k++) {
                 file_id = ns[k].file->identifier.id;
                 if (forward_id == file_id) {
-                    ns[i].edges.indices[j] = k;
+                    indices[j] = k;
                     break;
                 }
             }
@@ -267,7 +269,7 @@ int parse_edges(FILE* file, bld_node* node) {
     return 0;
 }
 
-int append_edge(bld_edges*, uintmax_t);
+void append_edge(bld_edges*, uintmax_t);
 int parse_edge(FILE* file, bld_edges* edges) {
     uintmax_t num;
     int result = parse_uintmax(file, &num);

@@ -208,19 +208,25 @@ void serialize_functions(FILE* cache, bld_funcs* funcs, int depth) {
 }
 
 void serialize_edges(FILE* cache, bld_graph* graph, bld_edges* edges, int depth) {
+    size_t i = 0;
+    uintmax_t index;
     bld_node* nodes = graph->nodes.array.values;
-    if (edges->size == 0) {
+    bld_iter iter;
+    if (edges->array.size == 0) {
         fprintf(cache, "[]");
         return;
-    } else if (edges->size == 1) {
-        fprintf(cache, "[%ju]", nodes[edges->indices[0]].file->identifier.id);
+    } else if (edges->array.size == 1) {
+        index = *((uintmax_t*) edges->array.values);
+        fprintf(cache, "[%ju]", nodes[index].file->identifier.id);
         return;
     }
     fprintf(cache, "[\n");
 
-    for (size_t i = 0; i < edges->size; i++) {
+    iter = bld_iter_array(&edges->array, sizeof(uintmax_t));
+    while (bld_array_next(&iter, &index)) {
         if (i > 0) {fprintf(cache, ",\n");};
-        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', nodes[edges->indices[i]].file->identifier.id);
+        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', nodes[index].file->identifier.id);
+        i++;
     }
 
     fprintf(cache, "\n");
