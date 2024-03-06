@@ -268,12 +268,12 @@ void free_edges(bld_edges* edges) {
     bld_array_free(&edges->array);
 }
 
-void add_edge(bld_node* from, uintmax_t to_index) {
-    append_edge(&from->edges, to_index);
+void add_edge(bld_node* from, uintmax_t file_id) {
+    append_edge(&from->edges, file_id);
 }
 
-void append_edge(bld_edges* edges, uintmax_t to_index) {
-    bld_array_push(&edges->array, &to_index, sizeof(uintmax_t));
+void append_edge(bld_edges* edges, uintmax_t file_id) {
+    bld_array_push(&edges->array, &file_id, sizeof(uintmax_t));
 }
 
 bld_nodes new_nodes() {
