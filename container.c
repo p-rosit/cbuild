@@ -252,7 +252,7 @@ int bld_set_set_capacity(bld_set* set, size_t capacity, size_t value_size) {
     return error;
 }
 
-void bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
+int bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
     int error;
     size_t target;
     size_t new_capacity = set->capacity;
@@ -269,7 +269,7 @@ void bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
         if (!error && set->hash[target] == hash && set->offset[target] < set->max_offset) {
             log_warn("Trying to add value twice");
             free(temp);
-            return;
+            return -1;
         }
     } else {
         target = 0;
@@ -306,6 +306,7 @@ void bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
         log_fatal("Unable to add value to set");
     }
     set->size += 1;
+    return 0;
 }
 
 int bld_set_has(bld_set* set, bld_hash hash) {
