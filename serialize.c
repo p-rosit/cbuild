@@ -209,23 +209,23 @@ void serialize_functions(FILE* cache, bld_funcs* funcs, int depth) {
 
 void serialize_edges(FILE* cache, bld_graph* graph, bld_edges* edges, int depth) {
     size_t i = 0;
-    uintmax_t index;
+    uintmax_t* index;
     bld_node* nodes = graph->nodes.array.values;
     bld_iter iter;
     if (edges->array.size == 0) {
         fprintf(cache, "[]");
         return;
     } else if (edges->array.size == 1) {
-        index = *((uintmax_t*) edges->array.values);
-        fprintf(cache, "[%ju]", nodes[index].file->identifier.id);
+        index = edges->array.values;
+        fprintf(cache, "[%ju]", nodes[*index].file->identifier.id);
         return;
     }
     fprintf(cache, "[\n");
 
     iter = bld_iter_array(&edges->array, sizeof(uintmax_t));
-    while (bld_array_next(&iter, &index)) {
+    while (bld_array_next(&iter, (void**) &index)) {
         if (i > 0) {fprintf(cache, ",\n");};
-        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', nodes[index].file->identifier.id);
+        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', nodes[*index].file->identifier.id);
         i++;
     }
 

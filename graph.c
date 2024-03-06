@@ -71,7 +71,7 @@ void free_info(bld_search_info* info) {
 
 int next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
-    uintmax_t index;
+    uintmax_t* index;
     bld_node *node, *nodes;
     bld_iter iter;
 
@@ -93,8 +93,8 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         nodes = info->graph->nodes.array.values;
         iter = bld_iter_array(&node->edges.array, sizeof(uintmax_t));
-        while (bld_array_next(&iter, &index)) {
-            node_push(&info->stack, &nodes[index]);
+        while (bld_array_next(&iter, (void**) &index)) {
+            node_push(&info->stack, &nodes[*index]);
         }
 
         next_node:;
@@ -233,10 +233,10 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 void connect_node(bld_graph* graph, bld_node* node) {
     size_t i = 0;
     bld_iter iter = bld_iter_array(&graph->nodes.array, sizeof(bld_node));
-    bld_node to_node;
+    bld_node* to_node;
 
-    while (bld_array_next(&iter, &to_node)) {
-        if (bld_set_empty_intersection(&node->used_funcs.set, &to_node.defined_funcs.set)) {
+    while (bld_array_next(&iter, (void**) &to_node)) {
+        if (bld_set_empty_intersection(&node->used_funcs.set, &to_node->defined_funcs.set)) {
             goto next_node;
         }
         add_edge(node, i);
