@@ -3,7 +3,7 @@
 #include "path.h"
 
 bld_paths new_paths() {
-    return (bld_paths) {.array = bld_array_new()};
+    return (bld_paths) {.array = bld_array_new(sizeof(bld_path))};
 }
 
 void free_paths(bld_paths* paths) {
@@ -15,7 +15,7 @@ void free_paths(bld_paths* paths) {
 }
 
 void push_path(bld_paths* paths, bld_path path) {
-    bld_array_push(&paths->array, &path, sizeof(bld_path));
+    bld_array_push(&paths->array, &path);
 }
 
 bld_path new_path() {

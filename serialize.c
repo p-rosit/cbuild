@@ -97,7 +97,7 @@ void serialize_compiler_options(FILE* cache, bld_options* options, int depth) {
 
 void serialize_files(FILE* cache, bld_files* files, int depth) {
     int first = 1;
-    bld_iter iter = bld_iter_set(&files->set, sizeof(bld_file));
+    bld_iter iter = bld_iter_set(&files->set);
     bld_file* file;
 
     fprintf(cache, "[\n");
@@ -160,7 +160,7 @@ void serialize_file_id(FILE* cache, bld_file_identifier id) {
 
 void serialize_graph(FILE* cache, bld_graph* graph, int depth) {
     int first = 1;
-    bld_iter iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
+    bld_iter iter = bld_iter_set(&graph->nodes.set);
     bld_node* node;
 
     fprintf(cache, "[\n");
@@ -233,7 +233,7 @@ void serialize_edges(FILE* cache, bld_edges* edges, int depth) {
     }
     fprintf(cache, "[\n");
 
-    iter = bld_iter_array(&edges->array, sizeof(uintmax_t));
+    iter = bld_iter_array(&edges->array);
     while (bld_array_next(&iter, (void**) &index)) {
         if (i > 0) {fprintf(cache, ",\n");};
         fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', *index);

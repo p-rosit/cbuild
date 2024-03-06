@@ -114,7 +114,7 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     if (c_ptr == NULL) {log_fatal("Could not add compiler to \"%s\"", str);}
     *c_ptr = compiler;
 
-    iter = bld_iter_set(&files.set, sizeof(bld_file));
+    iter = bld_iter_set(&files.set);
     while (bld_set_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {
             if (match_found) {
@@ -136,7 +136,7 @@ void set_main_file(bld_project* project, char* str) {
     bld_path path = path_from_string(str);
     bld_files files = project->files;
     bld_file* file;
-    bld_iter iter = bld_iter_set(&files.set, sizeof(bld_file));
+    bld_iter iter = bld_iter_set(&files.set);
 
     while (bld_set_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {
@@ -340,7 +340,7 @@ int compile_total(bld_project* project, char* executable_name) {
     bld_string cmd;
     bld_search_info* bfs;
 
-    main_file = bld_set_get(&project->files.set, project->main_file, sizeof(bld_file));
+    main_file = bld_set_get(&project->files.set, project->main_file);
     if (main_file == NULL) {
         log_fatal("No main file has been set");
         return 1;
@@ -387,7 +387,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     uintmax_t hash;
     bld_path path;
     bld_file* file;
-    bld_iter iter = bld_iter_set(&project->files.set, sizeof(bld_file));
+    bld_iter iter = bld_iter_set(&project->files.set);
 
     hash = hash_compiler(&project->compiler, 5031);
     while (bld_set_next(&iter, (void**) &file)) {
@@ -453,7 +453,7 @@ int cached_compilation(bld_project* project, bld_file* file) {
     int exists, new_options;
     bld_file* f;
 
-    f = bld_set_get(&project->cache->files.set, file->identifier.id, sizeof(bld_file));
+    f = bld_set_get(&project->cache->files.set, file->identifier.id);
     if (f != NULL) {
         exists = 1;
         new_options = (file->identifier.hash != f->identifier.hash);
@@ -481,7 +481,7 @@ int test_project(bld_project* project, char* path) {
 }
 
 bld_ignore new_ignore_ids() {
-    return (bld_ignore) {.set = bld_set_new()};
+    return (bld_ignore) {.set = bld_set_new(0)};
 }
 
 void free_ignore_ids(bld_ignore* ignore) {
@@ -489,5 +489,5 @@ void free_ignore_ids(bld_ignore* ignore) {
 }
 
 void append_ignore_id(bld_ignore* ignore, uintmax_t id) {
-    bld_set_add(&ignore->set, id, NULL, 0);
+    bld_set_add(&ignore->set, id, NULL);
 }

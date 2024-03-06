@@ -63,7 +63,7 @@ void set_main_rebuild(bld_project* build, bld_path* path) {
         log_fatal("Expected \"%s\" to be a valid path to the build file", path_to_string(path));
     }
 
-    file = bld_set_get(&build->files.set, file_stat.st_ino, sizeof(bld_file));
+    file = bld_set_get(&build->files.set, file_stat.st_ino);
     
     if (file == NULL) {log_fatal("Main file has not been indexed");}
 

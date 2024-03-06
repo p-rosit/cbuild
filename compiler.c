@@ -47,7 +47,7 @@ void add_option(bld_compiler* compiler, char* option) {
 }
 
 bld_options new_options() {
-    return (bld_options) {.array = bld_array_new()};
+    return (bld_options) {.array = bld_array_new(sizeof(char*))};
 }
 
 void free_options(bld_options* options) {
@@ -58,7 +58,7 @@ void free_options(bld_options* options) {
 }
 
 bld_options copy_options(bld_options* options) {
-    return (bld_options) {.array = bld_array_copy(&options->array, sizeof(char*))};
+    return (bld_options) {.array = bld_array_copy(&options->array)};
 }
 
 void append_option(bld_options* options, char* str) {
@@ -67,5 +67,5 @@ void append_option(bld_options* options, char* str) {
 
     append_string(&s, str);
     temp = make_string(&s);
-    bld_array_push(&options->array, &temp, sizeof(char*));
+    bld_array_push(&options->array, &temp);
 }

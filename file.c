@@ -64,7 +64,7 @@ uintmax_t hash_file(bld_file* file, uintmax_t seed) {
 }
 
 bld_files new_files() {
-    return (bld_files) {.set = bld_set_new()};
+    return (bld_files) {.set = bld_set_new(sizeof(bld_file))};
 }
 
 void clear_files(bld_files* files) {
@@ -72,7 +72,7 @@ void clear_files(bld_files* files) {
 }
 
 void free_files(bld_files* files) {
-    bld_iter iter = bld_iter_set(&files->set, sizeof(bld_file));
+    bld_iter iter = bld_iter_set(&files->set);
     bld_file* file;
 
     while (bld_set_next(&iter, (void**) &file)) {
@@ -82,5 +82,5 @@ void free_files(bld_files* files) {
 }
 
 int append_file(bld_files* files, bld_file file) {
-    return bld_set_add(&files->set, file.identifier.id, &file, sizeof(bld_file));
+    return bld_set_add(&files->set, file.identifier.id, &file);
 }

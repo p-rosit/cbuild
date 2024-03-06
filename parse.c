@@ -148,9 +148,9 @@ int parse_graph(FILE* file, bld_project* project) {
         return -1;
     }
 
-    iter = bld_iter_set(&files->set, sizeof(bld_file));
+    iter = bld_iter_set(&files->set);
     while (bld_set_next(&iter, (void**) &f)) {
-        node = bld_set_get(&nodes->set, f->identifier.id, sizeof(bld_node));
+        node = bld_set_get(&nodes->set, f->identifier.id);
         node->file = f;
     }
 

@@ -31,12 +31,12 @@ struct bld_search_info {
 };
 
 void node_push(bld_stack* stack, bld_node* node) {
-    bld_array_push(&stack->array, &node, sizeof(bld_node*));
+    bld_array_push(&stack->array, &node);
 }
 
 bld_node* node_pop(bld_stack* stack) {
     bld_node* node;
-    bld_array_pop(&stack->array, &node, sizeof(bld_node*));
+    bld_array_pop(&stack->array, &node);
     return node;
 }
 
@@ -49,10 +49,10 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
     }
 
     info->graph = graph;
-    info->stack = (bld_stack) {.array = bld_array_new()};
-    info->visited = bld_set_new();
+    info->stack = (bld_stack) {.array = bld_array_new(sizeof(bld_node*))};
+    info->visited = bld_set_new(sizeof(uintmax_t));
 
-    iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
+    iter = bld_iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &node)) {
         if (file_eq(node->file, main)) {
             node_push(&info->stack, node);
@@ -89,11 +89,11 @@ int next_file(bld_search_info* info, bld_file** file) {
             goto next_node;
         }
 
-        bld_set_add(&info->visited, node->file->identifier.hash, &node, sizeof(bld_node*));
+        bld_set_add(&info->visited, node->file->identifier.hash, &node);
 
-        iter = bld_iter_array(&node->edges.array, sizeof(uintmax_t));
+        iter = bld_iter_array(&node->edges.array);
         while (bld_array_next(&iter, (void**) &index)) {
-            to_node = bld_set_get(&info->graph->nodes.set, *index, sizeof(bld_node));
+            to_node = bld_set_get(&info->graph->nodes.set, *index);
             node_push(&info->stack, to_node);
         }
 
@@ -223,7 +223,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
-    bld_iter iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
+    bld_iter iter = bld_iter_set(&graph->nodes.set);
     bld_node* to_node;
 
     while (bld_set_next(&iter, (void**) &to_node)) {
@@ -244,14 +244,14 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     symbol_path = copy_path(cache_path);
     append_dir(&symbol_path, "symbols");
 
-    iter = bld_iter_set(&graph->files->set, sizeof(bld_file));
+    iter = bld_iter_set(&graph->files->set);
     while (bld_set_next(&iter, (void**) &file)) {
         populate_node(graph, cache_path, &symbol_path, file);
     }
 
     remove(path_to_string(&symbol_path));
 
-    iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
+    iter = bld_iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &node)) {
         connect_node(graph, node);
     }
@@ -261,7 +261,7 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
 }
 
 bld_edges new_edges() {
-    return (bld_edges) {.array = bld_array_new()};
+    return (bld_edges) {.array = bld_array_new(sizeof(uintmax_t))};
 }
 
 void free_edges(bld_edges* edges) {
@@ -273,15 +273,15 @@ void add_edge(bld_node* from, uintmax_t file_id) {
 }
 
 void append_edge(bld_edges* edges, uintmax_t file_id) {
-    bld_array_push(&edges->array, &file_id, sizeof(uintmax_t));
+    bld_array_push(&edges->array, &file_id);
 }
 
 bld_nodes new_nodes() {
-    return (bld_nodes) {.set = bld_set_new()};
+    return (bld_nodes) {.set = bld_set_new(sizeof(bld_node))};
 }
 
 void free_nodes(bld_nodes* nodes) {
-    bld_iter iter = bld_iter_set(&nodes->set, sizeof(bld_node));
+    bld_iter iter = bld_iter_set(&nodes->set);
     bld_node* node;
 
     while (bld_set_next(&iter, (void**) &node)) {
@@ -291,7 +291,7 @@ void free_nodes(bld_nodes* nodes) {
 }
 
 void push_node(bld_nodes* nodes, bld_node node) {
-    bld_set_add(&nodes->set, node.file->identifier.id, &node, sizeof(bld_node));
+    bld_set_add(&nodes->set, node.file->identifier.id, &node);
 }
 
 bld_node new_node(bld_file* file) {
@@ -310,7 +310,7 @@ void free_node(bld_node* node) {
 }
 
 bld_funcs new_funcs() {
-    return (bld_funcs) {.set = bld_set_new()};
+    return (bld_funcs) {.set = bld_set_new(sizeof(char*))};
 }
 
 void free_funcs(bld_funcs* funcs) {
@@ -324,5 +324,5 @@ void free_funcs(bld_funcs* funcs) {
 
 void add_func(bld_funcs* funcs, bld_string* func) {
     char* str = make_string(func);
-    bld_set_add(&funcs->set, hash_string(str, 0), &str, sizeof(char*));
+    bld_set_add(&funcs->set, hash_string(str, 0), &str);
 }
