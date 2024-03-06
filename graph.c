@@ -286,19 +286,21 @@ void append_edge(bld_edges* edges, uintmax_t to_index) {
 }
 
 bld_nodes new_nodes() {
-    return (bld_nodes) {.array = bld_array_new()};
+    return (bld_nodes) {.set = bld_set_new()};
 }
 
 void free_nodes(bld_nodes* nodes) {
-    bld_node* ns = nodes->array.values;
-    for (size_t i = 0; i < nodes->array.size; i++) {
-        free_node(&ns[i]);
+    bld_iter iter = bld_iter_set(&nodes->set, sizeof(bld_node));
+    bld_node* node;
+
+    while (bld_set_next(&iter, (void**) &node)) {
+        free_node(node);
     }
-    bld_array_free(&nodes->array);
+    bld_set_free(&nodes->set);
 }
 
 void push_node(bld_nodes* nodes, bld_node node) {
-    bld_array_push(&nodes->array, &node, sizeof(bld_node));
+    bld_set_add(&nodes->set, node.file->identifier.id, &node, sizeof(bld_node));
 }
 
 bld_node new_node(bld_file* file) {

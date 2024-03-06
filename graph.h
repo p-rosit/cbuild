@@ -27,7 +27,7 @@ struct bld_node {
 };
 
 typedef struct bld_nodes {
-    bld_array array;
+    bld_set set;
 } bld_nodes;
 
 typedef struct bld_graph {
