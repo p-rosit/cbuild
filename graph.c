@@ -106,16 +106,9 @@ int next_file(bld_search_info* info, bld_file** file) {
 }
 
 bld_graph new_graph(bld_files* files) {
-    size_t capacity;
-    if (files == NULL) {
-        capacity = 0;
-    } else {
-        capacity = files->size;
-    }
-
     return (bld_graph) {
         .files = files,
-        .nodes = new_nodes(capacity),
+        .nodes = new_nodes(),
     };
 }
 
