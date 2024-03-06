@@ -14,9 +14,7 @@ typedef struct bld_extra {
 } bld_extra;
 
 typedef struct bld_ignore {
-    size_t capacity;
-    size_t size;
-    uintmax_t* ids;
+    bld_set set;
 } bld_ignore;
 
 typedef struct bld_project bld_project;

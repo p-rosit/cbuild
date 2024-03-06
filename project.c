@@ -243,20 +243,18 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
         if (strcmp(file_ptr->d_name, ".") == 0 || strcmp(file_ptr->d_name, "..") == 0) {
             continue;
         }
-        if (file_ptr->d_name[0] == '.') {goto next_file;}
-        for (size_t i = 0; i < project->ignore_paths.size; i++) {
-            if (file_ptr->d_ino == project->ignore_paths.ids[i]) {
-                log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name); /* TODO: print better */
-                goto next_file;
-            }
+        if (file_ptr->d_name[0] == '.') {
+            continue;
+        }
+        if (bld_set_has(&project->ignore_paths.set, file_ptr->d_ino)) {
+            log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name);
+            continue;
         }
 
         sub_path = copy_path(path);
         append_dir(&sub_path, file_ptr->d_name);
         index_recursive(project, &sub_path, file_ptr->d_name);
         free_path(&sub_path);
-
-        next_file:;
     }
     
     closedir(dir);
@@ -476,33 +474,13 @@ int test_project(bld_project* project, char* path) {
 }
 
 bld_ignore new_ignore_ids() {
-    return (bld_ignore) {
-        .capacity = 0,
-        .size = 0,
-        .ids = NULL,
-    };
+    return (bld_ignore) {.set = bld_set_new()};
 }
 
 void free_ignore_ids(bld_ignore* ignore) {
-    free(ignore->ids);
+    bld_set_free(&ignore->set);
 }
 
 void append_ignore_id(bld_ignore* ignore, uintmax_t id) {
-    size_t capacity = ignore->capacity;
-    uintmax_t* ids;
-
-    if (ignore->size >= ignore->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-
-        ids = malloc(capacity * sizeof(uintmax_t));
-        if (ids == NULL) {log_fatal("Could not append id to ignore path");}
-
-        memcpy(ids, ignore->ids, ignore->size * sizeof(uintmax_t));
-        free(ignore->ids);
-
-        ignore->capacity = capacity;
-        ignore->ids = ids;
-    }
-
-    ignore->ids[ignore->size++] = id;
+    bld_set_add(&ignore->set, id, NULL, 0);
 }
