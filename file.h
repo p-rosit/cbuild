@@ -34,9 +34,10 @@ typedef struct bld_file {
 
 typedef struct bld_files {
     /* TODO: hash set for faster lookup */
-    size_t capacity;
-    size_t size;
-    bld_file* files;
+    // size_t capacity;
+    // size_t size;
+    // bld_file* files;
+    bld_set set;
 } bld_files;
 
 bld_file    make_header(bld_path*, char*, bld_stat*);

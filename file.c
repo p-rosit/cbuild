@@ -64,50 +64,23 @@ uintmax_t hash_file(bld_file* file, uintmax_t seed) {
 }
 
 bld_files new_files() {
-    return (bld_files) {
-        .capacity = 0,
-        .size = 0,
-        .files = NULL,
-    };
+    return (bld_files) {.set = bld_set_new()};
 }
 
 void clear_files(bld_files* files) {
-    files->size = 0;
+    bld_set_clear(&files->set);
 }
 
 void free_files(bld_files* files) {
-    for (size_t i = 0; i < files->size; i++) {
-        free_file(&files->files[i]);
+    bld_iter iter = bld_iter_set(&files->set, sizeof(bld_file));
+    bld_file* file;
+
+    while (bld_set_next(&iter, (void**) &file)) {
+        free_file(file);
     }
-    free(files->files);
+    bld_set_free(&files->set);
 }
 
 int append_file(bld_files* files, bld_file file) {
-    bld_file* fs;
-    size_t capacity = files->capacity;
-
-    for (size_t i = 0; i < files->size; i++) {
-        if (file_eq(&files->files[i], &file)) {
-            return 1;
-        }
-    }
-
-
-    if (files->size >= files->capacity) {
-        capacity += (capacity / 2) + 2 * (capacity < 2);
-        
-        fs = malloc(capacity * sizeof(bld_file));
-        if (fs == NULL) {
-            log_fatal("Could not increase size of file array.");
-        }
-
-        memcpy(fs, files->files, files->size * sizeof(bld_file));
-        free(files->files);
-        
-        files->capacity = capacity;
-        files->files = fs;
-    }
-
-    files->files[files->size++] = file;
-    return 0;
+    return bld_set_add(&files->set, file.identifier.id, &file, sizeof(bld_file));
 }
