@@ -1,3 +1,6 @@
+[ ] extract exposed functions that can be used by the user
+[ ] define private function prototypes somewhere
+[ ] hide ubuntu dependencies behind interface
 [ ] find include dependencies and put in graph
 [ ] make graph optional
 [ ] make cache optional
@@ -7,7 +10,7 @@
 [ ] detect when .c file was included and disregard when compiling
 [ ] detect if .h file is header only
 [ ] use hash maps where appropriate
-[ ] remove duplication in growable arrays
+[x] remove duplication in growable arrays
 [ ] implement generic hash map
 [x] implement generic hash set for faster access
 [x] implement generic array to reduce code duplication
