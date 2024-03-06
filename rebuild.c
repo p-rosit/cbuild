@@ -67,7 +67,7 @@ void set_main_rebuild(bld_project* build, bld_path* path) {
     
     if (file == NULL) {log_fatal("Main file has not been indexed");}
 
-    build->main_file = *file;
+    build->main_file = file->identifier.id;
 }
 
 void index_possible_file(bld_project*, bld_path*, char*);

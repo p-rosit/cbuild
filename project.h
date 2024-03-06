@@ -24,7 +24,7 @@ struct bld_project {
     bld_path build;
     bld_paths extra_paths;
     bld_ignore ignore_paths;
-    bld_file main_file;
+    uintmax_t main_file;
     bld_compiler compiler;
     bld_files files;
     bld_graph graph;

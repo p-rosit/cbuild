@@ -52,7 +52,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .build = new_path(),
         .extra_paths = new_paths(),
         .ignore_paths = new_ignore_ids(),
-        .main_file = (bld_file) {.type = BLD_INVALID}, /* TODO: Needs to be something that can be freed by free_file... */
+        .main_file = 0,
         .compiler = compiler,
         .files = new_files(),
         .graph = new_graph(NULL),
@@ -144,7 +144,7 @@ void set_main_file(bld_project* project, char* str) {
                 log_fatal("Name of main file \"%s\" is ambiguous, found several matches.", str);
             }
             match_found = 1;
-            project->main_file = *file;
+            project->main_file = file->identifier.id;
         }
     }
 
@@ -336,10 +336,17 @@ int compile_total(bld_project* project, char* executable_name) {
     char name[256], **flags;
     bld_path path;
     bld_compiler compiler = project->compiler;
-    bld_file* file;
-    bld_string cmd = new_string();
+    bld_file *main_file, *file;
+    bld_string cmd;
     bld_search_info* bfs;
 
+    main_file = bld_set_get(&project->files.set, project->main_file, sizeof(bld_file));
+    if (main_file == NULL) {
+        log_fatal("No main file has been set");
+        return 1;
+    }
+
+    cmd = new_string();
     append_string(&cmd, compiler.executable);
     append_space(&cmd);
 
@@ -353,7 +360,7 @@ int compile_total(bld_project* project, char* executable_name) {
     append_string(&cmd, executable_name);
     append_space(&cmd);
 
-    bfs = graph_dfs_from(&project->graph, &project->main_file);
+    bfs = graph_dfs_from(&project->graph, main_file);
     while (next_file(bfs, &file)) {
         path = copy_path(&project->root);
         append_path(&path, &(*project->cache).root);
