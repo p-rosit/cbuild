@@ -67,7 +67,7 @@ bld_iter bld_iter_array(bld_array* array, size_t value_size) {
     };
 }
 
-int bld_array_next(bld_iter* iter, void* value_ptr) {
+int bld_array_next(bld_iter* iter, void** value_ptr_ptr) {
     size_t value_size = iter->array.value_size;
     bld_array* array = iter->array.array;
     char* values = array->values;
@@ -75,7 +75,7 @@ int bld_array_next(bld_iter* iter, void* value_ptr) {
         return 0;
     }
 
-    memcpy(value_ptr, values + iter->array.index++ * value_size, value_size);
+    *value_ptr_ptr = values + iter->array.index++ * value_size;
     return 1;
 }
 

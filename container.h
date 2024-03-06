@@ -77,7 +77,7 @@ void        bld_map_remove(bld_map*, bld_hash, void*, size_t, size_t);
 bld_iter    bld_iter_array(bld_array*, size_t);
 bld_iter    bld_iter_set(bld_set*, size_t);
 bld_iter    bld_iter_map(bld_map*, size_t);
-int         bld_array_next(bld_iter*, void*);
-int         bld_set_next(bld_iter*, void*);
-int         bld_map_next(bld_iter*, void*, void*);
+int         bld_array_next(bld_iter*, void**);
+int         bld_set_next(bld_iter*, void**);
+int         bld_map_next(bld_iter*, void**, void**);
 #endif
