@@ -334,7 +334,7 @@ bld_iter bld_iter_set(bld_set* set, size_t value_size) {
     };
 }
 
-int bld_set_next(bld_iter* iter, void* value_ptr) {
+int bld_set_next(bld_iter* iter, void** value_ptr_ptr) {
     int has_next = 0;
     size_t i;
     size_t value_size = iter->set.value_size;
@@ -344,7 +344,7 @@ int bld_set_next(bld_iter* iter, void* value_ptr) {
     for (i = iter->set.index; i < set->capacity + set->max_offset; i++) {
         if (set->offset[i] < set->max_offset) {
             has_next = 1;
-            memcpy(value_ptr, values + iter->set.index++ * value_size, value_size);
+            *value_ptr_ptr = values + iter->set.index++ * value_size;
             break;
         }
     }
