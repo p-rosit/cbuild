@@ -329,8 +329,11 @@ void* bld_set_get(bld_set* set, bld_hash hash, size_t value_size) {
 int bld_set_has(bld_set* set, bld_hash hash) {
     size_t target;
     bld_offset offset = 0;
-    int error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+    int error;
 
+    if (set->capacity == 0) {return 0;}
+
+    error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
     if (!error) {
         target = bld_hash_target(set->capacity, offset, hash);
         return set->offset[target] < set->max_offset && set->hash[target] == hash;
