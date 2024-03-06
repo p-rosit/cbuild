@@ -41,8 +41,9 @@ bld_node* node_pop(bld_stack* stack) {
 }
 
 bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
-    bld_node *node, *nodes;
+    bld_node *node;
     bld_search_info* info = malloc(sizeof(bld_search_info));
+    bld_iter iter;
     if (info == NULL) {
         log_fatal("Could not allocate info to start search.");
     }
@@ -51,9 +52,8 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
     info->stack = (bld_stack) {.array = bld_array_new()};
     info->visited = bld_set_new();
 
-    nodes = graph->nodes.array.values;
-    for (size_t i = 0; i < graph->nodes.array.size; i++) {
-        node = &nodes[i];
+    iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
+    while (bld_set_next(&iter, (void**) &node)) {
         if (file_eq(node->file, main)) {
             node_push(&info->stack, node);
             break;
@@ -72,7 +72,7 @@ void free_info(bld_search_info* info) {
 int next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
     uintmax_t* index;
-    bld_node *node, *nodes;
+    bld_node *node, *to_node;
     bld_iter iter;
 
     while (node_visited) {
@@ -91,10 +91,10 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         bld_set_add(&info->visited, node->file->identifier.hash, &node, sizeof(bld_node*));
 
-        nodes = info->graph->nodes.array.values;
         iter = bld_iter_array(&node->edges.array, sizeof(uintmax_t));
         while (bld_array_next(&iter, (void**) &index)) {
-            node_push(&info->stack, &nodes[*index]);
+            to_node = bld_set_get(&info->graph->nodes.set, *index, sizeof(bld_node));
+            node_push(&info->stack, to_node);
         }
 
         next_node:;
@@ -196,7 +196,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     char name[256];
     bld_string cmd = new_string();
     bld_path path;
-    bld_node *node, *nodes;
+    bld_node node;
 
     if (file->type == BLD_HEADER) {
         free_string(&cmd);
@@ -222,51 +222,49 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
     }
 
-    push_node(&graph->nodes, parse_symbols(file, symbol_path));
-    nodes = graph->nodes.array.values;
-    node = &nodes[graph->nodes.array.size - 1];
-    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s)", path_to_string(&file->path), node->defined_funcs.set.size, node->used_funcs.set.size);
+    node = parse_symbols(file, symbol_path);
+    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s)", path_to_string(&file->path), node.defined_funcs.set.size, node.used_funcs.set.size);
+    push_node(&graph->nodes, node);
 
     free_string(&cmd);
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
-    size_t i = 0;
-    bld_iter iter = bld_iter_array(&graph->nodes.array, sizeof(bld_node));
+    bld_iter iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
     bld_node* to_node;
 
-    while (bld_array_next(&iter, (void**) &to_node)) {
+    while (bld_set_next(&iter, (void**) &to_node)) {
         if (bld_set_empty_intersection(&node->used_funcs.set, &to_node->defined_funcs.set)) {
-            goto next_node;
+            continue;
         }
-        add_edge(node, i);
-
-        next_node:
-        i++;
+        add_edge(node, to_node->file->identifier.id);
     }
 }
 
 void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
-    bld_node* nodes;
+    bld_iter iter;
+    bld_node *node;
+    bld_file* file;
     /* TODO: utilize cache if present */
 
     symbol_path = copy_path(cache_path);
     append_dir(&symbol_path, "symbols");
 
-    for (size_t i = 0; i < graph->files->size; i++) {
-        populate_node(graph, cache_path, &symbol_path, &graph->files->files[i]);
+    iter = bld_iter_set(&graph->files->set, sizeof(bld_file));
+    while (bld_set_next(&iter, (void**) &file)) {
+        populate_node(graph, cache_path, &symbol_path, file);
     }
 
     remove(path_to_string(&symbol_path));
 
-    nodes = graph->nodes.array.values;
-    for (size_t i = 0; i < graph->nodes.array.size; i++) {
-        connect_node(graph, &nodes[i]);
+    iter = bld_iter_set(&graph->nodes.set, sizeof(bld_node));
+    while (bld_set_next(&iter, (void**) &node)) {
+        connect_node(graph, node);
     }
 
     free_path(&symbol_path);
-    log_info("Generated dependency graph with %lu nodes", graph->nodes.array.size);
+    log_info("Generated dependency graph with %lu nodes", graph->nodes.set.size);
 }
 
 bld_edges new_edges() {
