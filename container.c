@@ -146,6 +146,12 @@ void bld_set_free(bld_set* set) {
     free(set->values);
 }
 
+void bld_set_clear(bld_set* set) {
+    for (size_t i = 0; i < set->capacity + set->max_offset; i++) {
+        set->offset[i] = set->max_offset;
+    }
+}
+
 void bld_set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value, size_t value_size) {
     void* value_ptr;
     void* temp = malloc(value_size);
