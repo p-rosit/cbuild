@@ -55,6 +55,21 @@ char* infer_build_name(char* name) {
     return path_to_string(&path);
 }
 
+void set_main_rebuild(bld_project* build, bld_path* path) {
+    bld_stat file_stat;
+    bld_file* file;
+
+    if (stat(path_to_string(path), &file_stat) < 0) {
+        log_fatal("Expected \"%s\" to be a valid path to the build file", path_to_string(path));
+    }
+
+    file = bld_set_get(&build->files.set, file_stat.st_ino, sizeof(bld_file));
+    
+    if (file == NULL) {log_fatal("Main file has not been indexed");}
+
+    build->main_file = *file;
+}
+
 void index_possible_file(bld_project*, bld_path*, char*);
 int compile_with_absolute_path(bld_project*, char*);
 void rebuild_builder(bld_project* project, int argc, char** argv) {
@@ -94,7 +109,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     index_possible_file(&build, &main, main_name);
     index_project(&build);
 
-    build.main_file = build.files.files[0];
+    set_main_rebuild(&build, &main);
 
     executable_path = copy_path(&project->root);
     append_dir(&executable_path, executable);
