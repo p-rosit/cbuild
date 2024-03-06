@@ -309,6 +309,23 @@ int bld_set_add(bld_set* set, bld_hash hash, void* value, size_t value_size) {
     return 0;
 }
 
+void* bld_set_get(bld_set* set, bld_hash hash, size_t value_size) {
+    int error;
+    size_t offset = 0, target;
+    char* values = set->values;
+
+    if (set->capacity == 0) {return NULL;}
+
+    error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+    target = bld_hash_target(set->capacity, offset, hash);
+
+    if (!error && set->hash[target] == hash && set->offset[target] < set->max_offset) {
+        return values + target * value_size;
+    }
+
+    return NULL;
+}
+
 int bld_set_has(bld_set* set, bld_hash hash) {
     size_t target;
     bld_offset offset = 0;
