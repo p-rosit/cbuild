@@ -1,18 +1,5 @@
 #include "../cbuild.h"
 
-/**
- *  TODO: find include dependencies and put in graph
- *  TODO: make graph optional
- *  TODO: make cache optional
- *  TODO: recompile if file changed due to include dependency
- *  TODO: use cache to populate graph
- *  TODO: split generating dependency graph from indexing project
- *  TODO: detect when .c file was included and disregard when compiling
- *  TODO: detect if .h file is header only
- *  TODO: use hash maps where appropriate
- *  TODO: remove duplication in growable arrays
- */
-
 int main(int argc, char** argv) {
     int result = 0;
     bld_project project = new_project(
