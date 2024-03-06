@@ -133,11 +133,12 @@ int parse_cache(bld_project* cache, bld_path* root) {
 
 bld_nodes new_nodes();
 int parse_graph(FILE* file, bld_project* project) {
-    uintmax_t forward_id, file_id, *indices;
     int amount_parsed;
-    bld_node* ns;
+    bld_file* f;
+    bld_node* node;
     bld_files* files = &project->files;
     bld_nodes* nodes = &project->graph.nodes;
+    bld_iter iter;
 
     project->files = new_files();
     project->graph = new_graph(&project->files); 
@@ -147,24 +148,10 @@ int parse_graph(FILE* file, bld_project* project) {
         return -1;
     }
 
-    ns = nodes->array.values;
-    for (size_t i = 0; i < files->size; i++) {
-        ns[i].file = &files->files[i];
-    }
-
-    for (size_t i = 0; i < nodes->array.size; i++) {
-        indices = ns[i].edges.array.values;
-
-        for (size_t j = 0; j < ns[i].edges.array.size; j++) {
-            forward_id = indices[j];
-            for (size_t k = 0; k < nodes->array.size; k++) {
-                file_id = ns[k].file->identifier.id;
-                if (forward_id == file_id) {
-                    indices[j] = k;
-                    break;
-                }
-            }
-        }
+    iter = bld_iter_set(&files->set, sizeof(bld_file));
+    while (bld_set_next(&iter, (void**) &f)) {
+        node = bld_set_get(&nodes->set, f->identifier.id, sizeof(bld_node));
+        node->file = f;
     }
 
     return 0;
