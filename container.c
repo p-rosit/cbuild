@@ -363,20 +363,21 @@ bld_iter bld_iter_set(bld_set* set, size_t value_size) {
 
 int bld_set_next(bld_iter* iter, void** value_ptr_ptr) {
     int has_next = 0;
-    size_t i;
+    size_t i = iter->set.index;
     size_t value_size = iter->set.value_size;
     bld_set* set = iter->set.set;
     char* values = set->values;
     
-    for (i = iter->set.index; i < set->capacity + set->max_offset; i++) {
+    while (i < set->capacity + set->max_offset) {
         if (set->offset[i] < set->max_offset) {
             has_next = 1;
-            *value_ptr_ptr = values + iter->set.index++ * value_size;
+            *value_ptr_ptr = values + i * value_size;
             break;
         }
+        i++;
     }
 
-    iter->set.index = i;
+    iter->set.index = i + 1;
     return has_next;
 }
 
