@@ -1,3 +1,4 @@
+[x] move value size from function call to container struct
 [ ] extract exposed functions that can be used by the user
 [ ] define private function prototypes somewhere
 [ ] hide ubuntu dependencies behind interface
