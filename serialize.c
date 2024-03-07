@@ -15,6 +15,7 @@ void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_graph(FILE*, bld_graph*, int);
 void serialize_node(FILE*, bld_node*, int);
 void serialize_functions(FILE*, bld_funcs*, int);
+void serialize_includes(FILE*, bld_set*, int);
 void serialize_edges(FILE*, bld_edges*, int);
 
 void save_cache(bld_project* project) {
@@ -195,6 +196,10 @@ void serialize_node(FILE* cache, bld_node* node, int depth) {
 
     fprintf(cache, "%*c\"edges\": ", 2 * (depth + 1), ' ');
     serialize_edges(cache, &node->edges, depth + 1);
+    fprintf(cache, ",\n");
+
+    fprintf(cache, "%*c\"includes\": ", 2 * (depth + 1), ' ');
+    serialize_includes(cache, &node->includes, depth + 1);
     fprintf(cache, "\n");
 
     fprintf(cache, "%*c}", 2 * depth, ' ');
@@ -212,6 +217,32 @@ void serialize_functions(FILE* cache, bld_funcs* funcs, int depth) {
 
         fprintf(cache, "%*c\"%s\"", 2 * (depth + 1), ' ', func_ptr[i]);
         first = 0;
+    }
+
+    fprintf(cache, "\n");
+    fprintf(cache, "%*c]", 2 * depth, ' ');
+}
+
+void serialize_includes(FILE* cache, bld_set* includes, int depth) {
+    size_t i = 0;
+    uintmax_t* index;
+    bld_iter iter;
+
+    if (includes->size == 0) {
+        fprintf(cache, "[]");
+        return;
+    } else if (includes->size == 1) {
+        index = includes->values;
+        fprintf(cache, "[%ju]", *index);
+        return;
+    }
+    fprintf(cache, "[\n");
+
+    iter = bld_iter_set(includes);
+    while (bld_set_next(&iter, (void**) &index)) {
+        if (i > 0) {fprintf(cache, ",\n");};
+        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', *index);
+        i++;
     }
 
     fprintf(cache, "\n");

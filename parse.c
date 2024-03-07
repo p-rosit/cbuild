@@ -17,6 +17,7 @@ int parse_graph(FILE*, bld_project*);
 int parse_node(FILE*, bld_project*);
 int parse_defined_functions(FILE*, bld_node*);
 int parse_undefined_functions(FILE*, bld_node*);
+int parse_includes(FILE*, bld_node*);
 int parse_edges(FILE*, bld_node*);
 int parse_edge(FILE*, bld_edges*);
 int parse_function(FILE*, bld_funcs*);
@@ -160,14 +161,15 @@ int parse_graph(FILE* file, bld_project* project) {
 void push_node(bld_nodes*, bld_node);
 int parse_node(FILE* file, bld_project* project) {
     int amount_parsed;
-    int size = 4;
-    int parsed[4];
-    char *keys[4] = {"file", "defined", "undefined", "edges"};
-    bld_parse_func funcs[4] = {
+    int size = 5;
+    int parsed[5];
+    char *keys[5] = {"file", "defined", "undefined", "edges", "includes"};
+    bld_parse_func funcs[5] = {
         (bld_parse_func) parse_node_file,
         (bld_parse_func) parse_defined_functions,
         (bld_parse_func) parse_undefined_functions,
-        (bld_parse_func) parse_edges
+        (bld_parse_func) parse_edges,
+        (bld_parse_func) parse_includes,
     };
     bld_nodes* nodes = &project->graph.nodes;
     bld_files* files = &project->files;
@@ -241,6 +243,32 @@ int parse_undefined_functions(FILE* file, bld_node* node) {
     node->used_funcs = funcs;
     return 0;
 }
+
+int parse_include_edge(FILE* file, bld_set* includes) {
+    uintmax_t file_id;
+    int result = parse_uintmax(file, &file_id);
+    if (result) {
+        log_warn("Could not parse edge");
+        return -1;
+    }
+    bld_set_add(includes, file_id, NULL);
+    return 0;
+}
+
+int parse_includes(FILE* file, bld_node* node) {
+    int values;
+    bld_set includes = bld_set_new(0);
+
+    values = parse_array(file, &includes, (bld_parse_func) parse_include_edge);
+    if (values < 0) {
+        log_warn("Could not parse ");
+        return -1;
+    }
+
+    node->includes = includes;
+    return 0;
+}
+
 
 bld_edges new_edges();
 int parse_edges(FILE* file, bld_node* node) {
