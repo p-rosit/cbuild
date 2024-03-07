@@ -20,6 +20,7 @@ struct bld_node {
     bld_funcs defined_funcs;
     bld_funcs used_funcs;
     bld_edges edges;
+    bld_set includes;
 };
 
 typedef struct bld_nodes {
