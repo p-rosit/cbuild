@@ -116,18 +116,10 @@ void free_graph(bld_graph* graph) {
     free_nodes(&graph->nodes);
 }
 
-bld_node parse_symbols(bld_file* file, bld_path* symbol_path) {
+void parse_symbols(bld_node* node, bld_path* symbol_path) {
     FILE* f;
     int c, func_type;
     bld_string func;
-    bld_node node;
-
-    node = (bld_node) {
-        .file = file,
-        .defined_funcs = new_funcs(),
-        .used_funcs = new_funcs(),
-        .edges = new_edges(),
-    };
 
     f = fopen(path_to_string(symbol_path), "r");
     if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
@@ -135,18 +127,18 @@ bld_node parse_symbols(bld_file* file, bld_path* symbol_path) {
     while (1) {
         c = fgetc(f);
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node.file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
             break;
         }
 
         while (c != EOF && c != ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node.file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
             break;
         }
         while (c != EOF && c == ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node.file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
             break;
         }
 
@@ -167,9 +159,9 @@ bld_node parse_symbols(bld_file* file, bld_path* symbol_path) {
         }
 
         if (func_type == 'T') {
-            add_func(&node.defined_funcs, &func);
+            add_func(&node->defined_funcs, &func);
         } else if (func_type == 'U') {
-            add_func(&node.used_funcs, &func);
+            add_func(&node->used_funcs, &func);
         } else {
             log_fatal("parse_symbols: unreachable error");
         }
@@ -181,21 +173,27 @@ bld_node parse_symbols(bld_file* file, bld_path* symbol_path) {
     }
 
     fclose(f);
-    return node;
+}
+
+void parse_file_includes(bld_node* node) {
+    (void) node;
+// #error "Parse correctly!"
 }
 
 void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path, bld_file* file) {
     int result;
     char name[256];
-    bld_string cmd = new_string();
+    bld_string cmd;
     bld_path path;
     bld_node node;
 
     if (file->type == BLD_HEADER) {
-        free_string(&cmd);
         return;
     }
 
+    node = new_node(file);
+
+    cmd = new_string();
     fclose(fopen(path_to_string(symbol_path), "w"));
 
     append_string(&cmd, "nm ");
@@ -215,8 +213,10 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
     }
 
-    node = parse_symbols(file, symbol_path);
-    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s)", path_to_string(&file->path), node.defined_funcs.set.size, node.used_funcs.set.size);
+    parse_symbols(&node, symbol_path);
+    parse_file_includes(&node);
+
+    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s), %lu include(s)", path_to_string(&file->path), node.defined_funcs.set.size, node.used_funcs.set.size, node.includes.size);
     push_node(&graph->nodes, node);
 
     free_string(&cmd);
@@ -300,6 +300,7 @@ bld_node new_node(bld_file* file) {
         .defined_funcs = new_funcs(),
         .used_funcs = new_funcs(),
         .edges = new_edges(),
+        .includes = bld_set_new(0),
     };
 }
 
@@ -307,6 +308,7 @@ void free_node(bld_node* node) {
     free_funcs(&node->defined_funcs);
     free_funcs(&node->used_funcs);
     free_edges(&node->edges);
+    bld_set_free(&node->includes);
 }
 
 bld_funcs new_funcs() {
