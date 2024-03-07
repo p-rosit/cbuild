@@ -1,4 +1,6 @@
-[x] move value size from function call to container struct
+[ ] make sure no path separator is passed when removing file ending
+[ ] use realloc instead of memcpy and free
+[x] move value size from function call to generic container struct
 [ ] extract exposed functions that can be used by the user
 [ ] define private function prototypes somewhere
 [ ] hide ubuntu dependencies behind interface
