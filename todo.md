@@ -1,3 +1,4 @@
+[ ] handle failed compilation
 [ ] make sure no path separator is passed when removing file ending
 [ ] use realloc instead of memcpy and free
 [x] move value size from function call to generic container struct
