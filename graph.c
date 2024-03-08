@@ -301,39 +301,38 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     bld_path path;
     bld_node node;
 
-    if (file->type == BLD_HEADER) {
-        return;
-    }
-
     node = new_node(file);
 
-    cmd = new_string();
-    fclose(fopen(path_to_string(symbol_path), "w"));
+    if (file->type != BLD_HEADER) {
+        cmd = new_string();
+        fclose(fopen(path_to_string(symbol_path), "w"));
 
-    append_string(&cmd, "nm ");
+        append_string(&cmd, "nm ");
 
-    path = copy_path(cache_path);
-    serialize_identifier(name, file);
-    append_dir(&path, name);
-    append_string(&cmd, path_to_string(&path));
-    append_string(&cmd, ".o");
-    free_path(&path);
+        path = copy_path(cache_path);
+        serialize_identifier(name, file);
+        append_dir(&path, name);
+        append_string(&cmd, path_to_string(&path));
+        append_string(&cmd, ".o");
+        free_path(&path);
 
-    append_string(&cmd, " >> ");
-    append_string(&cmd, path_to_string(symbol_path));
-    
-    result = system(make_string(&cmd));
-    if (result) {
-        log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
+        append_string(&cmd, " >> ");
+        append_string(&cmd, path_to_string(symbol_path));
+
+        result = system(make_string(&cmd));
+        if (result) {
+            log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
+        }
+        
+        parse_symbols(&node, symbol_path);
+        free_string(&cmd);
     }
 
-    parse_symbols(&node, symbol_path);
     parse_file_includes(&node);
 
     log_debug("Populating: \"%s\", %lu function(s), %lu reference(s), %lu include(s)", path_to_string(&file->path), node.defined_funcs.set.size, node.used_funcs.set.size, node.includes.size);
     push_node(&graph->nodes, node);
 
-    free_string(&cmd);
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
