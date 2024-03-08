@@ -8,7 +8,7 @@
 [x] find include dependencies and put in graph
 [ ] make graph optional
 [ ] make cache optional
-[ ] recompile if file changed due to include dependency
+[x] recompile if file changed due to include dependency
 [ ] use cache to populate graph
 [ ] split generating dependency graph from indexing project
 [ ] detect when .c file was included and disregard when compiling
