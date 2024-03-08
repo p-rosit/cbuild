@@ -25,7 +25,14 @@ typedef struct bld_stack {
     bld_array array;
 } bld_stack;
 
+typedef enum bld_search_type {
+    BLD_FUNCS,
+    BLD_INCLUDES,
+    BLD_NO_SEARCH,
+} bld_search_type;
+
 struct bld_search_info {
+    bld_search_type type;
     bld_graph* graph;
     bld_stack stack;
     bld_set visited;
@@ -41,26 +48,38 @@ bld_node* node_pop(bld_stack* stack) {
     return node;
 }
 
-bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* main) {
+bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
     bld_node *node;
     bld_search_info* info = malloc(sizeof(bld_search_info));
-    bld_iter iter;
     if (info == NULL) {
         log_fatal("Could not allocate info to start search.");
     }
 
-    info->graph = graph;
-    info->stack = (bld_stack) {.array = bld_array_new(sizeof(bld_node*))};
-    info->visited = bld_set_new(sizeof(uintmax_t));
+    *info = (bld_search_info) {
+        .type = BLD_NO_SEARCH,
+        .graph = graph,
+        .stack = (bld_stack) {.array = bld_array_new(sizeof(bld_node*))},
+        .visited = bld_set_new(sizeof(uintmax_t)),
+    };
 
-    iter = bld_iter_set(&graph->nodes.set);
-    while (bld_set_next(&iter, (void**) &node)) {
-        if (file_eq(node->file, main)) {
-            node_push(&info->stack, node);
-            break;
-        }
+    node = bld_set_get(&graph->nodes.set, root->identifier.id);
+    if (node == NULL) {
+        log_fatal("Could not find requested file in graph");
     }
+    node_push(&info->stack, node);
 
+    return info;
+}
+
+bld_search_info* graph_functions_from(bld_graph* graph, bld_file* root) {
+    bld_search_info* info = graph_dfs_from(graph, root);
+    info->type = BLD_FUNCS;
+    return info;
+}
+
+bld_search_info* graph_includes_from(bld_graph* graph, bld_file* root) {
+    bld_search_info* info = graph_dfs_from(graph, root);
+    info->type = BLD_INCLUDES;
     return info;
 }
 
@@ -75,6 +94,10 @@ int next_file(bld_search_info* info, bld_file** file) {
     uintmax_t* index;
     bld_node *node, *to_node;
     bld_iter iter;
+
+    if (info->type == BLD_NO_SEARCH) {
+        log_fatal("No search type has been set");
+    }
 
     while (node_visited) {
         if (info->stack.array.size <= 0) {
@@ -92,7 +115,16 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         bld_set_add(&info->visited, node->file->identifier.hash, &node);
 
-        iter = bld_iter_array(&node->edges.array);
+        switch (info->type) {
+            case (BLD_FUNCS): {
+                iter = bld_iter_array(&node->functions_from.array);
+            } break;
+            case (BLD_INCLUDES): {
+                iter = bld_iter_array(&node->included_in.array);
+            } break;
+            default: log_fatal("next_file: unreachable error???");
+        }
+
         while (bld_array_next(&iter, (void**) &index)) {
             to_node = bld_set_get(&info->graph->nodes.set, *index);
             node_push(&info->stack, to_node);
