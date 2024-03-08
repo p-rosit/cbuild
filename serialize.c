@@ -224,25 +224,21 @@ void serialize_functions(FILE* cache, bld_funcs* funcs, int depth) {
 }
 
 void serialize_includes(FILE* cache, bld_set* includes, int depth) {
-    size_t i = 0;
-    uintmax_t* index;
-    bld_iter iter;
-
+    int first = 1;
     if (includes->size == 0) {
         fprintf(cache, "[]");
         return;
     } else if (includes->size == 1) {
-        index = includes->values;
-        fprintf(cache, "[%ju]", *index);
+        fprintf(cache, "[%ju]", includes->hash[0]);
         return;
     }
     fprintf(cache, "[\n");
 
-    iter = bld_iter_set(includes);
-    while (bld_set_next(&iter, (void**) &index)) {
-        if (i > 0) {fprintf(cache, ",\n");};
-        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', *index);
-        i++;
+    for (size_t i = 0; i < includes->capacity + includes->max_offset; i++) {
+        if (includes->offset[i] >= includes->max_offset) {continue;}
+        if (!first) {fprintf(cache, ",\n");};
+        fprintf(cache, "%*c%ju", 2 * (depth + 1), ' ', includes->hash[i]);
+        first = 0;
     }
 
     fprintf(cache, "\n");
