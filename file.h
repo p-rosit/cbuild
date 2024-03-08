@@ -36,12 +36,13 @@ typedef struct bld_files {
     bld_set set;
 } bld_files;
 
-bld_file    make_header(bld_path*, char*, bld_stat*);
-bld_file    make_impl(bld_path*, char*, bld_stat*);
-bld_file    make_test(bld_path*, char*, bld_stat*);
+bld_file    make_header(bld_path*, char*);
+bld_file    make_impl(bld_path*, char*);
+bld_file    make_test(bld_path*, char*);
 void        free_file(bld_file*);
 uintmax_t   hash_file(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
+uintmax_t   get_file_id(bld_path*);
 void        serialize_identifier(char[256], bld_file*);
 
 bld_files   new_files();
