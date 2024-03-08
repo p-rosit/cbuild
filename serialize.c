@@ -194,12 +194,16 @@ void serialize_node(FILE* cache, bld_node* node, int depth) {
     serialize_functions(cache, &node->used_funcs, depth + 1);
     fprintf(cache, ",\n");
 
-    fprintf(cache, "%*c\"edges\": ", 2 * (depth + 1), ' ');
-    serialize_edges(cache, &node->edges, depth + 1);
-    fprintf(cache, ",\n");
-
     fprintf(cache, "%*c\"includes\": ", 2 * (depth + 1), ' ');
     serialize_includes(cache, &node->includes, depth + 1);
+    fprintf(cache, ",\n");
+
+    fprintf(cache, "%*c\"functions_from\": ", 2 * (depth + 1), ' ');
+    serialize_edges(cache, &node->functions_from, depth + 1);
+    fprintf(cache, ",\n");
+
+    fprintf(cache, "%*c\"included_in\": ", 2 * (depth + 1), ' ');
+    serialize_edges(cache, &node->included_in, depth + 1);
     fprintf(cache, "\n");
 
     fprintf(cache, "%*c}", 2 * depth, ' ');
