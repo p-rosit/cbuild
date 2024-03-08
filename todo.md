@@ -5,7 +5,7 @@
 [ ] extract exposed functions that can be used by the user
 [ ] define private function prototypes somewhere
 [ ] hide ubuntu dependencies behind interface
-[ ] find include dependencies and put in graph
+[x] find include dependencies and put in graph
 [ ] make graph optional
 [ ] make cache optional
 [ ] recompile if file changed due to include dependency
