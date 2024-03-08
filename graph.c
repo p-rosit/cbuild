@@ -175,9 +175,78 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
     fclose(f);
 }
 
+int get_next(FILE* file) { /* Same as next_character... */
+    int c = getc(file);
+    while (c != EOF && isspace(c)) {c = getc(file);}
+    return c;
+}
+
+int skip_line(FILE* file) {
+    int c = getc(file);
+    while (c != EOF && c != '\n') {c = getc(file);}
+    return c == '\n';
+}
+
+int expect_char(FILE* file, char c) {
+    int file_char = get_next(file);
+    return c == file_char;
+}
+
+int expect_string(FILE* file, char* str) {
+    char str_char;
+    int file_char;
+
+    while ((str_char = *str++) != '\0') {
+        file_char = getc(file);
+        if (file_char != str_char) {return 0;}
+    }
+
+    return 1;
+}
+
 void parse_file_includes(bld_node* node) {
-    (void) node;
-// #error "Parse correctly!"
+    bld_path parent_path;
+    bld_path file_path;
+    bld_string str;
+    uintmax_t include_id;
+    FILE* file;
+    int c;
+
+    file = fopen(path_to_string(&node->file->path), "r");
+    if (file == NULL) {log_fatal("Could not open file for reading: \"%s\"", make_string(&node->file->name));}
+
+    parent_path = copy_path(&node->file->path);
+    remove_last_dir(&parent_path);
+
+    while (1) {
+        if (!expect_char(file, '#')) {goto next_line;}
+        if (!expect_string(file, "include")) {goto next_line;}
+        if (!expect_char(file, '\"')) {goto next_line;}
+
+        str = new_string();
+        c = getc(file);
+        while (c != EOF && c != '\"' && c != '\n') {
+            append_char(&str, c);
+            c = getc(file);
+        }
+        if (c == EOF) {free_string(&str); break;}
+        if (c == '\n') {goto next_line;}
+
+        file_path = copy_path(&parent_path);
+        append_dir(&file_path, make_string(&str));
+
+        include_id = get_file_id(&file_path);
+        bld_set_add(&node->includes, include_id, &include_id);
+
+        free_path(&file_path);
+        free_string(&str);
+
+        next_line:
+        if (!skip_line(file)) {break;}
+    }
+
+    free_path(&parent_path);
+    fclose(file);
 }
 
 void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path, bld_file* file) {
