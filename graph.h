@@ -17,10 +17,13 @@ typedef struct bld_edges {
 
 struct bld_node {
     bld_file* file;
+
     bld_funcs defined_funcs;
     bld_funcs used_funcs;
-    bld_edges edges;
     bld_set includes;
+    
+    bld_edges functions_from;
+    bld_edges included_in;
 };
 
 typedef struct bld_nodes {

@@ -8,7 +8,8 @@
 bld_edges   new_edges();
 void        free_edges(bld_edges*);
 void        append_edge(bld_edges*, uintmax_t);
-void        add_edge(bld_node*, uintmax_t);
+void        add_function_edge(bld_node*, uintmax_t);
+void        add_include_edge(bld_node*, uintmax_t);
 
 bld_nodes   new_nodes();
 void        free_nodes(bld_nodes*);
@@ -205,11 +206,12 @@ int expect_string(FILE* file, char* str) {
 }
 
 void parse_file_includes(bld_node* node) {
+    size_t line_number;
     bld_path parent_path;
     bld_path file_path;
     bld_string str;
     uintmax_t include_id;
-    FILE* file;
+    FILE *file, *included_file;
     int c;
 
     file = fopen(path_to_string(&node->file->path), "r");
@@ -218,6 +220,7 @@ void parse_file_includes(bld_node* node) {
     parent_path = copy_path(&node->file->path);
     remove_last_dir(&parent_path);
 
+    line_number = 0;
     while (1) {
         if (!expect_char(file, '#')) {goto next_line;}
         if (!expect_string(file, "include")) {goto next_line;}
@@ -235,6 +238,15 @@ void parse_file_includes(bld_node* node) {
         file_path = copy_path(&parent_path);
         append_dir(&file_path, make_string(&str));
 
+        included_file = fopen(path_to_string(&file_path), "r");
+        if (included_file == NULL) {
+            log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&node->file->path), line_number, make_string(&str));
+            free_path(&file_path);
+            free_string(&str);
+            goto next_line;
+        }
+        fclose(included_file);
+
         include_id = get_file_id(&file_path);
         bld_set_add(&node->includes, include_id, &include_id);
 
@@ -243,6 +255,7 @@ void parse_file_includes(bld_node* node) {
 
         next_line:
         if (!skip_line(file)) {break;}
+        line_number++;
     }
 
     free_path(&parent_path);
@@ -292,14 +305,18 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
-    bld_iter iter = bld_iter_set(&graph->nodes.set);
+    bld_iter iter;
     bld_node* to_node;
 
+    iter = bld_iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &to_node)) {
-        if (bld_set_empty_intersection(&node->used_funcs.set, &to_node->defined_funcs.set)) {
-            continue;
+        if (!bld_set_empty_intersection(&node->used_funcs.set, &to_node->defined_funcs.set)) {
+            add_function_edge(node, to_node->file->identifier.id);
         }
-        add_edge(node, to_node->file->identifier.id);
+
+        if (bld_set_has(&to_node->includes, node->file->identifier.id)) {
+            add_include_edge(node, to_node->file->identifier.id);
+        }
     }
 }
 
@@ -337,8 +354,12 @@ void free_edges(bld_edges* edges) {
     bld_array_free(&edges->array);
 }
 
-void add_edge(bld_node* from, uintmax_t file_id) {
-    append_edge(&from->edges, file_id);
+void add_function_edge(bld_node* from, uintmax_t file_id) {
+    append_edge(&from->functions_from, file_id);
+}
+
+void add_include_edge(bld_node* from, uintmax_t file_id) {
+    append_edge(&from->included_in, file_id);
 }
 
 void append_edge(bld_edges* edges, uintmax_t file_id) {
@@ -368,16 +389,18 @@ bld_node new_node(bld_file* file) {
         .file = file,
         .defined_funcs = new_funcs(),
         .used_funcs = new_funcs(),
-        .edges = new_edges(),
         .includes = bld_set_new(0),
+        .functions_from = new_edges(),
+        .included_in = new_edges(),
     };
 }
 
 void free_node(bld_node* node) {
     free_funcs(&node->defined_funcs);
     free_funcs(&node->used_funcs);
-    free_edges(&node->edges);
     bld_set_free(&node->includes);
+    free_edges(&node->functions_from);
+    free_edges(&node->included_in);
 }
 
 bld_funcs new_funcs() {
