@@ -160,20 +160,10 @@ void add_build(bld_project* project, char* path) {
     ignore_path(project, path);
 }
 
-uintmax_t test_open(bld_path* path) {
-    bld_stat file_stat;
-    
-    if (stat(path_to_string(path), &file_stat) < 0) {
-        log_fatal("\"%s\" is not a valid path under the root", path_to_string(path));
-    }
-
-    return file_stat.st_ino;
-}
-
 void add_path(bld_project* project, char* path) {
     bld_path test = copy_path(&project->root);
     append_dir(&test, path);
-    test_open(&test);
+    get_file_id(&test);
 
     push_path(&project->extra_paths, path_from_string(path));
 
@@ -184,7 +174,7 @@ void ignore_path(bld_project* project, char* path) {
     bld_path test = copy_path(&project->root);
     append_dir(&test, path);
 
-    append_ignore_id(&project->ignore_paths, test_open(&test));
+    append_ignore_id(&project->ignore_paths, get_file_id(&test));
 
     free_path(&test);
 }
@@ -198,23 +188,18 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     char* file_ending;
     bld_path file_path;
     bld_file file;
-    bld_stat file_stat;
     // log_warn("Indexing: \"%s\", name \"%s\"", path_to_string(path), name);
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
 
-    if (stat(path_to_string(path), &file_stat) < 0) {
-        log_fatal("Could not extract information about \"%s\"", path_to_string(path));
-    }
-
     file_path = copy_path(path);
     if (strncmp(name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-        file = make_test(&file_path, name, &file_stat);
+        file = make_test(&file_path, name);
     } else if (strcmp(file_ending, ".c") == 0) {
-        file = make_impl(&file_path, name, &file_stat);
+        file = make_impl(&file_path, name);
     } else if (strcmp(file_ending, ".h") == 0) {
-        file = make_header(&file_path, name, &file_stat);
+        file = make_header(&file_path, name);
     } else {
         free_path(&file_path);
         return;
