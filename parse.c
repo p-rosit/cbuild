@@ -18,7 +18,8 @@ int parse_node(FILE*, bld_project*);
 int parse_defined_functions(FILE*, bld_node*);
 int parse_undefined_functions(FILE*, bld_node*);
 int parse_includes(FILE*, bld_node*);
-int parse_edges(FILE*, bld_node*);
+int parse_functions_from(FILE*, bld_node*);
+int parse_included_in(FILE*, bld_node*);
 int parse_edge(FILE*, bld_edges*);
 int parse_function(FILE*, bld_funcs*);
 int parse_node_file(FILE*, bld_node*);
@@ -161,15 +162,16 @@ int parse_graph(FILE* file, bld_project* project) {
 void push_node(bld_nodes*, bld_node);
 int parse_node(FILE* file, bld_project* project) {
     int amount_parsed;
-    int size = 5;
-    int parsed[5];
-    char *keys[5] = {"file", "defined", "undefined", "edges", "includes"};
-    bld_parse_func funcs[5] = {
+    int size = 6;
+    int parsed[6];
+    char *keys[6] = {"file", "defined", "undefined", "includes", "functions_from", "included_in"};
+    bld_parse_func funcs[6] = {
         (bld_parse_func) parse_node_file,
         (bld_parse_func) parse_defined_functions,
         (bld_parse_func) parse_undefined_functions,
-        (bld_parse_func) parse_edges,
         (bld_parse_func) parse_includes,
+        (bld_parse_func) parse_functions_from,
+        (bld_parse_func) parse_included_in,
     };
     bld_nodes* nodes = &project->graph.nodes;
     bld_files* files = &project->files;
@@ -271,7 +273,7 @@ int parse_includes(FILE* file, bld_node* node) {
 
 
 bld_edges new_edges();
-int parse_edges(FILE* file, bld_node* node) {
+int parse_functions_from(FILE* file, bld_node* node) {
     int values;
     bld_edges edges = new_edges();
 
@@ -280,7 +282,20 @@ int parse_edges(FILE* file, bld_node* node) {
         log_warn("Could not parse edges");
         return -1;
     }
-    node->edges = edges;
+    node->functions_from = edges;
+    return 0;
+}
+
+int parse_included_in(FILE* file, bld_node* node) {
+    int values;
+    bld_edges edges = new_edges();
+
+    values = parse_array(file, &edges, (bld_parse_func) parse_edge);
+    if (values < 0) {
+        log_warn("Could not parse edges");
+        return -1;
+    }
+    node->included_in = edges;
     return 0;
 }
 
