@@ -27,6 +27,7 @@ struct bld_project {
     uintmax_t main_file;
     bld_compiler compiler;
     bld_files files;
+    bld_set changed_files;
     bld_graph graph;
     bld_project* cache;
 };

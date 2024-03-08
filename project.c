@@ -55,6 +55,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .main_file = 0,
         .compiler = compiler,
         .files = new_files(),
+        .changed_files = bld_set_new(sizeof(int)),
         .graph = new_graph(NULL),
         .cache = NULL,
     };
@@ -101,6 +102,7 @@ void free_project(bld_project* project) {
     free_compiler(&project->compiler);
     free_graph(&project->graph);
     free_files(&project->files);
+    bld_set_free(&project->changed_files);
     free_cache(project->cache);
 }
 
@@ -345,7 +347,7 @@ int compile_total(bld_project* project, char* executable_name) {
     append_string(&cmd, executable_name);
     append_space(&cmd);
 
-    bfs = graph_dfs_from(&project->graph, main_file);
+    bfs = graph_functions_from(&project->graph, main_file);
     while (next_file(bfs, &file)) {
         path = copy_path(&project->root);
         append_path(&path, &(*project->cache).root);
@@ -367,16 +369,55 @@ int compile_total(bld_project* project, char* executable_name) {
     return result;
 }
 
+void mark_changed_files(bld_project* project) {
+    int* has_changed;
+    bld_search_info* info;
+    bld_iter iter;
+    bld_file *file, *temp;
+
+    iter = bld_iter_set(&project->files.set);
+    while (bld_set_next(&iter, (void**) &file)) {
+        has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+        if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
+        if (!*has_changed) {continue;}
+
+        info = graph_includes_from(&project->graph, file);
+
+        while (next_file(info, &temp)) {
+            has_changed = bld_set_get(&project->changed_files, temp->identifier.id);
+            if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
+            *has_changed = 1;
+        }
+    }
+}
+
 int compile_with_absolute_path(bld_project* project, char* name) {
-    int result = 0, any_compiled = 0, temp;
+    int result = 0, any_compiled = 0, temp, *has_changed;
     uintmax_t hash;
     bld_path path;
-    bld_file* file;
-    bld_iter iter = bld_iter_set(&project->files.set);
+    bld_file *file, *cache_file;
+    bld_iter iter;
+
+    temp = 0;
+    iter = bld_iter_set(&project->files.set);
+    while (bld_set_next(&iter, (void**) &file)) {
+        bld_set_add(&project->changed_files, file->identifier.id, &temp);
+    }
 
     hash = hash_compiler(&project->compiler, 5031);
+    iter = bld_iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BLD_HEADER) {
+            cache_file = bld_set_get(&project->cache->files.set, file->identifier.id);
+            if (cache_file == NULL) {
+                has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+                *has_changed = 1;
+            } else if (file->identifier.hash != cache_file->identifier.hash) {
+                has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+                *has_changed = 1;
+            }
+            continue;
+        }
 
         file->identifier.hash = hash_file(file, hash);
         if (cached_compilation(project, file)) {
@@ -384,16 +425,14 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         }
 
         any_compiled = 1;
+        has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+        *has_changed = 1;
+
         temp = compile_file(project, file);
         if (temp) {
             log_warn("Compiled \"%s\" with errors", make_string(&file->name));
             result = temp;
         }
-    }
-
-    if (result) {
-        log_warn("Could not compile all files, no executable generated.");
-        return result;
     }
 
     path = copy_path(&project->root);
@@ -405,6 +444,27 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     /* TODO: move to separate function */
     generate_graph(&project->graph, &path);
     free_path(&path);
+
+    mark_changed_files(project);
+
+    iter = bld_iter_set(&project->files.set);
+    while (bld_set_next(&iter, (void**) &file)) {
+        if (file->type == BLD_HEADER) {continue;}
+
+        has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+        if (!*has_changed) {continue;}
+
+        temp = compile_file(project, file);
+        if (temp) {
+            log_warn("Compiled \"%s\" with errors", make_string(&file->name));
+            result = temp;
+        }
+    }
+
+    if (result) {
+        log_warn("Could not compile all files, no executable generated.");
+        return result;
+    }
 
     if (!any_compiled) {
         log_debug("Entire project existed in cache, generating executable");
