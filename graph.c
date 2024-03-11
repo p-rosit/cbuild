@@ -190,9 +190,9 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
         }
 
         if (func_type == 'T') {
-            add_func(&node->defined_funcs, &func);
+            add_symbol(&node->file->defined_symbols, &func);
         } else if (func_type == 'U') {
-            add_func(&node->used_funcs, &func);
+            add_symbol(&node->file->undefined_symbols, &func);
         } else {
             log_fatal("parse_symbols: unreachable error");
         }
@@ -278,7 +278,7 @@ void parse_file_includes(bld_node* node) {
         fclose(included_file);
 
         include_id = get_file_id(&file_path);
-        bld_set_add(&node->includes, include_id, &include_id);
+        bld_set_add(&node->file->includes, include_id, &include_id);
 
         free_path(&file_path);
         free_string(&str);
@@ -328,7 +328,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 
     parse_file_includes(&node);
 
-    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s), %lu include(s)", path_to_string(&file->path), node.defined_funcs.set.size, node.used_funcs.set.size, node.includes.size);
+    log_debug("Populating: \"%s\", %lu function(s), %lu reference(s), %lu include(s)", path_to_string(&file->path), node.file->defined_symbols.size, node.file->undefined_symbols.size, node.file->includes.size);
     push_node(&graph->nodes, node);
 
 }
@@ -339,11 +339,11 @@ void connect_node(bld_graph* graph, bld_node* node) {
 
     iter = bld_iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &to_node)) {
-        if (!bld_set_empty_intersection(&node->used_funcs.set, &to_node->defined_funcs.set)) {
+        if (!bld_set_empty_intersection(&node->file->undefined_symbols, &to_node->file->defined_symbols)) {
             add_function_edge(node, to_node->file->identifier.id);
         }
 
-        if (bld_set_has(&to_node->includes, node->file->identifier.id)) {
+        if (bld_set_has(&to_node->file->includes, node->file->identifier.id)) {
             add_include_edge(node, to_node->file->identifier.id);
         }
     }
