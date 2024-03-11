@@ -18,6 +18,8 @@ void serialize_functions(FILE*, bld_funcs*, int);
 void serialize_includes(FILE*, bld_set*, int);
 void serialize_edges(FILE*, bld_edges*, int);
 
+void serialize_key(FILE*, char*, int);
+
 void save_cache(bld_project* project) {
     FILE* cache;
     bld_path cache_path;
@@ -273,4 +275,8 @@ void serialize_edges(FILE* cache, bld_edges* edges, int depth) {
 
     fprintf(cache, "\n");
     fprintf(cache, "%*c]", 2 * depth, ' ');
+}
+
+void serialize_key(FILE* cache, char* key, int depth) {
+    fprintf(cache, "%*c\"%s\": ", 2 * depth, ' ', key);
 }
