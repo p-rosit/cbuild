@@ -17,9 +17,7 @@ void        push_node(bld_nodes*, bld_node);
 bld_node    new_node(bld_file*);
 void        free_node(bld_node*);
 
-bld_funcs   new_funcs();
-void        free_funcs(bld_funcs*);
-void        add_func(bld_funcs*, bld_string*);
+void add_symbol(bld_set* set, bld_string* str);
 
 typedef struct bld_stack {
     bld_array array;
@@ -418,36 +416,17 @@ void push_node(bld_nodes* nodes, bld_node node) {
 bld_node new_node(bld_file* file) {
     return (bld_node) {
         .file = file,
-        .defined_funcs = new_funcs(),
-        .used_funcs = new_funcs(),
-        .includes = bld_set_new(0),
         .functions_from = new_edges(),
         .included_in = new_edges(),
     };
 }
 
 void free_node(bld_node* node) {
-    free_funcs(&node->defined_funcs);
-    free_funcs(&node->used_funcs);
-    bld_set_free(&node->includes);
     free_edges(&node->functions_from);
     free_edges(&node->included_in);
 }
 
-bld_funcs new_funcs() {
-    return (bld_funcs) {.set = bld_set_new(sizeof(char*))};
-}
-
-void free_funcs(bld_funcs* funcs) {
-    char** func_ptr = funcs->set.values;
-    for (size_t i = 0; i < funcs->set.capacity + funcs->set.max_offset; i++) {
-        if (funcs->set.offset[i] >= funcs->set.max_offset) {continue;}
-        free(func_ptr[i]);
-    }
-    bld_set_free(&funcs->set);
-}
-
-void add_func(bld_funcs* funcs, bld_string* func) {
-    char* str = make_string(func);
-    bld_set_add(&funcs->set, hash_string(str, 0), &str);
+void add_symbol(bld_set* set, bld_string* str) {
+    char* temp = make_string(str);
+    bld_set_add(set, hash_string(temp, 0), temp);
 }
