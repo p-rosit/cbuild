@@ -7,21 +7,12 @@
 typedef struct bld_search_info bld_search_info;
 typedef struct bld_node bld_node;
 
-typedef struct bld_funcs {
-    bld_set set;
-} bld_funcs;
-
 typedef struct bld_edges {
     bld_array array;
 } bld_edges;
 
 struct bld_node {
     bld_file* file;
-
-    bld_funcs defined_funcs;
-    bld_funcs used_funcs;
-    bld_set includes;
-    
     bld_edges functions_from;
     bld_edges included_in;
 };
