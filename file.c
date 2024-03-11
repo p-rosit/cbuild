@@ -44,6 +44,9 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
         .name = str,
         .path = *path,
         .compiler = NULL,
+        .defined_symbols = bld_set_new(sizeof(char*)),
+        .undefined_symbols = bld_set_new(sizeof(char*)),
+        .includes = bld_set_new(0),
     };
 }
 
@@ -67,6 +70,9 @@ void free_file(bld_file* file) {
     free_string(&file->name);
     free_compiler(file->compiler);
     free(file->compiler);
+    bld_set_free(&file->defined_symbols);
+    bld_set_free(&file->undefined_symbols);
+    bld_set_free(&file->includes);
 }
 
 uintmax_t hash_file(bld_file* file, uintmax_t seed) {

@@ -27,9 +27,12 @@ typedef struct bld_file_identifier {
 typedef struct bld_file {
     bld_file_type type;
     bld_file_identifier identifier;
-    bld_string name;
     bld_path path;
+    bld_string name;
     bld_compiler* compiler;
+    bld_set defined_symbols;
+    bld_set undefined_symbols;
+    bld_set includes;
 } bld_file;
 
 typedef struct bld_files {
