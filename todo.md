@@ -1,6 +1,7 @@
-[ ] separate file and graph data in serialized cache
+[ ] handle case where cache exists but .o file is missing
+[x] separate file and graph data in serialized cache
 [ ] move compilation of project to different file
-[ ] move functions and includes to `bld_file` keep edges in `bld_node`
+[x] move functions and includes to `bld_file` keep edges in `bld_node`
 [ ] handle failed compilation
 [ ] make sure no path separator is passed when removing file ending
 [ ] use realloc instead of memcpy and free
