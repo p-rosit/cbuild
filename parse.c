@@ -13,22 +13,25 @@ bld_project make_project(bld_path, bld_compiler);
 int parse_cache(bld_project*, bld_path*);
 int parse_project_compiler(FILE*, bld_project*);
 
-int parse_graph(FILE*, bld_project*);
-int parse_node(FILE*, bld_project*);
-int parse_defined_functions(FILE*, bld_node*);
-int parse_undefined_functions(FILE*, bld_node*);
-int parse_includes(FILE*, bld_node*);
-int parse_functions_from(FILE*, bld_node*);
-int parse_included_in(FILE*, bld_node*);
-int parse_edge(FILE*, bld_edges*);
-int parse_function(FILE*, bld_funcs*);
-int parse_node_file(FILE*, bld_node*);
-int parse_file(FILE*, bld_file*);
+int parse_project_files(FILE*, bld_project*);
+int parse_file(FILE*, bld_files*);
 int parse_file_type(FILE*, bld_file*);
 int parse_file_id(FILE*, bld_file*);
 int parse_file_hash(FILE*, bld_file*);
 int parse_file_name(FILE*, bld_file*);
 int parse_file_compiler(FILE*, bld_file*);
+int parse_file_defined_symbols(FILE*, bld_file*);
+int parse_file_undefined_symbols(FILE*, bld_file*);
+int parse_file_function(FILE*, bld_set*);
+int parse_file_includes(FILE*, bld_file*);
+int parse_file_include(FILE*, bld_set*);
+
+int parse_project_graph(FILE*, bld_project*);
+int parse_graph_node(FILE*, bld_project*);
+int parse_node_file(FILE*, bld_node*);
+int parse_node_symbol_edges(FILE*, bld_node*);
+int parse_node_include_edges(FILE*, bld_node*);
+int parse_node_edge(FILE*, bld_array*);
 
 int parse_compiler(FILE*, bld_compiler*);
 int parse_compiler_type(FILE*, bld_compiler*);
@@ -38,6 +41,8 @@ int parse_compiler_option(FILE*, bld_options*);
 
 int parse_string(FILE*, bld_string*);
 int parse_uintmax(FILE*, uintmax_t*);
+int parse_uintmax_array(FILE*, bld_array*);
+int parse_uintmax_set(FILE*, bld_set*);
 
 int parse_array(FILE*, void*, bld_parse_func);
 int parse_map(FILE*, void*, int, int*, char**, bld_parse_func*);
@@ -106,12 +111,13 @@ void load_cache(bld_project* project, char* cache_path) {
 
 int parse_cache(bld_project* cache, bld_path* root) {
     int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"compiler", "project_graph"};
-    bld_parse_func funcs[2] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"compiler", "files", "graph"};
+    bld_parse_func funcs[3] = {
         (bld_parse_func) parse_project_compiler,
-        (bld_parse_func) parse_graph
+        (bld_parse_func) parse_project_files,
+        (bld_parse_func) parse_project_graph,
     };
     bld_path path = copy_path(root);
     FILE* f;
@@ -128,222 +134,80 @@ int parse_cache(bld_project* cache, bld_path* root) {
         return -1;
     }
 
+    cache->graph.files = &cache->files;
+
     fclose(f);
     free_path(&path);
     return 0;
 }
 
-bld_nodes new_nodes();
-int parse_graph(FILE* file, bld_project* project) {
+int parse_project_compiler(FILE* file, bld_project* project) {
+    int result = parse_compiler(file, &project->compiler);
+    if (result) {log_warn("Could not parse compiler for project.");}
+    return result;
+}
+
+int parse_project_files(FILE* file, bld_project* project) {
     int amount_parsed;
-    bld_file* f;
-    bld_node* node;
     bld_files* files = &project->files;
-    bld_nodes* nodes = &project->graph.nodes;
-    bld_iter iter;
 
     project->files = new_files();
-    project->graph = new_graph(&project->files); 
-    amount_parsed = parse_array(file, project, (bld_parse_func) parse_node);
+    amount_parsed = parse_array(file, files, (bld_parse_func) parse_file);
     if (amount_parsed < 0) {
         log_warn("Could not parse graph");
         return -1;
     }
 
-    iter = bld_iter_set(&files->set);
-    while (bld_set_next(&iter, (void**) &f)) {
-        node = bld_set_get(&nodes->set, f->identifier.id);
-        node->file = f;
-    }
-
     return 0;
 }
 
-void push_node(bld_nodes*, bld_node);
-int parse_node(FILE* file, bld_project* project) {
+int parse_file(FILE* file, bld_files* files) {
+    bld_file temp, *f;
     int amount_parsed;
-    int size = 6;
-    int parsed[6];
-    char *keys[6] = {"file", "defined", "undefined", "includes", "functions_from", "included_in"};
-    bld_parse_func funcs[6] = {
-        (bld_parse_func) parse_node_file,
-        (bld_parse_func) parse_defined_functions,
-        (bld_parse_func) parse_undefined_functions,
-        (bld_parse_func) parse_includes,
-        (bld_parse_func) parse_functions_from,
-        (bld_parse_func) parse_included_in,
-    };
-    bld_nodes* nodes = &project->graph.nodes;
-    bld_files* files = &project->files;
-    bld_node node;
-
-    amount_parsed = parse_map(file, &node, size, parsed, keys, funcs);
-    append_file(files, *node.file);
-    push_node(nodes, node);
-    free(node.file);
-
-    if (amount_parsed != size) {
-        log_warn("Could not parse node, expected all keys to be present: [");
-        for (int i = 0; i < size; i++) {
-            if (i > 0) {printf(",\n");}
-            printf("  \"%s\"", keys[i]);
-        }
-        printf("\n]\n");
-        return -1;
-    }
-
-    return 0;
-}
-
-bld_funcs new_funcs();
-int parse_functions(FILE* file, bld_funcs* funcs) {
-    int values;
-    bld_funcs f = new_funcs();
-
-    values = parse_array(file, &f, (bld_parse_func) parse_function);
-    if (values < 0) {
-        log_warn("Could not parse functions");
-        return -1;
-    }
-    *funcs = f;
-
-    return 0;
-}
-
-void add_func(bld_funcs*, bld_string*);
-int parse_function(FILE* file, bld_funcs* funcs) {
-    bld_string str = new_string();
-    int result = parse_string(file, &str);
-    if (result) {
-        free_string(&str);
-        log_warn("Could not parse function");
-        return -1;
-    }
-    
-    add_func(funcs, &str);
-    return result;
-}
-
-int parse_defined_functions(FILE* file, bld_node* node) {
-    bld_funcs funcs;
-    int result = parse_functions(file, &funcs);
-    if (result) {
-        log_warn("Could not parse defined functions.");
-        return -1;
-    }
-    node->defined_funcs = funcs;
-    return 0;
-}
-
-int parse_undefined_functions(FILE* file, bld_node* node) {
-    bld_funcs funcs;
-    int result = parse_functions(file, &funcs);
-    if (result) {
-        log_warn("Could not parse defined functions.");
-        return -1;
-    }
-    node->used_funcs = funcs;
-    return 0;
-}
-
-int parse_include_edge(FILE* file, bld_set* includes) {
-    uintmax_t file_id;
-    int result = parse_uintmax(file, &file_id);
-    if (result) {
-        log_warn("Could not parse edge");
-        return -1;
-    }
-    bld_set_add(includes, file_id, NULL);
-    return 0;
-}
-
-int parse_includes(FILE* file, bld_node* node) {
-    int values;
-    bld_set includes = bld_set_new(0);
-
-    values = parse_array(file, &includes, (bld_parse_func) parse_include_edge);
-    if (values < 0) {
-        log_warn("Could not parse ");
-        return -1;
-    }
-
-    node->includes = includes;
-    return 0;
-}
-
-
-bld_edges new_edges();
-int parse_functions_from(FILE* file, bld_node* node) {
-    int values;
-    bld_edges edges = new_edges();
-
-    values = parse_array(file, &edges, (bld_parse_func) parse_edge);
-    if (values < 0) {
-        log_warn("Could not parse edges");
-        return -1;
-    }
-    node->functions_from = edges;
-    return 0;
-}
-
-int parse_included_in(FILE* file, bld_node* node) {
-    int values;
-    bld_edges edges = new_edges();
-
-    values = parse_array(file, &edges, (bld_parse_func) parse_edge);
-    if (values < 0) {
-        log_warn("Could not parse edges");
-        return -1;
-    }
-    node->included_in = edges;
-    return 0;
-}
-
-void append_edge(bld_edges*, uintmax_t);
-int parse_edge(FILE* file, bld_edges* edges) {
-    uintmax_t num;
-    int result = parse_uintmax(file, &num);
-    if (result) {
-        log_warn("Could not parse edge");
-        return -1;
-    }
-    append_edge(edges, num);
-    return 0;
-}
-
-int parse_node_file(FILE* file, bld_node* node) {
-    bld_file* f = malloc(sizeof(bld_file));
-    int result = parse_file(file, f);
-    if (result) {
-        free(f);
-        log_fatal("Free correctly");
-        log_warn("Could not parse file of node.");
-        return -1;
-    }
-    node->file = f;
-    return 0;
-}
-
-int parse_file(FILE* file, bld_file* f) {
-    int amount_parsed;
-    int size = 5;
-    int parsed[5];
-    char *keys[5] = {"type", "id", "hash", "name", "compiler"};
-    bld_parse_func funcs[5] = {
+    int size = 8;
+    int parsed[8];
+    char *keys[8] = {"type", "id", "hash", "name", "compiler", "includes", "defined_symbols", "undefined_symbols"};
+    bld_parse_func funcs[8] = {
         (bld_parse_func) parse_file_type,
         (bld_parse_func) parse_file_id,
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
-        (bld_parse_func) parse_file_compiler
+        (bld_parse_func) parse_file_compiler,
+        (bld_parse_func) parse_file_includes,
+        (bld_parse_func) parse_file_defined_symbols,
+        (bld_parse_func) parse_file_undefined_symbols,
     };
 
+    temp.defined_symbols = bld_set_new(sizeof(char*));
+    temp.undefined_symbols = bld_set_new(sizeof(char*));
+
+    f = &temp;
     f->compiler = NULL;
     amount_parsed = parse_map(file, f, size, parsed, keys, funcs);
+    if (amount_parsed < 0) {return -1;}
+    if (!parsed[0]) {return -1;} /* Fail if file type was not parsed */
 
-    if (amount_parsed < size && parsed[4]) {
-        return -1;
+    if (f->type == BLD_HEADER) {
+        /* Header must have: id, hash, name, includes */
+        if (!parsed[1] || !parsed[2] || !parsed[3] || !parsed[5]) {
+            log_warn("Header did not have required fields");
+            return -1;
+        }
+        /* Header cannot have: defined_symbols, undefined_symbols */
+        if (parsed[6] || parsed[7]) {
+            log_warn("Header had forbidden fields");
+            return -1;
+        }
+    } else {
+        /* File must have every key except an optional compiler */
+        if ((amount_parsed < size - 1) || ((amount_parsed == size - 1) && parsed[4])) {
+            log_warn("File is missing required field");
+            return -1;
+        }
     }
+
     f->path = new_path();
+    bld_set_add(&files->set, f->identifier.id, f);
     return 0;
 }
 
@@ -351,6 +215,7 @@ int parse_file_type(FILE* file, bld_file* f) {
     bld_string str = new_string();
     char* temp;
     int result = parse_string(file, &str);
+
     if (result) {
         free_string(&str);
         log_warn("Could not parse compiler type");
@@ -371,27 +236,6 @@ int parse_file_type(FILE* file, bld_file* f) {
 
     free_string(&str);
     return result;
-}
-
-int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
-    uintmax_t num = 0;
-    int c;
-
-    c = next_character(file);
-    if (!isdigit(c)) {
-        log_warn("Expected number, got: \'%c\'", c);
-        return -1;
-    }
-
-    while (c != EOF && isdigit(c)) {
-        /* Warning: number is assumed to be valid, no overflow etc. */
-        num = 10 * num + (c - '0');
-        c = getc(file);
-    }
-    ungetc(c, file);
-
-    *num_ptr = num;
-    return 0;
 }
 
 int parse_file_id(FILE* file, bld_file* f) {
@@ -439,10 +283,162 @@ int parse_file_compiler(FILE* file, bld_file* f) {
     return result;
 }
 
-int parse_project_compiler(FILE* file, bld_project* project) {
-    int result = parse_compiler(file, &project->compiler);
-    if (result) {log_warn("Could not parse compiler for project.");}
-    return result;
+int parse_file_includes(FILE* file, bld_file* f) {
+    int amount_parsed;
+
+    f->includes = bld_set_new(0);
+    amount_parsed = parse_array(file, &f->includes, (bld_parse_func) parse_file_include);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse file includes");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_file_include(FILE* file, bld_set* set) {
+    uintmax_t file_id;
+    int result;
+
+    result = parse_uintmax(file, &file_id);
+    if (result) {return -1;}
+
+    bld_set_add(set, file_id, NULL);
+    return 0;
+}
+
+int parse_file_defined_symbols(FILE* file, bld_file* f) {
+    int amount_parsed;
+
+    amount_parsed = parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse defined symbols");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_file_undefined_symbols(FILE* file, bld_file* f) {
+    int amount_parsed;
+
+    amount_parsed = parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse defined symbols");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_file_function(FILE* file, bld_set* set) {
+    bld_string str = new_string();
+    char* temp;
+    int result;
+
+    result = parse_string(file, &str);
+    if (result) {return -1;}
+
+    temp = make_string(&str);
+    bld_set_add(set, hash_string(temp, 0), &temp);
+    return 0;
+}
+
+int parse_project_graph(FILE* file, bld_project* project) {
+    int amount_parsed;
+
+    project->graph = new_graph(&project->files); 
+    amount_parsed = parse_array(file, project, (bld_parse_func) parse_graph_node);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse graph");
+        return -1;
+    }
+
+    return 0;
+}
+
+void push_node(bld_nodes*, bld_node);
+int parse_graph_node(FILE* file, bld_project* project) {
+    int amount_parsed;
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"file", "symbol_edges", "include_edges"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_node_file,
+        (bld_parse_func) parse_node_symbol_edges,
+        (bld_parse_func) parse_node_include_edges,
+    };
+    bld_nodes* nodes = &project->graph.nodes;
+    bld_node node;
+
+    amount_parsed = parse_map(file, &node, size, parsed, keys, funcs);
+
+    if (amount_parsed != size) {
+        log_warn("Could not parse node, expected all keys to be present: [");
+        for (int i = 0; i < size; i++) {
+            if (i > 0) {printf(",\n");}
+            printf("  \"%s\"", keys[i]);
+        }
+        printf("\n]\n");
+        return -1;
+    }
+
+    push_node(nodes, node);
+
+    return 0;
+}
+
+int parse_node_file(FILE* file, bld_node* node) {
+    uintmax_t file_id;
+    int result;
+
+    result = parse_uintmax(file, &file_id);
+
+    if (result) {
+        log_fatal("Free correctly");
+        log_warn("Could not parse file of node.");
+        return result;
+    }
+
+    node->file_id = file_id;
+    return 0;
+}
+
+int parse_node_symbol_edges(FILE* file, bld_node* node) {
+    int amount_parsed;
+
+    node->functions_from.array = bld_array_new(sizeof(uintmax_t));
+    amount_parsed = parse_array(file, &node->functions_from.array, (bld_parse_func) parse_node_edge);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse graph");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_node_include_edges(FILE* file, bld_node* node) {
+    int amount_parsed;
+
+    node->included_in.array = bld_array_new(sizeof(uintmax_t));
+    amount_parsed = parse_array(file, &node->included_in.array, (bld_parse_func) parse_node_edge);
+    if (amount_parsed < 0) {
+        log_warn("Could not parse graph");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_node_edge(FILE* file, bld_array* array) {
+    uintmax_t file_id;
+    int result;
+
+    result = parse_uintmax(file, &file_id);
+    if (result) {return -1;}
+
+    bld_array_push(array, &file_id);
+    return 0;
 }
 
 int parse_compiler(FILE* file, bld_compiler* compiler) {
@@ -552,6 +548,27 @@ int parse_string(FILE* file, bld_string* str) {
     return 0;
     parse_failed:
     return -1;
+}
+
+int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
+    uintmax_t num = 0;
+    int c;
+
+    c = next_character(file);
+    if (!isdigit(c)) {
+        log_warn("Expected number, got: \'%c\'", c);
+        return -1;
+    }
+
+    while (c != EOF && isdigit(c)) {
+        // Warning: number is assumed to be valid, no overflow etc.
+        num = 10 * num + (c - '0');
+        c = getc(file);
+    }
+    ungetc(c, file);
+
+    *num_ptr = num;
+    return 0;
 }
 
 int next_character(FILE* file) {
