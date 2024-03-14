@@ -66,11 +66,24 @@ bld_file make_test(bld_path* path, char* name) {
 }
 
 void free_file(bld_file* file) {
+    bld_iter iter;
+    char** symbol;
+
     free_path(&file->path);
     free_string(&file->name);
     free_compiler(file->compiler);
     free(file->compiler);
+
+    iter = bld_iter_set(&file->defined_symbols);
+    while (bld_set_next(&iter, (void**) &symbol)) {
+        free(*symbol);
+    }
     bld_set_free(&file->defined_symbols);
+
+    iter = bld_iter_set(&file->undefined_symbols);
+    while (bld_set_next(&iter, (void**) &symbol)) {
+        free(*symbol);
+    }
     bld_set_free(&file->undefined_symbols);
     bld_set_free(&file->includes);
 }
