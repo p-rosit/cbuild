@@ -150,7 +150,7 @@ void free_graph(bld_graph* graph) {
     free_nodes(&graph->nodes);
 }
 
-void parse_symbols(bld_node* node, bld_path* symbol_path) {
+void parse_symbols(bld_file* file, bld_path* symbol_path) {
     FILE* f;
     int c, func_type;
     bld_string func;
@@ -161,18 +161,18 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
     while (1) {
         c = fgetc(f);
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
             break;
         }
 
         while (c != EOF && c != ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
             break;
         }
         while (c != EOF && c == ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&node->file->path));
+            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
             break;
         }
 
@@ -193,9 +193,9 @@ void parse_symbols(bld_node* node, bld_path* symbol_path) {
         }
 
         if (func_type == 'T') {
-            add_symbol(&node->file->defined_symbols, &func);
+            add_symbol(&file->defined_symbols, &func);
         } else if (func_type == 'U') {
-            add_symbol(&node->file->undefined_symbols, &func);
+            add_symbol(&file->undefined_symbols, &func);
         } else {
             log_fatal("parse_symbols: unreachable error");
         }
@@ -238,32 +238,32 @@ int expect_string(FILE* file, char* str) {
     return 1;
 }
 
-void parse_file_includes(bld_node* node) {
+void parse_included_files(bld_file* file) {
     size_t line_number;
     bld_path parent_path;
     bld_path file_path;
     bld_string str;
     uintmax_t include_id;
-    FILE *file, *included_file;
+    FILE *f, *included_file;
     int c;
 
-    file = fopen(path_to_string(&node->file->path), "r");
-    if (file == NULL) {log_fatal("Could not open file for reading: \"%s\"", make_string(&node->file->name));}
+    f = fopen(path_to_string(&file->path), "r");
+    if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", make_string(&file->name));}
 
-    parent_path = copy_path(&node->file->path);
+    parent_path = copy_path(&file->path);
     remove_last_dir(&parent_path);
 
     line_number = 0;
     while (1) {
-        if (!expect_char(file, '#')) {goto next_line;}
-        if (!expect_string(file, "include")) {goto next_line;}
-        if (!expect_char(file, '\"')) {goto next_line;}
+        if (!expect_char(f, '#')) {goto next_line;}
+        if (!expect_string(f, "include")) {goto next_line;}
+        if (!expect_char(f, '\"')) {goto next_line;}
 
         str = new_string();
-        c = getc(file);
+        c = getc(f);
         while (c != EOF && c != '\"' && c != '\n') {
             append_char(&str, c);
-            c = getc(file);
+            c = getc(f);
         }
         if (c == EOF) {free_string(&str); break;}
         if (c == '\n') {goto next_line;}
@@ -273,7 +273,7 @@ void parse_file_includes(bld_node* node) {
 
         included_file = fopen(path_to_string(&file_path), "r");
         if (included_file == NULL) {
-            log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&node->file->path), line_number, make_string(&str));
+            log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&file->path), line_number, make_string(&str));
             free_path(&file_path);
             free_string(&str);
             goto next_line;
@@ -281,18 +281,18 @@ void parse_file_includes(bld_node* node) {
         fclose(included_file);
 
         include_id = get_file_id(&file_path);
-        bld_set_add(&node->file->includes, include_id, &include_id);
+        bld_set_add(&file->includes, include_id, &include_id);
 
         free_path(&file_path);
         free_string(&str);
 
         next_line:
-        if (!skip_line(file)) {break;}
+        if (!skip_line(f)) {break;}
         line_number++;
     }
 
     free_path(&parent_path);
-    fclose(file);
+    fclose(f);
 }
 
 void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path, bld_file* file) {
