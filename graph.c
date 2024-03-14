@@ -152,7 +152,7 @@ void free_graph(bld_graph* graph) {
 
 void parse_symbols(bld_file* file, bld_path* symbol_path) {
     FILE* f;
-    int c, func_type;
+    int c, symbol_type;
     bld_string func;
 
     f = fopen(path_to_string(symbol_path), "r");
@@ -176,8 +176,8 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
             break;
         }
 
-        func_type = c;
-        if (func_type != 'T' && func_type != 'U') {goto next_line;}
+        symbol_type = c;
+        if (symbol_type != 'T' && symbol_type != 'B' && symbol_type != 'U') {goto next_line;}
 
         c = fgetc(f);
         if (c != ' ') {
@@ -192,9 +192,9 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
             c = fgetc(f);
         }
 
-        if (func_type == 'T') {
+        if (symbol_type == 'T' || symbol_type == 'B') {
             add_symbol(&file->defined_symbols, &func);
-        } else if (func_type == 'U') {
+        } else if (symbol_type == 'U') {
             add_symbol(&file->undefined_symbols, &func);
         } else {
             log_fatal("parse_symbols: unreachable error");
