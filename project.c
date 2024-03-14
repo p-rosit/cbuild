@@ -382,7 +382,6 @@ void mark_changed_files(bld_project* project) {
         if (!*has_changed) {continue;}
 
         info = graph_includes_from(&project->graph, file);
-
         while (next_file(info, &temp)) {
             has_changed = bld_set_get(&project->changed_files, temp->identifier.id);
             if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
