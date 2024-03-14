@@ -17,7 +17,7 @@ void        push_node(bld_nodes*, bld_node);
 bld_node    new_node(bld_file*);
 void        free_node(bld_node*);
 
-void add_symbol(bld_set* set, bld_string* str);
+void        add_symbol(bld_set*, bld_string*);
 
 typedef struct bld_stack {
     bld_array array;
@@ -428,5 +428,5 @@ void free_node(bld_node* node) {
 
 void add_symbol(bld_set* set, bld_string* str) {
     char* temp = make_string(str);
-    bld_set_add(set, hash_string(temp, 0), temp);
+    bld_set_add(set, hash_string(temp, 0), &temp);
 }
