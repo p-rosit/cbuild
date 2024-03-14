@@ -420,12 +420,12 @@ void free_nodes(bld_nodes* nodes) {
 }
 
 void push_node(bld_nodes* nodes, bld_node node) {
-    bld_set_add(&nodes->set, node.file->identifier.id, &node);
+    bld_set_add(&nodes->set, node.file_id, &node);
 }
 
 bld_node new_node(bld_file* file) {
     return (bld_node) {
-        .file = file,
+        .file_id = file->identifier.id,
         .functions_from = new_edges(),
         .included_in = new_edges(),
     };
