@@ -12,7 +12,7 @@ typedef struct bld_edges {
 } bld_edges;
 
 struct bld_node {
-    bld_file* file;
+    uintmax_t file_id;
     bld_edges functions_from;
     bld_edges included_in;
 };
