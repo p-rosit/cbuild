@@ -406,6 +406,8 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     hash = hash_compiler(&project->compiler, 5031);
     iter = bld_iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
+        file->identifier.hash = hash_file(file, hash);
+
         if (file->type == BLD_HEADER) {
             cache_file = bld_set_get(&project->cache->files.set, file->identifier.id);
             if (cache_file == NULL) {
@@ -418,7 +420,6 @@ int compile_with_absolute_path(bld_project* project, char* name) {
             continue;
         }
 
-        file->identifier.hash = hash_file(file, hash);
         if (cached_compilation(project, file)) {
             continue;
         }
