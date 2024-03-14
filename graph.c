@@ -91,6 +91,7 @@ int next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
     uintmax_t* index;
     bld_node *node, *to_node;
+    bld_file* temp;
     bld_iter iter;
 
     if (info->type == BLD_NO_SEARCH) {
@@ -106,12 +107,12 @@ int next_file(bld_search_info* info, bld_file** file) {
         node = node_pop(&info->stack);
 
         node_visited = 0;
-        if (bld_set_has(&info->visited, node->file->identifier.hash)) {
+        if (bld_set_has(&info->visited, node->file_id)) {
             node_visited = 1;
             goto next_node;
         }
 
-        bld_set_add(&info->visited, node->file->identifier.hash, &node);
+        bld_set_add(&info->visited, node->file_id, &node);
 
         switch (info->type) {
             case (BLD_FUNCS): {
@@ -131,7 +132,9 @@ int next_file(bld_search_info* info, bld_file** file) {
         next_node:;
     }
 
-    *file = node->file;
+    temp = bld_set_get(&info->graph->files->set, node->file_id);
+    if (temp == NULL) {log_fatal("File did not exist in graph, internal error");}
+    *file = temp;
 
     return 1;
 }
