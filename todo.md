@@ -1,3 +1,4 @@
+[ ] use prefix on functions to avoid collisions
 [ ] handle forward declarations of compiler associated with file
 [x] keep file id in node instead of pointer to file (pointer might become invalid, id never becomes invalid)
 [ ] handle case where cache exists but .o file is missing
