@@ -86,7 +86,7 @@ void append_string(bld_string* str, char* s) {
     }
 }
 
-char* make_string(bld_string* str) {
+char* string_unpack(bld_string* str) {
     str->chars[str->size] = '\0';
     return str->chars;
 }

@@ -36,12 +36,12 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
 
     str = string_new();
     append_string(&str, name);
-    *file = make_string(&str);
+    *file = string_unpack(&str);
 
     str = string_new();
     append_string(&str, "old_");
     append_string(&str, name);
-    *old_file = make_string(&str);
+    *old_file = string_unpack(&str);
 
     free_path(&path);
 }

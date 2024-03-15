@@ -222,7 +222,7 @@ int parse_file_type(FILE* file, bld_file* f) {
         return -1;
     }
     
-    temp = make_string(&str);
+    temp = string_unpack(&str);
     if (strcmp(temp, "implementation") == 0) {
         f->type = BLD_IMPL;
     } else if (strcmp(temp, "header") == 0) {
@@ -339,7 +339,7 @@ int parse_file_function(FILE* file, bld_set* set) {
     result = parse_string(file, &str);
     if (result) {return -1;}
 
-    temp = make_string(&str);
+    temp = string_unpack(&str);
     bld_set_add(set, hash_string(temp, 0), &temp);
     return 0;
 }
@@ -471,7 +471,7 @@ int parse_compiler_type(FILE* file, bld_compiler* compiler) {
         return -1;
     }
     
-    temp = make_string(&str);
+    temp = string_unpack(&str);
     if (strcmp(temp, "gcc") == 0) {
         compiler->type = BLD_GCC;
     } else if (strcmp(temp, "clang") == 0) {
@@ -495,7 +495,7 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
         return -1;
     }
     
-    temp = make_string(&str);
+    temp = string_unpack(&str);
     compiler->executable = temp;
     return result;
 }
@@ -524,7 +524,7 @@ int parse_compiler_option(FILE* file, bld_options* options) {
         return -1;
     }
     
-    temp = make_string(&str);
+    temp = string_unpack(&str);
     append_option(options, temp);
 
     free(temp);
@@ -660,7 +660,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
         }
 
         exists = 0;
-        temp = make_string(&str);
+        temp = string_unpack(&str);
         for (int i = 0; i < entries; i++) {
             if (strcmp(temp, keys[i]) == 0) {
                 exists = 1;

@@ -138,7 +138,7 @@ void serialize_file(FILE* cache, bld_file* file, int depth) {
     fprintf(cache, ",\n");
 
     serialize_key(cache, "name", depth);
-    fprintf(cache, "\"%s\"", make_string(&file->name));
+    fprintf(cache, "\"%s\"", string_unpack(&file->name));
     fprintf(cache, ",\n");
 
     if (file->compiler != NULL) {

@@ -124,8 +124,8 @@ int compile_file(bld_project* project, bld_file* file) {
     append_string(&cmd, ".o");
     free_path(&path);
 
-    // log_warn("File: \"%s\"", make_string(&cmd));
-    result = system(make_string(&cmd));
+    // log_warn("File: \"%s\"", string_unpack(&cmd));
+    result = system(string_unpack(&cmd));
     free_string(&cmd);
     return result;
 }
@@ -171,8 +171,8 @@ int compile_total(bld_project* project, char* executable_name) {
         free_path(&path);
     }
 
-    // log_warn("Final: \"%s\"", make_string(&cmd));
-    result = system(make_string(&cmd));
+    // log_warn("Final: \"%s\"", string_unpack(&cmd));
+    result = system(string_unpack(&cmd));
     if (result < 0) {
         log_fatal("Expected return value of compiler to be non-negative.");
     }
@@ -217,11 +217,11 @@ int cached_compilation(bld_project* project, bld_file* file) {
     }
 
     if (exists && !new_options) {
-        log_debug("Found \"%s\" in cache", make_string(&file->name));
+        log_debug("Found \"%s\" in cache", string_unpack(&file->name));
     } else if (exists && new_options) {
-        log_debug("Invalidated cache of \"%s\"", make_string(&file->name));
+        log_debug("Invalidated cache of \"%s\"", string_unpack(&file->name));
     } else {
-        log_debug("Did not find \"%s\" in cache", make_string(&file->name));
+        log_debug("Did not find \"%s\" in cache", string_unpack(&file->name));
     }
 
     return exists && !new_options;
@@ -268,7 +268,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 
         temp = compile_file(project, file);
         if (temp) {
-            log_warn("Compiled \"%s\" with errors", make_string(&file->name));
+            log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
             result = temp;
         }
     }
@@ -294,7 +294,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 
         temp = compile_file(project, file);
         if (temp) {
-            log_warn("Compiled \"%s\" with errors", make_string(&file->name));
+            log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
             result = temp;
         }
     }

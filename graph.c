@@ -248,7 +248,7 @@ void parse_included_files(bld_file* file) {
     int c;
 
     f = fopen(path_to_string(&file->path), "r");
-    if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", make_string(&file->name));}
+    if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", string_unpack(&file->name));}
 
     parent_path = copy_path(&file->path);
     remove_last_dir(&parent_path);
@@ -269,11 +269,11 @@ void parse_included_files(bld_file* file) {
         if (c == '\n') {goto next_line;}
 
         file_path = copy_path(&parent_path);
-        append_dir(&file_path, make_string(&str));
+        append_dir(&file_path, string_unpack(&str));
 
         included_file = fopen(path_to_string(&file_path), "r");
         if (included_file == NULL) {
-            log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&file->path), line_number, make_string(&str));
+            log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&file->path), line_number, string_unpack(&str));
             free_path(&file_path);
             free_string(&str);
             goto next_line;
@@ -320,7 +320,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         append_string(&cmd, " >> ");
         append_string(&cmd, path_to_string(symbol_path));
 
-        result = system(make_string(&cmd));
+        result = system(string_unpack(&cmd));
         if (result) {
             log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
         }
@@ -437,6 +437,6 @@ void free_node(bld_node* node) {
 }
 
 void add_symbol(bld_set* set, bld_string* str) {
-    char* temp = make_string(str);
+    char* temp = string_unpack(str);
     bld_set_add(set, hash_string(temp, 0), &temp);
 }

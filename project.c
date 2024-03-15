@@ -30,7 +30,7 @@ bld_path extract_build_path(bld_path* root) {
     char* name;
     append_string(&str, get_last_dir(root));
 
-    make_string(&str);
+    string_unpack(&str);
     if (strncmp(str.chars, "old_", 4) == 0) {
         name = str.chars + 4;
     } else {

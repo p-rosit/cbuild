@@ -12,7 +12,7 @@ typedef struct bld_string {
 
 bld_string  string_new();
 bld_string  string_copy(bld_string*);
-char*       make_string(bld_string*);
+char*       string_unpack(bld_string*);
 void        free_string(bld_string*);
 uintmax_t   hash_string(char*, uintmax_t);
 
