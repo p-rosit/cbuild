@@ -34,7 +34,6 @@ struct bld_project {
 
 bld_project new_project(bld_path, bld_compiler);
 void        free_project(bld_project*);
-void        print_project(bld_project*);
 
 bld_path    extract_path(int, char**);
 void        set_main_file(bld_project*, char*);
