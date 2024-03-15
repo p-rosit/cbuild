@@ -26,7 +26,7 @@ bld_path new_path() {
 
 bld_path copy_path(bld_path* path) {
     return (bld_path) {
-        .str = copy_string(&path->str),
+        .str = string_copy(&path->str),
     };
 }
 

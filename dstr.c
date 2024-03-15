@@ -13,7 +13,7 @@ bld_string string_new() {
     };
 }
 
-bld_string copy_string(bld_string* str) {
+bld_string string_copy(bld_string* str) {
     char* chars;
 
     chars = malloc(str->size + 1);
