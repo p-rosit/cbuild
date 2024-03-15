@@ -212,7 +212,7 @@ int parse_file(FILE* file, bld_files* files) {
 }
 
 int parse_file_type(FILE* file, bld_file* f) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
 
@@ -261,7 +261,7 @@ int parse_file_hash(FILE* file, bld_file* f) {
 }
 
 int parse_file_name(FILE* file, bld_file* f) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     int result = parse_string(file, &str);
     if (result) {
         free_string(&str);
@@ -332,7 +332,7 @@ int parse_file_undefined_symbols(FILE* file, bld_file* f) {
 }
 
 int parse_file_function(FILE* file, bld_set* set) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     char* temp;
     int result;
 
@@ -462,7 +462,7 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
 }
 
 int parse_compiler_type(FILE* file, bld_compiler* compiler) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
@@ -486,7 +486,7 @@ int parse_compiler_type(FILE* file, bld_compiler* compiler) {
 }
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
@@ -515,7 +515,7 @@ int parse_compiler_options(FILE* file, bld_compiler* compiler) {
 
 void append_option(bld_options*, char*);
 int parse_compiler_option(FILE* file, bld_options* options) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
@@ -647,7 +647,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
 
     while (!parse_complete) {
         key_num += 1;
-        str = new_string();
+        str = string_new();
         result = parse_string(file, &str);
         if (result) {
             log_warn("Key %d could not be parsed, expected: [", key_num);

@@ -20,7 +20,7 @@ void push_path(bld_paths* paths, bld_path path) {
 
 bld_path new_path() {
     return (bld_path) {
-        .str = new_string(),
+        .str = string_new(),
     };
 }
 

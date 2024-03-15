@@ -3,7 +3,7 @@
 #include "compiler.h"
 
 bld_compiler new_compiler(bld_compiler_type type, char* executable) {
-    bld_string str = new_string();
+    bld_string str = string_new();
     append_string(&str, executable);
 
     return (bld_compiler) {
@@ -21,7 +21,7 @@ void free_compiler(bld_compiler* compiler) {
 
 bld_compiler copy_compiler(bld_compiler* compiler) {
     bld_options options;
-    bld_string executable = new_string();
+    bld_string executable = string_new();
     append_string(&executable, compiler->executable);
 
     options = copy_options(&compiler->options);
@@ -63,7 +63,7 @@ bld_options copy_options(bld_options* options) {
 
 void append_option(bld_options* options, char* str) {
     char* temp;
-    bld_string s = new_string();
+    bld_string s = string_new();
 
     append_string(&s, str);
     temp = make_string(&s);

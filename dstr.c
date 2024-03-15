@@ -2,7 +2,7 @@
 #include "logging.h"
 #include "dstr.h"
 
-bld_string new_string() {
+bld_string string_new() {
     char* chars = malloc(1);
     if (chars == NULL) {log_fatal("Could not allocate minimal string.");}
 

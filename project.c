@@ -26,7 +26,7 @@ bld_path extract_path(int argc, char** argv) {
 
 bld_path extract_build_path(bld_path* root) {
     bld_path build_path;
-    bld_string str = new_string();
+    bld_string str = string_new();
     char* name;
     append_string(&str, get_last_dir(root));
 

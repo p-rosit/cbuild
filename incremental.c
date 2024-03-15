@@ -92,7 +92,7 @@ int compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[256], **flags;
     bld_compiler compiler;
-    bld_string cmd = new_string();
+    bld_string cmd = string_new();
     bld_path path;
 
     if (file->compiler != NULL) {
@@ -145,7 +145,7 @@ int compile_total(bld_project* project, char* executable_name) {
         return 1;
     }
 
-    cmd = new_string();
+    cmd = string_new();
     append_string(&cmd, compiler.executable);
     append_space(&cmd);
 

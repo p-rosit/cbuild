@@ -10,7 +10,7 @@ typedef struct bld_string {
     char* chars;
 } bld_string;
 
-bld_string  new_string();
+bld_string  string_new();
 bld_string  copy_string(bld_string*);
 char*       make_string(bld_string*);
 void        free_string(bld_string*);

@@ -34,11 +34,11 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
         name += 4;
     }
 
-    str = new_string();
+    str = string_new();
     append_string(&str, name);
     *file = make_string(&str);
 
-    str = new_string();
+    str = string_new();
     append_string(&str, "old_");
     append_string(&str, name);
     *old_file = make_string(&str);

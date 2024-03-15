@@ -185,7 +185,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
             goto next_line;
         }
 
-        func = new_string();
+        func = string_new();
         c = fgetc(f);
         while (c != '\n' && c != ' ' && c != EOF) {
             append_char(&func, c);
@@ -259,7 +259,7 @@ void parse_included_files(bld_file* file) {
         if (!expect_string(f, "include")) {goto next_line;}
         if (!expect_char(f, '\"')) {goto next_line;}
 
-        str = new_string();
+        str = string_new();
         c = getc(f);
         while (c != EOF && c != '\"' && c != '\n') {
             append_char(&str, c);
@@ -305,7 +305,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     node = new_node(file);
 
     if (file->type != BLD_HEADER) {
-        cmd = new_string();
+        cmd = string_new();
         fclose(fopen(path_to_string(symbol_path), "w"));
 
         append_string(&cmd, "nm ");
