@@ -5,5 +5,6 @@
 #include "file.h"
 #include "compiler.h"
 #include "project.h"
+#include "incremental.h"
 
 #include "rebuild.h"

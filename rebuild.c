@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "logging.h"
+#include "incremental.h"
 #include "rebuild.h"
 
 int run_new_build(bld_path* root, char* executable) {
