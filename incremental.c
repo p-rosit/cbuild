@@ -73,12 +73,8 @@ void index_project(bld_project* project) {
     if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&project->root));}
     closedir(dir);
 
-    if (!project->ignore_root) {
-        log_info("Indexing project under root");
-        index_recursive(project, &project->root, NULL);
-    } else {
-        log_info("Ignoring root");
-    }
+    log_info("Indexing project under root");
+    index_recursive(project, &project->root, NULL);
 
     paths = project->extra_paths.array.values;
     for (size_t i = 0; i < project->extra_paths.array.size; i++) {

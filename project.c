@@ -47,7 +47,6 @@ bld_path extract_build_path(bld_path* root) {
 
 bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
-        .ignore_root = 0,
         .root = root,
         .build = new_path(),
         .extra_paths = new_paths(),
@@ -179,10 +178,6 @@ void ignore_path(bld_project* project, char* path) {
     append_ignore_id(&project->ignore_paths, get_file_id(&test));
 
     free_path(&test);
-}
-
-void ignore_root(bld_project* project) {
-    project->ignore_root = 1;
 }
 
 bld_ignore new_ignore_ids() {
