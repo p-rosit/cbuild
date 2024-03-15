@@ -1,3 +1,4 @@
+[ ] replace wrappers to generic array and set by array/set
 [ ] avoid recompiling file twice when performing incremental compilation
 [ ] add functions to analyze the dependency graph
 [x] parse symbols that are variables ("B" entries when running nm)
