@@ -29,11 +29,23 @@ void free_compiler(bld_compiler* compiler) {
 }
 
 bld_compiler copy_compiler(bld_compiler* compiler) {
+    bld_iter iter;
+    bld_string str;
+    char **flag, *temp;
     bld_array options;
     bld_string executable = string_new();
     string_append_string(&executable, compiler->executable);
 
     options = bld_array_copy(&compiler->options); /* TODO: incorrect copy??? */
+
+    iter = bld_iter_array(&compiler->options);
+    while (bld_array_next(&iter, (void**) &flag)) {
+        str = string_new();
+        string_append_string(&str, *flag);
+        temp = string_unpack(&str);
+
+        *flag = temp;
+    }
 
     return (bld_compiler) {
         .type = compiler->type,
