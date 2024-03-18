@@ -5,7 +5,7 @@
 
 void serialize_compiler(FILE*, bld_compiler*, int);
 void serialize_compiler_type(FILE*, bld_compiler_type);
-void serialize_compiler_options(FILE*, bld_options*, int);
+void serialize_compiler_options(FILE*, bld_array*, int);
 
 void serialize_files(FILE*, bld_files*, int);
 void serialize_file(FILE*, bld_file*, int);
@@ -68,7 +68,7 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", compiler->executable);
 
-    if (compiler->options.array.size > 0) {
+    if (compiler->options.size > 0) {
         fprintf(cache, ",\n");
         serialize_key(cache, "options", depth);
         serialize_compiler_options(cache, &compiler->options, depth + 1);
@@ -90,13 +90,18 @@ void serialize_compiler_type(FILE* cache, bld_compiler_type type) {
     }
 }
 
-void serialize_compiler_options(FILE* cache, bld_options* options, int depth) {
-    char** flags = options->array.values;
+void serialize_compiler_options(FILE* cache, bld_array* options, int depth) {
+    bld_iter iter;
+    char** flag;
+    int first = 1;
+
     fprintf(cache, "[\n");
     
-    for (size_t i = 0; i < options->array.size; i++) {
-        if (i > 0) {fprintf(cache, ",\n");}
-        fprintf(cache, "%*c\"%s\"", 2 * depth, ' ', flags[i]);
+    iter = bld_iter_array(options);
+    while (bld_array_next(&iter, (void**) &flag)) {
+        if (!first) {fprintf(cache, ",\n");}
+        else {first = 0;}
+        fprintf(cache, "%*c\"%s\"", 2 * depth, ' ', *flag);
     }
 
     fprintf(cache, "\n");

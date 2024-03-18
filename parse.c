@@ -37,7 +37,7 @@ int parse_compiler(FILE*, bld_compiler*);
 int parse_compiler_type(FILE*, bld_compiler*);
 int parse_compiler_executable(FILE*, bld_compiler*);
 int parse_compiler_options(FILE*, bld_compiler*);
-int parse_compiler_option(FILE*, bld_options*);
+int parse_compiler_option(FILE*, bld_array*);
 
 int parse_string(FILE*, bld_string*);
 int parse_uintmax(FILE*, uintmax_t*);
@@ -452,7 +452,7 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
         (bld_parse_func) parse_compiler_options
     };
 
-    compiler->options = new_options();
+    compiler->options = bld_array_new(sizeof(char*));
     amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
 
     if (amount_parsed < size && parsed[2]) {
@@ -502,7 +502,7 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_options(FILE* file, bld_compiler* compiler) {
     int values;
-    bld_options options = new_options();
+    bld_array options = bld_array_new(sizeof(char*));
 
     values = parse_array(file, &options, (bld_parse_func) parse_compiler_option);
     if (values < 0) {
@@ -513,8 +513,7 @@ int parse_compiler_options(FILE* file, bld_compiler* compiler) {
     return 0;
 }
 
-void append_option(bld_options*, char*);
-int parse_compiler_option(FILE* file, bld_options* options) {
+int parse_compiler_option(FILE* file, bld_array* options) {
     bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
@@ -525,9 +524,8 @@ int parse_compiler_option(FILE* file, bld_options* options) {
     }
     
     temp = string_unpack(&str);
-    append_option(options, temp);
+    bld_array_push(options, &temp);
 
-    free(temp);
     return result;
 }
 
