@@ -14,7 +14,7 @@ bld_string  string_new();
 bld_string  string_copy(bld_string*);
 char*       string_unpack(bld_string*);
 void        string_free(bld_string*);
-uintmax_t   hash_string(char*, uintmax_t);
+uintmax_t   string_hash(char*, uintmax_t);
 
 void        append_space(bld_string*);
 void        append_char(bld_string*, char);

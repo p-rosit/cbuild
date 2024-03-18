@@ -438,5 +438,5 @@ void free_node(bld_node* node) {
 
 void add_symbol(bld_set* set, bld_string* str) {
     char* temp = string_unpack(str);
-    bld_set_add(set, hash_string(temp, 0), &temp);
+    bld_set_add(set, string_hash(temp, 0), &temp);
 }

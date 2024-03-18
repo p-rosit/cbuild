@@ -34,7 +34,7 @@ void string_free(bld_string* str) {
     free(str->chars);
 }
 
-uintmax_t hash_string(char* str, uintmax_t seed) {
+uintmax_t string_hash(char* str, uintmax_t seed) {
     char c;
     while ((c = *str++) != '\0') {
         seed = (seed << 5) + seed + c;

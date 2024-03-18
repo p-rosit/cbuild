@@ -34,9 +34,9 @@ bld_compiler copy_compiler(bld_compiler* compiler) {
 }
 
 uintmax_t hash_compiler(bld_compiler* compiler, uintmax_t seed) {
-    seed = hash_string(compiler->executable, seed);
+    seed = string_hash(compiler->executable, seed);
     for (size_t i = 0; i < compiler->options.array.size; i++) {
-        seed = hash_string(((char**) compiler->options.array.values)[i], seed);
+        seed = string_hash(((char**) compiler->options.array.values)[i], seed);
     }
     return seed;
 }
