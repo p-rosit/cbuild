@@ -101,27 +101,27 @@ int compile_file(bld_project* project, bld_file* file) {
         compiler = project->compiler;
     }
 
-    append_string(&cmd, compiler.executable);
+    string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
     flags = compiler.options.array.values;
     for (size_t i = 0; i < compiler.options.array.size; i++) {
-        append_string(&cmd, flags[i]);
+        string_append_string(&cmd, flags[i]);
         string_append_space(&cmd);
     }
 
-    append_string(&cmd, "-c ");
-    append_string(&cmd, path_to_string(&file->path));
+    string_append_string(&cmd, "-c ");
+    string_append_string(&cmd, path_to_string(&file->path));
 
-    append_string(&cmd, " -o ");
+    string_append_string(&cmd, " -o ");
 
     path = copy_path(&project->root);
     append_path(&path, &(*project->cache).root);
     serialize_identifier(name, file);
     append_dir(&path, name);
-    append_string(&cmd, path_to_string(&path));
+    string_append_string(&cmd, path_to_string(&path));
 
-    append_string(&cmd, ".o");
+    string_append_string(&cmd, ".o");
     free_path(&path);
 
     // log_warn("File: \"%s\"", string_unpack(&cmd));
@@ -146,17 +146,17 @@ int compile_total(bld_project* project, char* executable_name) {
     }
 
     cmd = string_new();
-    append_string(&cmd, compiler.executable);
+    string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
     flags = compiler.options.array.values;
     for (size_t i = 0; i < compiler.options.array.size; i++) {
-        append_string(&cmd, flags[i]);
+        string_append_string(&cmd, flags[i]);
         string_append_space(&cmd);
     }
 
-    append_string(&cmd, "-o ");
-    append_string(&cmd, executable_name);
+    string_append_string(&cmd, "-o ");
+    string_append_string(&cmd, executable_name);
     string_append_space(&cmd);
 
     bfs = graph_functions_from(&project->graph, main_file);
@@ -166,8 +166,8 @@ int compile_total(bld_project* project, char* executable_name) {
         serialize_identifier(name, file);
         append_dir(&path, name);
         
-        append_string(&cmd, path_to_string(&path));
-        append_string(&cmd, ".o ");
+        string_append_string(&cmd, path_to_string(&path));
+        string_append_string(&cmd, ".o ");
         free_path(&path);
     }
 

@@ -36,7 +36,7 @@ void free_path(bld_path* path) {
 
 bld_path path_from_string(char* str) {
     bld_path path = new_path();
-    append_string(&path.str, str);
+    string_append_string(&path.str, str);
     return path;
 }
 
@@ -45,8 +45,8 @@ char* path_to_string(bld_path* path) {
 }
 
 void append_dir(bld_path* path, char* str) {
-    append_string(&path->str, BLD_PATH_SEP);
-    append_string(&path->str, str);
+    string_append_string(&path->str, BLD_PATH_SEP);
+    string_append_string(&path->str, str);
 }
 
 void append_path(bld_path* root, bld_path* path) {

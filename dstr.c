@@ -76,7 +76,7 @@ void string_append_char(bld_string* str, char c) {
     }
 }
 
-void append_string(bld_string* str, char* s) {
+void string_append_string(bld_string* str, char* s) {
     char *temp = s, c;
 
     while ((c = *temp++) != '\0') {

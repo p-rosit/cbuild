@@ -4,7 +4,7 @@
 
 bld_compiler new_compiler(bld_compiler_type type, char* executable) {
     bld_string str = string_new();
-    append_string(&str, executable);
+    string_append_string(&str, executable);
 
     return (bld_compiler) {
         .type = type,
@@ -22,7 +22,7 @@ void free_compiler(bld_compiler* compiler) {
 bld_compiler copy_compiler(bld_compiler* compiler) {
     bld_options options;
     bld_string executable = string_new();
-    append_string(&executable, compiler->executable);
+    string_append_string(&executable, compiler->executable);
 
     options = copy_options(&compiler->options);
 
@@ -65,7 +65,7 @@ void append_option(bld_options* options, char* str) {
     char* temp;
     bld_string s = string_new();
 
-    append_string(&s, str);
+    string_append_string(&s, str);
     temp = string_unpack(&s);
     bld_array_push(&options->array, &temp);
 }

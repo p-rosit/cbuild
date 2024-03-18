@@ -308,17 +308,17 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         cmd = string_new();
         fclose(fopen(path_to_string(symbol_path), "w"));
 
-        append_string(&cmd, "nm ");
+        string_append_string(&cmd, "nm ");
 
         path = copy_path(cache_path);
         serialize_identifier(name, file);
         append_dir(&path, name);
-        append_string(&cmd, path_to_string(&path));
-        append_string(&cmd, ".o");
+        string_append_string(&cmd, path_to_string(&path));
+        string_append_string(&cmd, ".o");
         free_path(&path);
 
-        append_string(&cmd, " >> ");
-        append_string(&cmd, path_to_string(symbol_path));
+        string_append_string(&cmd, " >> ");
+        string_append_string(&cmd, path_to_string(symbol_path));
 
         result = system(string_unpack(&cmd));
         if (result) {

@@ -28,7 +28,7 @@ bld_path extract_build_path(bld_path* root) {
     bld_path build_path;
     bld_string str = string_new();
     char* name;
-    append_string(&str, get_last_dir(root));
+    string_append_string(&str, get_last_dir(root));
 
     string_unpack(&str);
     if (strncmp(str.chars, "old_", 4) == 0) {
@@ -39,7 +39,7 @@ bld_path extract_build_path(bld_path* root) {
 
     build_path = path_from_string(name);
     remove_file_ending(&build_path);
-    append_string(&build_path.str, ".c");
+    string_append_string(&build_path.str, ".c");
 
     string_free(&str);
     return build_path;

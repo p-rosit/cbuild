@@ -35,12 +35,12 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
     }
 
     str = string_new();
-    append_string(&str, name);
+    string_append_string(&str, name);
     *file = string_unpack(&str);
 
     str = string_new();
-    append_string(&str, "old_");
-    append_string(&str, name);
+    string_append_string(&str, "old_");
+    string_append_string(&str, name);
     *old_file = string_unpack(&str);
 
     free_path(&path);
@@ -51,7 +51,7 @@ char* infer_build_name(char* name) {
 
     path = path_from_string(name);
     remove_file_ending(&path);
-    append_string(&path.str, ".c");
+    string_append_string(&path.str, ".c");
 
     return path_to_string(&path);
 }

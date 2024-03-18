@@ -37,7 +37,7 @@ void serialize_identifier(char name[256], bld_file* file) {
 
 bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     bld_string str = string_new();
-    append_string(&str, name);
+    string_append_string(&str, name);
     return (bld_file) {
         .type = type,
         .identifier = get_identifier(path),
