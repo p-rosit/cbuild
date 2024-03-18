@@ -1,3 +1,4 @@
+[ ] remove extra structs where abstracted layer is too thin (wrapper to container)
 [ ] handle failed parse
 [ ] rename functions into a consistent style
 [ ] hide compilation (incremental/from scratch) behind single function
