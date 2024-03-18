@@ -50,7 +50,7 @@ char* infer_build_name(char* name) {
     bld_path path;
 
     path = path_from_string(name);
-    remove_file_ending(&path);
+    path_remove_file_ending(&path);
     string_append_string(&path.str, ".c");
 
     return path_to_string(&path);
