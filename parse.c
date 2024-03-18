@@ -540,7 +540,7 @@ int parse_string(FILE* file, bld_string* str) {
 
     c = getc(file);
     while (c != '\"' && c != EOF) {
-        append_char(str, c);
+        string_append_char(str, c);
         c = getc(file);
     }
     if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}

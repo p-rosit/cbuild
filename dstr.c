@@ -70,7 +70,7 @@ void string_append_space(bld_string* str) {
     }
 }
 
-void append_char(bld_string* str, char c) {
+void string_append_char(bld_string* str, char c) {
     if (!push_character(str, c)) {
         log_fatal("Could not append \'%c\' to string.", c);
     }

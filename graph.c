@@ -188,7 +188,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
         func = string_new();
         c = fgetc(f);
         while (c != '\n' && c != ' ' && c != EOF) {
-            append_char(&func, c);
+            string_append_char(&func, c);
             c = fgetc(f);
         }
 
@@ -262,7 +262,7 @@ void parse_included_files(bld_file* file) {
         str = string_new();
         c = getc(f);
         while (c != EOF && c != '\"' && c != '\n') {
-            append_char(&str, c);
+            string_append_char(&str, c);
             c = getc(f);
         }
         if (c == EOF) {string_free(&str); break;}
