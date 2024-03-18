@@ -28,7 +28,7 @@ bld_path extract_build_path(bld_path* root) {
     bld_path build_path;
     bld_string str = string_new();
     char* name;
-    string_append_string(&str, get_last_dir(root));
+    string_append_string(&str, path_get_last_string(root));
 
     string_unpack(&str);
     if (strncmp(str.chars, "old_", 4) == 0) {

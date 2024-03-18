@@ -81,7 +81,7 @@ void index_project(bld_project* project) {
     while (bld_array_next(&iter, (void**) &path)) {
         extra_path = path_copy(&project->root);
         path_append_path(&extra_path, path);
-        name = get_last_dir(&extra_path);
+        name = path_get_last_string(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
         index_recursive(project, &extra_path, name);

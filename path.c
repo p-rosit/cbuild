@@ -37,7 +37,7 @@ void path_append_path(bld_path* root, bld_path* path) {
     path_append_string(root, path_to_string(path));
 }
 
-char* get_last_dir(bld_path* path) {
+char* path_get_last_string(bld_path* path) {
     size_t sep_len = sizeof(BLD_PATH_SEP) - 1;
     char* str;
 
@@ -54,7 +54,7 @@ char* get_last_dir(bld_path* path) {
 }
 
 char* remove_last_dir(bld_path* path) {
-    char* name = get_last_dir(path);
+    char* name = path_get_last_string(path);
     path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
     return name;
 }
