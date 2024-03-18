@@ -34,7 +34,7 @@ void path_append_string(bld_path* path, char* str) {
 }
 
 void path_append_path(bld_path* root, bld_path* path) {
-    path_append_string(root, string_unpack(&path->str));
+    path_append_string(root, path_to_string(path));
 }
 
 char* get_last_dir(bld_path* path) {
