@@ -17,7 +17,7 @@ void        path_free(bld_path*);
 bld_path    path_from_string(char*);
 char*       path_to_string(bld_path*);
 
-void        append_dir(bld_path*, char*);
+void        path_append_string(bld_path*, char*);
 void        append_path(bld_path*, bld_path*);
 char*       get_last_dir(bld_path*);
 char*       remove_last_dir(bld_path*);

@@ -57,7 +57,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
         }
 
         sub_path = path_copy(path);
-        append_dir(&sub_path, file_ptr->d_name);
+        path_append_string(&sub_path, file_ptr->d_name);
         index_recursive(project, &sub_path, file_ptr->d_name);
         path_free(&sub_path);
     }
@@ -119,7 +119,7 @@ int compile_file(bld_project* project, bld_file* file) {
     path = path_copy(&project->root);
     append_path(&path, &(*project->cache).root);
     serialize_identifier(name, file);
-    append_dir(&path, name);
+    path_append_string(&path, name);
     string_append_string(&cmd, path_to_string(&path));
 
     string_append_string(&cmd, ".o");
@@ -165,7 +165,7 @@ int compile_total(bld_project* project, char* executable_name) {
         path = path_copy(&project->root);
         append_path(&path, &(*project->cache).root);
         serialize_identifier(name, file);
-        append_dir(&path, name);
+        path_append_string(&path, name);
         
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o ");
@@ -327,7 +327,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 int compile_project(bld_project* project, char* name) {
     int result;
     bld_path executable_path = path_copy(&project->root);
-    append_dir(&executable_path, name);
+    path_append_string(&executable_path, name);
     result = compile_with_absolute_path(project, path_to_string(&executable_path));
     path_free(&executable_path);
     return result;

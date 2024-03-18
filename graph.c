@@ -269,7 +269,7 @@ void parse_included_files(bld_file* file) {
         if (c == '\n') {goto next_line;}
 
         file_path = path_copy(&parent_path);
-        append_dir(&file_path, string_unpack(&str));
+        path_append_string(&file_path, string_unpack(&str));
 
         included_file = fopen(path_to_string(&file_path), "r");
         if (included_file == NULL) {
@@ -312,7 +312,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 
         path = path_copy(cache_path);
         serialize_identifier(name, file);
-        append_dir(&path, name);
+        path_append_string(&path, name);
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o");
         path_free(&path);
@@ -367,7 +367,7 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     /* TODO: utilize cache if present */
 
     symbol_path = path_copy(cache_path);
-    append_dir(&symbol_path, "symbols");
+    path_append_string(&symbol_path, "symbols");
 
     iter = bld_iter_set(&graph->files->set);
     while (bld_set_next(&iter, (void**) &file)) {

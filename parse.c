@@ -77,10 +77,10 @@ void load_cache(bld_project* project, char* cache_path) {
     bld_project* cache;
 
     path = path_copy(&project->root);
-    append_dir(&path, cache_path);
+    path_append_string(&path, cache_path);
     ensure_directory_exists(&path);
 
-    append_dir(&path, BLD_CACHE_NAME);
+    path_append_string(&path, BLD_CACHE_NAME);
     file = fopen(path_to_string(&path), "r");
 
     cache = malloc(sizeof(bld_project));
@@ -123,7 +123,7 @@ int parse_cache(bld_project* cache, bld_path* root) {
     FILE* f;
 
     append_path(&path, &cache->root);
-    append_dir(&path, BLD_CACHE_NAME);
+    path_append_string(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
     amount_parsed = parse_map(f, cache, size, parsed, keys, funcs);

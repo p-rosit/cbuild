@@ -7,7 +7,7 @@
 int run_new_build(bld_path* root, char* executable) {
     int result;
     bld_path cmd = path_copy(root);
-    append_dir(&cmd, executable);
+    path_append_string(&cmd, executable);
 
     log_info("Running new build script");
     log_debug("Rebuild command: \"%s\"", path_to_string(&cmd));
@@ -106,14 +106,14 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     load_cache(&build, ".build_cache");
 
     main = path_copy(&project->root);
-    append_dir(&main, main_name);
+    path_append_string(&main, main_name);
     index_possible_file(&build, &main, main_name);
     index_project(&build);
 
     set_main_rebuild(&build, &main);
 
     executable_path = path_copy(&project->root);
-    append_dir(&executable_path, executable);
+    path_append_string(&executable_path, executable);
     rename(executable, old_executable);
     result = compile_with_absolute_path(&build, path_to_string(&executable_path));
 

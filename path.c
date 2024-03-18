@@ -28,13 +28,13 @@ char* path_to_string(bld_path* path) {
     return string_unpack(&path->str);
 }
 
-void append_dir(bld_path* path, char* str) {
+void path_append_string(bld_path* path, char* str) {
     string_append_string(&path->str, BLD_PATH_SEP);
     string_append_string(&path->str, str);
 }
 
 void append_path(bld_path* root, bld_path* path) {
-    append_dir(root, string_unpack(&path->str));
+    path_append_string(root, string_unpack(&path->str));
 }
 
 char* get_last_dir(bld_path* path) {
