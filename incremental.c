@@ -102,12 +102,12 @@ int compile_file(bld_project* project, bld_file* file) {
     }
 
     append_string(&cmd, compiler.executable);
-    append_space(&cmd);
+    string_append_space(&cmd);
 
     flags = compiler.options.array.values;
     for (size_t i = 0; i < compiler.options.array.size; i++) {
         append_string(&cmd, flags[i]);
-        append_space(&cmd);
+        string_append_space(&cmd);
     }
 
     append_string(&cmd, "-c ");
@@ -147,17 +147,17 @@ int compile_total(bld_project* project, char* executable_name) {
 
     cmd = string_new();
     append_string(&cmd, compiler.executable);
-    append_space(&cmd);
+    string_append_space(&cmd);
 
     flags = compiler.options.array.values;
     for (size_t i = 0; i < compiler.options.array.size; i++) {
         append_string(&cmd, flags[i]);
-        append_space(&cmd);
+        string_append_space(&cmd);
     }
 
     append_string(&cmd, "-o ");
     append_string(&cmd, executable_name);
-    append_space(&cmd);
+    string_append_space(&cmd);
 
     bfs = graph_functions_from(&project->graph, main_file);
     while (next_file(bfs, &file)) {

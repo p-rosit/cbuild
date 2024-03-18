@@ -64,7 +64,7 @@ int push_character(bld_string* str, char c) {
     return 1;
 }
 
-void append_space(bld_string* str) {
+void string_append_space(bld_string* str) {
     if (!push_character(str, ' ')) {
         log_fatal("Could not append space to string.");
     }

@@ -16,7 +16,7 @@ char*       string_unpack(bld_string*);
 void        string_free(bld_string*);
 uintmax_t   string_hash(char*, uintmax_t);
 
-void        append_space(bld_string*);
+void        string_append_space(bld_string*);
 void        append_char(bld_string*, char);
 void        append_string(bld_string*, char*);
 
