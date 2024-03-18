@@ -1,3 +1,4 @@
+[ ] rename functions into a consistent style
 [ ] hide compilation (incremental/from scratch) behind single function
 [ ] allow forward declaration of compiler associated with file
 [ ] replace wrappers to generic array and set by array/set
