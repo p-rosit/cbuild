@@ -251,7 +251,7 @@ void parse_included_files(bld_file* file) {
     if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", string_unpack(&file->name));}
 
     parent_path = path_copy(&file->path);
-    remove_last_dir(&parent_path);
+    path_remove_last_string(&parent_path);
 
     line_number = 0;
     while (1) {

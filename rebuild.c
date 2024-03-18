@@ -29,7 +29,7 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
     bld_string str;
     char* name;
     
-    name = remove_last_dir(&path);
+    name = path_remove_last_string(&path);
     if (strncmp(name, "old_", 4) == 0) {
         name += 4;
     }

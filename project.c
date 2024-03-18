@@ -67,7 +67,7 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
 
     build_file_path = extract_build_path(&root);
     
-    remove_last_dir(&root);
+    path_remove_last_string(&root);
     project = make_project(root, compiler);
 
     f = fopen(path_to_string(&build_file_path), "r");
