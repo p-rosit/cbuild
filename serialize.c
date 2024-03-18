@@ -55,7 +55,7 @@ void save_cache(bld_project* project) {
     fprintf(cache, "}\n");
 
     fclose(cache);
-    free_path(&cache_path);
+    path_free(&cache_path);
 }
 
 void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {

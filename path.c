@@ -9,7 +9,7 @@ bld_paths new_paths() {
 void free_paths(bld_paths* paths) {
     bld_path* ps = paths->array.values;
     for (size_t i = 0; i < paths->array.size; i++) {
-        free_path(&ps[i]);
+        path_free(&ps[i]);
     }
     bld_array_free(&paths->array);
 }
@@ -30,7 +30,7 @@ bld_path path_copy(bld_path* path) {
     };
 }
 
-void free_path(bld_path* path) {
+void path_free(bld_path* path) {
     string_free(&path->str);
 }
 

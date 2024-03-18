@@ -21,7 +21,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     } else if (strcmp(file_ending, ".h") == 0) {
         file = make_header(&file_path, name);
     } else {
-        free_path(&file_path);
+        path_free(&file_path);
         return;
     }
 
@@ -59,7 +59,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
         sub_path = path_copy(path);
         append_dir(&sub_path, file_ptr->d_name);
         index_recursive(project, &sub_path, file_ptr->d_name);
-        free_path(&sub_path);
+        path_free(&sub_path);
     }
     
     closedir(dir);
@@ -84,7 +84,7 @@ void index_project(bld_project* project) {
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
         index_recursive(project, &extra_path, name);
-        free_path(&extra_path);
+        path_free(&extra_path);
     }
 }
 
@@ -122,7 +122,7 @@ int compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, path_to_string(&path));
 
     string_append_string(&cmd, ".o");
-    free_path(&path);
+    path_free(&path);
 
     // log_warn("File: \"%s\"", string_unpack(&cmd));
     result = system(string_unpack(&cmd));
@@ -168,7 +168,7 @@ int compile_total(bld_project* project, char* executable_name) {
         
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o ");
-        free_path(&path);
+        path_free(&path);
     }
 
     // log_warn("Final: \"%s\"", string_unpack(&cmd));
@@ -281,7 +281,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 
     /* TODO: move to separate function */
     generate_graph(&project->graph, &path);
-    free_path(&path);
+    path_free(&path);
 
     mark_changed_files(project);
 
@@ -328,7 +328,7 @@ int compile_project(bld_project* project, char* name) {
     bld_path executable_path = path_copy(&project->root);
     append_dir(&executable_path, name);
     result = compile_with_absolute_path(project, path_to_string(&executable_path));
-    free_path(&executable_path);
+    path_free(&executable_path);
     return result;
 }
 

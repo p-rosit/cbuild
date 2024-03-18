@@ -13,7 +13,7 @@ int run_new_build(bld_path* root, char* executable) {
     log_debug("Rebuild command: \"%s\"", path_to_string(&cmd));
     result = system(path_to_string(&cmd));
 
-    free_path(&cmd);
+    path_free(&cmd);
     return result;
 }
 
@@ -43,7 +43,7 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
     string_append_string(&str, name);
     *old_file = string_unpack(&str);
 
-    free_path(&path);
+    path_free(&path);
 }
 
 char* infer_build_name(char* name) {
@@ -134,8 +134,8 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     free(executable);
     free(old_executable);
     free(main_name);
-    free_path(&executable_path);
-    free_path(&main);
+    path_free(&executable_path);
+    path_free(&main);
     free_project(&build);
 
     if (result == 0) {

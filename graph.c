@@ -274,7 +274,7 @@ void parse_included_files(bld_file* file) {
         included_file = fopen(path_to_string(&file_path), "r");
         if (included_file == NULL) {
             log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&file->path), line_number, string_unpack(&str));
-            free_path(&file_path);
+            path_free(&file_path);
             string_free(&str);
             goto next_line;
         }
@@ -283,7 +283,7 @@ void parse_included_files(bld_file* file) {
         include_id = get_file_id(&file_path);
         bld_set_add(&file->includes, include_id, &include_id);
 
-        free_path(&file_path);
+        path_free(&file_path);
         string_free(&str);
 
         next_line:
@@ -291,7 +291,7 @@ void parse_included_files(bld_file* file) {
         line_number++;
     }
 
-    free_path(&parent_path);
+    path_free(&parent_path);
     fclose(f);
 }
 
@@ -315,7 +315,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         append_dir(&path, name);
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o");
-        free_path(&path);
+        path_free(&path);
 
         string_append_string(&cmd, " >> ");
         string_append_string(&cmd, path_to_string(symbol_path));
@@ -381,7 +381,7 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
         connect_node(graph, node);
     }
 
-    free_path(&symbol_path);
+    path_free(&symbol_path);
     log_info("Generated dependency graph with %lu nodes", graph->nodes.set.size);
 }
 

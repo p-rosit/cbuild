@@ -106,7 +106,7 @@ void load_cache(bld_project* project, char* cache_path) {
     }
 
     project->cache = cache;
-    free_path(&path);
+    path_free(&path);
 }
 
 int parse_cache(bld_project* cache, bld_path* root) {
@@ -130,14 +130,14 @@ int parse_cache(bld_project* cache, bld_path* root) {
 
     if (amount_parsed != size) {
         fclose(f);
-        free_path(&path);
+        path_free(&path);
         return -1;
     }
 
     cache->graph.files = &cache->files;
 
     fclose(f);
-    free_path(&path);
+    path_free(&path);
     return 0;
 }
 

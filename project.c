@@ -77,15 +77,15 @@ bld_project new_project(bld_path root, bld_compiler compiler) {
     fclose(f);
 
     ignore_path(&project, path_to_string(&build_file_path));
-    free_path(&build_file_path);
+    path_free(&build_file_path);
 
     return project;
 }
 
 void free_cache(bld_project* cache) {
     if (cache == NULL) {return;}
-    free_path(&cache->root);
-    free_path(&cache->build);
+    path_free(&cache->root);
+    path_free(&cache->build);
     free_compiler(&cache->compiler);
     free_graph(&cache->graph);
     free_files(&cache->files);
@@ -94,8 +94,8 @@ void free_cache(bld_project* cache) {
 
 void free_project(bld_project* project) {
     if (project == NULL) {return;}
-    free_path(&project->root);
-    free_path(&project->build);
+    path_free(&project->root);
+    path_free(&project->build);
     free_paths(&project->extra_paths);
     free_ignore_ids(&project->ignore_paths);
     free_compiler(&project->compiler);
@@ -126,7 +126,7 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
         }
     }
 
-    free_path(&path);
+    path_free(&path);
     if (!match_found) {
         log_fatal("No file matching \"%s\" could be found.", str);
     }
@@ -149,14 +149,14 @@ void set_main_file(bld_project* project, char* str) {
         }
     }
 
-    free_path(&path);
+    path_free(&path);
     if (!match_found) {
         log_fatal("No file matching \"%s\" could be found.", str);
     }
 }
 
 void add_build(bld_project* project, char* path) {
-    free_path(&project->build);
+    path_free(&project->build);
     project->build = path_from_string(path);
     ignore_path(project, path);
 }
@@ -168,7 +168,7 @@ void add_path(bld_project* project, char* path) {
 
     push_path(&project->extra_paths, path_from_string(path));
 
-    free_path(&test);
+    path_free(&test);
 }
 
 void ignore_path(bld_project* project, char* path) {
@@ -177,7 +177,7 @@ void ignore_path(bld_project* project, char* path) {
 
     append_ignore_id(&project->ignore_paths, get_file_id(&test));
 
-    free_path(&test);
+    path_free(&test);
 }
 
 bld_ignore new_ignore_ids() {

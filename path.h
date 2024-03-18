@@ -16,7 +16,7 @@ typedef struct bld_paths {
 
 bld_path    path_new();
 bld_path    path_copy(bld_path*);
-void        free_path(bld_path*);
+void        path_free(bld_path*);
 
 bld_paths   new_paths();
 void        free_paths(bld_paths*);
