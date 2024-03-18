@@ -21,7 +21,7 @@ typedef struct bld_project bld_project;
 struct bld_project {
     bld_path root;
     bld_path build;
-    bld_paths extra_paths;
+    bld_array extra_paths;
     bld_ignore ignore_paths;
     uintmax_t main_file;
     bld_compiler compiler;

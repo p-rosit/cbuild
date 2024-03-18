@@ -49,7 +49,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
         .root = root,
         .build = path_new(),
-        .extra_paths = new_paths(),
+        .extra_paths = bld_array_new(sizeof(bld_path)),
         .ignore_paths = new_ignore_ids(),
         .main_file = 0,
         .compiler = compiler,
@@ -93,10 +93,19 @@ void free_cache(bld_project* cache) {
 }
 
 void free_project(bld_project* project) {
+    bld_iter iter;
+    bld_path *path;
+
     if (project == NULL) {return;}
     path_free(&project->root);
     path_free(&project->build);
-    free_paths(&project->extra_paths);
+
+    iter = bld_iter_array(&project->extra_paths);
+    while (bld_array_next(&iter, (void**) &path)) {
+        path_free(path);
+    }
+    bld_array_free(&project->extra_paths);
+
     free_ignore_ids(&project->ignore_paths);
     free_compiler(&project->compiler);
     free_graph(&project->graph);
@@ -162,11 +171,14 @@ void add_build(bld_project* project, char* path) {
 }
 
 void add_path(bld_project* project, char* path) {
-    bld_path test = path_copy(&project->root);
+    bld_path test, extra;
+    
+    test = path_copy(&project->root);
     append_dir(&test, path);
     get_file_id(&test);
 
-    push_path(&project->extra_paths, path_from_string(path));
+    extra = path_from_string(path);
+    bld_array_push(&project->extra_paths, &extra);
 
     path_free(&test);
 }

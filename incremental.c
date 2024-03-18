@@ -76,8 +76,8 @@ void index_project(bld_project* project) {
     log_info("Indexing project under root");
     index_recursive(project, &project->root, NULL);
 
-    paths = project->extra_paths.array.values;
-    for (size_t i = 0; i < project->extra_paths.array.size; i++) {
+    paths = project->extra_paths.values;
+    for (size_t i = 0; i < project->extra_paths.size; i++) {
         extra_path = path_copy(&project->root);
         append_path(&extra_path, &paths[i]);
         name = get_last_dir(&extra_path);
