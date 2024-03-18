@@ -15,7 +15,7 @@
 [x] keep file id in node instead of pointer to file (pointer might become invalid, id never becomes invalid)
 [ ] handle case where cache exists but .o file is missing
 [x] separate file and graph data in serialized cache
-[ ] move compilation of project to different file
+[x] move compilation of project to different file
 [x] move functions and includes to `bld_file` keep edges in `bld_node`
 [ ] handle failed compilation
 [ ] make sure no path separator is passed when removing file ending
