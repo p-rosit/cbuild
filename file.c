@@ -70,7 +70,7 @@ void free_file(bld_file* file) {
     char** symbol;
 
     free_path(&file->path);
-    free_string(&file->name);
+    string_free(&file->name);
     free_compiler(file->compiler);
     free(file->compiler);
 

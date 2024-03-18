@@ -30,7 +30,7 @@ bld_string string_copy(bld_string* str) {
     };
 }
 
-void free_string(bld_string* str) {
+void string_free(bld_string* str) {
     free(str->chars);
 }
 

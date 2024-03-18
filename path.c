@@ -31,7 +31,7 @@ bld_path copy_path(bld_path* path) {
 }
 
 void free_path(bld_path* path) {
-    free_string(&path->str);
+    string_free(&path->str);
 }
 
 bld_path path_from_string(char* str) {

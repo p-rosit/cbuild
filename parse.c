@@ -217,7 +217,7 @@ int parse_file_type(FILE* file, bld_file* f) {
     int result = parse_string(file, &str);
 
     if (result) {
-        free_string(&str);
+        string_free(&str);
         log_warn("Could not parse compiler type");
         return -1;
     }
@@ -234,7 +234,7 @@ int parse_file_type(FILE* file, bld_file* f) {
         result = -1;
     }
 
-    free_string(&str);
+    string_free(&str);
     return result;
 }
 
@@ -264,7 +264,7 @@ int parse_file_name(FILE* file, bld_file* f) {
     bld_string str = string_new();
     int result = parse_string(file, &str);
     if (result) {
-        free_string(&str);
+        string_free(&str);
         log_warn("Could not parse file name");
         return -1;
     }
@@ -466,7 +466,7 @@ int parse_compiler_type(FILE* file, bld_compiler* compiler) {
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
-        free_string(&str);
+        string_free(&str);
         log_warn("Could not parse compiler type");
         return -1;
     }
@@ -481,7 +481,7 @@ int parse_compiler_type(FILE* file, bld_compiler* compiler) {
         result = -1;
     }
 
-    free_string(&str);
+    string_free(&str);
     return result;
 }
 
@@ -490,7 +490,7 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
-        free_string(&str);
+        string_free(&str);
         log_warn("Could not parse compiler executable");
         return -1;
     }
@@ -519,7 +519,7 @@ int parse_compiler_option(FILE* file, bld_options* options) {
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
-        free_string(&str);
+        string_free(&str);
         log_warn("Could not parse compiler option");
         return -1;
     }
@@ -692,7 +692,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
         result = parse_funcs[index](file, obj);
         if (result) {goto parse_failed;}
 
-        free_string(&str);
+        string_free(&str);
         c = next_character(file);
         switch (c) {
             case ('}'): {
@@ -714,6 +714,6 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
 
     return key_num;
     parse_failed:
-    free_string(&str);
+    string_free(&str);
     return -1;
 }

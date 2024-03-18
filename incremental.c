@@ -126,7 +126,7 @@ int compile_file(bld_project* project, bld_file* file) {
 
     // log_warn("File: \"%s\"", string_unpack(&cmd));
     result = system(string_unpack(&cmd));
-    free_string(&cmd);
+    string_free(&cmd);
     return result;
 }
 
@@ -177,7 +177,7 @@ int compile_total(bld_project* project, char* executable_name) {
         log_fatal("Expected return value of compiler to be non-negative.");
     }
 
-    free_string(&cmd);
+    string_free(&cmd);
     return result;
 }
 

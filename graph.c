@@ -265,7 +265,7 @@ void parse_included_files(bld_file* file) {
             append_char(&str, c);
             c = getc(f);
         }
-        if (c == EOF) {free_string(&str); break;}
+        if (c == EOF) {string_free(&str); break;}
         if (c == '\n') {goto next_line;}
 
         file_path = copy_path(&parent_path);
@@ -275,7 +275,7 @@ void parse_included_files(bld_file* file) {
         if (included_file == NULL) {
             log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&file->path), line_number, string_unpack(&str));
             free_path(&file_path);
-            free_string(&str);
+            string_free(&str);
             goto next_line;
         }
         fclose(included_file);
@@ -284,7 +284,7 @@ void parse_included_files(bld_file* file) {
         bld_set_add(&file->includes, include_id, &include_id);
 
         free_path(&file_path);
-        free_string(&str);
+        string_free(&str);
 
         next_line:
         if (!skip_line(f)) {break;}
@@ -326,7 +326,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
         }
         
         parse_symbols(file, symbol_path);
-        free_string(&cmd);
+        string_free(&cmd);
     }
 
     parse_included_files(file);

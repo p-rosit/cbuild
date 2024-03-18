@@ -41,7 +41,7 @@ bld_path extract_build_path(bld_path* root) {
     remove_file_ending(&build_path);
     append_string(&build_path.str, ".c");
 
-    free_string(&str);
+    string_free(&str);
     return build_path;
 }
 
