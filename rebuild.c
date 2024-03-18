@@ -6,7 +6,7 @@
 
 int run_new_build(bld_path* root, char* executable) {
     int result;
-    bld_path cmd = copy_path(root);
+    bld_path cmd = path_copy(root);
     append_dir(&cmd, executable);
 
     log_info("Running new build script");
@@ -89,7 +89,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     log_debug("Old:  \"%s\"", old_executable);
     log_debug("Main: \"%s\"", main_name);
 
-    build_root = copy_path(&project->root);
+    build_root = path_copy(&project->root);
     append_path(&build_root, &project->build);
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
@@ -105,14 +105,14 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
 
     load_cache(&build, ".build_cache");
 
-    main = copy_path(&project->root);
+    main = path_copy(&project->root);
     append_dir(&main, main_name);
     index_possible_file(&build, &main, main_name);
     index_project(&build);
 
     set_main_rebuild(&build, &main);
 
-    executable_path = copy_path(&project->root);
+    executable_path = path_copy(&project->root);
     append_dir(&executable_path, executable);
     rename(executable, old_executable);
     result = compile_with_absolute_path(&build, path_to_string(&executable_path));

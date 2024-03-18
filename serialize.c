@@ -30,7 +30,7 @@ void save_cache(bld_project* project) {
         return;
     }
 
-    cache_path = copy_path(&project->root);
+    cache_path = path_copy(&project->root);
     append_path(&cache_path, &(*project->cache).root);
     append_dir(&cache_path, BLD_CACHE_NAME);
 

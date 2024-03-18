@@ -76,7 +76,7 @@ void load_cache(bld_project* project, char* cache_path) {
     bld_path path, temp;
     bld_project* cache;
 
-    path = copy_path(&project->root);
+    path = path_copy(&project->root);
     append_dir(&path, cache_path);
     ensure_directory_exists(&path);
 
@@ -119,7 +119,7 @@ int parse_cache(bld_project* cache, bld_path* root) {
         (bld_parse_func) parse_project_files,
         (bld_parse_func) parse_project_graph,
     };
-    bld_path path = copy_path(root);
+    bld_path path = path_copy(root);
     FILE* f;
 
     append_path(&path, &cache->root);

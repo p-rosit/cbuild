@@ -13,7 +13,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
 
-    file_path = copy_path(path);
+    file_path = path_copy(path);
     if (strncmp(name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
         file = make_test(&file_path, name);
     } else if (strcmp(file_ending, ".c") == 0) {
@@ -56,7 +56,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
             continue;
         }
 
-        sub_path = copy_path(path);
+        sub_path = path_copy(path);
         append_dir(&sub_path, file_ptr->d_name);
         index_recursive(project, &sub_path, file_ptr->d_name);
         free_path(&sub_path);
@@ -78,7 +78,7 @@ void index_project(bld_project* project) {
 
     paths = project->extra_paths.array.values;
     for (size_t i = 0; i < project->extra_paths.array.size; i++) {
-        extra_path = copy_path(&project->root);
+        extra_path = path_copy(&project->root);
         append_path(&extra_path, &paths[i]);
         name = get_last_dir(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
@@ -115,7 +115,7 @@ int compile_file(bld_project* project, bld_file* file) {
 
     string_append_string(&cmd, " -o ");
 
-    path = copy_path(&project->root);
+    path = path_copy(&project->root);
     append_path(&path, &(*project->cache).root);
     serialize_identifier(name, file);
     append_dir(&path, name);
@@ -161,7 +161,7 @@ int compile_total(bld_project* project, char* executable_name) {
 
     bfs = graph_functions_from(&project->graph, main_file);
     while (next_file(bfs, &file)) {
-        path = copy_path(&project->root);
+        path = path_copy(&project->root);
         append_path(&path, &(*project->cache).root);
         serialize_identifier(name, file);
         append_dir(&path, name);
@@ -273,7 +273,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         }
     }
 
-    path = copy_path(&project->root);
+    path = path_copy(&project->root);
     append_path(&path, &(*project->cache).root);
 
     free_graph(&project->graph);
@@ -325,7 +325,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 
 int compile_project(bld_project* project, char* name) {
     int result;
-    bld_path executable_path = copy_path(&project->root);
+    bld_path executable_path = path_copy(&project->root);
     append_dir(&executable_path, name);
     result = compile_with_absolute_path(project, path_to_string(&executable_path));
     free_path(&executable_path);

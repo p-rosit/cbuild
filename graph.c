@@ -250,7 +250,7 @@ void parse_included_files(bld_file* file) {
     f = fopen(path_to_string(&file->path), "r");
     if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", string_unpack(&file->name));}
 
-    parent_path = copy_path(&file->path);
+    parent_path = path_copy(&file->path);
     remove_last_dir(&parent_path);
 
     line_number = 0;
@@ -268,7 +268,7 @@ void parse_included_files(bld_file* file) {
         if (c == EOF) {string_free(&str); break;}
         if (c == '\n') {goto next_line;}
 
-        file_path = copy_path(&parent_path);
+        file_path = path_copy(&parent_path);
         append_dir(&file_path, string_unpack(&str));
 
         included_file = fopen(path_to_string(&file_path), "r");
@@ -310,7 +310,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 
         string_append_string(&cmd, "nm ");
 
-        path = copy_path(cache_path);
+        path = path_copy(cache_path);
         serialize_identifier(name, file);
         append_dir(&path, name);
         string_append_string(&cmd, path_to_string(&path));
@@ -366,7 +366,7 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_file* file;
     /* TODO: utilize cache if present */
 
-    symbol_path = copy_path(cache_path);
+    symbol_path = path_copy(cache_path);
     append_dir(&symbol_path, "symbols");
 
     iter = bld_iter_set(&graph->files->set);

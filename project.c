@@ -162,7 +162,7 @@ void add_build(bld_project* project, char* path) {
 }
 
 void add_path(bld_project* project, char* path) {
-    bld_path test = copy_path(&project->root);
+    bld_path test = path_copy(&project->root);
     append_dir(&test, path);
     get_file_id(&test);
 
@@ -172,7 +172,7 @@ void add_path(bld_project* project, char* path) {
 }
 
 void ignore_path(bld_project* project, char* path) {
-    bld_path test = copy_path(&project->root);
+    bld_path test = path_copy(&project->root);
     append_dir(&test, path);
 
     append_ignore_id(&project->ignore_paths, get_file_id(&test));
