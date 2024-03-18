@@ -2,22 +2,6 @@
 #include "logging.h"
 #include "path.h"
 
-bld_paths new_paths() {
-    return (bld_paths) {.array = bld_array_new(sizeof(bld_path))};
-}
-
-void free_paths(bld_paths* paths) {
-    bld_path* ps = paths->array.values;
-    for (size_t i = 0; i < paths->array.size; i++) {
-        path_free(&ps[i]);
-    }
-    bld_array_free(&paths->array);
-}
-
-void push_path(bld_paths* paths, bld_path path) {
-    bld_array_push(&paths->array, &path);
-}
-
 bld_path path_new() {
     return (bld_path) {
         .str = string_new(),
