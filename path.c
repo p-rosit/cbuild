@@ -18,7 +18,7 @@ void push_path(bld_paths* paths, bld_path path) {
     bld_array_push(&paths->array, &path);
 }
 
-bld_path new_path() {
+bld_path path_new() {
     return (bld_path) {
         .str = string_new(),
     };
@@ -35,7 +35,7 @@ void free_path(bld_path* path) {
 }
 
 bld_path path_from_string(char* str) {
-    bld_path path = new_path();
+    bld_path path = path_new();
     string_append_string(&path.str, str);
     return path;
 }

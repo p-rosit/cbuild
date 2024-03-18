@@ -206,7 +206,7 @@ int parse_file(FILE* file, bld_files* files) {
         }
     }
 
-    f->path = new_path();
+    f->path = path_new();
     bld_set_add(&files->set, f->identifier.id, f);
     return 0;
 }

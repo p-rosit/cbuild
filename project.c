@@ -48,7 +48,7 @@ bld_path extract_build_path(bld_path* root) {
 bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
         .root = root,
-        .build = new_path(),
+        .build = path_new(),
         .extra_paths = new_paths(),
         .ignore_paths = new_ignore_ids(),
         .main_file = 0,
