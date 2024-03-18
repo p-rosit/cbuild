@@ -90,7 +90,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     log_debug("Main: \"%s\"", main_name);
 
     build_root = path_copy(&project->root);
-    append_path(&build_root, &project->build);
+    path_append_path(&build_root, &project->build);
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
     build = new_rebuild(build_root, compiler);

@@ -122,7 +122,7 @@ int parse_cache(bld_project* cache, bld_path* root) {
     bld_path path = path_copy(root);
     FILE* f;
 
-    append_path(&path, &cache->root);
+    path_append_path(&path, &cache->root);
     path_append_string(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 

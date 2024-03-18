@@ -80,7 +80,7 @@ void index_project(bld_project* project) {
     iter = bld_iter_array(&project->extra_paths);
     while (bld_array_next(&iter, (void**) &path)) {
         extra_path = path_copy(&project->root);
-        append_path(&extra_path, path);
+        path_append_path(&extra_path, path);
         name = get_last_dir(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
@@ -117,7 +117,7 @@ int compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, " -o ");
 
     path = path_copy(&project->root);
-    append_path(&path, &(*project->cache).root);
+    path_append_path(&path, &(*project->cache).root);
     serialize_identifier(name, file);
     path_append_string(&path, name);
     string_append_string(&cmd, path_to_string(&path));
@@ -163,7 +163,7 @@ int compile_total(bld_project* project, char* executable_name) {
     bfs = graph_functions_from(&project->graph, main_file);
     while (next_file(bfs, &file)) {
         path = path_copy(&project->root);
-        append_path(&path, &(*project->cache).root);
+        path_append_path(&path, &(*project->cache).root);
         serialize_identifier(name, file);
         path_append_string(&path, name);
         
@@ -275,7 +275,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     }
 
     path = path_copy(&project->root);
-    append_path(&path, &(*project->cache).root);
+    path_append_path(&path, &(*project->cache).root);
 
     free_graph(&project->graph);
     project->graph = new_graph(&project->files);

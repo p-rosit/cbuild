@@ -33,7 +33,7 @@ void path_append_string(bld_path* path, char* str) {
     string_append_string(&path->str, str);
 }
 
-void append_path(bld_path* root, bld_path* path) {
+void path_append_path(bld_path* root, bld_path* path) {
     path_append_string(root, string_unpack(&path->str));
 }
 

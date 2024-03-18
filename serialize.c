@@ -31,7 +31,7 @@ void save_cache(bld_project* project) {
     }
 
     cache_path = path_copy(&project->root);
-    append_path(&cache_path, &(*project->cache).root);
+    path_append_path(&cache_path, &(*project->cache).root);
     path_append_string(&cache_path, BLD_CACHE_NAME);
 
     cache = fopen(path_to_string(&cache_path), "w");
