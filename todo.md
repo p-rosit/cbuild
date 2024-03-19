@@ -1,3 +1,4 @@
+[ ] join graph with containers if possible
 [ ] remove extra structs where abstracted layer is too thin (wrapper to container)
 [ ] handle failed parse
 [ ] rename functions into a consistent style
