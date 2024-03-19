@@ -328,7 +328,7 @@ void* set_get(bld_set* set, bld_hash hash) {
     return NULL;
 }
 
-int bld_set_has(bld_set* set, bld_hash hash) {
+int set_has(bld_set* set, bld_hash hash) {
     size_t target;
     bld_offset offset = 0;
     int error;
@@ -346,7 +346,7 @@ int bld_set_has(bld_set* set, bld_hash hash) {
 int bld_set_empty_intersection(bld_set* set1, bld_set* set2) {
     for (size_t i = 0; i < set1->capacity + set1->max_offset; i++) {
         if (set1->offset[i] >= set1->max_offset) {continue;}
-        if (bld_set_has(set2, set1->hash[i])) {
+        if (set_has(set2, set1->hash[i])) {
             return 0;
         }
     }

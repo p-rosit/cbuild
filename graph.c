@@ -107,7 +107,7 @@ int next_file(bld_search_info* info, bld_file** file) {
         node = node_pop(&info->stack);
 
         node_visited = 0;
-        if (bld_set_has(&info->visited, node->file_id)) {
+        if (set_has(&info->visited, node->file_id)) {
             node_visited = 1;
             goto next_node;
         }
@@ -353,7 +353,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
             add_function_edge(node, to_file->identifier.id);
         }
 
-        if (bld_set_has(&to_file->includes, file->identifier.id)) {
+        if (set_has(&to_file->includes, file->identifier.id)) {
             add_include_edge(node, to_file->identifier.id);
         }
     }
