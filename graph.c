@@ -349,7 +349,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
         to_file = set_get(&graph->files->set, to_node->file_id);
         if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
 
-        if (!bld_set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {
+        if (!set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {
             add_function_edge(node, to_file->identifier.id);
         }
 

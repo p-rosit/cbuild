@@ -343,7 +343,7 @@ int set_has(bld_set* set, bld_hash hash) {
     return 0;
 }
 
-int bld_set_empty_intersection(bld_set* set1, bld_set* set2) {
+int set_empty_intersection(bld_set* set1, bld_set* set2) {
     for (size_t i = 0; i < set1->capacity + set1->max_offset; i++) {
         if (set1->offset[i] >= set1->max_offset) {continue;}
         if (set_has(set2, set1->hash[i])) {
