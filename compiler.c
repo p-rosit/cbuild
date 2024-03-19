@@ -21,7 +21,7 @@ void compiler_free(bld_compiler* compiler) {
     
     free(compiler->executable);
 
-    iter = bld_iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         free(*flag);
     }
@@ -38,7 +38,7 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
 
     flags = array_copy(&compiler->flags);
 
-    iter = bld_iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         str = string_new();
         string_append_string(&str, *flag);
@@ -60,7 +60,7 @@ uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
 
     seed = string_hash(compiler->executable, seed);
     
-    iter = bld_iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         seed = string_hash(*flag, seed);
     }

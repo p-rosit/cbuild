@@ -116,10 +116,10 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         switch (info->type) {
             case (BLD_FUNCS): {
-                iter = bld_iter_array(&node->functions_from.array);
+                iter = iter_array(&node->functions_from.array);
             } break;
             case (BLD_INCLUDES): {
-                iter = bld_iter_array(&node->included_in.array);
+                iter = iter_array(&node->included_in.array);
             } break;
             default: log_fatal("next_file: unreachable error???");
         }

@@ -100,7 +100,7 @@ void free_project(bld_project* project) {
     path_free(&project->root);
     path_free(&project->build);
 
-    iter = bld_iter_array(&project->extra_paths);
+    iter = iter_array(&project->extra_paths);
     while (bld_array_next(&iter, (void**) &path)) {
         path_free(path);
     }

@@ -77,7 +77,7 @@ void index_project(bld_project* project) {
     log_info("Indexing project under root");
     index_recursive(project, &project->root, NULL);
 
-    iter = bld_iter_array(&project->extra_paths);
+    iter = iter_array(&project->extra_paths);
     while (bld_array_next(&iter, (void**) &path)) {
         extra_path = path_copy(&project->root);
         path_append_path(&extra_path, path);
@@ -106,7 +106,7 @@ int compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    iter = bld_iter_array(&compiler.flags);
+    iter = iter_array(&compiler.flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);
@@ -152,7 +152,7 @@ int compile_total(bld_project* project, char* executable_name) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    iter = bld_iter_array(&compiler.flags);
+    iter = iter_array(&compiler.flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);

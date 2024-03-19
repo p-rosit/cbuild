@@ -52,7 +52,7 @@ void*       set_get(bld_set*, bld_hash);
 int         set_has(bld_set*, bld_hash);
 int         set_empty_intersection(bld_set*, bld_set*);
 
-bld_iter    bld_iter_array(bld_array*);
+bld_iter    iter_array(bld_array*);
 bld_iter    bld_iter_set(bld_set*);
 int         bld_array_next(bld_iter*, void**);
 int         bld_set_next(bld_iter*, void**);

@@ -58,7 +58,7 @@ void array_pop(bld_array* array, void* ret_value) {
     memcpy(ret_value, ((char*)array->values) + --array->size * array->value_size, array->value_size);
 }
 
-bld_iter bld_iter_array(bld_array* array) {
+bld_iter iter_array(bld_array* array) {
     return (bld_iter) {
         .array = (struct bld_iter_array) {
             .array = array,

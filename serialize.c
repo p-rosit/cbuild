@@ -97,7 +97,7 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
 
     fprintf(cache, "[\n");
     
-    iter = bld_iter_array(flags);
+    iter = iter_array(flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
@@ -276,7 +276,7 @@ void serialize_edges(FILE* cache, bld_edges* edges, int depth) {
     }
     fprintf(cache, "[\n");
 
-    iter = bld_iter_array(&edges->array);
+    iter = iter_array(&edges->array);
     while (bld_array_next(&iter, (void**) &index)) {
         if (i > 0) {fprintf(cache, ",\n");};
         fprintf(cache, "%*c%ju", 2 * depth, ' ', *index);
