@@ -55,7 +55,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .compiler = compiler,
         .files = set_new(sizeof(bld_file)),
         .changed_files = set_new(sizeof(int)),
-        .graph = new_graph(NULL),
+        .graph = graph_new(NULL),
         .cache = NULL,
     };
 }

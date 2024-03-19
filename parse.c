@@ -347,7 +347,7 @@ int parse_file_function(FILE* file, bld_set* set) {
 int parse_project_graph(FILE* file, bld_project* project) {
     int amount_parsed;
 
-    project->graph = new_graph(&project->files); 
+    project->graph = graph_new(&project->files); 
     amount_parsed = parse_array(file, project, (bld_parse_func) parse_graph_node);
     if (amount_parsed < 0) {
         log_warn("Could not parse graph");

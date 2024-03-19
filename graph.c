@@ -134,7 +134,7 @@ int next_file(bld_search_info* info, bld_file** file) {
     return 1;
 }
 
-bld_graph new_graph(bld_set* files) {
+bld_graph graph_new(bld_set* files) {
     return (bld_graph) {
         .files = files,
         .nodes = set_new(sizeof(bld_node)),

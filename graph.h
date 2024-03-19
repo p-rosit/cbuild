@@ -18,7 +18,7 @@ typedef struct bld_graph {
     bld_set nodes;
 } bld_graph;
 
-bld_graph           new_graph(bld_set*);
+bld_graph           graph_new(bld_set*);
 void                free_graph(bld_graph*);
 
 void                generate_graph(bld_graph*, bld_path*);
