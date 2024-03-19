@@ -5,9 +5,6 @@
 #include "logging.h"
 #include "graph.h"
 
-bld_edges   new_edges();
-void        free_edges(bld_edges*);
-void        append_edge(bld_edges*, uintmax_t);
 void        add_function_edge(bld_node*, uintmax_t);
 void        add_include_edge(bld_node*, uintmax_t);
 
@@ -116,10 +113,10 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         switch (info->type) {
             case (BLD_FUNCS): {
-                edge_array = &node->functions_from.array;
+                edge_array = &node->functions_from;
             } break;
             case (BLD_INCLUDES): {
-                edge_array = &node->included_in.array;
+                edge_array = &node->included_in;
             } break;
             default: log_fatal("next_file: unreachable error???");
         }
@@ -384,24 +381,12 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     log_info("Generated dependency graph with %lu nodes", graph->nodes.set.size);
 }
 
-bld_edges new_edges() {
-    return (bld_edges) {.array = array_new(sizeof(uintmax_t))};
-}
-
-void free_edges(bld_edges* edges) {
-    array_free(&edges->array);
-}
-
 void add_function_edge(bld_node* from, uintmax_t file_id) {
-    append_edge(&from->functions_from, file_id);
+    array_push(&from->functions_from, &file_id);
 }
 
 void add_include_edge(bld_node* from, uintmax_t file_id) {
-    append_edge(&from->included_in, file_id);
-}
-
-void append_edge(bld_edges* edges, uintmax_t file_id) {
-    array_push(&edges->array, &file_id);
+    array_push(&from->included_in, &file_id);
 }
 
 bld_nodes new_nodes() {
@@ -425,14 +410,14 @@ void push_node(bld_nodes* nodes, bld_node node) {
 bld_node new_node(bld_file* file) {
     return (bld_node) {
         .file_id = file->identifier.id,
-        .functions_from = new_edges(),
-        .included_in = new_edges(),
+        .functions_from = array_new(sizeof(uintmax_t)),
+        .included_in = array_new(sizeof(uintmax_t)),
     };
 }
 
 void free_node(bld_node* node) {
-    free_edges(&node->functions_from);
-    free_edges(&node->included_in);
+    array_free(&node->functions_from);
+    array_free(&node->included_in);
 }
 
 void add_symbol(bld_set* set, bld_string* str) {

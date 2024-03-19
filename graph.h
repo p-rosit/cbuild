@@ -7,14 +7,10 @@
 typedef struct bld_search_info bld_search_info;
 typedef struct bld_node bld_node;
 
-typedef struct bld_edges {
-    bld_array array;
-} bld_edges;
-
 struct bld_node {
     uintmax_t file_id;
-    bld_edges functions_from;
-    bld_edges included_in;
+    bld_array functions_from;
+    bld_array included_in;
 };
 
 typedef struct bld_nodes {
