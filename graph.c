@@ -83,7 +83,7 @@ bld_search_info* graph_includes_from(bld_graph* graph, bld_file* root) {
 
 void free_info(bld_search_info* info) {
     array_free(&info->stack.array);
-    bld_set_free(&info->visited);
+    set_free(&info->visited);
     free(info);
 }
 
@@ -416,7 +416,7 @@ void free_nodes(bld_nodes* nodes) {
     while (bld_set_next(&iter, (void**) &node)) {
         free_node(node);
     }
-    bld_set_free(&nodes->set);
+    set_free(&nodes->set);
 }
 
 void push_node(bld_nodes* nodes, bld_node node) {

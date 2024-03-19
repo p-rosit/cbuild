@@ -110,7 +110,7 @@ void free_project(bld_project* project) {
     compiler_free(&project->compiler);
     free_graph(&project->graph);
     free_files(&project->files);
-    bld_set_free(&project->changed_files);
+    set_free(&project->changed_files);
     free_cache(project->cache);
 }
 
@@ -197,7 +197,7 @@ bld_ignore new_ignore_ids() {
 }
 
 void free_ignore_ids(bld_ignore* ignore) {
-    bld_set_free(&ignore->set);
+    set_free(&ignore->set);
 }
 
 void append_ignore_id(bld_ignore* ignore, uintmax_t id) {

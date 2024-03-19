@@ -78,14 +78,14 @@ void free_file(bld_file* file) {
     while (bld_set_next(&iter, (void**) &symbol)) {
         free(*symbol);
     }
-    bld_set_free(&file->defined_symbols);
+    set_free(&file->defined_symbols);
 
     iter = bld_iter_set(&file->undefined_symbols);
     while (bld_set_next(&iter, (void**) &symbol)) {
         free(*symbol);
     }
-    bld_set_free(&file->undefined_symbols);
-    bld_set_free(&file->includes);
+    set_free(&file->undefined_symbols);
+    set_free(&file->includes);
 }
 
 uintmax_t hash_file(bld_file* file, uintmax_t seed) {
@@ -112,7 +112,7 @@ void free_files(bld_files* files) {
     while (bld_set_next(&iter, (void**) &file)) {
         free_file(file);
     }
-    bld_set_free(&files->set);
+    set_free(&files->set);
 }
 
 int append_file(bld_files* files, bld_file file) {

@@ -141,7 +141,7 @@ bld_set set_new(size_t value_size) {
     };
 }
 
-void bld_set_free(bld_set* set) {
+void set_free(bld_set* set) {
     free(set->offset);
     free(set->hash);
     free(set->values);
