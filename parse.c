@@ -14,7 +14,7 @@ int parse_cache(bld_project*, bld_path*);
 int parse_project_compiler(FILE*, bld_project*);
 
 int parse_project_files(FILE*, bld_project*);
-int parse_file(FILE*, bld_files*);
+int parse_file(FILE*, bld_set*);
 int parse_file_type(FILE*, bld_file*);
 int parse_file_id(FILE*, bld_file*);
 int parse_file_hash(FILE*, bld_file*);
@@ -149,9 +149,9 @@ int parse_project_compiler(FILE* file, bld_project* project) {
 
 int parse_project_files(FILE* file, bld_project* project) {
     int amount_parsed;
-    bld_files* files = &project->files;
+    bld_set* files = &project->files;
 
-    project->files = new_files();
+    project->files = set_new(sizeof(bld_file));
     amount_parsed = parse_array(file, files, (bld_parse_func) parse_file);
     if (amount_parsed < 0) {
         log_warn("Could not parse graph");
@@ -161,7 +161,7 @@ int parse_project_files(FILE* file, bld_project* project) {
     return 0;
 }
 
-int parse_file(FILE* file, bld_files* files) {
+int parse_file(FILE* file, bld_set* files) {
     bld_file temp, *f;
     int amount_parsed;
     int size = 8;
@@ -207,7 +207,7 @@ int parse_file(FILE* file, bld_files* files) {
     }
 
     f->path = path_new();
-    set_add(&files->set, f->identifier.id, f);
+    set_add(files, f->identifier.id, f);
     return 0;
 }
 

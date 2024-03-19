@@ -133,14 +133,14 @@ int next_file(bld_search_info* info, bld_file** file) {
         next_node:;
     }
 
-    temp = set_get(&info->graph->files->set, node->file_id);
+    temp = set_get(info->graph->files, node->file_id);
     if (temp == NULL) {log_fatal("File did not exist in graph, internal error");}
     *file = temp;
 
     return 1;
 }
 
-bld_graph new_graph(bld_files* files) {
+bld_graph new_graph(bld_set* files) {
     return (bld_graph) {
         .files = files,
         .nodes = new_nodes(),
@@ -341,12 +341,12 @@ void connect_node(bld_graph* graph, bld_node* node) {
     bld_file *file, *to_file;
     bld_node* to_node;
 
-    file = set_get(&graph->files->set, node->file_id);
+    file = set_get(graph->files, node->file_id);
     if (file == NULL) {log_fatal("Could not get node file, internal error");}
 
     bld_iter iter = iter_set(&graph->nodes.set);
     while (iter_next(&iter, (void**) &to_node)) {
-        to_file = set_get(&graph->files->set, to_node->file_id);
+        to_file = set_get(graph->files, to_node->file_id);
         if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
 
         if (!set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {
@@ -368,7 +368,7 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     symbol_path = path_copy(cache_path);
     path_append_string(&symbol_path, "symbols");
 
-    bld_iter iter_files = iter_set(&graph->files->set);
+    bld_iter iter_files = iter_set(graph->files);
     while (iter_next(&iter_files, (void**) &file)) {
         populate_node(graph, cache_path, &symbol_path, file);
     }

@@ -22,11 +22,11 @@ typedef struct bld_nodes {
 } bld_nodes;
 
 typedef struct bld_graph {
-    bld_files* files;
+    bld_set* files;
     bld_nodes nodes;
 } bld_graph;
 
-bld_graph           new_graph(bld_files*);
+bld_graph           new_graph(bld_set*);
 void                free_graph(bld_graph*);
 
 void                generate_graph(bld_graph*, bld_path*);

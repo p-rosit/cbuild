@@ -7,7 +7,7 @@ void serialize_compiler(FILE*, bld_compiler*, int);
 void serialize_compiler_type(FILE*, bld_compiler_type);
 void serialize_compiler_flags(FILE*, bld_array*, int);
 
-void serialize_files(FILE*, bld_files*, int);
+void serialize_files(FILE*, bld_set*, int);
 void serialize_file(FILE*, bld_file*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
@@ -107,9 +107,9 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
     fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
 }
 
-void serialize_files(FILE* cache, bld_files* files, int depth) {
+void serialize_files(FILE* cache, bld_set* files, int depth) {
     int first = 1;
-    bld_iter iter = iter_set(&files->set);
+    bld_iter iter = iter_set(files);
     bld_file* file;
 
     fprintf(cache, "[\n");

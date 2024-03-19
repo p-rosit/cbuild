@@ -53,7 +53,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .ignore_paths = new_ignore_ids(),
         .main_file = 0,
         .compiler = compiler,
-        .files = new_files(),
+        .files = set_new(sizeof(bld_file)),
         .changed_files = set_new(sizeof(int)),
         .graph = new_graph(NULL),
         .cache = NULL,
@@ -88,7 +88,14 @@ void free_cache(bld_project* cache) {
     path_free(&cache->build);
     compiler_free(&cache->compiler);
     free_graph(&cache->graph);
-    free_files(&cache->files);
+
+    bld_file* file;
+    bld_iter iter = iter_set(&cache->files);
+    while (iter_next(&iter, (void**) &file)) {
+        file_free(file);
+    }
+    set_free(&cache->files);
+
     free(cache);
 }
 
@@ -99,8 +106,8 @@ void free_project(bld_project* project) {
     path_free(&project->root);
     path_free(&project->build);
 
-    bld_iter iter = iter_array(&project->extra_paths);
-    while (iter_next(&iter, (void**) &path)) {
+    bld_iter iter_paths = iter_array(&project->extra_paths);
+    while (iter_next(&iter_paths, (void**) &path)) {
         path_free(path);
     }
     array_free(&project->extra_paths);
@@ -108,7 +115,14 @@ void free_project(bld_project* project) {
     free_ignore_ids(&project->ignore_paths);
     compiler_free(&project->compiler);
     free_graph(&project->graph);
-    free_files(&project->files);
+
+    bld_file* file;
+    bld_iter iter_file = iter_set(&project->files);
+    while (iter_next(&iter_file, (void**) &file)) {
+        file_free(file);
+    }
+    set_free(&project->files);
+
     set_free(&project->changed_files);
     free_cache(project->cache);
 }
@@ -116,13 +130,12 @@ void free_project(bld_project* project) {
 void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     int match_found = 0;
     bld_path path = path_from_string(str);
-    bld_files files = project->files;
     bld_file* file;
     bld_compiler* c_ptr = malloc(sizeof(bld_compiler));
     if (c_ptr == NULL) {log_fatal("Could not add compiler to \"%s\"", str);}
     *c_ptr = compiler;
 
-    bld_iter iter = iter_set(&files.set);
+    bld_iter iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {
             if (match_found) {
@@ -142,9 +155,8 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
 void set_main_file(bld_project* project, char* str) {
     int match_found = 0;
     bld_path path = path_from_string(str);
-    bld_files files = project->files;
     bld_file* file;
-    bld_iter iter = iter_set(&files.set);
+    bld_iter iter = iter_set(&project->files);
 
     while (iter_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {

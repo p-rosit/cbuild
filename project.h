@@ -25,7 +25,7 @@ struct bld_project {
     bld_ignore ignore_paths;
     uintmax_t main_file;
     bld_compiler compiler;
-    bld_files files;
+    bld_set files;
     bld_set changed_files;
     bld_graph graph;
     bld_project* cache;
