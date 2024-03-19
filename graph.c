@@ -60,7 +60,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
         .visited = set_new(sizeof(uintmax_t)),
     };
 
-    node = bld_set_get(&graph->nodes.set, root->identifier.id);
+    node = set_get(&graph->nodes.set, root->identifier.id);
     if (node == NULL) {
         log_fatal("Could not find requested file in graph");
     }
@@ -125,14 +125,14 @@ int next_file(bld_search_info* info, bld_file** file) {
         }
 
         while (bld_array_next(&iter, (void**) &index)) {
-            to_node = bld_set_get(&info->graph->nodes.set, *index);
+            to_node = set_get(&info->graph->nodes.set, *index);
             node_push(&info->stack, to_node);
         }
 
         next_node:;
     }
 
-    temp = bld_set_get(&info->graph->files->set, node->file_id);
+    temp = set_get(&info->graph->files->set, node->file_id);
     if (temp == NULL) {log_fatal("File did not exist in graph, internal error");}
     *file = temp;
 
@@ -341,12 +341,12 @@ void connect_node(bld_graph* graph, bld_node* node) {
     bld_file *file, *to_file;
     bld_node* to_node;
 
-    file = bld_set_get(&graph->files->set, node->file_id);
+    file = set_get(&graph->files->set, node->file_id);
     if (file == NULL) {log_fatal("Could not get node file, internal error");}
 
     iter = bld_iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &to_node)) {
-        to_file = bld_set_get(&graph->files->set, to_node->file_id);
+        to_file = set_get(&graph->files->set, to_node->file_id);
         if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
 
         if (!bld_set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {

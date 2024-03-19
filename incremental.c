@@ -142,7 +142,7 @@ int compile_total(bld_project* project, char* executable_name) {
     bld_string cmd;
     bld_search_info* bfs;
 
-    main_file = bld_set_get(&project->files.set, project->main_file);
+    main_file = set_get(&project->files.set, project->main_file);
     if (main_file == NULL) {
         log_fatal("No main file has been set");
         return 1;
@@ -192,13 +192,13 @@ void mark_changed_files(bld_project* project) {
 
     iter = bld_iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
-        has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+        has_changed = set_get(&project->changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
         if (!*has_changed) {continue;}
 
         info = graph_includes_from(&project->graph, file);
         while (next_file(info, &temp)) {
-            has_changed = bld_set_get(&project->changed_files, temp->identifier.id);
+            has_changed = set_get(&project->changed_files, temp->identifier.id);
             if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
             *has_changed = 1;
         }
@@ -210,7 +210,7 @@ int cached_compilation(bld_project* project, bld_file* file) {
     int exists, new_options;
     bld_file* f;
 
-    f = bld_set_get(&project->cache->files.set, file->identifier.id);
+    f = set_get(&project->cache->files.set, file->identifier.id);
     if (f != NULL) {
         exists = 1;
         new_options = (file->identifier.hash != f->identifier.hash);
@@ -250,12 +250,12 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         file->identifier.hash = hash_file(file, hash);
 
         if (file->type == BLD_HEADER) {
-            cache_file = bld_set_get(&project->cache->files.set, file->identifier.id);
+            cache_file = set_get(&project->cache->files.set, file->identifier.id);
             if (cache_file == NULL) {
-                has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+                has_changed = set_get(&project->changed_files, file->identifier.id);
                 *has_changed = 1;
             } else if (file->identifier.hash != cache_file->identifier.hash) {
-                has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+                has_changed = set_get(&project->changed_files, file->identifier.id);
                 *has_changed = 1;
             }
             continue;
@@ -266,7 +266,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         }
 
         any_compiled = 1;
-        has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+        has_changed = set_get(&project->changed_files, file->identifier.id);
         *has_changed = 1;
 
         temp = compile_file(project, file);
@@ -292,7 +292,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     while (bld_set_next(&iter, (void**) &file)) {
         if (file->type == BLD_HEADER) {continue;}
 
-        has_changed = bld_set_get(&project->changed_files, file->identifier.id);
+        has_changed = set_get(&project->changed_files, file->identifier.id);
         if (!*has_changed) {continue;}
 
         temp = compile_file(project, file);
