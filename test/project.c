@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     {
 
         /* Optional */
-        load_cache(&project, ".build_cache");
+        project_load_cache(&project, ".build_cache");
 
         /* Mandatory */
         index_project(&project); 

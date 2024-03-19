@@ -103,7 +103,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     compiler_add_flag(&build.compiler, "-Werror");
     compiler_add_flag(&build.compiler, "-pedantic");
 
-    load_cache(&build, ".build_cache");
+    project_load_cache(&build, ".build_cache");
 
     main = path_copy(&project->root);
     path_append_string(&main, main_name);
