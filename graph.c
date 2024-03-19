@@ -359,7 +359,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
     }
 }
 
-void generate_graph(bld_graph* graph, bld_path* cache_path) {
+void graph_generate(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
     bld_node *node;
     bld_file* file;
