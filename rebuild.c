@@ -136,10 +136,10 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     free(main_name);
     path_free(&executable_path);
     path_free(&main);
-    free_project(&build);
+    project_free(&build);
 
     if (result == 0) {
-        free_project(project);
+        project_free(project);
         exit(new_result);
     }
 

@@ -46,6 +46,6 @@ int main(int argc, char** argv) {
         save_cache(&project);
     }
 
-    free_project(&project);
+    project_free(&project);
     return 0;
 }

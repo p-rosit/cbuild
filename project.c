@@ -95,7 +95,7 @@ void free_cache(bld_project* cache) {
     free(cache);
 }
 
-void free_project(bld_project* project) {
+void project_free(bld_project* project) {
     bld_path *path;
 
     if (project == NULL) {return;}

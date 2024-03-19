@@ -24,7 +24,7 @@ struct bld_project {
 };
 
 bld_project project_new(bld_path, bld_compiler);
-void        free_project(bld_project*);
+void        project_free(bld_project*);
 
 bld_path    extract_path(int, char**);
 void        add_build(bld_project*, char*);
