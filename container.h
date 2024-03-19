@@ -40,7 +40,7 @@ typedef union bld_iter {
 
 bld_array   array_new(size_t);
 void        array_free(bld_array*);
-bld_array   bld_array_copy(bld_array*);
+bld_array   array_copy(bld_array*);
 void        bld_array_push(bld_array*, void*);
 void        bld_array_pop(bld_array*, void*);
 

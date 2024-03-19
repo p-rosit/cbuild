@@ -36,7 +36,7 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
     bld_string executable = string_new();
     string_append_string(&executable, compiler->executable);
 
-    flags = bld_array_copy(&compiler->flags);
+    flags = array_copy(&compiler->flags);
 
     iter = bld_iter_array(&compiler->flags);
     while (bld_array_next(&iter, (void**) &flag)) {

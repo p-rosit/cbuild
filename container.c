@@ -15,7 +15,7 @@ void array_free(bld_array* array) {
     free(array->values);
 }
 
-bld_array bld_array_copy(bld_array* array) {
+bld_array array_copy(bld_array* array) {
     bld_array copy = (bld_array) {
         .capacity = array->size,
         .size = array->size,
