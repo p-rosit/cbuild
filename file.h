@@ -10,7 +10,7 @@
 #include "compiler.h"
 
 typedef enum bld_file_type {
-    BLD_INVALID,
+    BLD_INVALID_FILE,
     BLD_IMPL,
     BLD_HEADER,
     BLD_TEST,
