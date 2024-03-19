@@ -106,7 +106,7 @@ int compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    iter = bld_iter_array(&compiler.options);
+    iter = bld_iter_array(&compiler.flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);
@@ -152,7 +152,7 @@ int compile_total(bld_project* project, char* executable_name) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    iter = bld_iter_array(&compiler.options);
+    iter = bld_iter_array(&compiler.flags);
     while (bld_array_next(&iter, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);

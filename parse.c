@@ -36,7 +36,7 @@ int parse_node_edge(FILE*, bld_array*);
 int parse_compiler(FILE*, bld_compiler*);
 int parse_compiler_type(FILE*, bld_compiler*);
 int parse_compiler_executable(FILE*, bld_compiler*);
-int parse_compiler_options(FILE*, bld_compiler*);
+int parse_compiler_flags(FILE*, bld_compiler*);
 int parse_compiler_option(FILE*, bld_array*);
 
 int parse_string(FILE*, bld_string*);
@@ -445,14 +445,14 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
     int size = 3;
     int parsed[3];
-    char *keys[3] = {"type", "executable", "options"};
+    char *keys[3] = {"type", "executable", "flags"};
     bld_parse_func funcs[3] = {
         (bld_parse_func) parse_compiler_type,
         (bld_parse_func) parse_compiler_executable,
-        (bld_parse_func) parse_compiler_options
+        (bld_parse_func) parse_compiler_flags,
     };
 
-    compiler->options = bld_array_new(sizeof(char*));
+    compiler->flags = bld_array_new(sizeof(char*));
     amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
 
     if (amount_parsed < size && parsed[2]) {
@@ -500,31 +500,31 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     return result;
 }
 
-int parse_compiler_options(FILE* file, bld_compiler* compiler) {
+int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
     int values;
-    bld_array options = bld_array_new(sizeof(char*));
+    bld_array flags = bld_array_new(sizeof(char*));
 
-    values = parse_array(file, &options, (bld_parse_func) parse_compiler_option);
+    values = parse_array(file, &flags, (bld_parse_func) parse_compiler_option);
     if (values < 0) {
-        log_warn("Could not parse compiler options");
+        log_warn("Could not parse compiler flags");
         return -1;
     }
-    compiler->options = options;
+    compiler->flags = flags;
     return 0;
 }
 
-int parse_compiler_option(FILE* file, bld_array* options) {
+int parse_compiler_option(FILE* file, bld_array* flags) {
     bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
     if (result) {
         string_free(&str);
-        log_warn("Could not parse compiler option");
+        log_warn("Could not parse compiler flag");
         return -1;
     }
     
     temp = string_unpack(&str);
-    bld_array_push(options, &temp);
+    bld_array_push(flags, &temp);
 
     return result;
 }
