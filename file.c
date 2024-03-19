@@ -50,7 +50,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     };
 }
 
-bld_file make_header(bld_path* path, char* name) {
+bld_file file_header_new(bld_path* path, char* name) {
     bld_file header = make_file(BLD_HEADER, path, name);
     return header;
 }

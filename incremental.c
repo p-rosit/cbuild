@@ -20,7 +20,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     } else if (strcmp(file_ending, ".c") == 0) {
         file = make_impl(&file_path, name);
     } else if (strcmp(file_ending, ".h") == 0) {
-        file = make_header(&file_path, name);
+        file = file_header_new(&file_path, name);
     } else {
         path_free(&file_path);
         return;
