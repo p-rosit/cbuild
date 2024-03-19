@@ -281,7 +281,7 @@ void parse_included_files(bld_file* file) {
         }
         fclose(included_file);
 
-        include_id = get_file_id(&file_path);
+        include_id = file_get_id(&file_path);
         set_add(&file->includes, include_id, &include_id);
 
         path_free(&file_path);

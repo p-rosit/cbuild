@@ -43,7 +43,7 @@ bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
 uintmax_t   file_hash(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
-uintmax_t   get_file_id(bld_path*);
+uintmax_t   file_get_id(bld_path*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 bld_files   new_files();

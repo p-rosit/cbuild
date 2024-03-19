@@ -4,7 +4,7 @@
 #include "logging.h"
 #include "file.h"
 
-uintmax_t get_file_id(bld_path* path) {
+uintmax_t file_get_id(bld_path* path) {
     struct stat file_stat;
 
     if (stat(path_to_string(path), &file_stat) < 0) {
