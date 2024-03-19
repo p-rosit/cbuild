@@ -102,7 +102,7 @@ bld_files new_files() {
 }
 
 void clear_files(bld_files* files) {
-    bld_set_clear(&files->set);
+    set_clear(&files->set);
 }
 
 void free_files(bld_files* files) {

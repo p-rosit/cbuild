@@ -147,7 +147,7 @@ void set_free(bld_set* set) {
     free(set->values);
 }
 
-void bld_set_clear(bld_set* set) {
+void set_clear(bld_set* set) {
     for (size_t i = 0; i < set->capacity + set->max_offset; i++) {
         set->offset[i] = set->max_offset;
     }
