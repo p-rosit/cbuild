@@ -54,7 +54,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .main_file = 0,
         .compiler = compiler,
         .files = new_files(),
-        .changed_files = bld_set_new(sizeof(int)),
+        .changed_files = set_new(sizeof(int)),
         .graph = new_graph(NULL),
         .cache = NULL,
     };
@@ -193,7 +193,7 @@ void ignore_path(bld_project* project, char* path) {
 }
 
 bld_ignore new_ignore_ids() {
-    return (bld_ignore) {.set = bld_set_new(0)};
+    return (bld_ignore) {.set = set_new(0)};
 }
 
 void free_ignore_ids(bld_ignore* ignore) {

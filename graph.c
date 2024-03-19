@@ -57,7 +57,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
         .type = BLD_NO_SEARCH,
         .graph = graph,
         .stack = (bld_stack) {.array = array_new(sizeof(bld_node*))},
-        .visited = bld_set_new(sizeof(uintmax_t)),
+        .visited = set_new(sizeof(uintmax_t)),
     };
 
     node = bld_set_get(&graph->nodes.set, root->identifier.id);
@@ -406,7 +406,7 @@ void append_edge(bld_edges* edges, uintmax_t file_id) {
 }
 
 bld_nodes new_nodes() {
-    return (bld_nodes) {.set = bld_set_new(sizeof(bld_node))};
+    return (bld_nodes) {.set = set_new(sizeof(bld_node))};
 }
 
 void free_nodes(bld_nodes* nodes) {

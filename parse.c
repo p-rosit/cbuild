@@ -178,8 +178,8 @@ int parse_file(FILE* file, bld_files* files) {
         (bld_parse_func) parse_file_undefined_symbols,
     };
 
-    temp.defined_symbols = bld_set_new(sizeof(char*));
-    temp.undefined_symbols = bld_set_new(sizeof(char*));
+    temp.defined_symbols = set_new(sizeof(char*));
+    temp.undefined_symbols = set_new(sizeof(char*));
 
     f = &temp;
     f->compiler = NULL;
@@ -286,7 +286,7 @@ int parse_file_compiler(FILE* file, bld_file* f) {
 int parse_file_includes(FILE* file, bld_file* f) {
     int amount_parsed;
 
-    f->includes = bld_set_new(0);
+    f->includes = set_new(0);
     amount_parsed = parse_array(file, &f->includes, (bld_parse_func) parse_file_include);
     if (amount_parsed < 0) {
         log_warn("Could not parse file includes");

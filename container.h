@@ -44,7 +44,7 @@ bld_array   array_copy(bld_array*);
 void        array_push(bld_array*, void*);
 void        array_pop(bld_array*, void*);
 
-bld_set     bld_set_new(size_t);
+bld_set     set_new(size_t);
 void        bld_set_free(bld_set*);
 void        bld_set_clear(bld_set*);
 int         bld_set_add(bld_set*, bld_hash, void*);

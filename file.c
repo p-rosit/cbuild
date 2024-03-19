@@ -44,9 +44,9 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
         .name = str,
         .path = *path,
         .compiler = NULL,
-        .defined_symbols = bld_set_new(sizeof(char*)),
-        .undefined_symbols = bld_set_new(sizeof(char*)),
-        .includes = bld_set_new(0),
+        .defined_symbols = set_new(sizeof(char*)),
+        .undefined_symbols = set_new(sizeof(char*)),
+        .includes = set_new(0),
     };
 }
 
@@ -98,7 +98,7 @@ uintmax_t hash_file(bld_file* file, uintmax_t seed) {
 }
 
 bld_files new_files() {
-    return (bld_files) {.set = bld_set_new(sizeof(bld_file))};
+    return (bld_files) {.set = set_new(sizeof(bld_file))};
 }
 
 void clear_files(bld_files* files) {

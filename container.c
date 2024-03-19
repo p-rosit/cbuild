@@ -129,7 +129,7 @@ void bld_hash_swap_entry(size_t target, bld_offset* offsets, bld_hash* hashes, b
     *hash = temp_hash;
 }
 
-bld_set bld_set_new(size_t value_size) {
+bld_set set_new(size_t value_size) {
     return (bld_set) {
         .capacity = 0,
         .size = 0,
