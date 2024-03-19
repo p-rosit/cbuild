@@ -60,7 +60,7 @@ bld_file file_impl_new(bld_path* path, char* name) {
     return impl;
 }
 
-bld_file make_test(bld_path* path, char* name) {
+bld_file file_test_new(bld_path* path, char* name) {
     bld_file test = make_file(BLD_TEST, path, name);
     return test;
 }

@@ -16,7 +16,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
 
     file_path = path_copy(path);
     if (strncmp(name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-        file = make_test(&file_path, name);
+        file = file_test_new(&file_path, name);
     } else if (strcmp(file_ending, ".c") == 0) {
         file = file_impl_new(&file_path, name);
     } else if (strcmp(file_ending, ".h") == 0) {
