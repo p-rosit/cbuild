@@ -23,7 +23,7 @@ struct bld_project {
     bld_project* cache;
 };
 
-bld_project new_project(bld_path, bld_compiler);
+bld_project project_new(bld_path, bld_compiler);
 void        free_project(bld_project*);
 
 bld_path    extract_path(int, char**);

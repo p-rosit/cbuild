@@ -56,7 +56,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
     };
 }
 
-bld_project new_project(bld_path root, bld_compiler compiler) {
+bld_project project_new(bld_path root, bld_compiler compiler) {
     FILE* f;
     bld_path build_file_path;
     bld_project project;
