@@ -7,10 +7,6 @@
 
 int         cached_compilation(bld_project*, bld_file*);
 
-bld_ignore  new_ignore_ids();
-void        append_ignore_id(bld_ignore*, uintmax_t);
-void        free_ignore_ids(bld_ignore*);
-
 
 bld_path extract_path(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
@@ -50,7 +46,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .root = root,
         .build = path_new(),
         .extra_paths = array_new(sizeof(bld_path)),
-        .ignore_paths = new_ignore_ids(),
+        .ignore_paths = set_new(0),
         .main_file = 0,
         .compiler = compiler,
         .files = set_new(sizeof(bld_file)),
@@ -112,7 +108,7 @@ void free_project(bld_project* project) {
     }
     array_free(&project->extra_paths);
 
-    free_ignore_ids(&project->ignore_paths);
+    set_free(&project->ignore_paths);
     compiler_free(&project->compiler);
     graph_free(&project->graph);
 
@@ -197,19 +193,7 @@ void ignore_path(bld_project* project, char* path) {
     bld_path test = path_copy(&project->root);
     path_append_string(&test, path);
 
-    append_ignore_id(&project->ignore_paths, file_get_id(&test));
+    set_add(&project->ignore_paths, file_get_id(&test), NULL);
 
     path_free(&test);
-}
-
-bld_ignore new_ignore_ids() {
-    return (bld_ignore) {.set = set_new(0)};
-}
-
-void free_ignore_ids(bld_ignore* ignore) {
-    set_free(&ignore->set);
-}
-
-void append_ignore_id(bld_ignore* ignore, uintmax_t id) {
-    set_add(&ignore->set, id, NULL);
 }

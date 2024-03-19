@@ -52,7 +52,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
         if (file_ptr->d_name[0] == '.') {
             continue;
         }
-        if (set_has(&project->ignore_paths.set, file_ptr->d_ino)) {
+        if (set_has(&project->ignore_paths, file_ptr->d_ino)) {
             log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name);
             continue;
         }

@@ -9,16 +9,12 @@
 
 #define BLD_CACHE_NAME "cache.json"
 
-typedef struct bld_ignore {
-    bld_set set;
-} bld_ignore;
-
 typedef struct bld_project bld_project;
 struct bld_project {
     bld_path root;
     bld_path build;
     bld_array extra_paths;
-    bld_ignore ignore_paths;
+    bld_set ignore_paths;
     uintmax_t main_file;
     bld_compiler compiler;
     bld_set files;
