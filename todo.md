@@ -1,7 +1,7 @@
 [ ] add documentation to functions
 [ ] join graph with containers if possible
 [ ] handle failed parse
-[ ] rename functions into a consistent style
+[x] rename functions into a consistent style
 [ ] hide compilation (incremental/from scratch) behind single function
 [ ] allow forward declaration of compiler associated with file
 [x] replace wrappers to generic array and set by array/set
@@ -11,7 +11,7 @@
 [ ] expose api to generate human-readable dependency graph
 [ ] collapse array when only serializing 0 or 1 element/s
 [ ] find build directory automatically by searching upwards for cbuild and verify that correct files are present
-[ ] use prefix on functions to avoid collisions
+[x] use prefix on functions to avoid collisions
 [ ] handle forward declarations of compiler associated with file
 [x] keep file id in node instead of pointer to file (pointer might become invalid, id never becomes invalid)
 [ ] handle case where cache exists but .o file is missing
