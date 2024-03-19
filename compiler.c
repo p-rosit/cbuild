@@ -54,7 +54,7 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
     };
 }
 
-uintmax_t hash_compiler(bld_compiler* compiler, uintmax_t seed) {
+uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
     bld_iter iter;
     char** option;
 

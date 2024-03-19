@@ -92,7 +92,7 @@ uintmax_t hash_file(bld_file* file, uintmax_t seed) {
     seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
     if (file->compiler != NULL) {
-        seed = hash_compiler(file->compiler, seed);
+        seed = compiler_hash(file->compiler, seed);
     }
     return seed;
 }
