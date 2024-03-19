@@ -31,7 +31,7 @@ int file_eq(bld_file* f1, bld_file* f2) {
     return f1->identifier.id == f2->identifier.id;
 }
 
-void serialize_identifier(char name[256], bld_file* file) {
+void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
     sprintf(name, "%ju", (uintmax_t) file->identifier.id);
 }
 

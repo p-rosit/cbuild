@@ -2,6 +2,7 @@
 #define FILE_H
 
 #include <dirent.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #include <inttypes.h>
@@ -43,7 +44,7 @@ void        free_file(bld_file*);
 uintmax_t   hash_file(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   get_file_id(bld_path*);
-void        serialize_identifier(char[256], bld_file*);
+void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 bld_files   new_files();
 void        clear_files(bld_files*);

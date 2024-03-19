@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "logging.h"
 #include "incremental.h"
@@ -90,7 +91,7 @@ void index_project(bld_project* project) {
 
 int compile_file(bld_project* project, bld_file* file) {
     int result;
-    char name[256], **flag;
+    char name[FILENAME_MAX], **flag;
     bld_compiler compiler;
     bld_string cmd = string_new();
     bld_path path;
@@ -132,7 +133,7 @@ int compile_file(bld_project* project, bld_file* file) {
 
 int compile_total(bld_project* project, char* executable_name) {
     int result;
-    char name[256], **flag;
+    char name[FILENAME_MAX], **flag;
     bld_path path;
     bld_compiler compiler = project->compiler;
     bld_file *main_file, *file;

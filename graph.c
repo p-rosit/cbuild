@@ -298,7 +298,7 @@ void parse_included_files(bld_file* file) {
 
 void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path, bld_file* file) {
     int result;
-    char name[256];
+    char name[FILENAME_MAX];
     bld_string cmd;
     bld_path path;
     bld_node node;
