@@ -4,7 +4,7 @@ int main(int argc, char** argv) {
     int result = 0;
     bld_project project = new_project(
         extract_path(argc, argv),
-        new_compiler(BLD_GCC, "/usr/bin/gcc")
+        compiler_new(BLD_GCC, "/usr/bin/gcc")
     );
 
     add_build(&project, "..");
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     add_option(&project.compiler, "-Wextra");
     add_option(&project.compiler, "-pedantic");
 
-    bld_compiler cc = new_compiler(BLD_CLANG, "/usr/bin/clang");
+    bld_compiler cc = compiler_new(BLD_CLANG, "/usr/bin/clang");
     add_option(&cc, "-Weverything");
     {
 

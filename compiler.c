@@ -2,7 +2,7 @@
 #include "logging.h"
 #include "compiler.h"
 
-bld_compiler new_compiler(bld_compiler_type type, char* executable) {
+bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     bld_string str = string_new();
     string_append_string(&str, executable);
 

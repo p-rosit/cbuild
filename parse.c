@@ -86,7 +86,7 @@ void load_cache(bld_project* project, char* cache_path) {
     cache = malloc(sizeof(bld_project));
     if (cache == NULL) {log_fatal("Could not allocate cache.");}
     temp = path_from_string(cache_path);
-    *cache = make_project(temp, new_compiler(BLD_INVALID_COMPILER, ""));
+    *cache = make_project(temp, compiler_new(BLD_INVALID_COMPILER, ""));
 
     if (file == NULL) {
         log_debug("No cache file found.");

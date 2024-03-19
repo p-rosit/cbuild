@@ -16,7 +16,7 @@ typedef struct bld_compiler {
     bld_array options;
 } bld_compiler;
 
-bld_compiler    new_compiler(bld_compiler_type, char*);
+bld_compiler    compiler_new(bld_compiler_type, char*);
 bld_compiler    copy_compiler(bld_compiler*);
 void            free_compiler(bld_compiler*);
 uintmax_t       hash_compiler(bld_compiler*, uintmax_t);
