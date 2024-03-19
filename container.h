@@ -38,7 +38,7 @@ typedef union bld_iter {
     struct bld_iter_set set;
 } bld_iter;
 
-bld_array   bld_array_new(size_t);
+bld_array   array_new(size_t);
 void        bld_array_free(bld_array*);
 bld_array   bld_array_copy(bld_array*);
 void        bld_array_push(bld_array*, void*);

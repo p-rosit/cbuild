@@ -56,7 +56,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
     *info = (bld_search_info) {
         .type = BLD_NO_SEARCH,
         .graph = graph,
-        .stack = (bld_stack) {.array = bld_array_new(sizeof(bld_node*))},
+        .stack = (bld_stack) {.array = array_new(sizeof(bld_node*))},
         .visited = bld_set_new(sizeof(uintmax_t)),
     };
 

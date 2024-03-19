@@ -49,7 +49,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
         .root = root,
         .build = path_new(),
-        .extra_paths = bld_array_new(sizeof(bld_path)),
+        .extra_paths = array_new(sizeof(bld_path)),
         .ignore_paths = new_ignore_ids(),
         .main_file = 0,
         .compiler = compiler,

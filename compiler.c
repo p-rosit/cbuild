@@ -9,7 +9,7 @@ bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     return (bld_compiler) {
         .type = type,
         .executable = string_unpack(&str),
-        .flags = bld_array_new(sizeof(char*)),
+        .flags = array_new(sizeof(char*)),
     };
 }
 

@@ -2,7 +2,7 @@
 #include "logging.h"
 #include "container.h"
 
-bld_array bld_array_new(size_t value_size) {
+bld_array array_new(size_t value_size) {
     return (bld_array) {
         .capacity = 0,
         .size = 0,
