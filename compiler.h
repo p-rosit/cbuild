@@ -13,7 +13,7 @@ typedef enum bld_compiler_type {
 typedef struct bld_compiler {
     bld_compiler_type type;
     char* executable;
-    bld_array options;
+    bld_array flags;
 } bld_compiler;
 
 bld_compiler    compiler_new(bld_compiler_type, char*);
