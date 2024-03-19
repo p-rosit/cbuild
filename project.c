@@ -167,7 +167,7 @@ void set_main_file(bld_project* project, char* str) {
     }
 }
 
-void add_build(bld_project* project, char* path) {
+void project_add_build(bld_project* project, char* path) {
     path_free(&project->build);
     project->build = path_from_string(path);
     ignore_path(project, path);

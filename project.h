@@ -27,7 +27,7 @@ bld_project project_new(bld_path, bld_compiler);
 void        project_free(bld_project*);
 
 bld_path    project_path_extract(int, char**);
-void        add_build(bld_project*, char*);
+void        project_add_build(bld_project*, char*);
 void        add_path(bld_project*, char*);
 void        add_absolute(bld_project*, char*);
 void        ignore_path(bld_project*, char*);

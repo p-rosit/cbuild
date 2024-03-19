@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
         compiler_new(BLD_GCC, "/usr/bin/gcc")
     );
 
-    add_build(&project, "..");
+    project_add_build(&project, "..");
     rebuild_builder(&project, argc, argv);
 
     compiler_add_flag(&project.compiler, "-lm");
