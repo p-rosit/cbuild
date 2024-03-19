@@ -1,11 +1,11 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include <dirent.h>
 #include <stdio.h>
+#include <inttypes.h>
+#include <dirent.h>
 #include <sys/stat.h>
 
-#include <inttypes.h>
 #include "path.h"
 #include "compiler.h"
 
