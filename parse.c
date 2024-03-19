@@ -95,7 +95,7 @@ void load_cache(bld_project* project, char* cache_path) {
 
         fclose(file);
         log_debug("Found cache file, attempting to parse.");
-        free_compiler(&cache->compiler);
+        compiler_free(&cache->compiler);
         result = parse_cache(cache, &project->root);
 
         if (result) {

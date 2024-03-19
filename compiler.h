@@ -18,7 +18,7 @@ typedef struct bld_compiler {
 
 bld_compiler    compiler_new(bld_compiler_type, char*);
 bld_compiler    compiler_copy(bld_compiler*);
-void            free_compiler(bld_compiler*);
+void            compiler_free(bld_compiler*);
 uintmax_t       hash_compiler(bld_compiler*, uintmax_t);
 void            add_option(bld_compiler*, char*);
 

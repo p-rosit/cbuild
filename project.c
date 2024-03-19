@@ -86,7 +86,7 @@ void free_cache(bld_project* cache) {
     if (cache == NULL) {return;}
     path_free(&cache->root);
     path_free(&cache->build);
-    free_compiler(&cache->compiler);
+    compiler_free(&cache->compiler);
     free_graph(&cache->graph);
     free_files(&cache->files);
     free(cache);
@@ -107,7 +107,7 @@ void free_project(bld_project* project) {
     bld_array_free(&project->extra_paths);
 
     free_ignore_ids(&project->ignore_paths);
-    free_compiler(&project->compiler);
+    compiler_free(&project->compiler);
     free_graph(&project->graph);
     free_files(&project->files);
     bld_set_free(&project->changed_files);

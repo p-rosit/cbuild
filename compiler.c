@@ -13,7 +13,7 @@ bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     };
 }
 
-void free_compiler(bld_compiler* compiler) {
+void compiler_free(bld_compiler* compiler) {
     bld_iter iter;
     char** option;
 

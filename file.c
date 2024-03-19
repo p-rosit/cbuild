@@ -71,7 +71,7 @@ void free_file(bld_file* file) {
 
     path_free(&file->path);
     string_free(&file->name);
-    free_compiler(file->compiler);
+    compiler_free(file->compiler);
     free(file->compiler);
 
     iter = bld_iter_set(&file->defined_symbols);
