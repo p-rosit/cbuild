@@ -28,7 +28,7 @@ void free_compiler(bld_compiler* compiler) {
     bld_array_free(&compiler->options);
 }
 
-bld_compiler copy_compiler(bld_compiler* compiler) {
+bld_compiler compiler_copy(bld_compiler* compiler) {
     bld_iter iter;
     bld_string str;
     char **flag, *temp;
