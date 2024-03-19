@@ -20,7 +20,7 @@ void serialize_edges(FILE*, bld_array*, int);
 
 void serialize_key(FILE*, char*, int);
 
-void save_cache(bld_project* project) {
+void project_save_cache(bld_project* project) {
     FILE* cache;
     bld_path cache_path;
     int depth = 1;

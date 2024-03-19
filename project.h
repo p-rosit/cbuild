@@ -31,7 +31,7 @@ void        project_add_build(bld_project*, char*);
 void        project_add_path(bld_project*, char*);
 void        project_ignore_path(bld_project*, char*);
 void        project_load_cache(bld_project*, char*);
-void        save_cache(bld_project*);
+void        project_save_cache(bld_project*);
 
 void        set_main_file(bld_project*, char*);
 void        set_compiler(bld_project*, char*, bld_compiler);

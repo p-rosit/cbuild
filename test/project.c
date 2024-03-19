@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
             log_info("Entire project existed in cache");
         }
 
-        save_cache(&project);
+        project_save_cache(&project);
     }
 
     project_free(&project);

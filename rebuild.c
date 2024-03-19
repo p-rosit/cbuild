@@ -123,7 +123,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
         log_debug("No rebuild neccessary");
     }
 
-    save_cache(&build);
+    project_save_cache(&build);
 
     if (result == 0) {
         set_log_level(BLD_INFO);
