@@ -94,7 +94,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
     build = new_rebuild(build_root, compiler);
-    ignore_path(&build, "./test");
+    project_ignore_path(&build, "./test");
 
     compiler_add_flag(&build.compiler, "-std=c99");
     compiler_add_flag(&build.compiler, "-fsanitize=address");

@@ -29,7 +29,7 @@ void        project_free(bld_project*);
 bld_path    project_path_extract(int, char**);
 void        project_add_build(bld_project*, char*);
 void        project_add_path(bld_project*, char*);
-void        ignore_path(bld_project*, char*);
+void        project_ignore_path(bld_project*, char*);
 void        load_cache(bld_project*, char*);
 void        save_cache(bld_project*);
 

@@ -69,7 +69,7 @@ bld_project project_new(bld_path root, bld_compiler compiler) {
     }
     fclose(f);
 
-    ignore_path(&project, path_to_string(&build_file_path));
+    project_ignore_path(&project, path_to_string(&build_file_path));
     path_free(&build_file_path);
 
     return project;
@@ -170,7 +170,7 @@ void set_main_file(bld_project* project, char* str) {
 void project_add_build(bld_project* project, char* path) {
     path_free(&project->build);
     project->build = path_from_string(path);
-    ignore_path(project, path);
+    project_ignore_path(project, path);
 }
 
 void project_add_path(bld_project* project, char* path) {
@@ -186,7 +186,7 @@ void project_add_path(bld_project* project, char* path) {
     path_free(&test);
 }
 
-void ignore_path(bld_project* project, char* path) {
+void project_ignore_path(bld_project* project, char* path) {
     bld_path test = path_copy(&project->root);
     path_append_string(&test, path);
 
