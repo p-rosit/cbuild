@@ -5,7 +5,7 @@
 #include "file.h"
 
 uintmax_t get_file_id(bld_path* path) {
-    bld_stat file_stat;
+    struct stat file_stat;
 
     if (stat(path_to_string(path), &file_stat) < 0) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
@@ -15,7 +15,7 @@ uintmax_t get_file_id(bld_path* path) {
 }
 
 bld_file_identifier get_identifier(bld_path* path) {
-    bld_stat file_stat;
+    struct stat file_stat;
 
     if (stat(path_to_string(path), &file_stat) < 0) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));

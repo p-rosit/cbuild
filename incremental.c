@@ -33,7 +33,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
     char* str_path;
     bld_path sub_path;
     DIR* dir;
-    bld_dirent* file_ptr;
+    struct dirent* file_ptr;
 
     str_path = path_to_string(path);
     dir = opendir(str_path);

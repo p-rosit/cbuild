@@ -8,9 +8,6 @@
 #include "path.h"
 #include "compiler.h"
 
-typedef struct dirent bld_dirent;
-typedef struct stat bld_stat;
-
 typedef enum bld_file_type {
     BLD_INVALID,
     BLD_IMPL,

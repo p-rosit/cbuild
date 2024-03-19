@@ -57,7 +57,7 @@ char* infer_build_name(char* name) {
 }
 
 void set_main_rebuild(bld_project* build, bld_path* path) {
-    bld_stat file_stat;
+    struct stat file_stat;
     bld_file* file;
 
     if (stat(path_to_string(path), &file_stat) < 0) {
