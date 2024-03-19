@@ -104,7 +104,7 @@ void free_project(bld_project* project) {
     while (bld_array_next(&iter, (void**) &path)) {
         path_free(path);
     }
-    bld_array_free(&project->extra_paths);
+    array_free(&project->extra_paths);
 
     free_ignore_ids(&project->ignore_paths);
     compiler_free(&project->compiler);

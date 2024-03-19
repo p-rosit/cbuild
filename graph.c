@@ -82,7 +82,7 @@ bld_search_info* graph_includes_from(bld_graph* graph, bld_file* root) {
 }
 
 void free_info(bld_search_info* info) {
-    bld_array_free(&info->stack.array);
+    array_free(&info->stack.array);
     bld_set_free(&info->visited);
     free(info);
 }
@@ -386,11 +386,11 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
 }
 
 bld_edges new_edges() {
-    return (bld_edges) {.array = bld_array_new(sizeof(uintmax_t))};
+    return (bld_edges) {.array = array_new(sizeof(uintmax_t))};
 }
 
 void free_edges(bld_edges* edges) {
-    bld_array_free(&edges->array);
+    array_free(&edges->array);
 }
 
 void add_function_edge(bld_node* from, uintmax_t file_id) {

@@ -25,7 +25,7 @@ void compiler_free(bld_compiler* compiler) {
     while (bld_array_next(&iter, (void**) &flag)) {
         free(*flag);
     }
-    bld_array_free(&compiler->flags);
+    array_free(&compiler->flags);
 }
 
 bld_compiler compiler_copy(bld_compiler* compiler) {

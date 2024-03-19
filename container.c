@@ -11,7 +11,7 @@ bld_array array_new(size_t value_size) {
     };
 }
 
-void bld_array_free(bld_array* array) {
+void array_free(bld_array* array) {
     free(array->values);
 }
 
