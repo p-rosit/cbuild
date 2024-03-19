@@ -90,9 +90,9 @@ void free_info(bld_search_info* info) {
 int next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
     uintmax_t* index;
+    bld_array* edge_array;
     bld_node *node, *to_node;
     bld_file* temp;
-    bld_iter iter;
 
     if (info->type == BLD_NO_SEARCH) {
         log_fatal("No search type has been set");
@@ -116,15 +116,16 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         switch (info->type) {
             case (BLD_FUNCS): {
-                iter = iter_array(&node->functions_from.array);
+                edge_array = &node->functions_from.array;
             } break;
             case (BLD_INCLUDES): {
-                iter = iter_array(&node->included_in.array);
+                edge_array = &node->included_in.array;
             } break;
             default: log_fatal("next_file: unreachable error???");
         }
 
-        while (bld_array_next(&iter, (void**) &index)) {
+        bld_iter iter = iter_array(edge_array);
+        while (iter_next(&iter, (void**) &index)) {
             to_node = set_get(&info->graph->nodes.set, *index);
             node_push(&info->stack, to_node);
         }
@@ -337,15 +338,14 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
 }
 
 void connect_node(bld_graph* graph, bld_node* node) {
-    bld_iter iter;
     bld_file *file, *to_file;
     bld_node* to_node;
 
     file = set_get(&graph->files->set, node->file_id);
     if (file == NULL) {log_fatal("Could not get node file, internal error");}
 
-    iter = iter_set(&graph->nodes.set);
-    while (bld_set_next(&iter, (void**) &to_node)) {
+    bld_iter iter = iter_set(&graph->nodes.set);
+    while (iter_next(&iter, (void**) &to_node)) {
         to_file = set_get(&graph->files->set, to_node->file_id);
         if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
 
@@ -361,7 +361,6 @@ void connect_node(bld_graph* graph, bld_node* node) {
 
 void generate_graph(bld_graph* graph, bld_path* cache_path) {
     bld_path symbol_path;
-    bld_iter iter;
     bld_node *node;
     bld_file* file;
     /* TODO: utilize cache if present */
@@ -369,15 +368,15 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     symbol_path = path_copy(cache_path);
     path_append_string(&symbol_path, "symbols");
 
-    iter = iter_set(&graph->files->set);
-    while (bld_set_next(&iter, (void**) &file)) {
+    bld_iter iter_files = iter_set(&graph->files->set);
+    while (iter_next(&iter_files, (void**) &file)) {
         populate_node(graph, cache_path, &symbol_path, file);
     }
 
     remove(path_to_string(&symbol_path));
 
-    iter = iter_set(&graph->nodes.set);
-    while (bld_set_next(&iter, (void**) &node)) {
+    bld_iter iter_nodes = iter_set(&graph->nodes.set);
+    while (iter_next(&iter_nodes, (void**) &node)) {
         connect_node(graph, node);
     }
 
@@ -413,7 +412,7 @@ void free_nodes(bld_nodes* nodes) {
     bld_iter iter = iter_set(&nodes->set);
     bld_node* node;
 
-    while (bld_set_next(&iter, (void**) &node)) {
+    while (iter_next(&iter, (void**) &node)) {
         free_node(node);
     }
     set_free(&nodes->set);

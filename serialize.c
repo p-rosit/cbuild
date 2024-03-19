@@ -91,14 +91,13 @@ void serialize_compiler_type(FILE* cache, bld_compiler_type type) {
 }
 
 void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
-    bld_iter iter;
     char** flag;
     int first = 1;
 
     fprintf(cache, "[\n");
     
-    iter = iter_array(flags);
-    while (bld_array_next(&iter, (void**) &flag)) {
+    bld_iter iter = iter_array(flags);
+    while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
         fprintf(cache, "%*c\"%s\"", 2 * depth, ' ', *flag);
@@ -114,7 +113,7 @@ void serialize_files(FILE* cache, bld_files* files, int depth) {
     bld_file* file;
 
     fprintf(cache, "[\n");
-    while (bld_set_next(&iter, (void**) &file)) {
+    while (iter_next(&iter, (void**) &file)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
@@ -195,7 +194,7 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
     bld_iter iter = iter_set(symbols);
 
     fprintf(cache, "[\n");
-    while (bld_set_next(&iter, (void**) &symbol)) {
+    while (iter_next(&iter, (void**) &symbol)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
@@ -227,7 +226,7 @@ void serialize_graph(FILE* cache, bld_graph* graph, int depth) {
     bld_node* node;
 
     fprintf(cache, "[\n");
-    while (bld_set_next(&iter, (void**) &node)) {
+    while (iter_next(&iter, (void**) &node)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
@@ -264,7 +263,6 @@ void serialize_node(FILE* cache, bld_node* node, int depth) {
 void serialize_edges(FILE* cache, bld_edges* edges, int depth) {
     size_t i = 0;
     uintmax_t* index;
-    bld_iter iter;
 
     if (edges->array.size == 0) {
         fprintf(cache, "[]");
@@ -276,8 +274,8 @@ void serialize_edges(FILE* cache, bld_edges* edges, int depth) {
     }
     fprintf(cache, "[\n");
 
-    iter = iter_array(&edges->array);
-    while (bld_array_next(&iter, (void**) &index)) {
+    bld_iter iter = iter_array(&edges->array);
+    while (iter_next(&iter, (void**) &index)) {
         if (i > 0) {fprintf(cache, ",\n");};
         fprintf(cache, "%*c%ju", 2 * depth, ' ', *index);
         i++;

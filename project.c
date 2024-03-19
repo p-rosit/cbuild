@@ -93,15 +93,14 @@ void free_cache(bld_project* cache) {
 }
 
 void free_project(bld_project* project) {
-    bld_iter iter;
     bld_path *path;
 
     if (project == NULL) {return;}
     path_free(&project->root);
     path_free(&project->build);
 
-    iter = iter_array(&project->extra_paths);
-    while (bld_array_next(&iter, (void**) &path)) {
+    bld_iter iter = iter_array(&project->extra_paths);
+    while (iter_next(&iter, (void**) &path)) {
         path_free(path);
     }
     array_free(&project->extra_paths);
@@ -120,12 +119,11 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     bld_files files = project->files;
     bld_file* file;
     bld_compiler* c_ptr = malloc(sizeof(bld_compiler));
-    bld_iter iter;
     if (c_ptr == NULL) {log_fatal("Could not add compiler to \"%s\"", str);}
     *c_ptr = compiler;
 
-    iter = iter_set(&files.set);
-    while (bld_set_next(&iter, (void**) &file)) {
+    bld_iter iter = iter_set(&files.set);
+    while (iter_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {
             if (match_found) {
                 log_fatal("Name of file \"%s\" is ambiguous, found several matches.", str);
@@ -148,7 +146,7 @@ void set_main_file(bld_project* project, char* str) {
     bld_file* file;
     bld_iter iter = iter_set(&files.set);
 
-    while (bld_set_next(&iter, (void**) &file)) {
+    while (iter_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {
             if (match_found) {
                 log_fatal("Name of main file \"%s\" is ambiguous, found several matches.", str);

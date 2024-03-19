@@ -65,7 +65,6 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
     closedir(dir);
 }
 void index_project(bld_project* project) {
-    bld_iter iter;
     bld_path *path, extra_path;
     char* name;
     DIR* dir;
@@ -77,8 +76,8 @@ void index_project(bld_project* project) {
     log_info("Indexing project under root");
     index_recursive(project, &project->root, NULL);
 
-    iter = iter_array(&project->extra_paths);
-    while (bld_array_next(&iter, (void**) &path)) {
+    bld_iter iter = iter_array(&project->extra_paths);
+    while (iter_next(&iter, (void**) &path)) {
         extra_path = path_copy(&project->root);
         path_append_path(&extra_path, path);
         name = path_get_last_string(&extra_path);
@@ -92,7 +91,6 @@ void index_project(bld_project* project) {
 int compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[256], **flag;
-    bld_iter iter;
     bld_compiler compiler;
     bld_string cmd = string_new();
     bld_path path;
@@ -106,8 +104,8 @@ int compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    iter = iter_array(&compiler.flags);
-    while (bld_array_next(&iter, (void**) &flag)) {
+    bld_iter iter = iter_array(&compiler.flags);
+    while (iter_next(&iter, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);
     }
@@ -135,7 +133,6 @@ int compile_file(bld_project* project, bld_file* file) {
 int compile_total(bld_project* project, char* executable_name) {
     int result;
     char name[256], **flag;
-    bld_iter iter;
     bld_path path;
     bld_compiler compiler = project->compiler;
     bld_file *main_file, *file;
@@ -152,8 +149,8 @@ int compile_total(bld_project* project, char* executable_name) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    iter = iter_array(&compiler.flags);
-    while (bld_array_next(&iter, (void**) &flag)) {
+    bld_iter iter_flags = iter_array(&compiler.flags);
+    while (iter_next(&iter_flags, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);
     }
@@ -187,11 +184,10 @@ int compile_total(bld_project* project, char* executable_name) {
 void mark_changed_files(bld_project* project) {
     int* has_changed;
     bld_search_info* info;
-    bld_iter iter;
     bld_file *file, *temp;
 
-    iter = iter_set(&project->files.set);
-    while (bld_set_next(&iter, (void**) &file)) {
+    bld_iter iter = iter_set(&project->files.set);
+    while (iter_next(&iter, (void**) &file)) {
         has_changed = set_get(&project->changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
         if (!*has_changed) {continue;}
@@ -236,17 +232,16 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     uintmax_t hash;
     bld_path path;
     bld_file *file, *cache_file;
-    bld_iter iter;
 
     temp = 0;
-    iter = iter_set(&project->files.set);
-    while (bld_set_next(&iter, (void**) &file)) {
+    bld_iter iter_files1 = iter_set(&project->files.set);
+    while (iter_next(&iter_files1, (void**) &file)) {
         set_add(&project->changed_files, file->identifier.id, &temp);
     }
 
     hash = compiler_hash(&project->compiler, 5031);
-    iter = iter_set(&project->files.set);
-    while (bld_set_next(&iter, (void**) &file)) {
+    bld_iter iter_files2 = iter_set(&project->files.set);
+    while (iter_next(&iter_files2, (void**) &file)) {
         file->identifier.hash = hash_file(file, hash);
 
         if (file->type == BLD_HEADER) {
@@ -288,8 +283,8 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 
     mark_changed_files(project);
 
-    iter = iter_set(&project->files.set);
-    while (bld_set_next(&iter, (void**) &file)) {
+    bld_iter iter_files3 = iter_set(&project->files.set);
+    while (iter_next(&iter_files3, (void**) &file)) {
         if (file->type == BLD_HEADER) {continue;}
 
         has_changed = set_get(&project->changed_files, file->identifier.id);
