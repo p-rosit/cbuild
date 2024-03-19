@@ -95,25 +95,3 @@ uintmax_t file_hash(bld_file* file, uintmax_t seed) {
     }
     return seed;
 }
-
-bld_files new_files() {
-    return (bld_files) {.set = set_new(sizeof(bld_file))};
-}
-
-void clear_files(bld_files* files) {
-    set_clear(&files->set);
-}
-
-void free_files(bld_files* files) {
-    bld_iter iter = iter_set(&files->set);
-    bld_file* file;
-
-    while (iter_next(&iter, (void**) &file)) {
-        file_free(file);
-    }
-    set_free(&files->set);
-}
-
-int append_file(bld_files* files, bld_file file) {
-    return set_add(&files->set, file.identifier.id, &file);
-}

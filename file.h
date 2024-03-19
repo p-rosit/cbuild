@@ -33,10 +33,6 @@ typedef struct bld_file {
     bld_set includes;
 } bld_file;
 
-typedef struct bld_files {
-    bld_set set;
-} bld_files;
-
 bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
@@ -45,10 +41,5 @@ uintmax_t   file_hash(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
-
-bld_files   new_files();
-void        clear_files(bld_files*);
-void        free_files(bld_files*);
-int         append_file(bld_files*, bld_file);
 
 #endif
