@@ -5,9 +5,6 @@
 #include "file.h"
 #include "project.h"
 
-int         cached_compilation(bld_project*, bld_file*);
-
-
 bld_path project_path_extract(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
     bld_path path;
