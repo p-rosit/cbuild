@@ -178,7 +178,7 @@ void add_path(bld_project* project, char* path) {
     get_file_id(&test);
 
     extra = path_from_string(path);
-    bld_array_push(&project->extra_paths, &extra);
+    array_push(&project->extra_paths, &extra);
 
     path_free(&test);
 }

@@ -437,7 +437,7 @@ int parse_node_edge(FILE* file, bld_array* array) {
     result = parse_uintmax(file, &file_id);
     if (result) {return -1;}
 
-    bld_array_push(array, &file_id);
+    array_push(array, &file_id);
     return 0;
 }
 
@@ -524,7 +524,7 @@ int parse_compiler_option(FILE* file, bld_array* flags) {
     }
     
     temp = string_unpack(&str);
-    bld_array_push(flags, &temp);
+    array_push(flags, &temp);
 
     return result;
 }

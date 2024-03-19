@@ -29,7 +29,7 @@ bld_array array_copy(bld_array* array) {
     return copy;
 }
 
-void bld_array_push(bld_array* array, void* value) {
+void array_push(bld_array* array, void* value) {
     size_t capacity = array->capacity;
     void* values;
     char* ptr;

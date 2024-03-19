@@ -37,7 +37,7 @@ struct bld_search_info {
 };
 
 void node_push(bld_stack* stack, bld_node* node) {
-    bld_array_push(&stack->array, &node);
+    array_push(&stack->array, &node);
 }
 
 bld_node* node_pop(bld_stack* stack) {
@@ -402,7 +402,7 @@ void add_include_edge(bld_node* from, uintmax_t file_id) {
 }
 
 void append_edge(bld_edges* edges, uintmax_t file_id) {
-    bld_array_push(&edges->array, &file_id);
+    array_push(&edges->array, &file_id);
 }
 
 bld_nodes new_nodes() {
