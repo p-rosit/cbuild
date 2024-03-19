@@ -42,7 +42,7 @@ void node_push(bld_stack* stack, bld_node* node) {
 
 bld_node* node_pop(bld_stack* stack) {
     bld_node* node;
-    bld_array_pop(&stack->array, &node);
+    array_pop(&stack->array, &node);
     return node;
 }
 
