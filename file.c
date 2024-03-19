@@ -65,7 +65,7 @@ bld_file file_test_new(bld_path* path, char* name) {
     return test;
 }
 
-void free_file(bld_file* file) {
+void file_free(bld_file* file) {
     char** symbol;
 
     path_free(&file->path);
@@ -109,7 +109,7 @@ void free_files(bld_files* files) {
     bld_file* file;
 
     while (iter_next(&iter, (void**) &file)) {
-        free_file(file);
+        file_free(file);
     }
     set_free(&files->set);
 }

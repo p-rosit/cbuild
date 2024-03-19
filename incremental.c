@@ -27,7 +27,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     }
 
     exists = append_file(&project->files, file);
-    if (exists) {free_file(&file);}
+    if (exists) {file_free(&file);}
 }
 
 void index_recursive(bld_project* project, bld_path* path, char* name) {

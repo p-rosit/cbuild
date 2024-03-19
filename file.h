@@ -40,7 +40,7 @@ typedef struct bld_files {
 bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
-void        free_file(bld_file*);
+void        file_free(bld_file*);
 uintmax_t   hash_file(bld_file*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   get_file_id(bld_path*);
