@@ -254,7 +254,7 @@ int bld_set_set_capacity(bld_set* set, size_t capacity) {
     return error;
 }
 
-int bld_set_add(bld_set* set, bld_hash hash, void* value) {
+int set_add(bld_set* set, bld_hash hash, void* value) {
     int error;
     size_t target;
     size_t new_capacity = set->capacity;

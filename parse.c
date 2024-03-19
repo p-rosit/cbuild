@@ -207,7 +207,7 @@ int parse_file(FILE* file, bld_files* files) {
     }
 
     f->path = path_new();
-    bld_set_add(&files->set, f->identifier.id, f);
+    set_add(&files->set, f->identifier.id, f);
     return 0;
 }
 
@@ -303,7 +303,7 @@ int parse_file_include(FILE* file, bld_set* set) {
     result = parse_uintmax(file, &file_id);
     if (result) {return -1;}
 
-    bld_set_add(set, file_id, NULL);
+    set_add(set, file_id, NULL);
     return 0;
 }
 
@@ -340,7 +340,7 @@ int parse_file_function(FILE* file, bld_set* set) {
     if (result) {return -1;}
 
     temp = string_unpack(&str);
-    bld_set_add(set, string_hash(temp, 0), &temp);
+    set_add(set, string_hash(temp, 0), &temp);
     return 0;
 }
 

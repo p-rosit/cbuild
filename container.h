@@ -47,7 +47,7 @@ void        array_pop(bld_array*, void*);
 bld_set     set_new(size_t);
 void        set_free(bld_set*);
 void        set_clear(bld_set*);
-int         bld_set_add(bld_set*, bld_hash, void*);
+int         set_add(bld_set*, bld_hash, void*);
 void*       bld_set_get(bld_set*, bld_hash);
 int         bld_set_has(bld_set*, bld_hash);
 int         bld_set_empty_intersection(bld_set*, bld_set*);

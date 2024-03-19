@@ -241,7 +241,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     temp = 0;
     iter = bld_iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
-        bld_set_add(&project->changed_files, file->identifier.id, &temp);
+        set_add(&project->changed_files, file->identifier.id, &temp);
     }
 
     hash = compiler_hash(&project->compiler, 5031);

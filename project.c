@@ -201,5 +201,5 @@ void free_ignore_ids(bld_ignore* ignore) {
 }
 
 void append_ignore_id(bld_ignore* ignore, uintmax_t id) {
-    bld_set_add(&ignore->set, id, NULL);
+    set_add(&ignore->set, id, NULL);
 }

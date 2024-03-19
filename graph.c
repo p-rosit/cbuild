@@ -112,7 +112,7 @@ int next_file(bld_search_info* info, bld_file** file) {
             goto next_node;
         }
 
-        bld_set_add(&info->visited, node->file_id, &node);
+        set_add(&info->visited, node->file_id, &node);
 
         switch (info->type) {
             case (BLD_FUNCS): {
@@ -281,7 +281,7 @@ void parse_included_files(bld_file* file) {
         fclose(included_file);
 
         include_id = get_file_id(&file_path);
-        bld_set_add(&file->includes, include_id, &include_id);
+        set_add(&file->includes, include_id, &include_id);
 
         path_free(&file_path);
         string_free(&str);
@@ -420,7 +420,7 @@ void free_nodes(bld_nodes* nodes) {
 }
 
 void push_node(bld_nodes* nodes, bld_node node) {
-    bld_set_add(&nodes->set, node.file_id, &node);
+    set_add(&nodes->set, node.file_id, &node);
 }
 
 bld_node new_node(bld_file* file) {
@@ -438,5 +438,5 @@ void free_node(bld_node* node) {
 
 void add_symbol(bld_set* set, bld_string* str) {
     char* temp = string_unpack(str);
-    bld_set_add(set, string_hash(temp, 0), &temp);
+    set_add(set, string_hash(temp, 0), &temp);
 }

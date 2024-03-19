@@ -116,5 +116,5 @@ void free_files(bld_files* files) {
 }
 
 int append_file(bld_files* files, bld_file file) {
-    return bld_set_add(&files->set, file.identifier.id, &file);
+    return set_add(&files->set, file.identifier.id, &file);
 }
