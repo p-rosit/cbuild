@@ -161,7 +161,7 @@ int compile_total(bld_project* project, char* executable_name) {
     string_append_space(&cmd);
 
     bfs = graph_functions_from(&project->graph, main_file);
-    while (next_file(bfs, &file)) {
+    while (graph_next_file(bfs, &file)) {
         path = path_copy(&project->root);
         path_append_path(&path, &(*project->cache).root);
         serialize_identifier(name, file);
@@ -194,7 +194,7 @@ void mark_changed_files(bld_project* project) {
         if (!*has_changed) {continue;}
 
         info = graph_includes_from(&project->graph, file);
-        while (next_file(info, &temp)) {
+        while (graph_next_file(info, &temp)) {
             has_changed = set_get(&project->changed_files, temp->identifier.id);
             if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
             *has_changed = 1;

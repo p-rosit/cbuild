@@ -24,6 +24,6 @@ void                graph_free(bld_graph*);
 void                graph_generate(bld_graph*, bld_path*);
 bld_search_info*    graph_functions_from(bld_graph*, bld_file*);
 bld_search_info*    graph_includes_from(bld_graph*, bld_file*);
-int                 next_file(bld_search_info*, bld_file**);
+int                 graph_next_file(bld_search_info*, bld_file**);
 
 #endif

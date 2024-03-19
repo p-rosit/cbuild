@@ -81,7 +81,7 @@ void free_info(bld_search_info* info) {
     free(info);
 }
 
-int next_file(bld_search_info* info, bld_file** file) {
+int graph_next_file(bld_search_info* info, bld_file** file) {
     int node_visited = 1;
     uintmax_t* index;
     bld_array* edge_array;
@@ -115,7 +115,7 @@ int next_file(bld_search_info* info, bld_file** file) {
             case (BLD_INCLUDES): {
                 edge_array = &node->included_in;
             } break;
-            default: log_fatal("next_file: unreachable error???");
+            default: log_fatal("graph_next_file: unreachable error???");
         }
 
         bld_iter iter = iter_array(edge_array);
