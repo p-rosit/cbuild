@@ -1,11 +1,10 @@
 [ ] add documentation to functions
 [ ] join graph with containers if possible
-[ ] remove extra structs where abstracted layer is too thin (wrapper to container)
 [ ] handle failed parse
 [ ] rename functions into a consistent style
 [ ] hide compilation (incremental/from scratch) behind single function
 [ ] allow forward declaration of compiler associated with file
-[ ] replace wrappers to generic array and set by array/set
+[x] replace wrappers to generic array and set by array/set
 [ ] avoid recompiling file twice when performing incremental compilation
 [ ] add functions to analyze the dependency graph
 [x] parse symbols that are variables ("B" entries when running nm)
