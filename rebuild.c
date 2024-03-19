@@ -96,12 +96,12 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     build = new_rebuild(build_root, compiler);
     ignore_path(&build, "./test");
 
-    add_option(&build.compiler, "-std=c99");
-    add_option(&build.compiler, "-fsanitize=address");
-    add_option(&build.compiler, "-Wall");
-    add_option(&build.compiler, "-Wextra");
-    add_option(&build.compiler, "-Werror");
-    add_option(&build.compiler, "-pedantic");
+    compiler_add_flag(&build.compiler, "-std=c99");
+    compiler_add_flag(&build.compiler, "-fsanitize=address");
+    compiler_add_flag(&build.compiler, "-Wall");
+    compiler_add_flag(&build.compiler, "-Wextra");
+    compiler_add_flag(&build.compiler, "-Werror");
+    compiler_add_flag(&build.compiler, "-pedantic");
 
     load_cache(&build, ".build_cache");
 

@@ -68,7 +68,7 @@ uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
     return seed;
 }
 
-void add_option(bld_compiler* compiler, char* option) {
+void compiler_add_flag(bld_compiler* compiler, char* option) {
     char* temp;
     bld_string s = string_new();
 

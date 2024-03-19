@@ -20,6 +20,6 @@ bld_compiler    compiler_new(bld_compiler_type, char*);
 bld_compiler    compiler_copy(bld_compiler*);
 void            compiler_free(bld_compiler*);
 uintmax_t       compiler_hash(bld_compiler*, uintmax_t);
-void            add_option(bld_compiler*, char*);
+void            compiler_add_flag(bld_compiler*, char*);
 
 #endif

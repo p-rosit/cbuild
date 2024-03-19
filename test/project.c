@@ -10,15 +10,15 @@ int main(int argc, char** argv) {
     add_build(&project, "..");
     rebuild_builder(&project, argc, argv);
 
-    add_option(&project.compiler, "-lm");
-    add_option(&project.compiler, "-fsanitize=address");
-    add_option(&project.compiler, "-std=c99");
-    add_option(&project.compiler, "-Wall");
-    add_option(&project.compiler, "-Wextra");
-    add_option(&project.compiler, "-pedantic");
+    compiler_add_flag(&project.compiler, "-lm");
+    compiler_add_flag(&project.compiler, "-fsanitize=address");
+    compiler_add_flag(&project.compiler, "-std=c99");
+    compiler_add_flag(&project.compiler, "-Wall");
+    compiler_add_flag(&project.compiler, "-Wextra");
+    compiler_add_flag(&project.compiler, "-pedantic");
 
     bld_compiler cc = compiler_new(BLD_CLANG, "/usr/bin/clang");
-    add_option(&cc, "-Weverything");
+    compiler_add_flag(&cc, "-Weverything");
     {
 
         /* Optional */
