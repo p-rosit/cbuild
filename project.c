@@ -173,7 +173,7 @@ void project_add_build(bld_project* project, char* path) {
     ignore_path(project, path);
 }
 
-void add_path(bld_project* project, char* path) {
+void project_add_path(bld_project* project, char* path) {
     bld_path test, extra;
     
     test = path_copy(&project->root);
