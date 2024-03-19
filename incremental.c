@@ -243,7 +243,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     hash = compiler_hash(&project->compiler, 5031);
     bld_iter iter_files2 = iter_set(&project->files.set);
     while (iter_next(&iter_files2, (void**) &file)) {
-        file->identifier.hash = hash_file(file, hash);
+        file->identifier.hash = file_hash(file, hash);
 
         if (file->type == BLD_HEADER) {
             cache_file = set_get(&project->cache->files.set, file->identifier.id);

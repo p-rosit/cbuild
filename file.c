@@ -87,7 +87,7 @@ void file_free(bld_file* file) {
     set_free(&file->includes);
 }
 
-uintmax_t hash_file(bld_file* file, uintmax_t seed) {
+uintmax_t file_hash(bld_file* file, uintmax_t seed) {
     seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
     if (file->compiler != NULL) {
