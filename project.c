@@ -8,7 +8,7 @@
 int         cached_compilation(bld_project*, bld_file*);
 
 
-bld_path extract_path(int argc, char** argv) {
+bld_path project_path_extract(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
     bld_path path;
     if (argc < 1) {

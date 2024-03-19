@@ -25,7 +25,7 @@ bld_project new_rebuild(bld_path root, bld_compiler compiler) {
 }
 
 void extract_names(int argc, char** argv, char** file, char** old_file) {
-    bld_path path = extract_path(argc, argv);
+    bld_path path = project_path_extract(argc, argv);
     bld_string str;
     char* name;
     
