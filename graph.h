@@ -13,13 +13,9 @@ struct bld_node {
     bld_array included_in;
 };
 
-typedef struct bld_nodes {
-    bld_set set;
-} bld_nodes;
-
 typedef struct bld_graph {
     bld_set* files;
-    bld_nodes nodes;
+    bld_set nodes;
 } bld_graph;
 
 bld_graph           new_graph(bld_set*);

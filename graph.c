@@ -8,9 +8,6 @@
 void        add_function_edge(bld_node*, uintmax_t);
 void        add_include_edge(bld_node*, uintmax_t);
 
-bld_nodes   new_nodes();
-void        free_nodes(bld_nodes*);
-void        push_node(bld_nodes*, bld_node);
 bld_node    new_node(bld_file*);
 void        free_node(bld_node*);
 
@@ -57,7 +54,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
         .visited = set_new(sizeof(uintmax_t)),
     };
 
-    node = set_get(&graph->nodes.set, root->identifier.id);
+    node = set_get(&graph->nodes, root->identifier.id);
     if (node == NULL) {
         log_fatal("Could not find requested file in graph");
     }
@@ -123,7 +120,7 @@ int next_file(bld_search_info* info, bld_file** file) {
 
         bld_iter iter = iter_array(edge_array);
         while (iter_next(&iter, (void**) &index)) {
-            to_node = set_get(&info->graph->nodes.set, *index);
+            to_node = set_get(&info->graph->nodes, *index);
             node_push(&info->stack, to_node);
         }
 
@@ -140,12 +137,18 @@ int next_file(bld_search_info* info, bld_file** file) {
 bld_graph new_graph(bld_set* files) {
     return (bld_graph) {
         .files = files,
-        .nodes = new_nodes(),
+        .nodes = set_new(sizeof(bld_node)),
     };
 }
 
 void free_graph(bld_graph* graph) {
-    free_nodes(&graph->nodes);
+    bld_node* node;
+    bld_iter iter = iter_set(&graph->nodes);
+
+    while (iter_next(&iter, (void**) &node)) {
+        free_node(node);
+    }
+    set_free(&graph->nodes);
 }
 
 void parse_symbols(bld_file* file, bld_path* symbol_path) {
@@ -330,7 +333,7 @@ void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path
     parse_included_files(file);
 
     log_debug("Populating: \"%s\", %lu symbol(s), %lu reference(s), %lu include(s)", path_to_string(&file->path), file->defined_symbols.size, file->undefined_symbols.size, file->includes.size);
-    push_node(&graph->nodes, node);
+    set_add(&graph->nodes, node.file_id, &node);
 
 }
 
@@ -341,7 +344,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
     file = set_get(graph->files, node->file_id);
     if (file == NULL) {log_fatal("Could not get node file, internal error");}
 
-    bld_iter iter = iter_set(&graph->nodes.set);
+    bld_iter iter = iter_set(&graph->nodes);
     while (iter_next(&iter, (void**) &to_node)) {
         to_file = set_get(graph->files, to_node->file_id);
         if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
@@ -372,13 +375,13 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
 
     remove(path_to_string(&symbol_path));
 
-    bld_iter iter_nodes = iter_set(&graph->nodes.set);
+    bld_iter iter_nodes = iter_set(&graph->nodes);
     while (iter_next(&iter_nodes, (void**) &node)) {
         connect_node(graph, node);
     }
 
     path_free(&symbol_path);
-    log_info("Generated dependency graph with %lu nodes", graph->nodes.set.size);
+    log_info("Generated dependency graph with %lu nodes", graph->nodes.size);
 }
 
 void add_function_edge(bld_node* from, uintmax_t file_id) {
@@ -387,24 +390,6 @@ void add_function_edge(bld_node* from, uintmax_t file_id) {
 
 void add_include_edge(bld_node* from, uintmax_t file_id) {
     array_push(&from->included_in, &file_id);
-}
-
-bld_nodes new_nodes() {
-    return (bld_nodes) {.set = set_new(sizeof(bld_node))};
-}
-
-void free_nodes(bld_nodes* nodes) {
-    bld_iter iter = iter_set(&nodes->set);
-    bld_node* node;
-
-    while (iter_next(&iter, (void**) &node)) {
-        free_node(node);
-    }
-    set_free(&nodes->set);
-}
-
-void push_node(bld_nodes* nodes, bld_node node) {
-    set_add(&nodes->set, node.file_id, &node);
 }
 
 bld_node new_node(bld_file* file) {
