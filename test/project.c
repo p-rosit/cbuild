@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
         set_compiler(&project, "file.c", cc);
 
         /* Optional */
-        set_main_file(&project, "main.c");
+        project_set_main_file(&project, "main.c");
         /* Mandatory */
         result = compile_project(&project, "a.out");
         if (result > 0) {

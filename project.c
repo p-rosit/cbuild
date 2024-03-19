@@ -145,7 +145,7 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     }
 }
 
-void set_main_file(bld_project* project, char* str) {
+void project_set_main_file(bld_project* project, char* str) {
     int match_found = 0;
     bld_path path = path_from_string(str);
     bld_file* file;
