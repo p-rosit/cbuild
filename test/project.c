@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         // generate_dependency_graph(&project);
 
         /* Optional */
-        set_compiler(&project, "file.c", cc);
+        project_set_compiler(&project, "file.c", cc);
 
         /* Optional */
         project_set_main_file(&project, "main.c");

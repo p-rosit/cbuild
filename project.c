@@ -120,7 +120,7 @@ void project_free(bld_project* project) {
     free_cache(project->cache);
 }
 
-void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
+void project_set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     int match_found = 0;
     bld_path path = path_from_string(str);
     bld_file* file;
