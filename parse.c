@@ -357,7 +357,6 @@ int parse_project_graph(FILE* file, bld_project* project) {
     return 0;
 }
 
-void push_node(bld_nodes*, bld_node);
 int parse_graph_node(FILE* file, bld_project* project) {
     int amount_parsed;
     int size = 3;
@@ -368,7 +367,7 @@ int parse_graph_node(FILE* file, bld_project* project) {
         (bld_parse_func) parse_node_symbol_edges,
         (bld_parse_func) parse_node_include_edges,
     };
-    bld_nodes* nodes = &project->graph.nodes;
+    bld_set* nodes = &project->graph.nodes;
     bld_node node;
 
     amount_parsed = parse_map(file, &node, size, parsed, keys, funcs);
@@ -383,7 +382,7 @@ int parse_graph_node(FILE* file, bld_project* project) {
         return -1;
     }
 
-    push_node(nodes, node);
+    set_add(nodes, node.file_id, &node);
 
     return 0;
 }
@@ -407,8 +406,8 @@ int parse_node_file(FILE* file, bld_node* node) {
 int parse_node_symbol_edges(FILE* file, bld_node* node) {
     int amount_parsed;
 
-    node->functions_from.array = array_new(sizeof(uintmax_t));
-    amount_parsed = parse_array(file, &node->functions_from.array, (bld_parse_func) parse_node_edge);
+    node->functions_from = array_new(sizeof(uintmax_t));
+    amount_parsed = parse_array(file, &node->functions_from, (bld_parse_func) parse_node_edge);
     if (amount_parsed < 0) {
         log_warn("Could not parse graph");
         return -1;
@@ -420,8 +419,8 @@ int parse_node_symbol_edges(FILE* file, bld_node* node) {
 int parse_node_include_edges(FILE* file, bld_node* node) {
     int amount_parsed;
 
-    node->included_in.array = array_new(sizeof(uintmax_t));
-    amount_parsed = parse_array(file, &node->included_in.array, (bld_parse_func) parse_node_edge);
+    node->included_in = array_new(sizeof(uintmax_t));
+    amount_parsed = parse_array(file, &node->included_in, (bld_parse_func) parse_node_edge);
     if (amount_parsed < 0) {
         log_warn("Could not parse graph");
         return -1;
