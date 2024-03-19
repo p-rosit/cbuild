@@ -9,10 +9,6 @@
 
 #define BLD_CACHE_NAME "cache.json"
 
-typedef struct bld_extra {
-    bld_array array;
-} bld_extra;
-
 typedef struct bld_ignore {
     bld_set set;
 } bld_ignore;
