@@ -124,7 +124,7 @@ void set_compiler(bld_project* project, char* str, bld_compiler compiler) {
     if (c_ptr == NULL) {log_fatal("Could not add compiler to \"%s\"", str);}
     *c_ptr = compiler;
 
-    iter = bld_iter_set(&files.set);
+    iter = iter_set(&files.set);
     while (bld_set_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {
             if (match_found) {
@@ -146,7 +146,7 @@ void set_main_file(bld_project* project, char* str) {
     bld_path path = path_from_string(str);
     bld_files files = project->files;
     bld_file* file;
-    bld_iter iter = bld_iter_set(&files.set);
+    bld_iter iter = iter_set(&files.set);
 
     while (bld_set_next(&iter, (void**) &file)) {
         if (path_ends_with(&file->path, &path)) {

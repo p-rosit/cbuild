@@ -110,7 +110,7 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
 
 void serialize_files(FILE* cache, bld_files* files, int depth) {
     int first = 1;
-    bld_iter iter = bld_iter_set(&files->set);
+    bld_iter iter = iter_set(&files->set);
     bld_file* file;
 
     fprintf(cache, "[\n");
@@ -192,7 +192,7 @@ void serialize_file_id(FILE* cache, bld_file_identifier id) {
 void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
     int first = 1;
     char** symbol;
-    bld_iter iter = bld_iter_set(symbols);
+    bld_iter iter = iter_set(symbols);
 
     fprintf(cache, "[\n");
     while (bld_set_next(&iter, (void**) &symbol)) {
@@ -223,7 +223,7 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
 
 void serialize_graph(FILE* cache, bld_graph* graph, int depth) {
     int first = 1;
-    bld_iter iter = bld_iter_set(&graph->nodes.set);
+    bld_iter iter = iter_set(&graph->nodes.set);
     bld_node* node;
 
     fprintf(cache, "[\n");

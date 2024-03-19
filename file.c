@@ -74,13 +74,13 @@ void free_file(bld_file* file) {
     compiler_free(file->compiler);
     free(file->compiler);
 
-    iter = bld_iter_set(&file->defined_symbols);
+    iter = iter_set(&file->defined_symbols);
     while (bld_set_next(&iter, (void**) &symbol)) {
         free(*symbol);
     }
     set_free(&file->defined_symbols);
 
-    iter = bld_iter_set(&file->undefined_symbols);
+    iter = iter_set(&file->undefined_symbols);
     while (bld_set_next(&iter, (void**) &symbol)) {
         free(*symbol);
     }
@@ -106,7 +106,7 @@ void clear_files(bld_files* files) {
 }
 
 void free_files(bld_files* files) {
-    bld_iter iter = bld_iter_set(&files->set);
+    bld_iter iter = iter_set(&files->set);
     bld_file* file;
 
     while (bld_set_next(&iter, (void**) &file)) {

@@ -190,7 +190,7 @@ void mark_changed_files(bld_project* project) {
     bld_iter iter;
     bld_file *file, *temp;
 
-    iter = bld_iter_set(&project->files.set);
+    iter = iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
         has_changed = set_get(&project->changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
@@ -239,13 +239,13 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     bld_iter iter;
 
     temp = 0;
-    iter = bld_iter_set(&project->files.set);
+    iter = iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
         set_add(&project->changed_files, file->identifier.id, &temp);
     }
 
     hash = compiler_hash(&project->compiler, 5031);
-    iter = bld_iter_set(&project->files.set);
+    iter = iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
         file->identifier.hash = hash_file(file, hash);
 
@@ -288,7 +288,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
 
     mark_changed_files(project);
 
-    iter = bld_iter_set(&project->files.set);
+    iter = iter_set(&project->files.set);
     while (bld_set_next(&iter, (void**) &file)) {
         if (file->type == BLD_HEADER) {continue;}
 

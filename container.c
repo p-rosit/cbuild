@@ -353,7 +353,7 @@ int set_empty_intersection(bld_set* set1, bld_set* set2) {
     return 1;
 }
 
-bld_iter bld_iter_set(bld_set* set) {
+bld_iter iter_set(bld_set* set) {
     return (bld_iter) {
         .set = (struct bld_iter_set) {
             .set = set,

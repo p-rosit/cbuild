@@ -344,7 +344,7 @@ void connect_node(bld_graph* graph, bld_node* node) {
     file = set_get(&graph->files->set, node->file_id);
     if (file == NULL) {log_fatal("Could not get node file, internal error");}
 
-    iter = bld_iter_set(&graph->nodes.set);
+    iter = iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &to_node)) {
         to_file = set_get(&graph->files->set, to_node->file_id);
         if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
@@ -369,14 +369,14 @@ void generate_graph(bld_graph* graph, bld_path* cache_path) {
     symbol_path = path_copy(cache_path);
     path_append_string(&symbol_path, "symbols");
 
-    iter = bld_iter_set(&graph->files->set);
+    iter = iter_set(&graph->files->set);
     while (bld_set_next(&iter, (void**) &file)) {
         populate_node(graph, cache_path, &symbol_path, file);
     }
 
     remove(path_to_string(&symbol_path));
 
-    iter = bld_iter_set(&graph->nodes.set);
+    iter = iter_set(&graph->nodes.set);
     while (bld_set_next(&iter, (void**) &node)) {
         connect_node(graph, node);
     }
@@ -410,7 +410,7 @@ bld_nodes new_nodes() {
 }
 
 void free_nodes(bld_nodes* nodes) {
-    bld_iter iter = bld_iter_set(&nodes->set);
+    bld_iter iter = iter_set(&nodes->set);
     bld_node* node;
 
     while (bld_set_next(&iter, (void**) &node)) {
