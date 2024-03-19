@@ -58,27 +58,6 @@ void array_pop(bld_array* array, void* ret_value) {
     memcpy(ret_value, ((char*)array->values) + --array->size * array->value_size, array->value_size);
 }
 
-bld_iter iter_array(bld_array* array) {
-    return (bld_iter) {
-        .array = (struct bld_iter_array) {
-            .array = array,
-            .index = 0,
-        }
-    };
-}
-
-int bld_array_next(bld_iter* iter, void** value_ptr_ptr) {
-    size_t value_size = iter->array.array->value_size;
-    bld_array* array = iter->array.array;
-    char* values = array->values;
-    if (iter->array.index >= array->size) {
-        return 0;
-    }
-
-    *value_ptr_ptr = values + iter->array.index++ * value_size;
-    return 1;
-}
-
 bld_offset bld_hash_compute_offset(size_t capacity) {
     bld_offset max_offset = 0;
 
@@ -353,20 +332,40 @@ int set_empty_intersection(bld_set* set1, bld_set* set2) {
     return 1;
 }
 
-bld_iter iter_set(bld_set* set) {
+bld_iter iter_array(bld_array* array) {
     return (bld_iter) {
-        .set = (struct bld_iter_set) {
-            .set = set,
-            .index = 0,
-        }
+        .type = BLD_ARRAY,
+        .container = (union bld_container) {.array = array},
+        .index = 0,
     };
 }
 
-int bld_set_next(bld_iter* iter, void** value_ptr_ptr) {
+int array_next(bld_iter* iter, void** value_ptr_ptr) {
+    size_t value_size = iter->container.array->value_size;
+    bld_array* array = iter->container.array;
+    char* values = array->values;
+
+    if (iter->index >= array->size) {
+        return 0;
+    }
+
+    *value_ptr_ptr = values + iter->index++ * value_size;
+    return 1;
+}
+
+bld_iter iter_set(bld_set* set) {
+    return (bld_iter) {
+        .type = BLD_SET,
+        .container = (union bld_container) {.set = set},
+        .index = 0,
+    };
+}
+
+int set_next(bld_iter* iter, void** value_ptr_ptr) {
     int has_next = 0;
-    size_t i = iter->set.index;
-    size_t value_size = iter->set.set->value_size;
-    bld_set* set = iter->set.set;
+    size_t i = iter->index;
+    size_t value_size = iter->container.set->value_size;
+    bld_set* set = iter->container.set;
     char* values = set->values;
     
     while (i < set->capacity + set->max_offset) {
@@ -378,6 +377,19 @@ int bld_set_next(bld_iter* iter, void** value_ptr_ptr) {
         i++;
     }
 
-    iter->set.index = i + 1;
+    iter->index = i + 1;
     return has_next;
+}
+
+int iter_next(bld_iter* iter, void** value_ptr_ptr) {
+    switch (iter->type) {
+        case (BLD_ARRAY): {
+            return array_next(iter, value_ptr_ptr);
+        } break;
+        case (BLD_SET): {
+            return set_next(iter, value_ptr_ptr);
+        } break;
+    }
+    log_fatal("iter_next: unreachable error???");
+    return 0; /* Unreachable */
 }

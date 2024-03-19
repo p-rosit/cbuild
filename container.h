@@ -23,19 +23,20 @@ typedef struct bld_set {
     void* values;
 } bld_set;
 
-struct bld_iter_array {
+enum bld_container_type {
+    BLD_ARRAY,
+    BLD_SET,
+};
+
+union bld_container {
     bld_array* array;
-    size_t index;
-};
-
-struct bld_iter_set {
     bld_set* set;
-    size_t index;
 };
 
-typedef union bld_iter {
-    struct bld_iter_array array;
-    struct bld_iter_set set;
+typedef struct bld_iter {
+    const enum bld_container_type type;
+    const union bld_container container;
+    size_t index;
 } bld_iter;
 
 bld_array   array_new(size_t);
@@ -54,6 +55,6 @@ int         set_empty_intersection(bld_set*, bld_set*);
 
 bld_iter    iter_array(bld_array*);
 bld_iter    iter_set(bld_set*);
-int         bld_array_next(bld_iter*, void**);
-int         bld_set_next(bld_iter*, void**);
+int         iter_next(bld_iter*, void**);
+
 #endif
