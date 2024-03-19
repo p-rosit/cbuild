@@ -38,7 +38,7 @@ typedef struct bld_files {
 } bld_files;
 
 bld_file    file_header_new(bld_path*, char*);
-bld_file    make_impl(bld_path*, char*);
+bld_file    file_impl_new(bld_path*, char*);
 bld_file    make_test(bld_path*, char*);
 void        free_file(bld_file*);
 uintmax_t   hash_file(bld_file*, uintmax_t);

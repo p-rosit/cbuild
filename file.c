@@ -55,7 +55,7 @@ bld_file file_header_new(bld_path* path, char* name) {
     return header;
 }
 
-bld_file make_impl(bld_path* path, char* name) {
+bld_file file_impl_new(bld_path* path, char* name) {
     bld_file impl = make_file(BLD_IMPL, path, name);
     return impl;
 }
