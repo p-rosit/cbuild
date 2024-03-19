@@ -141,7 +141,7 @@ bld_graph graph_new(bld_set* files) {
     };
 }
 
-void free_graph(bld_graph* graph) {
+void graph_free(bld_graph* graph) {
     bld_node* node;
     bld_iter iter = iter_set(&graph->nodes);
 

@@ -87,7 +87,7 @@ void free_cache(bld_project* cache) {
     path_free(&cache->root);
     path_free(&cache->build);
     compiler_free(&cache->compiler);
-    free_graph(&cache->graph);
+    graph_free(&cache->graph);
 
     bld_file* file;
     bld_iter iter = iter_set(&cache->files);
@@ -114,7 +114,7 @@ void free_project(bld_project* project) {
 
     free_ignore_ids(&project->ignore_paths);
     compiler_free(&project->compiler);
-    free_graph(&project->graph);
+    graph_free(&project->graph);
 
     bld_file* file;
     bld_iter iter_file = iter_set(&project->files);

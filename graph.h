@@ -19,7 +19,7 @@ typedef struct bld_graph {
 } bld_graph;
 
 bld_graph           graph_new(bld_set*);
-void                free_graph(bld_graph*);
+void                graph_free(bld_graph*);
 
 void                generate_graph(bld_graph*, bld_path*);
 bld_search_info*    graph_functions_from(bld_graph*, bld_file*);

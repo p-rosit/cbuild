@@ -275,7 +275,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     path = path_copy(&project->root);
     path_append_path(&path, &(*project->cache).root);
 
-    free_graph(&project->graph);
+    graph_free(&project->graph);
     project->graph = graph_new(&project->files);
 
     /* TODO: move to separate function */
