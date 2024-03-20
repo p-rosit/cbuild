@@ -2,9 +2,6 @@
 #include "logging.h"
 #include "container.h"
 
-int array_next(bld_iter*, void**);
-int set_next(bld_iter*, void**);
-
 bld_offset  hash_compute_offset(size_t);
 size_t      hash_target(size_t, bld_offset, bld_hash);
 int         hash_find_entry(size_t, bld_offset, bld_offset*, bld_hash*, bld_offset*, bld_hash*);

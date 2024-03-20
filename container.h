@@ -44,6 +44,7 @@ void        array_free(bld_array*);
 bld_array   array_copy(bld_array*);
 void        array_push(bld_array*, void*);
 void*       array_pop(bld_array*);
+int         array_next(bld_iter*, void**);
 
 bld_set     set_new(size_t);
 void        set_free(bld_set*);
@@ -52,6 +53,7 @@ int         set_add(bld_set*, bld_hash, void*);
 void*       set_get(bld_set*, bld_hash);
 int         set_has(bld_set*, bld_hash);
 int         set_empty_intersection(bld_set*, bld_set*);
+int         set_next(bld_iter*, void**);
 
 bld_iter    iter_array(bld_array*);
 bld_iter    iter_set(bld_set*);
