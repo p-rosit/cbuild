@@ -5,13 +5,13 @@
 int array_next(bld_iter*, void**);
 int set_next(bld_iter*, void**);
 
-bld_offset  bld_hash_compute_offset(size_t);
-size_t      bld_hash_target(size_t, bld_offset, bld_hash);
-int         bld_hash_find_entry(size_t, bld_offset, bld_offset*, bld_hash*, bld_offset*, bld_hash*);
-void        bld_hash_swap_entry(size_t, bld_offset*, bld_hash*, bld_offset*, bld_hash*);
-void        bld_set_swap_value(bld_set*, size_t, bld_offset*, bld_hash*, void*);
-int         bld_set_add_value(bld_set*, size_t, bld_offset*, bld_hash*, void*);
-int         bld_set_set_capacity(bld_set*, size_t);
+bld_offset  hash_compute_offset(size_t);
+size_t      hash_target(size_t, bld_offset, bld_hash);
+int         hash_find_entry(size_t, bld_offset, bld_offset*, bld_hash*, bld_offset*, bld_hash*);
+void        hash_swap_entry(size_t, bld_offset*, bld_hash*, bld_offset*, bld_hash*);
+void        set_swap_value(bld_set*, size_t, bld_offset*, bld_hash*, void*);
+int         set_add_value(bld_set*, size_t, bld_offset*, bld_hash*, void*);
+int         set_set_capacity(bld_set*, size_t);
 
 bld_array array_new(size_t value_size) {
     return (bld_array) {
@@ -69,7 +69,7 @@ void array_pop(bld_array* array, void* ret_value) {
     memcpy(ret_value, ((char*)array->values) + --array->size * array->value_size, array->value_size);
 }
 
-bld_offset bld_hash_compute_offset(size_t capacity) {
+bld_offset hash_compute_offset(size_t capacity) {
     bld_offset max_offset = 0;
 
     /* Approximate log2 */
@@ -80,16 +80,16 @@ bld_offset bld_hash_compute_offset(size_t capacity) {
     return max_offset + (max_offset == 0 && capacity != 0);
 }
 
-size_t bld_hash_target(size_t capacity, bld_offset offset, bld_hash hash) {
+size_t hash_target(size_t capacity, bld_offset offset, bld_hash hash) {
     return (hash % capacity) + offset;
 }
 
-int bld_hash_find_entry(size_t capacity, bld_offset max_offset, bld_offset* offsets, bld_hash* hashes, bld_offset* offset, bld_hash* hash) {
+int hash_find_entry(size_t capacity, bld_offset max_offset, bld_offset* offsets, bld_hash* hashes, bld_offset* offset, bld_hash* hash) {
     size_t target;
     if (capacity <= 0) {return -1;}
 
     *offset = 0;
-    target = bld_hash_target(capacity, *offset, *hash);
+    target = hash_target(capacity, *offset, *hash);
     for (size_t i = target; *offset < max_offset; i++) {
         if (offsets[i] < *offset ||
             offsets[i] >= max_offset ||
@@ -105,7 +105,7 @@ int bld_hash_find_entry(size_t capacity, bld_offset max_offset, bld_offset* offs
     return 0;
 }
 
-void bld_hash_swap_entry(size_t target, bld_offset* offsets, bld_hash* hashes, bld_offset* offset, bld_hash* hash) {
+void hash_swap_entry(size_t target, bld_offset* offsets, bld_hash* hashes, bld_offset* offset, bld_hash* hash) {
     bld_hash temp_hash;
     bld_offset temp_offset;
 
@@ -143,12 +143,12 @@ void set_clear(bld_set* set) {
     }
 }
 
-void bld_set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
+void set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
     void* value_ptr;
     void* temp = malloc(set->value_size);
     if (temp == NULL) {log_fatal("Cannot swap values");}
 
-    bld_hash_swap_entry(target, set->offset, set->hash, offset, hash);
+    hash_swap_entry(target, set->offset, set->hash, offset, hash);
     value_ptr = ((char*) set->values) + target * set->value_size;
     memcpy(temp, value_ptr, set->value_size);
     memcpy(value_ptr, value, set->value_size);
@@ -157,13 +157,13 @@ void bld_set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_has
     free(temp);
 }
 
-int bld_set_add_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
+int set_add_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
     int error = -1;
 
     if (*offset >= set->max_offset) {return 0;}
 
     for (size_t i = target; i < set->capacity + set->max_offset; i++) {
-        bld_set_swap_value(set, i, offset, hash, value);
+        set_swap_value(set, i, offset, hash, value);
         if (*offset >= set->max_offset) {error = 0; break;}
 
         *offset += 1;
@@ -173,7 +173,7 @@ int bld_set_add_value(bld_set* set, size_t target, bld_offset* offset, bld_hash*
     return error;
 }
 
-int bld_set_set_capacity(bld_set* set, size_t capacity) {
+int set_set_capacity(bld_set* set, size_t capacity) {
     int error = 0;
     size_t i, target, total_capacity, max_offset;
     size_t* offsets;
@@ -184,7 +184,7 @@ int bld_set_set_capacity(bld_set* set, size_t capacity) {
     bld_hash hash;
     void* value = malloc(set->value_size);
 
-    max_offset = bld_hash_compute_offset(capacity);
+    max_offset = hash_compute_offset(capacity);
     total_capacity = capacity + max_offset;
     offsets = malloc(total_capacity * sizeof(bld_offset));
     hashes = malloc(total_capacity * sizeof(bld_hash));
@@ -217,15 +217,15 @@ int bld_set_set_capacity(bld_set* set, size_t capacity) {
         hash = set->hash[i];
         memcpy(value, ((char*) set->values) + i * set->value_size, set->value_size);
 
-        error = bld_hash_find_entry(new_set.capacity, new_set.max_offset, new_set.offset, new_set.hash, &offset, &hash);
+        error = hash_find_entry(new_set.capacity, new_set.max_offset, new_set.offset, new_set.hash, &offset, &hash);
         if (error) {break;}
 
-        target = bld_hash_target(new_set.capacity, offset, hash);
-        bld_set_swap_value(&new_set, target, &offset, &hash, value);
+        target = hash_target(new_set.capacity, offset, hash);
+        set_swap_value(&new_set, target, &offset, &hash, value);
         if (offset >= new_set.max_offset) {continue;}
 
         target += 1; offset += 1;
-        error = bld_set_add_value(&new_set, target, &offset, &hash, value);
+        error = set_add_value(&new_set, target, &offset, &hash, value);
         if (error) {break;};
     }
 
@@ -255,8 +255,8 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
     memcpy(temp, value, set->value_size);
 
     if (set->capacity > 0) {
-        error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
-        target = bld_hash_target(set->capacity, offset, hash);
+        error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+        target = hash_target(set->capacity, offset, hash);
 
         if (!error && set->hash[target] == hash && set->offset[target] < set->max_offset) {
             log_warn("Trying to add value twice");
@@ -278,17 +278,17 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
         increase_size:
         while (error) {
             new_capacity += new_capacity / 2 + 2 * (new_capacity < 2);
-            error = bld_set_set_capacity(set, new_capacity);
+            error = set_set_capacity(set, new_capacity);
         }
-        error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
-        target = bld_hash_target(set->capacity, offset, hash);
+        error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+        target = hash_target(set->capacity, offset, hash);
         if (error) {continue;}
 
         place_value:
-        bld_set_swap_value(set, target, &offset, &hash, temp);
+        set_swap_value(set, target, &offset, &hash, temp);
         if (offset < set->max_offset) {
             target += 1; offset += 1;
-            error = bld_set_add_value(set, target, &offset, &hash, temp);
+            error = set_add_value(set, target, &offset, &hash, temp);
             if (!error) {break;}
         }
     } while (error);
@@ -308,8 +308,8 @@ void* set_get(bld_set* set, bld_hash hash) {
 
     if (set->capacity == 0) {return NULL;}
 
-    error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
-    target = bld_hash_target(set->capacity, offset, hash);
+    error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+    target = hash_target(set->capacity, offset, hash);
 
     if (!error && set->hash[target] == hash && set->offset[target] < set->max_offset) {
         return values + target * set->value_size;
@@ -325,9 +325,9 @@ int set_has(bld_set* set, bld_hash hash) {
 
     if (set->capacity == 0) {return 0;}
 
-    error = bld_hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+    error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
     if (!error) {
-        target = bld_hash_target(set->capacity, offset, hash);
+        target = hash_target(set->capacity, offset, hash);
         return set->offset[target] < set->max_offset && set->hash[target] == hash;
     }
     return 0;
