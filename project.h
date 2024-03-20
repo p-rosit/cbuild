@@ -5,7 +5,7 @@
 #include "path.h"
 #include "compiler.h"
 #include "file.h"
-#include "graph.h"
+#include "dependencies.h"
 
 #define BLD_CACHE_NAME "cache.json"
 
