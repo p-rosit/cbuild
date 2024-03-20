@@ -3,7 +3,7 @@
 #include <string.h>
 #include "container.h"
 #include "logging.h"
-#include "graph.h"
+#include "dependencies.h"
 
 void                connect_node(bld_graph*, bld_node*);
 void                populate_node(bld_graph*, bld_path*, bld_path*, bld_file*);
