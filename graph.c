@@ -42,9 +42,7 @@ void node_push(bld_stack* stack, bld_node* node) {
 }
 
 bld_node* node_pop(bld_stack* stack) {
-    bld_node* node;
-    array_pop(&stack->array, &node);
-    return node;
+    return *((bld_node**) array_pop(&stack->array));
 }
 
 bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {

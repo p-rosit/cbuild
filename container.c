@@ -61,9 +61,9 @@ void array_push(bld_array* array, void* value) {
     memcpy(ptr + array->value_size * array->size++, value, array->value_size);
 }
 
-void array_pop(bld_array* array, void* ret_value) {
+void* array_pop(bld_array* array) {
     if (array->size <= 0) {log_fatal("Trying to pop from empty array");}
-    memcpy(ret_value, ((char*)array->values) + --array->size * array->value_size, array->value_size);
+    return ((char*) array->values) + --array->size * array->value_size;
 }
 
 bld_offset hash_compute_offset(size_t capacity) {

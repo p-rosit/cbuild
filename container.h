@@ -43,7 +43,7 @@ bld_array   array_new(size_t);
 void        array_free(bld_array*);
 bld_array   array_copy(bld_array*);
 void        array_push(bld_array*, void*);
-void        array_pop(bld_array*, void*);
+void*       array_pop(bld_array*);
 
 bld_set     set_new(size_t);
 void        set_free(bld_set*);
