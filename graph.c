@@ -16,10 +16,6 @@ bld_node            new_node(bld_file*);
 void                free_node(bld_node*);
 void                add_symbol(bld_set*, bld_string*);
 
-typedef struct bld_stack {
-    bld_array array;
-} bld_stack;
-
 typedef enum bld_search_type {
     BLD_FUNCS,
     BLD_INCLUDES,
@@ -29,21 +25,11 @@ typedef enum bld_search_type {
 struct bld_search_info {
     bld_search_type type;
     bld_graph* graph;
-    bld_stack stack;
+    bld_array stack;
     bld_set visited;
 };
 
-void node_push(bld_stack*, bld_node*);
-bld_node* node_pop(bld_stack*);
 void free_info(bld_search_info*);
-
-void node_push(bld_stack* stack, bld_node* node) {
-    array_push(&stack->array, &node);
-}
-
-bld_node* node_pop(bld_stack* stack) {
-    return *((bld_node**) array_pop(&stack->array));
-}
 
 bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
     bld_node *node;
@@ -55,7 +41,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
     *info = (bld_search_info) {
         .type = BLD_NO_SEARCH,
         .graph = graph,
-        .stack = (bld_stack) {.array = array_new(sizeof(bld_node*))},
+        .stack = array_new(sizeof(bld_node*)),
         .visited = set_new(sizeof(uintmax_t)),
     };
 
@@ -63,7 +49,7 @@ bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
     if (node == NULL) {
         log_fatal("Could not find requested file in graph");
     }
-    node_push(&info->stack, node);
+    array_push(&info->stack, &node);
 
     return info;
 }
@@ -81,7 +67,7 @@ bld_search_info* graph_includes_from(bld_graph* graph, bld_file* root) {
 }
 
 void free_info(bld_search_info* info) {
-    array_free(&info->stack.array);
+    array_free(&info->stack);
     set_free(&info->visited);
     free(info);
 }
@@ -98,12 +84,12 @@ int graph_next_file(bld_search_info* info, bld_file** file) {
     }
 
     while (node_visited) {
-        if (info->stack.array.size <= 0) {
+        if (info->stack.size <= 0) {
             free_info(info);
             return 0;
         }
 
-        node = node_pop(&info->stack);
+        node = *((bld_node**) array_pop(&info->stack));
 
         node_visited = 0;
         if (set_has(&info->visited, node->file_id)) {
@@ -126,7 +112,7 @@ int graph_next_file(bld_search_info* info, bld_file** file) {
         bld_iter iter = iter_array(edge_array);
         while (iter_next(&iter, (void**) &index)) {
             to_node = set_get(&info->graph->nodes, *index);
-            node_push(&info->stack, to_node);
+            array_push(&info->stack, &to_node);
         }
 
         next_node:;
