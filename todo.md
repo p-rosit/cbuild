@@ -1,3 +1,4 @@
+[ ] add prototypes to private functions
 [ ] add documentation to functions
 [ ] join graph with containers if possible
 [ ] handle failed parse
