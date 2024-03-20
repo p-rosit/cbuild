@@ -48,13 +48,10 @@ void array_push(bld_array* array, void* value) {
     if (array->size >= array->capacity) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
 
-        values = malloc(capacity * array->value_size);
+        values = realloc(array->values, capacity * array->value_size);
         if (values == NULL) {
             log_fatal("Could not increase capacity of array from %lu to %lu", array->capacity, capacity);
         }
-
-        memcpy(values, array->values, array->size * array->value_size);
-        free(array->values);
 
         array->capacity = capacity;
         array->values = values;

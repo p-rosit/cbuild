@@ -50,13 +50,10 @@ int push_character(bld_string* str, char c) {
     
     if (str->capacity == 0 || str->size >= str->capacity - 1) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
-        chars = malloc(capacity);
+        chars = realloc(str->chars, capacity);
         if (chars == NULL) {
             return 0;
         }
-
-        memcpy(chars, str->chars, str->size);
-        free(str->chars);
 
         str->chars = chars;
         str->capacity = capacity;
