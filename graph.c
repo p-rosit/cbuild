@@ -5,13 +5,16 @@
 #include "logging.h"
 #include "graph.h"
 
-void        add_function_edge(bld_node*, uintmax_t);
-void        add_include_edge(bld_node*, uintmax_t);
-
-bld_node    new_node(bld_file*);
-void        free_node(bld_node*);
-
-void        add_symbol(bld_set*, bld_string*);
+void                connect_node(bld_graph*, bld_node*);
+void                populate_node(bld_graph*, bld_path*, bld_path*, bld_file*);
+void                parse_symbols(bld_file*, bld_path*);
+void                parse_included_files(bld_file*);
+bld_search_info*    graph_dfs_from(bld_graph*, bld_file*);
+void                add_function_edge(bld_node*, uintmax_t);
+void                add_include_edge(bld_node*, uintmax_t);
+bld_node            new_node(bld_file*);
+void                free_node(bld_node*);
+void                add_symbol(bld_set*, bld_string*);
 
 typedef struct bld_stack {
     bld_array array;
@@ -29,6 +32,10 @@ struct bld_search_info {
     bld_stack stack;
     bld_set visited;
 };
+
+void node_push(bld_stack*, bld_node*);
+bld_node* node_pop(bld_stack*);
+void free_info(bld_search_info*);
 
 void node_push(bld_stack* stack, bld_node* node) {
     array_push(&stack->array, &node);
@@ -209,6 +216,11 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
 
     fclose(f);
 }
+
+int get_next(FILE*);
+int skip_line(FILE*);
+int expect_char(FILE*, char);
+int expect_string(FILE*, char*);
 
 int get_next(FILE* file) { /* Same as next_character... */
     int c = getc(file);

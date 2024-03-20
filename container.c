@@ -2,6 +2,17 @@
 #include "logging.h"
 #include "container.h"
 
+int array_next(bld_iter*, void**);
+int set_next(bld_iter*, void**);
+
+bld_offset  bld_hash_compute_offset(size_t);
+size_t      bld_hash_target(size_t, bld_offset, bld_hash);
+int         bld_hash_find_entry(size_t, bld_offset, bld_offset*, bld_hash*, bld_offset*, bld_hash*);
+void        bld_hash_swap_entry(size_t, bld_offset*, bld_hash*, bld_offset*, bld_hash*);
+void        bld_set_swap_value(bld_set*, size_t, bld_offset*, bld_hash*, void*);
+int         bld_set_add_value(bld_set*, size_t, bld_offset*, bld_hash*, void*);
+int         bld_set_set_capacity(bld_set*, size_t);
+
 bld_array array_new(size_t value_size) {
     return (bld_array) {
         .capacity = 0,

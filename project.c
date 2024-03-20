@@ -5,6 +5,10 @@
 #include "file.h"
 #include "project.h"
 
+bld_path    extract_build_path(bld_path*);
+bld_project make_project(bld_path, bld_compiler);
+void        free_cache(bld_project*);
+
 bld_path project_path_extract(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
     bld_path path;

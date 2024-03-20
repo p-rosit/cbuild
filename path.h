@@ -10,7 +10,7 @@ typedef struct bld_path {
     bld_string str;
 } bld_path;
 
-bld_path    path_new();
+bld_path    path_new(void);
 bld_path    path_copy(bld_path*);
 void        path_free(bld_path*);
 

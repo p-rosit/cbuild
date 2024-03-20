@@ -2,7 +2,7 @@
 #include "logging.h"
 #include "path.h"
 
-bld_path path_new() {
+bld_path path_new(void) {
     return (bld_path) {
         .str = string_new(),
     };

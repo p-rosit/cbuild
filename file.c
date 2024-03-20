@@ -4,6 +4,9 @@
 #include "logging.h"
 #include "file.h"
 
+bld_file_identifier get_identifier(bld_path*);
+bld_file make_file(bld_file_type, bld_path*, char*);
+
 uintmax_t file_get_id(bld_path* path) {
     struct stat file_stat;
 

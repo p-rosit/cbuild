@@ -4,6 +4,12 @@
 #include "incremental.h"
 #include "rebuild.h"
 
+int         run_new_build(bld_path*, char*);
+bld_project new_rebuild(bld_path, bld_compiler);
+void        extract_names(int, char**, char**, char**);
+char*       infer_build_name(char*);
+void        set_main_rebuild(bld_project*, bld_path*);
+
 int run_new_build(bld_path* root, char* executable) {
     int result;
     bld_path cmd = path_copy(root);
@@ -102,6 +108,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     compiler_add_flag(&build.compiler, "-Wextra");
     compiler_add_flag(&build.compiler, "-Werror");
     compiler_add_flag(&build.compiler, "-pedantic");
+    compiler_add_flag(&build.compiler, "-Wmissing-prototypes");
 
     project_load_cache(&build, ".build_cache");
 

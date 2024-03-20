@@ -9,6 +9,7 @@
 
 typedef int (*bld_parse_func)(FILE*, void*);
 
+void ensure_directory_exists(bld_path*);
 bld_project make_project(bld_path, bld_compiler);
 int parse_cache(bld_project*, bld_path*);
 int parse_project_compiler(FILE*, bld_project*);

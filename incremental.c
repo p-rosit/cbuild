@@ -3,6 +3,13 @@
 #include "logging.h"
 #include "incremental.h"
 
+void    index_possible_file(bld_project*, bld_path*, char*);
+void    index_recursive(bld_project*, bld_path*, char*);
+int     compile_file(bld_project*, bld_file*);
+int     compile_total(bld_project*, char*);
+void    mark_changed_files(bld_project*);
+int     cached_compilation(bld_project*, bld_file*);
+int     compile_with_absolute_path(bld_project*, char*);
 
 void index_possible_file(bld_project* project, bld_path* path, char* name) {
     int exists;
