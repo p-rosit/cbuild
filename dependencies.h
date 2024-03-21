@@ -18,8 +18,8 @@ typedef struct bld_graph {
     bld_set nodes;
 } bld_graph;
 
-bld_graph           graph_new(bld_set*);
-void                graph_free(bld_graph*);
+bld_graph           graph_t_new(bld_set*);
+void                graph_t_free(bld_graph*);
 
 void                graph_generate(bld_graph*, bld_path*);
 bld_search_info*    graph_functions_from(bld_graph*, bld_file*);

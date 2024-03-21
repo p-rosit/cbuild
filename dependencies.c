@@ -125,14 +125,14 @@ int graph_next_file(bld_search_info* info, bld_file** file) {
     return 1;
 }
 
-bld_graph graph_new(bld_set* files) {
+bld_graph graph_t_new(bld_set* files) {
     return (bld_graph) {
         .files = files,
         .nodes = set_new(sizeof(bld_node)),
     };
 }
 
-void graph_free(bld_graph* graph) {
+void graph_t_free(bld_graph* graph) {
     bld_node* node;
     bld_iter iter = iter_set(&graph->nodes);
 

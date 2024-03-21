@@ -282,8 +282,8 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     path = path_copy(&project->root);
     path_append_path(&path, &(*project->cache).root);
 
-    graph_free(&project->graph);
-    project->graph = graph_new(&project->files);
+    graph_t_free(&project->graph);
+    project->graph = graph_t_new(&project->files);
 
     /* TODO: move to separate function */
     graph_generate(&project->graph, &path);
