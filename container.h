@@ -23,14 +23,25 @@ typedef struct bld_set {
     void* values;
 } bld_set;
 
+typedef struct node {
+    bld_hash node_id;
+    bld_array edges;
+} node;
+
+typedef struct graph {
+    bld_set nodes;
+} graph;
+
 enum bld_container_type {
     BLD_ARRAY,
     BLD_SET,
+    BLD_GRAPH,
 };
 
 union bld_container {
     bld_array* array;
     bld_set* set;
+    graph* graph;
 };
 
 typedef struct bld_iter {
@@ -55,8 +66,14 @@ int         set_has(bld_set*, bld_hash);
 int         set_empty_intersection(bld_set*, bld_set*);
 int         set_next(bld_iter*, void**);
 
+graph       graph_new(bld_set*);
+void        graph_free(graph*);
+void        graph_add_edge(graph*, bld_hash, bld_hash);
+int         graph_next(bld_iter*, void**);
+
 bld_iter    iter_array(bld_array*);
 bld_iter    iter_set(bld_set*);
+bld_iter    iter_graph(graph*);
 int         iter_next(bld_iter*, void**);
 
 #endif
