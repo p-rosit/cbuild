@@ -58,6 +58,9 @@ int iter_next(bld_iter* iter, void** value_ptr_ptr) {
         case (BLD_SET): {
             return set_next(iter, value_ptr_ptr);
         } break;
+        case (BLD_GRAPH): {
+            return graph_next(iter, value_ptr_ptr);
+        } break;
     }
     log_fatal("iter_next: unreachable error???");
     return 0; /* Unreachable */
