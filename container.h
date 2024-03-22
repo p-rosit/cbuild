@@ -62,7 +62,7 @@ union bld_iter_container {
 };
 
 typedef struct bld_iter {
-    const enum bld_container_type type;
+    enum bld_container_type type;
     union bld_iter_container as;
 } bld_iter;
 
