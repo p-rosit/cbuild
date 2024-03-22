@@ -19,7 +19,7 @@ struct bld_project {
     bld_compiler compiler;
     bld_set files;
     bld_set changed_files;
-    bld_graph graph;
+    bld_dependency_graph graph;
     bld_project* cache;
 };
 

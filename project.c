@@ -52,7 +52,7 @@ bld_project make_project(bld_path root, bld_compiler compiler) {
         .compiler = compiler,
         .files = set_new(sizeof(bld_file)),
         .changed_files = set_new(sizeof(int)),
-        .graph = graph_t_new(NULL),
+        .graph = dependency_graph_new(NULL),
         .cache = NULL,
     };
 }
@@ -84,7 +84,7 @@ void free_cache(bld_project* cache) {
     path_free(&cache->root);
     path_free(&cache->build);
     compiler_free(&cache->compiler);
-    graph_t_free(&cache->graph);
+    dependency_graph_free(&cache->graph);
 
     bld_file* file;
     bld_iter iter = iter_set(&cache->files);
@@ -111,7 +111,7 @@ void project_free(bld_project* project) {
 
     set_free(&project->ignore_paths);
     compiler_free(&project->compiler);
-    graph_t_free(&project->graph);
+    dependency_graph_free(&project->graph);
 
     bld_file* file;
     bld_iter iter_file = iter_set(&project->files);
