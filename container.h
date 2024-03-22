@@ -23,14 +23,9 @@ typedef struct bld_set {
     void* values;
 } bld_set;
 
-typedef struct node {
-    bld_hash node_id;
-    bld_array edges;
-} node;
-
-typedef struct graph {
-    bld_set nodes;
-} graph;
+typedef struct bld_graph {
+    bld_set edges;
+} bld_graph;
 
 enum bld_container_type {
     BLD_ARRAY,
