@@ -54,8 +54,43 @@ int set_next(bld_iter* iter, void** value_ptr_ptr) {
         i++;
     }
 
-    iter->index = i + 1;
+    iter->as.set_iter.index = i + 1;
     return has_next;
+}
+
+bld_iter iter_graph(bld_graph* graph, uintmax_t root) {
+    bld_iter iter = (bld_iter) {
+        .type = BLD_GRAPH,
+        .as = (union bld_iter_container) {
+            .graph_iter = (bld_iter_graph) {
+                .graph = graph,
+                .stack = array_new(sizeof(uintmax_t)),
+                .visited = set_new(sizeof(uintmax_t)),
+            },
+        },
+    };
+
+    if (!set_has(&graph->edges, root)) {log_fatal("Root does not exist");}
+
+    array_push(&iter.as.graph_iter.stack, &root);
+
+    return iter;
+}
+
+int graph_next(bld_iter* iter, void** value_ptr_ptr) {
+    int node_visited = 1;
+    uintmax_t* node_id;
+    bld_array* edge_array;
+
+    while (node_visited) {
+        if (iter->as.graph_iter.stack.size <= 0) {
+            array_free(&iter->as.graph_iter.stack);
+            set_free(&iter->as.graph_iter.visited);
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 int iter_next(bld_iter* iter, void** value_ptr_ptr) {
