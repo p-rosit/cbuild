@@ -76,14 +76,15 @@ int         set_has(bld_set*, bld_hash);
 int         set_empty_intersection(bld_set*, bld_set*);
 int         set_next(bld_iter*, void**);
 
-graph       graph_new(bld_set*);
-void        graph_free(graph*);
-void        graph_add_edge(graph*, bld_hash, bld_hash);
+bld_graph   graph_new(void);
+void        graph_free(bld_graph*);
+void        graph_add_node(bld_graph*, uintmax_t);
+void        graph_add_edge(bld_graph*, uintmax_t, uintmax_t);
 int         graph_next(bld_iter*, void**);
 
 bld_iter    iter_array(bld_array*);
 bld_iter    iter_set(bld_set*);
-bld_iter    iter_graph(graph*);
+bld_iter    iter_graph(bld_graph*, uintmax_t);
 int         iter_next(bld_iter*, void**);
 
 #endif
