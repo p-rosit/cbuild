@@ -4,37 +4,45 @@
 bld_iter iter_array(bld_array* array) {
     return (bld_iter) {
         .type = BLD_ARRAY,
-        .container = (union bld_container) {.array = array},
-        .index = 0,
+        .as = (union bld_iter_container) {
+            .array_iter = (bld_iter_array) {
+                .array = array,
+                .index = 0,
+            },
+        },
     };
 }
 
 int array_next(bld_iter* iter, void** value_ptr_ptr) {
-    size_t value_size = iter->container.array->value_size;
-    bld_array* array = iter->container.array;
+    size_t value_size = iter->as.array_iter.array->value_size;
+    const bld_array* array = iter->as.array_iter.array;
     char* values = array->values;
 
-    if (iter->index >= array->size) {
+    if (iter->as.array_iter.index >= array->size) {
         return 0;
     }
 
-    *value_ptr_ptr = values + iter->index++ * value_size;
+    *value_ptr_ptr = values + iter->as.array_iter.index++ * value_size;
     return 1;
 }
 
 bld_iter iter_set(bld_set* set) {
     return (bld_iter) {
         .type = BLD_SET,
-        .container = (union bld_container) {.set = set},
-        .index = 0,
+        .as = (union bld_iter_container) {
+            .set_iter = (bld_iter_set) {
+                .set = set,
+                .index = 0,
+            },
+        },
     };
 }
 
 int set_next(bld_iter* iter, void** value_ptr_ptr) {
     int has_next = 0;
-    size_t i = iter->index;
-    size_t value_size = iter->container.set->value_size;
-    bld_set* set = iter->container.set;
+    size_t i = iter->as.set_iter.index;
+    size_t value_size = iter->as.set_iter.set->value_size;
+    const bld_set* set = iter->as.set_iter.set;
     char* values = set->values;
     
     while (i < set->capacity + set->max_offset) {
