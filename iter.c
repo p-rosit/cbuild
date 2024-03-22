@@ -66,7 +66,7 @@ bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
                 .type = BLD_DFS,
                 .graph = graph,
                 .stack = array_new(sizeof(uintmax_t)),
-                .visited = set_new(sizeof(uintmax_t)),
+                .visited = set_new(0),
             },
         },
     };
