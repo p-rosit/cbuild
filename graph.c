@@ -11,7 +11,7 @@ void graph_free(bld_graph* graph) {
     bld_iter iter = iter_set(&graph->edges);
     bld_array* edges;
 
-    while (set_next(&iter, (void**) &edges)) {
+    while (iter_next(&iter, (void**) &edges)) {
         array_free(edges);
     }
     set_free(&graph->edges);
