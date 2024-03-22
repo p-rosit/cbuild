@@ -33,16 +33,31 @@ enum bld_container_type {
     BLD_GRAPH,
 };
 
-union bld_container {
-    bld_array* array;
-    bld_set* set;
-    graph* graph;
+typedef struct bld_iter_array {
+    const bld_array* array;
+    size_t index;
+} bld_iter_array;
+
+typedef struct bld_iter_set {
+    const bld_set* set;
+    size_t index;
+} bld_iter_set;
+
+typedef struct bld_iter_graph {
+    const bld_graph* graph;
+    bld_array stack;
+    bld_set visited;
+} bld_iter_graph;
+
+union bld_iter_container {
+    bld_iter_array array_iter;
+    bld_iter_set set_iter;
+    bld_iter_graph graph_iter;
 };
 
 typedef struct bld_iter {
     const enum bld_container_type type;
-    const union bld_container container;
-    size_t index;
+    union bld_iter_container as;
 } bld_iter;
 
 bld_array   array_new(size_t);
