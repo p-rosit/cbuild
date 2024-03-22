@@ -63,6 +63,7 @@ bld_iter iter_graph(bld_graph* graph, uintmax_t root) {
         .type = BLD_GRAPH,
         .as = (union bld_iter_container) {
             .graph_iter = (bld_iter_graph) {
+                .type = BLD_DFS,
                 .graph = graph,
                 .stack = array_new(sizeof(uintmax_t)),
                 .visited = set_new(sizeof(uintmax_t)),
@@ -82,12 +83,33 @@ int graph_next(bld_iter_graph* iter, void** value_ptr_ptr) {
     uintmax_t* node_id;
     bld_array* edge_array;
 
+    if (iter->type == BLD_GRAPH_DONE) {
+        return 0;
+    }
+
     while (node_visited) {
         if (iter->stack.size <= 0) {
+            iter->type = BLD_GRAPH_DONE;
             array_free(&iter->stack);
             set_free(&iter->visited);
             return 0;
         }
+
+        node_id = array_pop(&iter->stack);
+
+        node_visited = set_has(&iter->visited, *node_id);
+        if (node_visited) {goto next_node;}
+
+        *value_ptr_ptr = node_id;
+        set_add(&iter->visited, *node_id, NULL);
+
+        edge_array = set_get(&iter->graph->edges, *node_id);
+        bld_iter edges = iter_array(edge_array);
+        while (iter_next(&edges, (void**) &node_id)) {
+            array_push(&iter->stack, node_id);
+        }
+
+        next_node:;
     }
 
     return 1;
