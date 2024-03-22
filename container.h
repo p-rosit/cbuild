@@ -68,7 +68,7 @@ typedef struct bld_iter {
 
 bld_array   array_new(size_t);
 void        array_free(bld_array*);
-bld_array   array_copy(bld_array*);
+bld_array   array_copy(const bld_array*);
 void        array_push(bld_array*, void*);
 void*       array_pop(bld_array*);
 int         array_next(bld_iter_array*, void**);
@@ -77,9 +77,9 @@ bld_set     set_new(size_t);
 void        set_free(bld_set*);
 void        set_clear(bld_set*);
 int         set_add(bld_set*, bld_hash, void*);
-void*       set_get(bld_set*, bld_hash);
-int         set_has(bld_set*, bld_hash);
-int         set_empty_intersection(bld_set*, bld_set*);
+void*       set_get(const bld_set*, bld_hash);
+int         set_has(const bld_set*, bld_hash);
+int         set_empty_intersection(const bld_set*, const bld_set*);
 int         set_next(bld_iter_set*, void**);
 
 bld_graph   graph_new(void);
@@ -88,9 +88,9 @@ void        graph_add_node(bld_graph*, uintmax_t);
 void        graph_add_edge(bld_graph*, uintmax_t, uintmax_t);
 int         graph_next(bld_iter_graph*, void**);
 
-bld_iter    iter_array(bld_array*);
-bld_iter    iter_set(bld_set*);
-bld_iter    iter_graph(bld_graph*, uintmax_t);
+bld_iter    iter_array(const bld_array*);
+bld_iter    iter_set(const bld_set*);
+bld_iter    iter_graph(const bld_graph*, uintmax_t);
 int         iter_next(bld_iter*, void**);
 
 #endif

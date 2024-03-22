@@ -1,7 +1,7 @@
 #include "logging.h"
 #include "container.h"
 
-bld_iter iter_array(bld_array* array) {
+bld_iter iter_array(const bld_array* array) {
     return (bld_iter) {
         .type = BLD_ARRAY,
         .as = (union bld_iter_container) {
@@ -26,7 +26,7 @@ int array_next(bld_iter_array* iter, void** value_ptr_ptr) {
     return 1;
 }
 
-bld_iter iter_set(bld_set* set) {
+bld_iter iter_set(const bld_set* set) {
     return (bld_iter) {
         .type = BLD_SET,
         .as = (union bld_iter_container) {
@@ -58,7 +58,7 @@ int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
     return has_next;
 }
 
-bld_iter iter_graph(bld_graph* graph, uintmax_t root) {
+bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
     bld_iter iter = (bld_iter) {
         .type = BLD_GRAPH,
         .as = (union bld_iter_container) {

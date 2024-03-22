@@ -243,7 +243,7 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
     return 0;
 }
 
-void* set_get(bld_set* set, bld_hash hash) {
+void* set_get(const bld_set* set, bld_hash hash) {
     int error;
     size_t offset = 0, target;
     char* values = set->values;
@@ -260,7 +260,7 @@ void* set_get(bld_set* set, bld_hash hash) {
     return NULL;
 }
 
-int set_has(bld_set* set, bld_hash hash) {
+int set_has(const bld_set* set, bld_hash hash) {
     size_t target;
     bld_offset offset = 0;
     int error;
