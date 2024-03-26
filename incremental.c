@@ -283,11 +283,12 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     path = path_copy(&project->root);
     path_append_path(&path, &(*project->cache).root);
 
-    graph_t_free(&project->graph);
-    project->graph = graph_t_new(&project->files);
+    dependency_graph_free(&project->graph);
+    project->graph = dependency_graph_new(&project->files);
 
     /* TODO: move to separate function */
-    graph_generate(&project->graph, &path);
+    dependency_graph_extract_includes(&project->graph);
+    dependency_graph_extract_symbols(&project->graph, &path);
     path_free(&path);
 
     mark_changed_files(project);
