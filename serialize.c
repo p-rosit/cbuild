@@ -14,10 +14,6 @@ void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_symbols(FILE*, bld_set*, int);
 void serialize_file_includes(FILE*, bld_set*, int);
 
-void serialize_graph(FILE*, bld_graph*, int);
-void serialize_node(FILE*, bld_node*, int);
-void serialize_edges(FILE*, bld_array*, int);
-
 void serialize_key(FILE*, char*, int);
 
 void project_save_cache(bld_project* project) {
@@ -46,10 +42,6 @@ void project_save_cache(bld_project* project) {
 
     serialize_key(cache, "files", depth);
     serialize_files(cache, &project->files, depth + 1);
-    fprintf(cache, ",\n");
-
-    serialize_key(cache, "graph", depth);
-    serialize_graph(cache, &project->graph, depth + 1);
     fprintf(cache, "\n");
 
     fprintf(cache, "}\n");
@@ -218,71 +210,6 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
         fprintf(cache, "%*c%ju", 2 * depth, ' ', includes->hash[i]);
     }
     fprintf(cache, "\n%*c]", 2 * (depth - 1), ' ');
-}
-
-void serialize_graph(FILE* cache, bld_graph* graph, int depth) {
-    int first = 1;
-    bld_iter iter = iter_set(&graph->nodes);
-    bld_node* node;
-
-    fprintf(cache, "[\n");
-    while (iter_next(&iter, (void**) &node)) {
-        if (!first) {
-            fprintf(cache, ",\n");
-        } else {
-            first = 0;
-        }
-        fprintf(cache, "%*c", 2 * depth, ' ');
-        serialize_node(cache, node, depth + 1);
-    }
-
-    fprintf(cache, "\n");
-    fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
-}
-
-void serialize_node(FILE* cache, bld_node* node, int depth) {
-    fprintf(cache, "{\n");
-
-    serialize_key(cache, "file", depth);
-    fprintf(cache, "%ju", node->file_id);
-    fprintf(cache, ",\n");
-
-    serialize_key(cache, "symbol_edges", depth);
-    serialize_edges(cache, &node->functions_from, depth + 1);
-    fprintf(cache, ",\n");
-
-    serialize_key(cache, "include_edges", depth);
-    serialize_edges(cache, &node->included_in, depth + 1);
-    fprintf(cache, "\n");
-
-    fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
-
-    (void)(node);
-}
-
-void serialize_edges(FILE* cache, bld_array* edges, int depth) {
-    size_t i = 0;
-    uintmax_t* index;
-
-    if (edges->size == 0) {
-        fprintf(cache, "[]");
-        return;
-    } else if (edges->size == 1) {
-        index = edges->values;
-        fprintf(cache, "[%ju]", *index);
-        return;
-    }
-    fprintf(cache, "[\n");
-
-    bld_iter iter = iter_array(edges);
-    while (iter_next(&iter, (void**) &index)) {
-        if (i > 0) {fprintf(cache, ",\n");};
-        fprintf(cache, "%*c%ju", 2 * depth, ' ', *index);
-        i++;
-    }
-
-    fprintf(cache, "\n");
-    fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
 }
 
 void serialize_key(FILE* cache, char* key, int depth) {
