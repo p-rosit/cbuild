@@ -4,7 +4,6 @@
 [ ] handle failed parse
 [x] rename functions into a consistent style
 [ ] hide compilation (incremental/from scratch) behind single function
-[ ] allow forward declaration of compiler associated with file
 [x] replace wrappers to generic array and set by array/set
 [ ] avoid recompiling file twice when performing incremental compilation
 [ ] add functions to analyze the dependency graph
