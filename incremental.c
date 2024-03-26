@@ -3,15 +3,15 @@
 #include "logging.h"
 #include "incremental.h"
 
-void    index_possible_file(bld_project*, bld_path*, char*);
-void    index_recursive(bld_project*, bld_path*, char*);
-int     compile_file(bld_project*, bld_file*);
-int     compile_total(bld_project*, char*);
-void    mark_changed_files(bld_project*);
-int     cached_compilation(bld_project*, bld_file*);
-int     compile_with_absolute_path(bld_project*, char*);
+void    incremental_index_possible_file(bld_project*, bld_path*, char*);
+void    incremental_index_recursive(bld_project*, bld_path*, char*);
+int     incremental_compile_file(bld_project*, bld_file*);
+int     incremental_compile_total(bld_project*, char*);
+void    incremental_mark_changed_files(bld_project*);
+int     incremental_cached_compilation(bld_project*, bld_file*);
+int     incremental_compile_with_absolute_path(bld_project*, char*);
 
-void index_possible_file(bld_project* project, bld_path* path, char* name) {
+void incremental_index_possible_file(bld_project* project, bld_path* path, char* name) {
     int exists;
     char* file_ending;
     bld_path file_path;
@@ -37,7 +37,7 @@ void index_possible_file(bld_project* project, bld_path* path, char* name) {
     if (exists) {file_free(&file);}
 }
 
-void index_recursive(bld_project* project, bld_path* path, char* name) {
+void incremental_index_recursive(bld_project* project, bld_path* path, char* name) {
     char* str_path;
     bld_path sub_path;
     DIR* dir;
@@ -46,7 +46,7 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
     str_path = path_to_string(path);
     dir = opendir(str_path);
     if (dir == NULL) {
-        index_possible_file(project, path, name);
+        incremental_index_possible_file(project, path, name);
         return;
     }
 
@@ -66,13 +66,13 @@ void index_recursive(bld_project* project, bld_path* path, char* name) {
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_ptr->d_name);
-        index_recursive(project, &sub_path, file_ptr->d_name);
+        incremental_index_recursive(project, &sub_path, file_ptr->d_name);
         path_free(&sub_path);
     }
     
     closedir(dir);
 }
-void index_project(bld_project* project) {
+void incremental_index_project(bld_project* project) {
     bld_path *path, extra_path;
     char* name;
     DIR* dir;
@@ -82,7 +82,7 @@ void index_project(bld_project* project) {
     closedir(dir);
 
     log_info("Indexing project under root");
-    index_recursive(project, &project->root, NULL);
+    incremental_index_recursive(project, &project->root, NULL);
 
     bld_iter iter = iter_array(&project->extra_paths);
     while (iter_next(&iter, (void**) &path)) {
@@ -91,12 +91,12 @@ void index_project(bld_project* project) {
         name = path_get_last_string(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
-        index_recursive(project, &extra_path, name);
+        incremental_index_recursive(project, &extra_path, name);
         path_free(&extra_path);
     }
 }
 
-int compile_file(bld_project* project, bld_file* file) {
+int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX], **flag;
     bld_compiler compiler;
@@ -138,7 +138,7 @@ int compile_file(bld_project* project, bld_file* file) {
     return result;
 }
 
-int compile_total(bld_project* project, char* executable_name) {
+int incremental_compile_total(bld_project* project, char* executable_name) {
     int result;
     char name[FILENAME_MAX], **flag;
     bld_path path;
@@ -189,7 +189,7 @@ int compile_total(bld_project* project, char* executable_name) {
     return result;
 }
 
-void mark_changed_files(bld_project* project) {
+void incremental_mark_changed_files(bld_project* project) {
     int* has_changed;
     bld_file *file, *temp;
 
@@ -198,20 +198,20 @@ void mark_changed_files(bld_project* project) {
         bld_iter iter;
 
         has_changed = set_get(&project->changed_files, file->identifier.id);
-        if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
+        if (has_changed == NULL) {log_fatal("incremental_mark_changed_files: unreachable error");}
         if (!*has_changed) {continue;}
 
         iter = dependency_graph_includes_from(&project->graph, file);
         while (dependency_graph_next_file(&iter, &project->graph, &temp)) {
             has_changed = set_get(&project->changed_files, temp->identifier.id);
-            if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
+            if (has_changed == NULL) {log_fatal("incremental_mark_changed_files: unreachable error");}
             *has_changed = 1;
         }
     }
 }
 
 
-int cached_compilation(bld_project* project, bld_file* file) {
+int incremental_cached_compilation(bld_project* project, bld_file* file) {
     int exists, new_options;
     bld_file* f;
 
@@ -236,7 +236,7 @@ int cached_compilation(bld_project* project, bld_file* file) {
 }
 
 
-int compile_with_absolute_path(bld_project* project, char* name) {
+int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     int result = 0, any_compiled = 0, temp, *has_changed;
     uintmax_t hash;
     bld_path path;
@@ -265,7 +265,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
             continue;
         }
 
-        if (cached_compilation(project, file)) {
+        if (incremental_cached_compilation(project, file)) {
             continue;
         }
 
@@ -273,7 +273,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         has_changed = set_get(&project->changed_files, file->identifier.id);
         *has_changed = 1;
 
-        temp = compile_file(project, file);
+        temp = incremental_compile_file(project, file);
         if (temp) {
             log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
             result = temp;
@@ -291,7 +291,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     dependency_graph_extract_symbols(&project->graph, &path);
     path_free(&path);
 
-    mark_changed_files(project);
+    incremental_mark_changed_files(project);
 
     bld_iter iter_files3 = iter_set(&project->files);
     while (iter_next(&iter_files3, (void**) &file)) {
@@ -300,7 +300,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         has_changed = set_get(&project->changed_files, file->identifier.id);
         if (!*has_changed) {continue;}
 
-        temp = compile_file(project, file);
+        temp = incremental_compile_file(project, file);
         if (temp) {
             log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
             result = temp;
@@ -316,7 +316,7 @@ int compile_with_absolute_path(bld_project* project, char* name) {
         log_debug("Entire project existed in cache, generating executable");
     }
 
-    temp = compile_total(project, name);
+    temp = incremental_compile_total(project, name);
     if (temp) {
         log_warn("Could not compile final executable");
         result = temp;
@@ -331,17 +331,17 @@ int compile_with_absolute_path(bld_project* project, char* name) {
     }
 }
 
-int compile_project(bld_project* project, char* name) {
+int incremental_compile_project(bld_project* project, char* name) {
     int result;
     bld_path executable_path = path_copy(&project->root);
     path_append_string(&executable_path, name);
-    result = compile_with_absolute_path(project, path_to_string(&executable_path));
+    result = incremental_compile_with_absolute_path(project, path_to_string(&executable_path));
     path_free(&executable_path);
     return result;
 }
 
-int test_project(bld_project* project, char* path) {
-    log_fatal("test_project: not implemented.");
+int incremental_test_project(bld_project* project, char* path) {
+    log_fatal("incremental_test_project: not implemented.");
     (void)(project); /* Suppress unused parameter warning */
     (void)(path);
     return -1;

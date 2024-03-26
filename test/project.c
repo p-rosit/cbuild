@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
         project_load_cache(&project, ".build_cache");
 
         /* Mandatory */
-        index_project(&project); 
+        incremental_index_project(&project); 
 
         /* Optional, mandatory if main file set */
         // generate_dependency_graph(&project);
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
         /* Optional */
         project_set_main_file(&project, "main.c");
         /* Mandatory */
-        result = compile_project(&project, "a.out");
+        result = incremental_compile_project(&project, "a.out");
         if (result > 0) {
             log_warn("Could not compile project");
         } else if (result < 0) {

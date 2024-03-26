@@ -77,8 +77,8 @@ void set_main_rebuild(bld_project* build, bld_path* path) {
     build->main_file = file->identifier.id;
 }
 
-void index_possible_file(bld_project*, bld_path*, char*);
-int compile_with_absolute_path(bld_project*, char*);
+void incremental_index_possible_file(bld_project*, bld_path*, char*);
+int incremental_compile_with_absolute_path(bld_project*, char*);
 void rebuild_builder(bld_project* project, int argc, char** argv) {
     int result, new_result, log_level;
     char *executable, *old_executable, *main_name;
@@ -114,15 +114,15 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
 
     main = path_copy(&project->root);
     path_append_string(&main, main_name);
-    index_possible_file(&build, &main, main_name);
-    index_project(&build);
+    incremental_index_possible_file(&build, &main, main_name);
+    incremental_index_project(&build);
 
     set_main_rebuild(&build, &main);
 
     executable_path = path_copy(&project->root);
     path_append_string(&executable_path, executable);
     rename(executable, old_executable);
-    result = compile_with_absolute_path(&build, path_to_string(&executable_path));
+    result = incremental_compile_with_absolute_path(&build, path_to_string(&executable_path));
 
     if (result > 0) {
         log_fatal("Could not compile build script");
