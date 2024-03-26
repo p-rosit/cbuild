@@ -1,6 +1,6 @@
 [x] add prototypes to private functions
 [ ] add documentation to functions
-[ ] join graph with containers if possible
+[x] join graph with containers if possible
 [ ] handle failed parse
 [x] rename functions into a consistent style
 [ ] hide compilation (incremental/from scratch) behind single function
