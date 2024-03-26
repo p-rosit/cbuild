@@ -78,9 +78,9 @@ bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
     return iter;
 }
 
-int graph_next(bld_iter_graph* iter, void** value_ptr_ptr) {
+int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
     int node_visited = 1;
-    uintmax_t* node_id;
+    uintmax_t *ptr_id, id;
     bld_array* edge_array;
 
     if (iter->type == BLD_GRAPH_DONE) {
@@ -95,15 +95,16 @@ int graph_next(bld_iter_graph* iter, void** value_ptr_ptr) {
             return 0;
         }
 
-        node_id = array_pop(&iter->stack);
+        ptr_id = array_pop(&iter->stack);
+        id = *ptr_id;
 
-        node_visited = set_has(&iter->visited, *node_id);
+        node_visited = set_has(&iter->visited, id);
         if (node_visited) {goto next_node;}
 
-        *value_ptr_ptr = node_id;
-        set_add(&iter->visited, *node_id, NULL);
+        *node_id = id;
+        set_add(&iter->visited, id, NULL);
 
-        edge_array = set_get(&iter->graph->edges, *node_id);
+        edge_array = set_get(&iter->graph->edges, id);
         bld_iter edges = iter_array(edge_array);
         while (iter_next(&edges, (void**) &node_id)) {
             array_push(&iter->stack, node_id);
@@ -124,7 +125,7 @@ int iter_next(bld_iter* iter, void** value_ptr_ptr) {
             return set_next(&iter->as.set_iter, value_ptr_ptr);
         } break;
         case (BLD_GRAPH): {
-            return graph_next(&iter->as.graph_iter, value_ptr_ptr);
+            return graph_next(&iter->as.graph_iter, (uintmax_t*) value_ptr_ptr);
         } break;
     }
     log_fatal("iter_next: unreachable error???");
