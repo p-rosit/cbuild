@@ -145,7 +145,7 @@ int compile_total(bld_project* project, char* executable_name) {
     bld_compiler compiler = project->compiler;
     bld_file *main_file, *file;
     bld_string cmd;
-    bld_search_info* bfs;
+    bld_iter iter;
 
     main_file = set_get(&project->files, project->main_file);
     if (main_file == NULL) {
@@ -167,8 +167,8 @@ int compile_total(bld_project* project, char* executable_name) {
     string_append_string(&cmd, executable_name);
     string_append_space(&cmd);
 
-    bfs = graph_functions_from(&project->graph, main_file);
-    while (graph_next_file(bfs, &file)) {
+    iter = dependency_graph_symbols_from(&project->graph, main_file);
+    while (dependency_graph_next_file(&iter, &project->graph, &file)) {
         path = path_copy(&project->root);
         path_append_path(&path, &(*project->cache).root);
         serialize_identifier(name, file);
@@ -191,17 +191,18 @@ int compile_total(bld_project* project, char* executable_name) {
 
 void mark_changed_files(bld_project* project) {
     int* has_changed;
-    bld_search_info* info;
     bld_file *file, *temp;
 
     bld_iter iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        bld_iter iter;
+
         has_changed = set_get(&project->changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
         if (!*has_changed) {continue;}
 
-        info = graph_includes_from(&project->graph, file);
-        while (graph_next_file(info, &temp)) {
+        iter = dependency_graph_includes_from(&project->graph, file);
+        while (dependency_graph_next_file(&iter, &project->graph, &temp)) {
             has_changed = set_get(&project->changed_files, temp->identifier.id);
             if (has_changed == NULL) {log_fatal("mark_changed_files: unreachable error");}
             *has_changed = 1;
