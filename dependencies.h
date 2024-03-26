@@ -14,9 +14,11 @@ typedef struct bld_dependency_graph {
 bld_dependency_graph dependency_graph_new(bld_set*);
 void        dependency_graph_free(bld_dependency_graph*);
 
-void        dependency_graph_generate(bld_dependency_graph*, bld_path*);
-bld_iter    dependency_graph_functions_from(bld_dependency_graph*, bld_file*);
-bld_iter    dependency_graph_includes_from(bld_dependency_graph*, bld_file*);
-int         dependency_graph_next_file(bld_iter*, bld_file**);
+void        dependency_graph_extract_includes(bld_dependency_graph*);
+void        dependency_graph_extract_symbols(bld_dependency_graph*, bld_path*);
+
+bld_iter    dependency_graph_symbols_from(const bld_dependency_graph*, bld_file*);
+bld_iter    dependency_graph_includes_from(const bld_dependency_graph*, bld_file*);
+int         dependency_graph_next_file(bld_iter*, const bld_dependency_graph*, bld_file**);
 
 #endif

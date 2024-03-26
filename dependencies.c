@@ -5,141 +5,145 @@
 #include "logging.h"
 #include "dependencies.h"
 
-void                connect_node(bld_graph*, bld_node*);
-void                populate_node(bld_graph*, bld_path*, bld_path*, bld_file*);
-void                parse_symbols(bld_file*, bld_path*);
-void                parse_included_files(bld_file*);
-bld_search_info*    graph_dfs_from(bld_graph*, bld_file*);
-void                add_function_edge(bld_node*, uintmax_t);
-void                add_include_edge(bld_node*, uintmax_t);
-bld_node            new_node(bld_file*);
-void                free_node(bld_node*);
-void                add_symbol(bld_set*, bld_string*);
+void parse_included_files(bld_file*);
 
-typedef enum bld_search_type {
-    BLD_FUNCS,
-    BLD_INCLUDES,
-    BLD_NO_SEARCH,
-} bld_search_type;
+void parse_symbols(bld_file*, bld_path*);
+void generate_symbol_file(bld_file*, bld_path*, bld_path*);
+void add_symbol(bld_set*, bld_string*);
 
-struct bld_search_info {
-    bld_search_type type;
-    bld_graph* graph;
-    bld_array stack;
-    bld_set visited;
-};
-
-void free_info(bld_search_info*);
-
-bld_search_info* graph_dfs_from(bld_graph* graph, bld_file* root) {
-    bld_node *node;
-    bld_search_info* info = malloc(sizeof(bld_search_info));
-    if (info == NULL) {
-        log_fatal("Could not allocate info to start search.");
-    }
-
-    *info = (bld_search_info) {
-        .type = BLD_NO_SEARCH,
-        .graph = graph,
-        .stack = array_new(sizeof(bld_node*)),
-        .visited = set_new(sizeof(uintmax_t)),
-    };
-
-    node = set_get(&graph->nodes, root->identifier.id);
-    if (node == NULL) {
-        log_fatal("Could not find requested file in graph");
-    }
-    array_push(&info->stack, &node);
-
-    return info;
-}
-
-bld_search_info* graph_functions_from(bld_graph* graph, bld_file* root) {
-    bld_search_info* info = graph_dfs_from(graph, root);
-    info->type = BLD_FUNCS;
-    return info;
-}
-
-bld_search_info* graph_includes_from(bld_graph* graph, bld_file* root) {
-    bld_search_info* info = graph_dfs_from(graph, root);
-    info->type = BLD_INCLUDES;
-    return info;
-}
-
-void free_info(bld_search_info* info) {
-    array_free(&info->stack);
-    set_free(&info->visited);
-    free(info);
-}
-
-int graph_next_file(bld_search_info* info, bld_file** file) {
-    int node_visited = 1;
-    uintmax_t* index;
-    bld_array* edge_array;
-    bld_node *node, *to_node;
-    bld_file* temp;
-
-    if (info->type == BLD_NO_SEARCH) {
-        log_fatal("No search type has been set");
-    }
-
-    while (node_visited) {
-        if (info->stack.size <= 0) {
-            free_info(info);
-            return 0;
-        }
-
-        node = *((bld_node**) array_pop(&info->stack));
-
-        node_visited = 0;
-        if (set_has(&info->visited, node->file_id)) {
-            node_visited = 1;
-            goto next_node;
-        }
-
-        set_add(&info->visited, node->file_id, &node);
-
-        switch (info->type) {
-            case (BLD_FUNCS): {
-                edge_array = &node->functions_from;
-            } break;
-            case (BLD_INCLUDES): {
-                edge_array = &node->included_in;
-            } break;
-            default: log_fatal("graph_next_file: unreachable error???");
-        }
-
-        bld_iter iter = iter_array(edge_array);
-        while (iter_next(&iter, (void**) &index)) {
-            to_node = set_get(&info->graph->nodes, *index);
-            array_push(&info->stack, &to_node);
-        }
-
-        next_node:;
-    }
-
-    temp = set_get(info->graph->files, node->file_id);
-    if (temp == NULL) {log_fatal("File did not exist in graph, internal error");}
-    *file = temp;
-
-    return 1;
-}
-
-bld_graph graph_t_new(bld_set* files) {
-    return (bld_graph) {
+bld_dependency_graph dependency_graph_new(bld_set* files) {
+    return (bld_dependency_graph) {
         .files = files,
-        .nodes = set_new(sizeof(bld_node)),
+        .include_graph = graph_new(),
+        .symbol_graph = graph_new(),
     };
 }
 
-void graph_t_free(bld_graph* graph) {
-    bld_node* node;
-    bld_iter iter = iter_set(&graph->nodes);
+void dependency_graph_free(bld_dependency_graph* graph) {
+    graph_free(&graph->include_graph);
+    graph_free(&graph->symbol_graph);
+}
 
-    while (iter_next(&iter, (void**) &node)) {
-        free_node(node);
+bld_iter dependency_graph_symbols_from(const bld_dependency_graph* graph, bld_file* root) {
+    return iter_graph(&graph->symbol_graph, root->identifier.id);
+}
+
+bld_iter dependency_graph_includes_from(const bld_dependency_graph* graph, bld_file* root) {
+    return  iter_graph(&graph->include_graph, root->identifier.id);
+}
+
+int dependency_graph_next_file(bld_iter* iter, const bld_dependency_graph* graph, bld_file** file) {
+    uintmax_t file_id;
+    int has_next;
+    
+    has_next = graph_next(&iter->as.graph_iter, &file_id);
+    if (!has_next) {return has_next;}
+
+    *file = set_get(graph->files, file_id);
+    if (*file == NULL) {log_fatal("File id in graph did not exist in file set.");}
+
+    return has_next;
+}
+
+void dependency_graph_extract_includes(bld_dependency_graph* graph) {
+    bld_iter iter;
+    bld_file *file;
+
+    iter = iter_set(graph->files);
+    while (iter_next(&iter, (void**) &file)) {
+        if (graph_has_node(&graph->include_graph, file->identifier.id)) {
+            continue;
+        }
+        graph_add_node(&graph->include_graph, file->identifier.id);
+        parse_included_files(file);
     }
-    set_free(&graph->nodes);
+
+    iter = iter_set(graph->files);
+    while (iter_next(&iter, (void**) &file)) {
+        bld_iter iter;
+        bld_file *to_file;
+
+        iter = iter_set(graph->files);
+        while (iter_next(&iter, (void**) &to_file)) {
+            if (!set_has(&to_file->includes, file->identifier.id)) {
+                continue;
+            }
+            graph_add_edge(&graph->include_graph, file->identifier.id, to_file->identifier.id);
+        }
+    }
+
+    log_info("Generated include graph with %lu nodes", graph->include_graph.edges.size);
+}
+
+void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_path* cache_path) {
+    bld_path symbol_path;
+    bld_iter iter;
+    bld_file* file;
+
+    symbol_path = path_copy(cache_path);
+    path_append_string(&symbol_path, "symbols");
+
+    iter = iter_set(graph->files);
+    while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_HEADER) {continue;}
+
+        if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
+            continue;
+        }
+        graph_add_node(&graph->symbol_graph, file->identifier.id);
+
+        generate_symbol_file(file, cache_path, &symbol_path);
+        parse_symbols(file, &symbol_path);
+    }
+
+    // remove(path_to_string(&symbol_path));
+    path_free(&symbol_path);
+
+    iter = iter_set(graph->files);
+    while (iter_next(&iter, (void**) &file)) {
+        bld_iter iter;
+        bld_file* to_file;
+
+        if (file->type == BLD_HEADER) {continue;}
+        iter = iter_set(graph->files);
+        while (iter_next(&iter, (void**) &to_file)) {
+            if (set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {
+                continue;
+            }
+            graph_add_edge(&graph->symbol_graph, file->identifier.id, to_file->identifier.id);
+        }
+    }
+
+    log_info("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
+}
+
+void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol_path) {
+    int result;
+    bld_string cmd;
+    bld_path path;
+    char name[FILENAME_MAX];
+
+    cmd = string_new();
+    fclose(fopen(path_to_string(symbol_path), "w"));
+
+    string_append_string(&cmd, "nm ");
+
+    path = path_copy(cache_path);
+    serialize_identifier(name, file);
+    path_append_string(&path, name);
+    string_append_string(&cmd, path_to_string(&path));
+    string_append_string(&cmd, ".o");
+    path_free(&path);
+
+    string_append_string(&cmd, " >> ");
+    string_append_string(&cmd, path_to_string(symbol_path));
+
+    result = system(string_unpack(&cmd));
+    if (result) {
+        log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
+    }
+
+    string_free(&cmd);
 }
 
 void parse_symbols(bld_file* file, bld_path* symbol_path) {
@@ -150,21 +154,22 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
     f = fopen(path_to_string(symbol_path), "r");
     if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
 
+    // log_warn("Parsing: \"%s\"", string_unpack(&file->name));
     while (1) {
         c = fgetc(f);
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
+            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
             break;
         }
 
         while (c != EOF && c != ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
+            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
             break;
         }
         while (c != EOF && c == ' ') {c = fgetc(f);}
         if (c == EOF) {
-            log_warn("unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
+            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
             break;
         }
 
@@ -199,6 +204,11 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
     }
 
     fclose(f);
+}
+
+void add_symbol(bld_set* set, bld_string* str) {
+    char* temp = string_unpack(str);
+    set_add(set, string_hash(temp, 0), &temp);
 }
 
 int get_next(FILE*);
@@ -290,118 +300,4 @@ void parse_included_files(bld_file* file) {
 
     path_free(&parent_path);
     fclose(f);
-}
-
-void populate_node(bld_graph* graph, bld_path* cache_path, bld_path* symbol_path, bld_file* file) {
-    int result;
-    char name[FILENAME_MAX];
-    bld_string cmd;
-    bld_path path;
-    bld_node node;
-
-    node = new_node(file);
-
-    if (file->type != BLD_HEADER) {
-        cmd = string_new();
-        fclose(fopen(path_to_string(symbol_path), "w"));
-
-        string_append_string(&cmd, "nm ");
-
-        path = path_copy(cache_path);
-        serialize_identifier(name, file);
-        path_append_string(&path, name);
-        string_append_string(&cmd, path_to_string(&path));
-        string_append_string(&cmd, ".o");
-        path_free(&path);
-
-        string_append_string(&cmd, " >> ");
-        string_append_string(&cmd, path_to_string(symbol_path));
-
-        result = system(string_unpack(&cmd));
-        if (result) {
-            log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
-        }
-        
-        parse_symbols(file, symbol_path);
-        string_free(&cmd);
-    }
-
-    parse_included_files(file);
-
-    log_debug("Populating: \"%s\", %lu symbol(s), %lu reference(s), %lu include(s)", path_to_string(&file->path), file->defined_symbols.size, file->undefined_symbols.size, file->includes.size);
-    set_add(&graph->nodes, node.file_id, &node);
-
-}
-
-void connect_node(bld_graph* graph, bld_node* node) {
-    bld_file *file, *to_file;
-    bld_node* to_node;
-
-    file = set_get(graph->files, node->file_id);
-    if (file == NULL) {log_fatal("Could not get node file, internal error");}
-
-    bld_iter iter = iter_set(&graph->nodes);
-    while (iter_next(&iter, (void**) &to_node)) {
-        to_file = set_get(graph->files, to_node->file_id);
-        if (to_file == NULL) {log_fatal("Could not get to node, internal error");}
-
-        if (!set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {
-            add_function_edge(node, to_file->identifier.id);
-        }
-
-        if (set_has(&to_file->includes, file->identifier.id)) {
-            add_include_edge(node, to_file->identifier.id);
-        }
-    }
-}
-
-void graph_generate(bld_graph* graph, bld_path* cache_path) {
-    bld_path symbol_path;
-    bld_node *node;
-    bld_file* file;
-    /* TODO: utilize cache if present */
-
-    symbol_path = path_copy(cache_path);
-    path_append_string(&symbol_path, "symbols");
-
-    bld_iter iter_files = iter_set(graph->files);
-    while (iter_next(&iter_files, (void**) &file)) {
-        populate_node(graph, cache_path, &symbol_path, file);
-    }
-
-    remove(path_to_string(&symbol_path));
-
-    bld_iter iter_nodes = iter_set(&graph->nodes);
-    while (iter_next(&iter_nodes, (void**) &node)) {
-        connect_node(graph, node);
-    }
-
-    path_free(&symbol_path);
-    log_info("Generated dependency graph with %lu nodes", graph->nodes.size);
-}
-
-void add_function_edge(bld_node* from, uintmax_t file_id) {
-    array_push(&from->functions_from, &file_id);
-}
-
-void add_include_edge(bld_node* from, uintmax_t file_id) {
-    array_push(&from->included_in, &file_id);
-}
-
-bld_node new_node(bld_file* file) {
-    return (bld_node) {
-        .file_id = file->identifier.id,
-        .functions_from = array_new(sizeof(uintmax_t)),
-        .included_in = array_new(sizeof(uintmax_t)),
-    };
-}
-
-void free_node(bld_node* node) {
-    array_free(&node->functions_from);
-    array_free(&node->included_in);
-}
-
-void add_symbol(bld_set* set, bld_string* str) {
-    char* temp = string_unpack(str);
-    set_add(set, string_hash(temp, 0), &temp);
 }
