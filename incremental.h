@@ -1,9 +1,8 @@
 #ifndef INCREMENTAL_H
 #include "project.h"
 
-void        index_project(bld_project*);
-void        generate_dependency_graph(bld_project*);
-int         compile_project(bld_project*, char*);
-int         test_project(bld_project*, char*);
+void    incremental_index_project(bld_project*);
+int     incremental_compile_project(bld_project*, char*);
+int     incremental_test_project(bld_project*, char*);
 
 #endif
