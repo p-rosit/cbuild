@@ -86,8 +86,8 @@ bld_graph   graph_new(void);
 void        graph_free(bld_graph*);
 void        graph_add_node(bld_graph*, uintmax_t);
 void        graph_add_edge(bld_graph*, uintmax_t, uintmax_t);
-int         graph_next(bld_iter_graph*, void**);
 int         graph_has_node(const bld_graph*, uintmax_t);
+int         graph_next(bld_iter_graph*, uintmax_t*);
 
 bld_iter    iter_array(const bld_array*);
 bld_iter    iter_set(const bld_set*);
