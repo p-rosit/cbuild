@@ -31,3 +31,7 @@ void graph_add_edge(bld_graph* graph, uintmax_t from_id, uintmax_t to_id) {
 
     array_push(edges, &to_id);
 }
+
+int graph_has_node(const bld_graph* graph, uintmax_t node_id) {
+    return set_has(&graph->edges, node_id);
+}
