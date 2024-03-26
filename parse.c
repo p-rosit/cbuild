@@ -27,13 +27,6 @@ int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_file*);
 int parse_file_include(FILE*, bld_set*);
 
-int parse_project_graph(FILE*, bld_project*);
-int parse_graph_node(FILE*, bld_project*);
-int parse_node_file(FILE*, bld_node*);
-int parse_node_symbol_edges(FILE*, bld_node*);
-int parse_node_include_edges(FILE*, bld_node*);
-int parse_node_edge(FILE*, bld_array*);
-
 int parse_compiler(FILE*, bld_compiler*);
 int parse_compiler_type(FILE*, bld_compiler*);
 int parse_compiler_executable(FILE*, bld_compiler*);
@@ -112,13 +105,12 @@ void project_load_cache(bld_project* project, char* cache_path) {
 
 int parse_cache(bld_project* cache, bld_path* root) {
     int amount_parsed;
-    int size = 3;
-    int parsed[3];
-    char *keys[3] = {"compiler", "files", "graph"};
-    bld_parse_func funcs[3] = {
+    int size = 2;
+    int parsed[2];
+    char *keys[2] = {"compiler", "files"};
+    bld_parse_func funcs[2] = {
         (bld_parse_func) parse_project_compiler,
         (bld_parse_func) parse_project_files,
-        (bld_parse_func) parse_project_graph,
     };
     bld_path path = path_copy(root);
     FILE* f;
@@ -342,102 +334,6 @@ int parse_file_function(FILE* file, bld_set* set) {
 
     temp = string_unpack(&str);
     set_add(set, string_hash(temp, 0), &temp);
-    return 0;
-}
-
-int parse_project_graph(FILE* file, bld_project* project) {
-    int amount_parsed;
-
-    project->graph = graph_t_new(&project->files); 
-    amount_parsed = parse_array(file, project, (bld_parse_func) parse_graph_node);
-    if (amount_parsed < 0) {
-        log_warn("Could not parse graph");
-        return -1;
-    }
-
-    return 0;
-}
-
-int parse_graph_node(FILE* file, bld_project* project) {
-    int amount_parsed;
-    int size = 3;
-    int parsed[3];
-    char *keys[3] = {"file", "symbol_edges", "include_edges"};
-    bld_parse_func funcs[3] = {
-        (bld_parse_func) parse_node_file,
-        (bld_parse_func) parse_node_symbol_edges,
-        (bld_parse_func) parse_node_include_edges,
-    };
-    bld_set* nodes = &project->graph.nodes;
-    bld_node node;
-
-    amount_parsed = parse_map(file, &node, size, parsed, keys, funcs);
-
-    if (amount_parsed != size) {
-        log_warn("Could not parse node, expected all keys to be present: [");
-        for (int i = 0; i < size; i++) {
-            if (i > 0) {printf(",\n");}
-            printf("  \"%s\"", keys[i]);
-        }
-        printf("\n]\n");
-        return -1;
-    }
-
-    set_add(nodes, node.file_id, &node);
-
-    return 0;
-}
-
-int parse_node_file(FILE* file, bld_node* node) {
-    uintmax_t file_id;
-    int result;
-
-    result = parse_uintmax(file, &file_id);
-
-    if (result) {
-        log_fatal("Free correctly");
-        log_warn("Could not parse file of node.");
-        return result;
-    }
-
-    node->file_id = file_id;
-    return 0;
-}
-
-int parse_node_symbol_edges(FILE* file, bld_node* node) {
-    int amount_parsed;
-
-    node->functions_from = array_new(sizeof(uintmax_t));
-    amount_parsed = parse_array(file, &node->functions_from, (bld_parse_func) parse_node_edge);
-    if (amount_parsed < 0) {
-        log_warn("Could not parse graph");
-        return -1;
-    }
-
-    return 0;
-}
-
-int parse_node_include_edges(FILE* file, bld_node* node) {
-    int amount_parsed;
-
-    node->included_in = array_new(sizeof(uintmax_t));
-    amount_parsed = parse_array(file, &node->included_in, (bld_parse_func) parse_node_edge);
-    if (amount_parsed < 0) {
-        log_warn("Could not parse graph");
-        return -1;
-    }
-
-    return 0;
-}
-
-int parse_node_edge(FILE* file, bld_array* array) {
-    uintmax_t file_id;
-    int result;
-
-    result = parse_uintmax(file, &file_id);
-    if (result) {return -1;}
-
-    array_push(array, &file_id);
     return 0;
 }
 
