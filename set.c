@@ -284,3 +284,35 @@ int set_empty_intersection(const bld_set* set1, const bld_set* set2) {
     }
     return 1;
 }
+
+bld_set set_copy(const bld_set* set) {
+    bld_set cpy;
+    size_t total_capacity;
+    size_t* offsets;
+    bld_hash* hashes;
+    void* values;
+
+    total_capacity = set->capacity + set->max_offset;
+    offsets = malloc(total_capacity * sizeof(bld_offset));
+    hashes = malloc(total_capacity * sizeof(bld_hash));
+    values = malloc(total_capacity * set->value_size);
+
+    if (offsets == NULL || hashes == NULL || values == NULL) {
+        log_fatal("set_copy: Could not allocate space for copy");
+    }
+
+    cpy = (bld_set) {
+        .capacity =  set->capacity,
+        .size = set->size,
+        .value_size = set->value_size,
+        .offset = offsets,
+        .hash = hashes,
+        .values = values,
+    };
+
+    memcpy(cpy.offset, set->offset, total_capacity * sizeof(bld_offset));
+    memcpy(cpy.hash, set->hash, total_capacity * sizeof(bld_hash));
+    memcpy(cpy.values, set->values, total_capacity * cpy.value_size);
+
+    return cpy;
+}

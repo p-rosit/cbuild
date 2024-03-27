@@ -75,6 +75,7 @@ int         array_next(bld_iter_array*, void**);
 
 bld_set     set_new(size_t);
 void        set_free(bld_set*);
+bld_set     set_copy(const bld_set*);
 void        set_clear(bld_set*);
 int         set_add(bld_set*, bld_hash, void*);
 void*       set_get(const bld_set*, bld_hash);
