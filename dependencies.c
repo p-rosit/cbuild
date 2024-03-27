@@ -96,7 +96,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_path* cac
         parse_symbols(file, &symbol_path);
     }
 
-    // remove(path_to_string(&symbol_path));
+    remove(path_to_string(&symbol_path));
     path_free(&symbol_path);
 
     iter = iter_set(graph->files);
