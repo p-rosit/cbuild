@@ -10,6 +10,7 @@ int     incremental_compile_total(bld_project*, char*);
 void    incremental_mark_changed_files(bld_project*);
 int     incremental_cached_compilation(bld_project*, bld_file*);
 int     incremental_compile_with_absolute_path(bld_project*, char*);
+int     incremental_compile_changed_files(bld_project*, int*);
 
 void incremental_index_possible_file(bld_project* project, bld_path* path, char* name) {
     int exists;
@@ -191,15 +192,25 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
 
 void incremental_mark_changed_files(bld_project* project) {
     int* has_changed;
-    bld_file *file, *temp;
+    bld_file *file, *cache_file, *temp;
+    bld_iter iter;
 
-    bld_iter iter = iter_set(&project->files);
+    iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
 
+        cache_file = set_get(&project->cache->files, file->identifier.id);
         has_changed = set_get(&project->changed_files, file->identifier.id);
-        if (has_changed == NULL) {log_fatal("incremental_mark_changed_files: unreachable error");}
-        if (!*has_changed) {continue;}
+
+        if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
+
+        if (cache_file == NULL) {
+            *has_changed = 1;
+        } else if (file->identifier.hash != cache_file->identifier.hash) {
+            *has_changed = 1;
+        } else {
+            continue;
+        }
 
         iter = dependency_graph_includes_from(&project->graph, file);
         while (dependency_graph_next_file(&iter, &project->graph, &temp)) {
@@ -237,80 +248,41 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
 
 
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
-    int result = 0, any_compiled = 0, temp, *has_changed;
+    bld_iter iter;
+    int result = 0, any_compiled = 0, temp;
     uintmax_t hash;
     bld_path path;
-    bld_file *file, *cache_file;
+    bld_file *file;
 
     temp = 0;
-    bld_iter iter_files1 = iter_set(&project->files);
-    while (iter_next(&iter_files1, (void**) &file)) {
+    hash = compiler_hash(&project->compiler, 5031);
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        file->identifier.hash = file_hash(file, hash); // TODO: move hash computation
         set_add(&project->changed_files, file->identifier.id, &temp);
     }
 
-    hash = compiler_hash(&project->compiler, 5031);
-    bld_iter iter_files2 = iter_set(&project->files);
-    while (iter_next(&iter_files2, (void**) &file)) {
-        file->identifier.hash = file_hash(file, hash);
+    incremental_apply_cache(project);
 
-        if (file->type == BLD_HEADER) {
-            cache_file = set_get(&project->cache->files, file->identifier.id);
-            if (cache_file == NULL) {
-                has_changed = set_get(&project->changed_files, file->identifier.id);
-                *has_changed = 1;
-            } else if (file->identifier.hash != cache_file->identifier.hash) {
-                has_changed = set_get(&project->changed_files, file->identifier.id);
-                *has_changed = 1;
-            }
-            continue;
-        }
+    if (project->graph.files != &project->files) {
+        dependency_graph_free(&project->graph);
+        project->graph = dependency_graph_new(&project->files);
+    }
 
-        if (incremental_cached_compilation(project, file)) {
-            continue;
-        }
+    dependency_graph_extract_includes(&project->graph);
+    incremental_mark_changed_files(project);
 
-        any_compiled = 1;
-        has_changed = set_get(&project->changed_files, file->identifier.id);
-        *has_changed = 1;
-
-        temp = incremental_compile_file(project, file);
-        if (temp) {
-            log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
-            result = temp;
-        }
+    result = incremental_compile_changed_files(project, &any_compiled);
+    if (result) {
+        log_warn("Could not compile all files, no executable generated.");
+        return result;
     }
 
     path = path_copy(&project->root);
     path_append_path(&path, &(*project->cache).root);
 
-    dependency_graph_free(&project->graph);
-    project->graph = dependency_graph_new(&project->files);
-
-    /* TODO: move to separate function */
-    dependency_graph_extract_includes(&project->graph);
     dependency_graph_extract_symbols(&project->graph, &path);
     path_free(&path);
-
-    incremental_mark_changed_files(project);
-
-    bld_iter iter_files3 = iter_set(&project->files);
-    while (iter_next(&iter_files3, (void**) &file)) {
-        if (file->type == BLD_HEADER) {continue;}
-
-        has_changed = set_get(&project->changed_files, file->identifier.id);
-        if (!*has_changed) {continue;}
-
-        temp = incremental_compile_file(project, file);
-        if (temp) {
-            log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
-            result = temp;
-        }
-    }
-
-    if (result) {
-        log_warn("Could not compile all files, no executable generated.");
-        return result;
-    }
 
     if (!any_compiled) {
         log_debug("Entire project existed in cache, generating executable");
@@ -329,6 +301,54 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     } else {
         return result;
     }
+}
+
+int incremental_compile_changed_files(bld_project* project, int* any_compiled) {
+    FILE* cached_file;
+    int *has_changed, result, temp;
+    char compiled_name[FILENAME_MAX];
+    bld_iter iter;
+    bld_path path;
+    bld_string compiled_path;
+    bld_file* file;
+
+    result = 0;
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_HEADER) {continue;}
+
+        has_changed = set_get(&project->changed_files, file->identifier.id);
+        if (has_changed == NULL) {log_fatal("incremental_compile_with_absolute_path: internal error");}
+
+        path = path_copy(&project->root);
+        path_append_path(&path, &(*project->cache).root);
+        serialize_identifier(compiled_name, file);
+        path_append_string(&path, compiled_name);
+
+        compiled_path = path.str;
+        string_append_string(&compiled_path, ".o");
+
+        cached_file = fopen(string_unpack(&compiled_path), "r");
+        if (cached_file != NULL) {fclose(cached_file);}
+
+        string_free(&compiled_path);
+
+        if (!*has_changed && cached_file != NULL) {continue;}
+
+        if (!*has_changed && cached_file == NULL) {
+            log_info("Cache is missing \"%s\", recompiling", string_unpack(&file->name));
+        }
+
+        *any_compiled = 1;
+        *has_changed = 0;
+        temp = incremental_compile_file(project, file);
+        if (temp) {
+            log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
+            result = temp;
+        }
+    }
+
+    return result;
 }
 
 int incremental_compile_project(bld_project* project, char* name) {
