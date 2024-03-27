@@ -6,6 +6,7 @@
 
 bld_file_identifier get_identifier(bld_path*);
 bld_file make_file(bld_file_type, bld_path*, char*);
+bld_set file_copy_symbol_set(bld_set*);
 
 uintmax_t file_get_id(bld_path* path) {
     struct stat file_stat;
@@ -97,4 +98,26 @@ uintmax_t file_hash(bld_file* file, uintmax_t seed) {
         seed = compiler_hash(file->compiler, seed);
     }
     return seed;
+}
+
+void file_symbols_copy(bld_file* file, bld_set* defined, bld_set* undefined) {
+    file->defined_symbols = file_copy_symbol_set(defined);
+    file->undefined_symbols = file_copy_symbol_set(undefined);
+}
+
+bld_set file_copy_symbol_set(bld_set* set) {
+    bld_iter iter;
+    bld_set cpy;
+    bld_string str;
+    char** symbol;
+
+    cpy = set_copy(set);
+    iter = iter_set(&cpy);
+    while (iter_next(&iter, (void**) &symbol)) {
+        str = string_new();
+        string_append_string(&str, *symbol);
+        *symbol = string_unpack(&str);
+    }
+
+    return cpy;
 }
