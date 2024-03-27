@@ -1,3 +1,4 @@
+[ ] remove tiny mallocs from set
 [x] add prototypes to private functions
 [ ] add documentation to functions
 [x] join graph with containers if possible
