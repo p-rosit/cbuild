@@ -25,16 +25,15 @@ void incremental_apply_cache(bld_project* project) {
             continue;
         }
 
-        log_info("Found \"%s\" in cache", string_unpack(&file->name));
+        log_debug("Found \"%s\":%ju in cache: %lu include(s), %lu defined, %lu undefined", string_unpack(&file->name), cached->identifier.id, cached->includes.size, cached->defined_symbols.size, cached->undefined_symbols.size);
 
-        /*
-        file->defined_symbols = set_copy(&cached->defined_symbols);
-        file->undefined_symbols = set_copy(&cached->undefined_symbols);
         file->includes = set_copy(&cached->includes);
-
-        graph_add_node(&project->graph.symbol_graph, file->identifier.id);
         graph_add_node(&project->graph.include_graph, file->identifier.id);
-        */
+
+        if (file->type == BLD_HEADER) {continue;}
+        
+        file_symbols_copy(file, &cached->defined_symbols, &cached->undefined_symbols);
+        graph_add_node(&project->graph.symbol_graph, file->identifier.id);
     }
 }
 
