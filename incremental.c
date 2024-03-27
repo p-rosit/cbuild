@@ -12,6 +12,33 @@ int     incremental_cached_compilation(bld_project*, bld_file*);
 int     incremental_compile_with_absolute_path(bld_project*, char*);
 int     incremental_compile_changed_files(bld_project*, int*);
 
+void incremental_apply_cache(bld_project* project) {
+    bld_iter iter;
+    bld_file *file, *cached;
+
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        cached = set_get(&project->cache->files, file->identifier.id);
+        if (cached == NULL) {continue;}
+
+        if (file->identifier.hash != cached->identifier.hash) {
+            continue;
+        }
+
+        log_info("Found \"%s\" in cache", string_unpack(&file->name));
+
+        /*
+        file->defined_symbols = set_copy(&cached->defined_symbols);
+        file->undefined_symbols = set_copy(&cached->undefined_symbols);
+        file->includes = set_copy(&cached->includes);
+
+        graph_add_node(&project->graph.symbol_graph, file->identifier.id);
+        graph_add_node(&project->graph.include_graph, file->identifier.id);
+        */
+    }
+}
+
+
 void incremental_index_possible_file(bld_project* project, bld_path* path, char* name) {
     int exists;
     char* file_ending;
