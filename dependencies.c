@@ -48,12 +48,14 @@ int dependency_graph_next_file(bld_iter* iter, const bld_dependency_graph* graph
 void dependency_graph_extract_includes(bld_dependency_graph* graph) {
     bld_iter iter;
     bld_file *file;
+    log_debug("Extracting includes, files in cache: %lu/%lu", graph->include_graph.edges.size, graph->files->size);
 
     iter = iter_set(graph->files);
     while (iter_next(&iter, (void**) &file)) {
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
         }
+        log_debug("Extracting includes of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->include_graph, file->identifier.id);
         parse_included_files(file);
     }
@@ -79,6 +81,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_path* cac
     bld_path symbol_path;
     bld_iter iter;
     bld_file* file;
+    log_debug("Extracting symbols, files in cache: %lu/%lu", graph->symbol_graph.edges.size, graph->files->size);
 
     symbol_path = path_copy(cache_path);
     path_append_string(&symbol_path, "symbols");
@@ -90,6 +93,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_path* cac
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
             continue;
         }
+
+        log_debug("Extracting symbols of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->symbol_graph, file->identifier.id);
 
         generate_symbol_file(file, cache_path, &symbol_path);
