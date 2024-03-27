@@ -305,6 +305,7 @@ bld_set set_copy(const bld_set* set) {
         .capacity =  set->capacity,
         .size = set->size,
         .value_size = set->value_size,
+        .max_offset = set->max_offset,
         .offset = offsets,
         .hash = hashes,
         .values = values,
