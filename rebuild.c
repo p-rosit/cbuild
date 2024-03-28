@@ -86,7 +86,7 @@ void rebuild_builder(bld_project* project, int argc, char** argv) {
     bld_compiler compiler = compiler_new(BLD_GCC, "/usr/bin/clang"); /* TODO: don't hardcode compiler */
     bld_project build;
 
-    log_level = set_log_level(BLD_WARN);
+    log_level = set_log_level(BLD_DEBUG);
 
     extract_names(argc, argv, &executable, &old_executable);
     main_name = infer_build_name(executable);
