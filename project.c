@@ -5,9 +5,50 @@
 #include "file.h"
 #include "project.h"
 
+bld_project_cache project_cache_new();
+
 bld_path    extract_build_path(bld_path*);
 bld_project make_project(bld_path, bld_compiler);
 void        free_cache(bld_project*);
+
+
+bld_forward_project project_new(bld_path path, bld_compiler compiler) {
+    return (bld_forward_project) {
+        .base = (bld_project_base) {
+            .root = path,
+            .compiler = compiler,
+            .cache = project_cache_new(),
+        },
+        .extra_paths = array_new(sizeof(bld_path)),
+        .ignore_paths = set_new(0),
+        .file_names = array_new(sizeof(bld_string)),
+        .file_compilers = array_new(sizeof(bld_compiler)),
+    };
+}
+
+void project_add_build(bld_forward_project* project, char* path) {
+}
+
+void project_add_path(bld_forward_project* project, char* path) {
+}
+
+void project_ignore_path(bld_forward_project* project, char* path) {
+}
+
+void project_load_cache(bld_forward_project* project, char* path) {
+}
+
+void project_set_main_file(bld_forward_project* project, char* file_name) {
+}
+
+void project_set_compiler(bld_forward_project* project, char* file_name, bld_compiler compiler) {
+}
+
+void project_save_cache(bld_project* project) {
+}
+
+void project_free(bld_project* project) {
+}
 
 bld_path project_path_extract(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
@@ -41,6 +82,11 @@ bld_path extract_build_path(bld_path* root) {
     string_free(&str);
     return build_path;
 }
+
+
+
+
+
 
 bld_project make_project(bld_path root, bld_compiler compiler) {
     return (bld_project) {
@@ -77,23 +123,6 @@ bld_project project_new(bld_path root, bld_compiler compiler) {
     path_free(&build_file_path);
 
     return project;
-}
-
-void free_cache(bld_project* cache) {
-    if (cache == NULL) {return;}
-    path_free(&cache->root);
-    path_free(&cache->build);
-    compiler_free(&cache->compiler);
-    dependency_graph_free(&cache->graph);
-
-    bld_file* file;
-    bld_iter iter = iter_set(&cache->files);
-    while (iter_next(&iter, (void**) &file)) {
-        file_free(file);
-    }
-    set_free(&cache->files);
-
-    free(cache);
 }
 
 void project_free(bld_project* project) {
