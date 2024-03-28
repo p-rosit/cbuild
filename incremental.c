@@ -77,7 +77,11 @@ void incremental_index_recursive(bld_project* project, bld_path* path, char* nam
         return;
     }
 
-    log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
+    if (name == NULL) {
+        log_debug("Searching under root: \"%s\"", path_to_string(path));
+    } else {
+        log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
+    }
 
     while ((file_ptr = readdir(dir)) != NULL) {
         if (strcmp(file_ptr->d_name, ".") == 0 || strcmp(file_ptr->d_name, "..") == 0) {
