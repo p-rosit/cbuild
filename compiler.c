@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdarg.h>
 #include "logging.h"
 #include "compiler.h"
 
@@ -11,6 +12,24 @@ bld_compiler compiler_new(bld_compiler_type type, char* executable) {
         .executable = string_unpack(&str),
         .flags = array_new(sizeof(char*)),
     };
+}
+
+bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
+    bld_compiler compiler;
+    va_list args;
+    char* flag;
+
+    compiler = compiler_new(type, executable);
+
+    va_start(args, executable);
+    while (1) {
+        flag = va_arg(args, char*);
+        if (flag == NULL) {break;}
+
+        compiler_add_flag(&compiler, flag);
+    }
+
+    return compiler;
 }
 
 void compiler_free(bld_compiler* compiler) {
