@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
         project_load_cache(&project, ".build_cache");
 
         /* Mandatory */
-        incremental_index_project(&project); 
+        incremental_index_project(&project);
 
         /* Optional, mandatory if main file set */
         // generate_dependency_graph(&project);
