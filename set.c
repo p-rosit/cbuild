@@ -200,10 +200,12 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
         error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
         target = hash_target(set->capacity, offset, hash);
 
-        if (!error && set->hash[target] == hash && set->offset[target] < set->max_offset) {
-            log_warn("Trying to add value twice");
-            free(temp);
-            return -1;
+        if (!error && set->offset[target] < set->max_offset) {
+            if (set->hash[target] == hash) {
+                log_warn("Trying to add value twice");
+                free(temp);
+                return -1;
+            }
         }
     } else {
         target = 0;
