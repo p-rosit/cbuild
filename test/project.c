@@ -50,33 +50,5 @@ int main(int argc, char** argv) {
 
     /* Mandatory */
     project_free(&project);
-
-
-
-
-
-
-
-
-
-
-    /* Mandatory */
-    incremental_index_project(&project);
-
-    /* Optional, mandatory if main file set */
-    // generate_dependency_graph(&project);
-
-    /* Optional */
-    /* Mandatory */
-    result = incremental_compile_project(&project, "a.out");
-    if (result > 0) {
-        log_warn("Could not compile project");
-    } else if (result < 0) {
-        log_info("Entire project existed in cache");
-    }
-
-    project_save_cache(&project);
-
-    project_free(&project);
     return 0;
 }
