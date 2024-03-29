@@ -45,7 +45,9 @@ bld_project project_resolve(bld_forward_project* fproject) {
         file->identifier.hash = file_hash(file, &project.base.file_compilers, hash);
     }
 
-    incremental_apply_cache(&project);
+    if (project.base.cache.loaded) {
+        incremental_apply_cache(&project);
+    }
 
     {
         bld_iter iter;
@@ -294,7 +296,9 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, " -o ");
 
     path = path_copy(&project->base.root);
-    path_append_path(&path, &project->base.cache.root);
+    if (project->base.cache.loaded) {
+        path_append_path(&path, &project->base.cache.root);
+    }
     serialize_identifier(name, file);
     path_append_string(&path, name);
     string_append_string(&cmd, path_to_string(&path));
@@ -340,7 +344,9 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
         path = path_copy(&project->base.root);
-        path_append_path(&path, &project->base.cache.root);
+        if (project->base.cache.loaded) {
+            path_append_path(&path, &project->base.cache.root);
+        }
         serialize_identifier(name, file);
         path_append_string(&path, name);
         
@@ -368,8 +374,13 @@ void incremental_mark_changed_files(bld_project* project, bld_set* changed_files
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
 
-        cache_file = set_get(&project->base.cache.files, file->identifier.id);
         has_changed = set_get(changed_files, file->identifier.id);
+        if (!project->base.cache.set) {
+            *has_changed = 1;
+            continue;
+        }
+
+        cache_file = set_get(&project->base.cache.files, file->identifier.id);
 
         if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
 
@@ -441,7 +452,9 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     }
 
     path = path_copy(&project->base.root);
-    path_append_path(&path, &project->base.cache.root);
+    if (project->base.cache.loaded) {
+        path_append_path(&path, &project->base.cache.root);
+    }
 
     dependency_graph_extract_symbols(&project->graph, &project->files, &path);
     path_free(&path);
@@ -483,7 +496,9 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
         if (has_changed == NULL) {log_fatal("incremental_compile_with_absolute_path: internal error");}
 
         path = path_copy(&project->base.root);
-        path_append_path(&path, &project->base.cache.root);
+        if (project->base.cache.loaded) {
+            path_append_path(&path, &project->base.cache.root);
+        }
         serialize_identifier(compiled_name, file);
         path_append_string(&path, compiled_name);
 
