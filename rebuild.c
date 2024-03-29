@@ -78,7 +78,8 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     int result, new_result, log_level;
     char *executable, *old_executable, *main_name;
     bld_path build_root, main, executable_path;
-    bld_compiler compiler = compiler_new(BLD_GCC, "/usr/bin/clang"); /* TODO: don't hardcode compiler */
+    bld_compiler compiler;
+    bld_forward_project fbuild;
     bld_project build;
 
     log_level = set_log_level(BLD_DEBUG);
@@ -90,31 +91,35 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     log_debug("Old:  \"%s\"", old_executable);
     log_debug("Main: \"%s\"", main_name);
 
-    build_root = path_copy(&project->root);
-    path_append_path(&build_root, &project->build);
+    /* TODO: verify that build path has been set */
+    build_root = path_copy(&fproject->base.root);
+    path_append_path(&build_root, &fproject->base.build);
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
-    build = new_rebuild(build_root, compiler);
-    project_ignore_path(&build, "./test");
+    compiler = compiler_with_flags(
+        BLD_GCC, "/usr/bin/gcc", /* TODO: don't hardcode compiler */
+        "-std=c99",
+        // "-fsanitize=address",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-Wmissing-prototypes",
+        NULL
+    );
 
-    compiler_add_flag(&build.compiler, "-std=c99");
-    compiler_add_flag(&build.compiler, "-fsanitize=address");
-    compiler_add_flag(&build.compiler, "-Wall");
-    compiler_add_flag(&build.compiler, "-Wextra");
-    compiler_add_flag(&build.compiler, "-Werror");
-    compiler_add_flag(&build.compiler, "-pedantic");
-    compiler_add_flag(&build.compiler, "-Wmissing-prototypes");
+    fbuild = new_rebuild(build_root, compiler);
+    project_ignore_path(&fbuild, "./test");
 
-    project_load_cache(&build, ".build_cache");
-
-    main = path_copy(&project->root);
+    main = path_copy(&fproject->base.root);
     path_append_string(&main, main_name);
-    incremental_index_possible_file(&build, &main, main_name);
-    incremental_index_project(&build);
+    set_main_rebuild(&fbuild, &main);
 
-    set_main_rebuild(&build, &main);
+    project_load_cache(&fbuild, ".build_cache");
 
-    executable_path = path_copy(&project->root);
+    build = project_resolve(&fbuild);
+
+    executable_path = path_copy(&fproject->base.root);
     path_append_string(&executable_path, executable);
     rename(executable, old_executable);
     result = incremental_compile_with_absolute_path(&build, path_to_string(&executable_path));
@@ -130,7 +135,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     if (result == 0) {
         set_log_level(BLD_INFO);
         log_info("Recompiled build script");
-        new_result = run_new_build(&project->root, executable);
+        new_result = run_new_build(&fproject->base.root, executable);
     }
 
     free(executable);
@@ -141,7 +146,25 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     project_free(&build);
 
     if (result == 0) {
-        project_free(project);
+        bld_iter iter;
+        bld_path* path;
+        bld_string* str;
+
+        project_base_free(&fproject->base);
+
+        iter = iter_array(&fproject->extra_paths);
+        while (iter_next(&iter, (void**) &path)) {
+            path_free(path);
+        }
+
+        set_free(&fproject->ignore_paths);
+        string_free(&fproject->main_file_name);
+
+        iter = iter_array(&fproject->file_names);
+        while (iter_next(&iter, (void**) &str)) {
+            string_free(str);
+        }
+
         exit(new_result);
     }
 
