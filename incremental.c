@@ -21,6 +21,12 @@ void incremental_apply_cache(bld_project* project) {
     bld_iter iter;
     bld_file *file, *cached;
 
+    if (!project->base.cache.loaded) {
+        log_fatal("Trying to apply cache but no cache has been loaded");
+    }
+
+    log_debug("Applying cache under \"%s\"", path_to_string(&project->base.cache.root));
+
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         cached = set_get(&project->cache->files, file->identifier.id);
