@@ -4,14 +4,16 @@
 #include "compiler.h"
 
 bld_compiler compiler_new(bld_compiler_type type, char* executable) {
+    bld_compiler compiler;
     bld_string str = string_new();
+
     string_append_string(&str, executable);
 
-    return (bld_compiler) {
-        .type = type,
-        .executable = string_unpack(&str),
-        .flags = array_new(sizeof(char*)),
-    };
+    compiler.type = type;
+    compiler.executable = string_unpack(&str);
+    compiler.flags = array_new(sizeof(char*));
+
+    return compiler;
 }
 
 bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
@@ -34,12 +36,13 @@ bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) 
 
 void compiler_free(bld_compiler* compiler) {
     char** flag;
+    bld_iter iter;
 
     if (compiler == NULL) {return;}
     
     free(compiler->executable);
 
-    bld_iter iter = iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags);
     while (iter_next(&iter, (void**) &flag)) {
         free(*flag);
     }
@@ -49,13 +52,15 @@ void compiler_free(bld_compiler* compiler) {
 bld_compiler compiler_copy(bld_compiler* compiler) {
     bld_string str;
     char **flag, *temp;
+    bld_compiler cpy;
+    bld_iter iter;
     bld_array flags;
     bld_string executable = string_new();
     string_append_string(&executable, compiler->executable);
 
     flags = array_copy(&compiler->flags);
 
-    bld_iter iter = iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags);
     while (iter_next(&iter, (void**) &flag)) {
         str = string_new();
         string_append_string(&str, *flag);
@@ -64,19 +69,20 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
         *flag = temp;
     }
 
-    return (bld_compiler) {
-        .type = compiler->type,
-        .executable = string_unpack(&executable),
-        .flags = flags,
-    };
+    cpy.type = compiler->type;
+    cpy.executable = string_unpack(&executable);
+    cpy.flags = flags;
+
+    return cpy;
 }
 
 uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
     char** flag;
+    bld_iter iter;
 
     seed = string_hash(compiler->executable, seed);
     
-    bld_iter iter = iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags);
     while (iter_next(&iter, (void**) &flag)) {
         seed = string_hash(*flag, seed);
     }
