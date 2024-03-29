@@ -55,6 +55,15 @@ void project_add_build(bld_forward_project* project, char* path) {
 }
 
 void project_add_path(bld_forward_project* project, char* path) {
+    bld_path test, extra;
+
+    test = path_copy(&project->base.root);
+    path_append_string(&test, path);
+    file_get_id(&test);
+    path_free(&test);
+
+    extra = path_from_string(path);
+    array_push(&project->extra_paths, &extra);
 }
 
 void project_ignore_path(bld_forward_project* project, char* path) {
