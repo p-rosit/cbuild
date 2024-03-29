@@ -43,6 +43,15 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler) {
 }
 
 void project_add_build(bld_forward_project* project, char* path) {
+    char* current_build = path_to_string(&project->base.build);
+
+    if (current_build[0] != '\0') {
+        log_fatal("Trying to add build path to project but build path has already been set to \"%s\"", current_build);
+    }
+
+    path_free(&project->base.build);
+    project->base.build = path_from_string(path);
+    project_ignore_path(project, path);
 }
 
 void project_add_path(bld_forward_project* project, char* path) {
