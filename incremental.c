@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "incremental.h"
 
+void    incremental_index_project(bld_project*, bld_forward_project*);
 void    incremental_index_possible_file(bld_project*, bld_path*, char*);
 void    incremental_index_recursive(bld_project*, bld_path*, char*);
 int     incremental_compile_file(bld_project*, bld_file*);
