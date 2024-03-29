@@ -241,8 +241,8 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
 
     string_append_string(&cmd, " -o ");
 
-    path = path_copy(&project->root);
-    path_append_path(&path, &(*project->cache).root);
+    path = path_copy(&project->base.root);
+    path_append_path(&path, &project->base.cache.root);
     serialize_identifier(name, file);
     path_append_string(&path, name);
     string_append_string(&cmd, path_to_string(&path));
