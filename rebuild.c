@@ -4,11 +4,11 @@
 #include "incremental.h"
 #include "rebuild.h"
 
-int         run_new_build(bld_path*, char*);
-bld_project new_rebuild(bld_path, bld_compiler);
-void        extract_names(int, char**, char**, char**);
-char*       infer_build_name(char*);
-void        set_main_rebuild(bld_project*, bld_path*);
+int                 run_new_build(bld_path*, char*);
+bld_forward_project new_rebuild(bld_path, bld_compiler);
+void                extract_names(int, char**, char**, char**);
+char*               infer_build_name(char*);
+void                set_main_rebuild(bld_forward_project*, bld_path*);
 
 int run_new_build(bld_path* root, char* executable) {
     int result;
@@ -23,11 +23,15 @@ int run_new_build(bld_path* root, char* executable) {
     return result;
 }
 
-bld_project make_project(bld_path, bld_compiler);
-bld_project new_rebuild(bld_path root, bld_compiler compiler) {
-    bld_project build;
-    build = make_project(root, compiler);
-    return build;
+bld_project_base project_base_new(bld_path, bld_compiler);
+bld_forward_project new_rebuild(bld_path root, bld_compiler compiler) {
+    return (bld_forward_project) {
+        .rebuilding = 1,
+        .base = project_base_new(root, compiler),
+        .extra_paths = array_new(sizeof(bld_path)),
+        .ignore_paths = set_new(0),
+        .file_names = array_new(sizeof(bld_string)),
+    };
 }
 
 void extract_names(int argc, char** argv, char** file, char** old_file) {
