@@ -28,13 +28,12 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler) {
         fclose(f);
     }
 
-    project = (bld_forward_project) {
-        .rebuilding = 0,
-        .base = project_base_new(path, compiler),
-        .extra_paths = array_new(sizeof(bld_path)),
-        .ignore_paths = set_new(0),
-        .file_names = array_new(sizeof(bld_string)),
-    };
+    project.rebuilding = 0;
+    project.base = project_base_new(path, compiler);
+    project.extra_paths = array_new(sizeof(bld_path));
+    project.ignore_paths = set_new(0);
+    project.main_file_name.chars = NULL;
+    project.file_names = array_new(sizeof(bld_string));
 
     project_ignore_path(&project, path_to_string(&build_file_path));
     path_free(&build_file_path);
@@ -105,13 +104,15 @@ void project_free(bld_project* project) {
 }
 
 bld_project_base project_base_new(bld_path path, bld_compiler compiler) {
-    return (bld_project_base) {
-        .root = path,
-        .build = path_new(),
-        .compiler = compiler,
-        .file_compilers = array_new(sizeof(bld_compiler)),
-        .cache = project_cache_new(),
-    };
+    bld_project_base base;
+
+    base.root = path;
+    base.build = path_new();
+    base.compiler = compiler;
+    base.file_compilers = array_new(sizeof(bld_compiler));
+    base.cache = project_cache_new();
+
+    return base;
 }
 
 void project_base_free(bld_project_base* base) {
@@ -131,11 +132,13 @@ void project_base_free(bld_project_base* base) {
 }
 
 bld_project_cache project_cache_new(void) {
-    return (bld_project_cache) {
-        .loaded = 0,
-        .set = 0,
-        .applied = 0,
-    };
+    bld_project_cache cache;
+
+    cache.loaded = 0;
+    cache.set = 0;
+    cache.applied = 0;
+
+    return cache;
 }
 
 void project_cache_free(bld_project_cache* cache) {
