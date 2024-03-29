@@ -1,3 +1,4 @@
+[ ] write project with c89
 [ ] allow using compiler different from default in linking step
 [ ] handle project with .so files
 [ ] allow setting compiler for all files under directory
