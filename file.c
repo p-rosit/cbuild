@@ -20,15 +20,17 @@ uintmax_t file_get_id(bld_path* path) {
 
 bld_file_identifier get_identifier(bld_path* path) {
     struct stat file_stat;
+    bld_file_identifier identifier;
 
     if (stat(path_to_string(path), &file_stat) < 0) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
     }
-    return (bld_file_identifier) {
-        .id = file_stat.st_ino,
-        .time = file_stat.st_mtime,
-        .hash = 0,
-    };
+
+    identifier.id = file_stat.st_ino;
+    identifier.time = file_stat.st_mtime;
+    identifier.hash = 0;
+
+    return identifier;
 }
 
 int file_eq(bld_file* f1, bld_file* f2) {
@@ -36,22 +38,24 @@ int file_eq(bld_file* f1, bld_file* f2) {
 }
 
 void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
-    sprintf(name, "%ju", (uintmax_t) file->identifier.id);
+    sprintf(name, "%" PRIuMAX, (uintmax_t) file->identifier.id);
 }
 
 bld_file make_file(bld_file_type type, bld_path* path, char* name) {
+    bld_file file;
     bld_string str = string_new();
     string_append_string(&str, name);
-    return (bld_file) {
-        .type = type,
-        .identifier = get_identifier(path),
-        .name = str,
-        .path = *path,
-        .compiler = -1,
-        .defined_symbols = set_new(sizeof(char*)),
-        .undefined_symbols = set_new(sizeof(char*)),
-        .includes = set_new(0),
-    };
+
+    file.type = type;
+    file.identifier = get_identifier(path);
+    file.name = str;
+    file.path = *path;
+    file.compiler = -1;
+    file.defined_symbols = set_new(sizeof(char*));
+    file.undefined_symbols = set_new(sizeof(char*));
+    file.includes = set_new(0);
+
+    return file;
 }
 
 bld_file file_header_new(bld_path* path, char* name) {
@@ -71,18 +75,19 @@ bld_file file_test_new(bld_path* path, char* name) {
 
 void file_free(bld_file* file) {
     char** symbol;
+    bld_iter iter;
 
     path_free(&file->path);
     string_free(&file->name);
 
-    bld_iter iter_defined = iter_set(&file->defined_symbols);
-    while (iter_next(&iter_defined, (void**) &symbol)) {
+    iter = iter_set(&file->defined_symbols);
+    while (iter_next(&iter, (void**) &symbol)) {
         free(*symbol);
     }
     set_free(&file->defined_symbols);
 
-    bld_iter iter_undefined = iter_set(&file->undefined_symbols);
-    while (iter_next(&iter_undefined, (void**) &symbol)) {
+    iter = iter_set(&file->undefined_symbols);
+    while (iter_next(&iter, (void**) &symbol)) {
         free(*symbol);
     }
     set_free(&file->undefined_symbols);
