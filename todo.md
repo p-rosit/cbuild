@@ -18,7 +18,7 @@
 [x] use prefix on functions to avoid collisions
 [x] handle forward declarations of compiler associated with file
 [x] keep file id in node instead of pointer to file (pointer might become invalid, id never becomes invalid)
-[ ] handle case where cache exists but .o file is missing
+[x] handle case where cache exists but .o file is missing
 [x] separate file and graph data in serialized cache
 [x] move compilation of project to different file
 [x] move functions and includes to `bld_file` keep edges in `bld_node`
