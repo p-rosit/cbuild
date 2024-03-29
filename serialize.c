@@ -7,8 +7,8 @@ void serialize_compiler(FILE*, bld_compiler*, int);
 void serialize_compiler_type(FILE*, bld_compiler_type);
 void serialize_compiler_flags(FILE*, bld_array*, int);
 
-void serialize_files(FILE*, bld_set*, int);
-void serialize_file(FILE*, bld_file*, int);
+void serialize_files(FILE*, bld_set*, bld_array*, int);
+void serialize_file(FILE*, bld_file*, bld_array*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_symbols(FILE*, bld_set*, int);
@@ -21,13 +21,13 @@ void project_save_cache(bld_project* project) {
     bld_path cache_path;
     int depth = 1;
 
-    if (project->cache == NULL) {
+    if (!project->base.cache.loaded) {
         log_warn("Trying to save cache but no cache was loaded. Ignoring.");
         return;
     }
 
-    cache_path = path_copy(&project->root);
-    path_append_path(&cache_path, &(*project->cache).root);
+    cache_path = path_copy(&project->base.root);
+    path_append_path(&cache_path, &project->base.cache.root);
     path_append_string(&cache_path, BLD_CACHE_NAME);
 
     cache = fopen(path_to_string(&cache_path), "w");
@@ -37,11 +37,11 @@ void project_save_cache(bld_project* project) {
 
     fprintf(cache, "{\n");
     serialize_key(cache, "compiler", depth);
-    serialize_compiler(cache, &project->compiler, depth + 1);
+    serialize_compiler(cache, &project->base.compiler, depth + 1);
     fprintf(cache, ",\n");
 
     serialize_key(cache, "files", depth);
-    serialize_files(cache, &project->files, depth + 1);
+    serialize_files(cache, &project->files, &project->base.file_compilers, depth + 1);
     fprintf(cache, "\n");
 
     fprintf(cache, "}\n");
@@ -99,7 +99,7 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
     fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
 }
 
-void serialize_files(FILE* cache, bld_set* files, int depth) {
+void serialize_files(FILE* cache, bld_set* files, bld_array* compilers, int depth) {
     int first = 1;
     bld_iter iter = iter_set(files);
     bld_file* file;
@@ -112,13 +112,13 @@ void serialize_files(FILE* cache, bld_set* files, int depth) {
             first = 0;
         }
         fprintf(cache, "%*c", 2 * depth, ' ');
-        serialize_file(cache, file, depth + 1);
+        serialize_file(cache, file, compilers, depth + 1);
     }
     fprintf(cache, "\n");
     fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
 }
 
-void serialize_file(FILE* cache, bld_file* file, int depth) {
+void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "type", depth);
@@ -137,9 +137,9 @@ void serialize_file(FILE* cache, bld_file* file, int depth) {
     fprintf(cache, "\"%s\"", string_unpack(&file->name));
     fprintf(cache, ",\n");
 
-    if (file->compiler != NULL) {
+    if (file->compiler > 0) {
         serialize_key(cache, "compiler", depth);
-        serialize_compiler(cache, file->compiler, depth + 1);
+        serialize_compiler(cache, array_get(compilers, file->compiler), depth + 1);
         fprintf(cache, ",\n");
     }
 
