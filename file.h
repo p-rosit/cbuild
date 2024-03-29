@@ -15,7 +15,7 @@ typedef enum bld_file_type {
     BLD_INVALID_FILE,
     BLD_IMPL,
     BLD_HEADER,
-    BLD_TEST,
+    BLD_TEST
 } bld_file_type;
 
 typedef struct bld_file_identifier {
