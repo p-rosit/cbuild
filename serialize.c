@@ -84,10 +84,11 @@ void serialize_compiler_type(FILE* cache, bld_compiler_type type) {
 void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
     char** flag;
     int first = 1;
+    bld_iter iter;
 
     fprintf(cache, "[\n");
     
-    bld_iter iter = iter_array(flags);
+    iter = iter_array(flags);
     while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
@@ -129,7 +130,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, int depth
     fprintf(cache, ",\n");
 
     serialize_key(cache, "hash", depth);
-    fprintf(cache, "%ju", file->identifier.hash);
+    fprintf(cache, "%" PRIuMAX, file->identifier.hash);
     fprintf(cache, ",\n");
 
     serialize_key(cache, "name", depth);
@@ -176,7 +177,7 @@ void serialize_file_type(FILE* cache, bld_file_type type) {
 }
 
 void serialize_file_id(FILE* cache, bld_file_identifier id) {
-    fprintf(cache, "%ju", id.id);
+    fprintf(cache, "%" PRIuMAX, id.id);
 }
 
 void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
@@ -198,15 +199,17 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
 
 void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
     int first = 1;
+    size_t i;
+
     fprintf(cache, "[\n");
-    for (size_t i = 0; i < includes->capacity + includes->max_offset; i++) {
+    for (i = 0; i < includes->capacity + includes->max_offset; i++) {
         if (includes->offset[i] >= includes->max_offset) {continue;}
         if (!first) {
             fprintf(cache, ",\n");
         } else {
             first = 0;
         }
-        fprintf(cache, "%*c%ju", 2 * depth, ' ', includes->hash[i]);
+        fprintf(cache, "%*c%" PRIuMAX, 2 * depth, ' ', includes->hash[i]);
     }
     fprintf(cache, "\n%*c]", 2 * (depth - 1), ' ');
 }
