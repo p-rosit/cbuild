@@ -1,3 +1,4 @@
+[ ] figure out how to handle special cases for the rebuilder
 [ ] remove tiny mallocs from set
 [x] add prototypes to private functions
 [ ] add documentation to functions
