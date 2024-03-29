@@ -47,7 +47,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
         .identifier = get_identifier(path),
         .name = str,
         .path = *path,
-        .compiler = NULL,
+        .compiler = -1,
         .defined_symbols = set_new(sizeof(char*)),
         .undefined_symbols = set_new(sizeof(char*)),
         .includes = set_new(0),
@@ -74,8 +74,6 @@ void file_free(bld_file* file) {
 
     path_free(&file->path);
     string_free(&file->name);
-    compiler_free(file->compiler);
-    free(file->compiler);
 
     bld_iter iter_defined = iter_set(&file->defined_symbols);
     while (iter_next(&iter_defined, (void**) &symbol)) {
@@ -91,11 +89,11 @@ void file_free(bld_file* file) {
     set_free(&file->includes);
 }
 
-uintmax_t file_hash(bld_file* file, uintmax_t seed) {
+uintmax_t file_hash(bld_file* file, bld_array* compilers, uintmax_t seed) {
     seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
-    if (file->compiler != NULL) {
-        seed = compiler_hash(file->compiler, seed);
+    if (file->compiler > 0) {
+        seed = compiler_hash(array_get(compilers, file->compiler), seed);
     }
     return seed;
 }

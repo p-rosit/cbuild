@@ -27,7 +27,7 @@ typedef struct bld_file {
     bld_file_identifier identifier;
     bld_path path;
     bld_string name;
-    bld_compiler* compiler;
+    int compiler;
     bld_set defined_symbols;
     bld_set undefined_symbols;
     bld_set includes;
@@ -37,7 +37,7 @@ bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
-uintmax_t   file_hash(bld_file*, uintmax_t);
+uintmax_t   file_hash(bld_file*, bld_array*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
 void        file_symbols_copy(bld_file*, bld_set*, bld_set*);
