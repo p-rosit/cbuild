@@ -72,9 +72,9 @@ void set_main_rebuild(bld_forward_project* build, bld_path* path) {
     build->main_file_name = str;
 }
 
-void incremental_index_possible_file(bld_project*, bld_path*, char*);
-int incremental_compile_with_absolute_path(bld_project*, char*);
-void rebuild_builder(bld_project* project, int argc, char** argv) {
+void    project_base_free(bld_project_base*);
+int     incremental_compile_with_absolute_path(bld_project*, char*);
+void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     int result, new_result, log_level;
     char *executable, *old_executable, *main_name;
     bld_path build_root, main, executable_path;
