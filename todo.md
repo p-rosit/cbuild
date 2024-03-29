@@ -1,3 +1,4 @@
+[ ] rebuild with less restrictive flags
 [x] write project with c89
 [ ] allow using compiler different from default in linking step
 [ ] handle project with .so files
