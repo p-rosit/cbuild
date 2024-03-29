@@ -286,9 +286,9 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     string_append_space(&cmd);
 
     iter = dependency_graph_symbols_from(&project->graph, main_file);
-    while (dependency_graph_next_file(&iter, &project->graph, &file)) {
-        path = path_copy(&project->root);
-        path_append_path(&path, &(*project->cache).root);
+    while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        path = path_copy(&project->base.root);
+        path_append_path(&path, &project->base.cache.root);
         serialize_identifier(name, file);
         path_append_string(&path, name);
         
