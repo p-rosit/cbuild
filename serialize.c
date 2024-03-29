@@ -22,8 +22,7 @@ void project_save_cache(bld_project* project) {
     int depth = 1;
 
     if (!project->base.cache.loaded) {
-        log_warn("Trying to save cache but no cache was loaded. Ignoring.");
-        return;
+        log_fatal("Trying to save cache without a corresponding load cache, i.e. no cache path has been set.");
     }
 
     cache_path = path_copy(&project->base.root);
