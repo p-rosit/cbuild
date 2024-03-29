@@ -9,6 +9,8 @@
 #include "path.h"
 #include "compiler.h"
 
+#define BLD_INVALID_IDENITIFIER (0)
+
 typedef enum bld_file_type {
     BLD_INVALID_FILE,
     BLD_IMPL,
