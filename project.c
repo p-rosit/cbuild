@@ -75,6 +75,10 @@ void project_ignore_path(bld_forward_project* project, char* path) {
 }
 
 void project_set_main_file(bld_forward_project* project, char* file_name) {
+    bld_string str = string_new();
+    string_append_string(&str, file_name);
+
+    project->main_file_name = str;
 }
 
 void project_set_compiler(bld_forward_project* project, char* file_name, bld_compiler compiler) {
