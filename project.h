@@ -53,7 +53,6 @@ void        project_load_cache(bld_forward_project*, char*);
 void        project_set_main_file(bld_forward_project*, char*);
 void        project_set_compiler(bld_forward_project*, char*, bld_compiler);
 
-bld_project project_resolve(bld_forward_project*);
 void        project_save_cache(bld_project*);
 void        project_free(bld_project*);
 
