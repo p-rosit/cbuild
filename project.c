@@ -67,9 +67,11 @@ void project_add_path(bld_forward_project* project, char* path) {
 }
 
 void project_ignore_path(bld_forward_project* project, char* path) {
-}
+    bld_path test = path_copy(&project->base.root);
+    path_append_string(&test, path);
 
-void project_load_cache(bld_forward_project* project, char* path) {
+    set_add(&project->ignore_paths, file_get_id(&test), NULL);
+    path_free(&test);
 }
 
 void project_set_main_file(bld_forward_project* project, char* file_name) {
