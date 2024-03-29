@@ -431,10 +431,10 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     }
 
     dependency_graph_extract_includes(&project->graph, &project->files);
+    incremental_mark_changed_files(project, &changed_files);
 
-    incremental_mark_changed_files(project);
-
-    result = incremental_compile_changed_files(project, &any_compiled);
+    result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
+    set_free(&changed_files);
     if (result) {
         log_warn("Could not compile all files, no executable generated.");
         return result;
