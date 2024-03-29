@@ -2,9 +2,9 @@
 #include "container.h"
 
 bld_graph graph_new(void) {
-    return (bld_graph) {
-        .edges = set_new(sizeof(bld_array)),
-    };
+    bld_graph graph;
+    graph.edges = set_new(sizeof(bld_array));
+    return graph;
 }
 
 void graph_free(bld_graph* graph) {
