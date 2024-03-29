@@ -465,7 +465,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     }
 }
 
-int incremental_compile_changed_files(bld_project* project, int* any_compiled) {
+int incremental_compile_changed_files(bld_project* project, bld_set* changed_files, int* any_compiled) {
     FILE* cached_file;
     int *has_changed, result, temp;
     char compiled_name[FILENAME_MAX];
@@ -479,11 +479,11 @@ int incremental_compile_changed_files(bld_project* project, int* any_compiled) {
     while (iter_next(&iter, (void**) &file)) {
         if (file->type == BLD_HEADER) {continue;}
 
-        has_changed = set_get(&project->changed_files, file->identifier.id);
+        has_changed = set_get(changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("incremental_compile_with_absolute_path: internal error");}
 
-        path = path_copy(&project->root);
-        path_append_path(&path, &(*project->cache).root);
+        path = path_copy(&project->base.root);
+        path_append_path(&path, &project->base.cache.root);
         serialize_identifier(compiled_name, file);
         path_append_string(&path, compiled_name);
 
