@@ -7,7 +7,7 @@
 typedef enum bld_compiler_type {
     BLD_INVALID_COMPILER,
     BLD_GCC,
-    BLD_CLANG,
+    BLD_CLANG
 } bld_compiler_type;
 
 typedef struct bld_compiler {
