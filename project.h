@@ -28,6 +28,7 @@ typedef struct bld_project_base {
 } bld_project_base;
 
 typedef struct bld_forward_project {
+    int rebuilding;
     bld_project_base base;
     bld_array extra_paths;
     bld_set ignore_paths;
