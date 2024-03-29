@@ -141,6 +141,79 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
     }
 }
 
+void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {
+    int match_found = 0;
+    bld_iter iter;
+    bld_path path;
+    bld_file* file;
+
+    path = (bld_path) {.str = fproject->main_file_name};
+
+    if (fproject->rebuilding) {
+        project->main_file = file_get_id(&path);
+        return;
+    }
+
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        if (path_ends_with(&file->path, &path)) {
+            if (match_found) {
+                log_fatal("Name of main file \"%s\" is ambiguous, found several matches", string_unpack(&fproject->main_file_name));
+            }
+            match_found = 1;
+            project->main_file = file->identifier.id;
+        }
+    }
+
+    if (!match_found) {
+        log_fatal("No file matching \"%s\" could be found", string_unpack(&fproject->main_file_name));
+    }
+}
+
+void incremental_apply_compilers(bld_project* project, bld_forward_project* fproject) {
+    int has_file, has_compiler;
+    size_t index;
+    bld_iter file_iter, compiler_iter;
+    bld_string* file_name;
+    bld_compiler* compiler;
+
+    file_iter = iter_array(&fproject->file_names);
+    compiler_iter = iter_array(&fproject->base.file_compilers);
+
+    index = 0;
+    while (1) {
+        int match_found;
+        bld_iter iter;
+        bld_file* file;
+        bld_path path;
+
+        has_file = iter_next(&file_iter, (void**) &file_name);
+        has_compiler = iter_next(&compiler_iter, (void**) &compiler);
+
+        if (has_file != has_compiler) {
+            log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
+        }
+        if (!has_file && !has_compiler) {break;}
+
+        match_found = 0;
+        path = path_from_string(string_unpack(file_name));
+        iter = iter_set(&project->files);
+        while (iter_next(&iter, (void**) &file)) {
+            if (path_ends_with(&file->path, &path)) {
+                if (match_found) {
+                    log_fatal("Applying compiler to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
+                }
+                match_found = 1;
+                file->compiler = index;
+            }
+        }
+
+        path_free(&path);
+
+        index++;
+    }
+}
+
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX], **flag;
