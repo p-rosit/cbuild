@@ -5,13 +5,17 @@
 
 void    incremental_index_project(bld_project*, bld_forward_project*);
 void    incremental_index_possible_file(bld_project*, bld_path*, char*);
-void    incremental_index_recursive(bld_project*, bld_path*, char*);
+void    incremental_index_recursive(bld_project*, bld_forward_project*, bld_path*, char*);
+void    incremental_apply_main_file(bld_project*, bld_forward_project*);
+void    incremental_apply_compilers(bld_project*, bld_forward_project*);
+
 int     incremental_compile_file(bld_project*, bld_file*);
 int     incremental_compile_total(bld_project*, char*);
-void    incremental_mark_changed_files(bld_project*);
-int     incremental_cached_compilation(bld_project*, bld_file*);
 int     incremental_compile_with_absolute_path(bld_project*, char*);
-int     incremental_compile_changed_files(bld_project*, int*);
+
+void    incremental_mark_changed_files(bld_project*, bld_set*);
+int     incremental_cached_compilation(bld_project*, bld_file*);
+int     incremental_compile_changed_files(bld_project*, bld_set*, int*);
 
 void incremental_apply_cache(bld_project* project) {
     bld_iter iter;
