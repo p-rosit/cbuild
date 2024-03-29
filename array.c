@@ -4,12 +4,14 @@
 
 
 bld_array array_new(size_t value_size) {
-    return (bld_array) {
-        .capacity = 0,
-        .size = 0,
-        .value_size = value_size,
-        .values = NULL,
-    };
+    bld_array array;
+
+    array.capacity = 0;
+    array.size = 0;
+    array.value_size = value_size;
+    array.values = NULL;
+
+    return array;
 }
 
 void array_free(bld_array* array) {
@@ -17,17 +19,19 @@ void array_free(bld_array* array) {
 }
 
 bld_array array_copy(const bld_array* array) {
-    bld_array copy = (bld_array) {
-        .capacity = array->size,
-        .size = array->size,
-        .values = malloc(array->size * array->value_size),
-    };
-    if (copy.values == NULL) {
+    bld_array cpy;
+
+    cpy.capacity = array->size;
+    cpy.size = array->size;
+    cpy.value_size = array->value_size;
+    cpy.values = malloc(array->size * array->value_size);
+
+    if (cpy.values == NULL) {
         log_fatal("Could not allocate");
     }
 
-    memcpy(copy.values, array->values, array->size * array->value_size);
-    return copy;
+    memcpy(cpy.values, array->values, array->size * array->value_size);
+    return cpy;
 }
 
 void array_push(bld_array* array, void* value) {
