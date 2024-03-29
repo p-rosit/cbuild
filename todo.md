@@ -1,3 +1,4 @@
+[ ] handle project with .so files
 [ ] allow setting compiler for all files under directory
 [ ] represent project files as tree
 [x] figure out how to handle special cases for the rebuilder
