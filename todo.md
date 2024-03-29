@@ -9,7 +9,7 @@
 [x] rename functions into a consistent style
 [x] hide compilation (incremental/from scratch) behind single function
 [x] replace wrappers to generic array and set by array/set
-[ ] avoid recompiling file twice when performing incremental compilation
+[x] avoid recompiling file twice when performing incremental compilation
 [ ] add functions to analyze the dependency graph
 [x] parse symbols that are variables ("B" entries when running nm)
 [ ] expose api to generate human-readable dependency graph
