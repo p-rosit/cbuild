@@ -369,11 +369,13 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     int result = 0, any_compiled = 0, temp;
     bld_path path;
     bld_file *file;
+    bld_set changed_files;
 
     temp = 0;
+    changed_files = set_new(sizeof(int));
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        set_add(&project->changed_files, file->identifier.id, &temp);
+        set_add(&changed_files, file->identifier.id, &temp);
     }
 
     if (project->graph.files != &project->files) {
