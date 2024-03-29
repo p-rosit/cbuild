@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
         log_info("Entire project existed in cache");
     }
 
-    /* Optional */
+    /* Optional, can only be used if cache path has been set with project_load_cache */
     project_save_cache(&project);
 
     /* Mandatory */
