@@ -21,6 +21,7 @@ typedef struct bld_project_base {
     bld_path root;
     bld_path build;
     bld_compiler compiler;
+    bld_array file_compilers;
     bld_project_cache cache;
 } bld_project_base;
 
@@ -29,7 +30,6 @@ typedef struct bld_forward_project {
     bld_array extra_paths;
     bld_set ignore_paths;
     bld_array file_names;
-    bld_array file_compilers;
 } bld_forward_project;
 
 typedef struct bld_project {
