@@ -440,8 +440,8 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         return result;
     }
 
-    path = path_copy(&project->root);
-    path_append_path(&path, &(*project->cache).root);
+    path = path_copy(&project->base.root);
+    path_append_path(&path, &project->base.cache.root);
 
     dependency_graph_extract_symbols(&project->graph, &path);
     path_free(&path);
