@@ -367,15 +367,12 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     bld_iter iter;
     int result = 0, any_compiled = 0, temp;
-    uintmax_t hash;
     bld_path path;
     bld_file *file;
 
     temp = 0;
-    hash = compiler_hash(&project->compiler, 5031);
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        file->identifier.hash = file_hash(file, hash); // TODO: move hash computation
         set_add(&project->changed_files, file->identifier.id, &temp);
     }
 
