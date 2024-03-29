@@ -1,6 +1,6 @@
 [ ] allow setting compiler for all files under directory
 [ ] represent project files as tree
-[ ] figure out how to handle special cases for the rebuilder
+[x] figure out how to handle special cases for the rebuilder
 [ ] remove tiny mallocs from set
 [x] add prototypes to private functions
 [ ] add documentation to functions
