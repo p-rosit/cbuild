@@ -1,3 +1,4 @@
+[ ] allow using compiler different from default in linking step
 [ ] handle project with .so files
 [ ] allow setting compiler for all files under directory
 [ ] represent project files as tree
