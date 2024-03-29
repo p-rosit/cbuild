@@ -307,7 +307,7 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     return result;
 }
 
-void incremental_mark_changed_files(bld_project* project) {
+void incremental_mark_changed_files(bld_project* project, bld_set* changed_files) {
     int* has_changed;
     bld_file *file, *cache_file, *temp;
     bld_iter iter;
@@ -316,8 +316,8 @@ void incremental_mark_changed_files(bld_project* project) {
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
 
-        cache_file = set_get(&project->cache->files, file->identifier.id);
-        has_changed = set_get(&project->changed_files, file->identifier.id);
+        cache_file = set_get(&project->base.cache.files, file->identifier.id);
+        has_changed = set_get(changed_files, file->identifier.id);
 
         if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
 
@@ -330,8 +330,8 @@ void incremental_mark_changed_files(bld_project* project) {
         }
 
         iter = dependency_graph_includes_from(&project->graph, file);
-        while (dependency_graph_next_file(&iter, &project->graph, &temp)) {
-            has_changed = set_get(&project->changed_files, temp->identifier.id);
+        while (dependency_graph_next_file(&iter, &project->files, &temp)) {
+            has_changed = set_get(changed_files, temp->identifier.id);
             if (has_changed == NULL) {log_fatal("incremental_mark_changed_files: unreachable error");}
             *has_changed = 1;
         }
