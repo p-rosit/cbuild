@@ -32,6 +32,7 @@ typedef struct bld_forward_project {
     bld_project_base base;
     bld_array extra_paths;
     bld_set ignore_paths;
+    bld_string main_file_name;
     bld_array file_names;
 } bld_forward_project;
 
