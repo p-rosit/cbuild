@@ -29,14 +29,14 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        cached = set_get(&project->cache->files, file->identifier.id);
+        cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
         if (file->identifier.hash != cached->identifier.hash) {
             continue;
         }
 
-        log_debug("Found \"%s\":%ju in cache: %lu include(s), %lu defined, %lu undefined", string_unpack(&file->name), cached->identifier.id, cached->includes.size, cached->defined_symbols.size, cached->undefined_symbols.size);
+        log_debug("Found \"%s\" in cache: %lu include(s), %lu defined, %lu undefined", string_unpack(&file->name), cached->includes.size, cached->defined_symbols.size, cached->undefined_symbols.size);
 
         file->includes = set_copy(&cached->includes);
         graph_add_node(&project->graph.include_graph, file->identifier.id);
@@ -46,6 +46,8 @@ void incremental_apply_cache(bld_project* project) {
         file_symbols_copy(file, &cached->defined_symbols, &cached->undefined_symbols);
         graph_add_node(&project->graph.symbol_graph, file->identifier.id);
     }
+
+    project->base.cache.applied = 1;
 }
 
 
