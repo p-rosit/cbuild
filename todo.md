@@ -34,7 +34,7 @@
 [ ] make cache optional
 [x] recompile if file changed due to include dependency
 [ ] use cache to populate graph
-[ ] split generating dependency graph from indexing project
+[x] split generating dependency graph from indexing project
 [ ] detect when .c file was included and disregard when compiling
 [ ] detect if .h file is header only
     - unclear what it means for a file to be "header only"
