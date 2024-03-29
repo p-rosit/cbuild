@@ -260,7 +260,7 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     int result;
     char name[FILENAME_MAX], **flag;
     bld_path path;
-    bld_compiler compiler = project->compiler;
+    bld_compiler compiler = project->base.compiler;
     bld_file *main_file, *file;
     bld_string cmd;
     bld_iter iter;
