@@ -343,7 +343,7 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
     int exists, new_options;
     bld_file* f;
 
-    f = set_get(&project->cache->files, file->identifier.id);
+    f = set_get(&project->base.cache.files, file->identifier.id);
     if (f != NULL) {
         exists = 1;
         new_options = (file->identifier.hash != f->identifier.hash);
