@@ -23,15 +23,16 @@ bld_project project_resolve(bld_forward_project* fproject) {
     bld_iter iter;
     bld_file* file;
 
-    project = (bld_project) {
-        .base = fproject->base,
-        .files = set_new(sizeof(bld_file)),
-        .graph = dependency_graph_new(),
-    };
+    project.base = fproject->base;
+    project.files = set_new(sizeof(bld_file));
+    project.graph = dependency_graph_new();
 
     if (fproject->rebuilding) {
-        bld_path main_path = (bld_path) {.str = fproject->main_file_name};
-        char* main_name = path_get_last_string(&main_path);
+        char* main_name;
+        bld_path main_path;
+        main_path.str = fproject->main_file_name;
+
+        main_name = path_get_last_string(&main_path);
         incremental_index_possible_file(&project, &main_path, main_name);
     }
     incremental_index_project(&project, fproject);
@@ -110,7 +111,6 @@ void incremental_index_possible_file(bld_project* project, bld_path* path, char*
     char* file_ending;
     bld_path file_path;
     bld_file file;
-    // log_warn("Indexing: \"%s\", name \"%s\"", path_to_string(path), name);
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
@@ -173,8 +173,9 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
 void incremental_index_project(bld_project* project, bld_forward_project* forward_project) {
     DIR* dir;
-    bld_path *path, extra_path;
     char* name;
+    bld_path *path, extra_path;
+    bld_iter iter;
 
     dir = opendir(path_to_string(&forward_project->base.root));
     if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&forward_project->base.root));}
@@ -183,7 +184,7 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
     log_info("Indexing project under root");
     incremental_index_recursive(project, forward_project, &forward_project->base.root, NULL);
 
-    bld_iter iter = iter_array(&forward_project->extra_paths);
+    iter = iter_array(&forward_project->extra_paths);
     while (iter_next(&iter, (void**) &path)) {
         extra_path = path_copy(&project->base.root);
         path_append_path(&extra_path, path);
@@ -201,7 +202,7 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
     bld_path path;
     bld_file* file;
 
-    path = (bld_path) {.str = fproject->main_file_name};
+    path.str = fproject->main_file_name;
 
     if (fproject->rebuilding) {
         project->main_file = file_get_id(&path);
@@ -307,7 +308,6 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
         string_append_string(&cmd, *flag);
     }
 
-    // log_warn("Compiling: \"%s\"", string_unpack(&cmd));
     result = system(string_unpack(&cmd));
     string_free(&cmd);
     return result;
@@ -358,7 +358,6 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
         string_append_string(&cmd, *flag);
     }
 
-    // log_warn("Final: \"%s\"", string_unpack(&cmd));
     result = system(string_unpack(&cmd));
     if (result < 0) {
         log_fatal("Expected return value of compiler to be non-negative.");
