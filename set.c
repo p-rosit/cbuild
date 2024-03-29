@@ -12,10 +12,11 @@ int         set_set_capacity(bld_set*, size_t);
 
 
 bld_offset hash_compute_offset(size_t capacity) {
-    bld_offset max_offset = 0;
+    bld_offset i, max_offset;
 
     /* Approximate log2 */
-    for (bld_offset i = 0; capacity > 0; capacity /= 2, i++) {
+    max_offset = 0;
+    for (i = 0; capacity > 0; capacity /= 2, i++) {
         max_offset = (capacity % 2) ? i : max_offset;
     }
 
@@ -27,12 +28,12 @@ size_t hash_target(size_t capacity, bld_offset offset, bld_hash hash) {
 }
 
 int hash_find_entry(size_t capacity, bld_offset max_offset, bld_offset* offsets, bld_hash* hashes, bld_offset* offset, bld_hash* hash) {
-    size_t target;
+    size_t i, target;
     if (capacity <= 0) {return -1;}
 
     *offset = 0;
     target = hash_target(capacity, *offset, *hash);
-    for (size_t i = target; *offset < max_offset; i++) {
+    for (i = target; *offset < max_offset; i++) {
         if (offsets[i] < *offset ||
             offsets[i] >= max_offset ||
             hashes[i] == *hash) {
@@ -62,15 +63,17 @@ void hash_swap_entry(size_t target, bld_offset* offsets, bld_hash* hashes, bld_o
 }
 
 bld_set set_new(size_t value_size) {
-    return (bld_set) {
-        .capacity = 0,
-        .size = 0,
-        .value_size = value_size,
-        .max_offset = 0,
-        .offset = NULL,
-        .hash = NULL,
-        .values = NULL,
-    };
+    bld_set set;
+
+    set.capacity = 0;
+    set.size = 0;
+    set.value_size = value_size;
+    set.max_offset = 0;
+    set.offset = NULL;
+    set.hash = NULL;
+    set.values = NULL;
+
+    return set;
 }
 
 void set_free(bld_set* set) {
@@ -80,7 +83,8 @@ void set_free(bld_set* set) {
 }
 
 void set_clear(bld_set* set) {
-    for (size_t i = 0; i < set->capacity + set->max_offset; i++) {
+    size_t i;
+    for (i = 0; i < set->capacity + set->max_offset; i++) {
         set->offset[i] = set->max_offset;
     }
 }
@@ -101,10 +105,11 @@ void set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* h
 
 int set_add_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
     int error = -1;
+    size_t i;
 
     if (*offset >= set->max_offset) {return 0;}
 
-    for (size_t i = target; i < set->capacity + set->max_offset; i++) {
+    for (i = target; i < set->capacity + set->max_offset; i++) {
         set_swap_value(set, i, offset, hash, value);
         if (*offset >= set->max_offset) {error = 0; break;}
 
@@ -139,15 +144,13 @@ int set_set_capacity(bld_set* set, size_t capacity) {
         return -1;
     }
 
-    new_set = (bld_set) {
-        .capacity = capacity,
-        .size = set->size,
-        .value_size = set->value_size,
-        .max_offset = max_offset,
-        .offset = offsets,
-        .hash = hashes,
-        .values = values,
-    };
+    new_set.capacity = capacity;
+    new_set.size = set->size;
+    new_set.value_size = set->value_size;
+    new_set.max_offset = max_offset;
+    new_set.offset = offsets;
+    new_set.hash = hashes;
+    new_set.values = values;
 
     for (i = 0; i < new_set.capacity + new_set.max_offset; i++) {
         new_set.offset[i] = new_set.max_offset;
@@ -316,7 +319,8 @@ int set_has(const bld_set* set, bld_hash hash) {
 }
 
 int set_empty_intersection(const bld_set* set1, const bld_set* set2) {
-    for (size_t i = 0; i < set1->capacity + set1->max_offset; i++) {
+    size_t i;
+    for (i = 0; i < set1->capacity + set1->max_offset; i++) {
         if (set1->offset[i] >= set1->max_offset) {continue;}
         if (set_has(set2, set1->hash[i])) {
             return 0;
@@ -341,15 +345,13 @@ bld_set set_copy(const bld_set* set) {
         log_fatal("set_copy: Could not allocate space for copy");
     }
 
-    cpy = (bld_set) {
-        .capacity =  set->capacity,
-        .size = set->size,
-        .value_size = set->value_size,
-        .max_offset = set->max_offset,
-        .offset = offsets,
-        .hash = hashes,
-        .values = values,
-    };
+    cpy.capacity =  set->capacity;
+    cpy.size = set->size;
+    cpy.value_size = set->value_size;
+    cpy.max_offset = set->max_offset;
+    cpy.offset = offsets;
+    cpy.hash = hashes;
+    cpy.values = values;
 
     memcpy(cpy.offset, set->offset, total_capacity * sizeof(bld_offset));
     memcpy(cpy.hash, set->hash, total_capacity * sizeof(bld_hash));
