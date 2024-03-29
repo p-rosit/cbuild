@@ -97,6 +97,4 @@ void compiler_add_flag(bld_compiler* compiler, char* flag) {
     string_append_string(&s, flag);
     temp = string_unpack(&s);
     array_push(&compiler->flags, &temp);
-
-    log_debug("Added flag: \"%s\"", flag);
 }
