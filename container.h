@@ -30,12 +30,12 @@ typedef struct bld_graph {
 enum bld_container_type {
     BLD_ARRAY,
     BLD_SET,
-    BLD_GRAPH,
+    BLD_GRAPH
 };
 
 enum bld_graph_search_type {
     BLD_GRAPH_DONE,
-    BLD_DFS,
+    BLD_DFS
 };
 
 typedef struct bld_iter_array {
