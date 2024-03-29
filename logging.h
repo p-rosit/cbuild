@@ -7,7 +7,7 @@ typedef enum bld_log_level {
     BLD_WARN,
     BLD_DEPRECATED,
     BLD_ERROR,
-    BLD_FATAL,
+    BLD_FATAL
 } bld_log_level;
 
 extern int log_level;
