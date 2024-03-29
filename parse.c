@@ -462,7 +462,7 @@ int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
     }
 
     while (c != EOF && isdigit(c)) {
-        // Warning: number is assumed to be valid, no overflow etc.
+        /* Warning: number is assumed to be valid, no overflow etc. */
         num = 10 * num + (c - '0');
         c = getc(file);
     }
@@ -547,12 +547,14 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
     }
 
     while (!parse_complete) {
+        int i;
+
         key_num += 1;
         str = string_new();
         result = parse_string(file, &str);
         if (result) {
             log_warn("Key %d could not be parsed, expected: [", key_num);
-            for (int i = 0; i < entries; i++) {
+            for (i = 0; i < entries; i++) {
                 if (i > 0) {printf(",\n");}
                 printf("  \"%s\"", keys[i]);
             }
@@ -562,7 +564,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
 
         exists = 0;
         temp = string_unpack(&str);
-        for (int i = 0; i < entries; i++) {
+        for (i = 0; i < entries; i++) {
             if (strcmp(temp, keys[i]) == 0) {
                 exists = 1;
                 index = i;
@@ -571,7 +573,7 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
 
         if (!exists) {
             log_warn("\"%s\" is not a valid key, expected: [", temp);
-            for (int i = 0; i < entries; i++) {
+            for (i = 0; i < entries; i++) {
                 if (i > 0) {printf(",\n");}
                 printf("  \"%s\"", keys[i]);
             }
