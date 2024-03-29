@@ -14,17 +14,32 @@ void                project_cache_free(bld_project_cache*);
 bld_path            extract_build_path(bld_path*);
 
 bld_forward_project project_new(bld_path path, bld_compiler compiler) {
-    return (bld_forward_project) {
-        .base = (bld_project_base) {
-            .root = path,
-            .compiler = compiler,
-            .cache = project_cache_new(),
-        },
+    FILE* f;
+    bld_path build_file_path;
+    bld_forward_project project;
+    
+    build_file_path = extract_build_path(&path);
+    path_remove_last_string(&path);
+
+    f = fopen(path_to_string(&build_file_path), "r");
+    if (f == NULL) {
+        log_fatal("Expected executable to have same name (and be in same directory) as build file. Could not find \"%s\"", path_to_string(&build_file_path));
+    } else {
+        fclose(f);
+    }
+
+    project = (bld_forward_project) {
+        .rebuilding = 0,
+        .base = project_base_new(path, compiler),
         .extra_paths = array_new(sizeof(bld_path)),
         .ignore_paths = set_new(0),
         .file_names = array_new(sizeof(bld_string)),
-        .file_compilers = array_new(sizeof(bld_compiler)),
     };
+
+    project_ignore_path(&project, path_to_string(&build_file_path));
+    path_free(&build_file_path);
+
+    return project;
 }
 
 void project_add_build(bld_forward_project* project, char* path) {
