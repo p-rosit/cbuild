@@ -16,7 +16,7 @@
 [ ] collapse array when only serializing 0 or 1 element/s
 [ ] find build directory automatically by searching upwards for cbuild and verify that correct files are present
 [x] use prefix on functions to avoid collisions
-[ ] handle forward declarations of compiler associated with file
+[x] handle forward declarations of compiler associated with file
 [x] keep file id in node instead of pointer to file (pointer might become invalid, id never becomes invalid)
 [ ] handle case where cache exists but .o file is missing
 [x] separate file and graph data in serialized cache
