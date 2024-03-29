@@ -12,10 +12,12 @@ void generate_symbol_file(bld_file*, bld_path*, bld_path*);
 void add_symbol(bld_set*, bld_string*);
 
 bld_dependency_graph dependency_graph_new(void) {
-    return (bld_dependency_graph) {
-        .include_graph = graph_new(),
-        .symbol_graph = graph_new(),
-    };
+    bld_dependency_graph graph;
+
+    graph.include_graph = graph_new();
+    graph.symbol_graph = graph_new();
+
+    return graph;
 }
 
 void dependency_graph_free(bld_dependency_graph* graph) {
@@ -158,7 +160,6 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
     f = fopen(path_to_string(symbol_path), "r");
     if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
 
-    // log_warn("Parsing: \"%s\"", string_unpack(&file->name));
     while (1) {
         c = fgetc(f);
         if (c == EOF) {
