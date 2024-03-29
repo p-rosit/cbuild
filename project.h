@@ -11,9 +11,11 @@
 
 typedef struct bld_project_cache {
     int loaded;
+    int set;
     int applied;
-    bld_compiler compiler;
     bld_path root;
+    bld_compiler compiler;
+    bld_array file_compilers;
     bld_set files;
 } bld_project_cache;
 

@@ -74,6 +74,30 @@ void project_base_free(bld_project_base* base) {
     }
     array_free(&base->file_compilers);
 }
+
+bld_project_cache project_cache_new(void) {
+    return (bld_project_cache) {
+        .loaded = 0,
+        .set = 0,
+        .applied = 0,
+    };
+}
+
+void project_cache_free(bld_project_cache* cache) {
+    bld_iter iter;
+    bld_file *file;
+    
+    if (!cache->loaded) {return;}
+    path_free(&cache->root);
+
+    if (!cache->set) {return;}
+    compiler_free(&cache->compiler);
+
+    iter = iter_set(&cache->files);
+    while (iter_next(&iter, (void**) &file)) {
+        file_free(file);
+    }
+    set_free(&cache->files);
 }
 
 bld_path project_path_extract(int argc, char** argv) {
