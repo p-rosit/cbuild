@@ -3,15 +3,15 @@
 #include "path.h"
 
 bld_path path_new(void) {
-    return (bld_path) {
-        .str = string_new(),
-    };
+    bld_path path;
+    path.str = string_new();
+    return path;
 }
 
 bld_path path_copy(bld_path* path) {
-    return (bld_path) {
-        .str = string_copy(&path->str),
-    };
+    bld_path cpy;
+    cpy.str = string_copy(&path->str);
+    return cpy;
 }
 
 void path_free(bld_path* path) {
@@ -38,11 +38,12 @@ void path_append_path(bld_path* root, bld_path* path) {
 }
 
 char* path_get_last_string(bld_path* path) {
-    size_t sep_len = sizeof(BLD_PATH_SEP) - 1;
+    size_t i, sep_len;
     char* str;
 
+    sep_len = sizeof(BLD_PATH_SEP) - 1;
     path_to_string(path);
-    for (size_t i = 0; i < path->str.size; i++) {
+    for (i = 0; i < path->str.size; i++) {
         str = path->str.chars + path->str.size - i - 1;
         if (strncmp(str, BLD_PATH_SEP, sep_len) == 0) {
             return &path->str.chars[path->str.size - i + sizeof(BLD_PATH_SEP) - 2];
@@ -60,12 +61,13 @@ char* path_remove_last_string(bld_path* path) {
 }
 
 int path_ends_with(bld_path* path, bld_path* suffix) {
-    size_t suffix_start = path->str.size - suffix->str.size;
+    size_t i, suffix_start;
     char a, b;
 
+    suffix_start = path->str.size - suffix->str.size;
     if (suffix->str.size > path->str.size) {return 0;}
 
-    for (size_t i = 0; i < suffix->str.size; i++) {
+    for (i = 0; i < suffix->str.size; i++) {
         a = path->str.chars[suffix_start + i];
         b = suffix->str.chars[i];
         if (a != b) {
@@ -77,8 +79,9 @@ int path_ends_with(bld_path* path, bld_path* suffix) {
 }
 
 void path_remove_file_ending(bld_path* path) {
+    size_t i;
     /* TODO: make sure we don't pass a path separator */
-    for (size_t i = path->str.size; 0 < i; i--) {
+    for (i = path->str.size; 0 < i; i--) {
         if (path->str.chars[i - 1] == '.') {
             path->str.size = i - 1;
             path->str.chars[i - 1] = '\0';
