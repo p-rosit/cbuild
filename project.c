@@ -64,6 +64,19 @@ void project_save_cache(bld_project* project) {
 }
 
 void project_free(bld_project* project) {
+    bld_iter iter;
+    bld_file* file;
+
+    project_base_free(&project->base);
+    dependency_graph_free(&project->graph);
+
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        file_free(file);
+    }
+    set_free(&project->files);
+}
+
 bld_project_base project_base_new(bld_path path, bld_compiler compiler) {
     return (bld_project_base) {
         .root = path,
