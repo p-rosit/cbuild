@@ -471,6 +471,27 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         log_info("Compiled executable: \"%s\"", name);
     }
 
+    if (!project->base.cache.loaded) {
+        bld_iter iter;
+        bld_path obj_path;
+        bld_string str;
+        bld_file* file;
+        char obj_name[FILENAME_MAX];
+
+        iter = iter_set(&project->files);
+        while (iter_next(&iter, (void**) &file)) {
+            if (file->type == BLD_HEADER) {continue;}
+
+            obj_path = path_copy(&project->base.root);
+            serialize_identifier(obj_name, file);
+            path_append_string(&obj_path, obj_name);
+            str = obj_path.str;
+            string_append_string(&str, ".o");
+
+            remove(string_unpack(&str));
+        }
+    }
+
     if (!any_compiled && !result) {
         return -1;
     } else {
