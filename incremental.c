@@ -45,7 +45,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
         file->identifier.hash = file_hash(file, &project.base.file_compilers, hash);
     }
 
-    if (project.base.cache.loaded) {
+    if (project.base.cache.set) {
         incremental_apply_cache(&project);
     }
 
