@@ -30,7 +30,7 @@
 [ ] define private function prototypes somewhere
 [ ] hide ubuntu dependencies in building behind interface
 [x] find include dependencies and put in graph
-[ ] make graph optional
+[x] make graph optional (graph is now internal)
 [ ] make cache optional
 [x] recompile if file changed due to include dependency
 [x] use cache to populate graph
