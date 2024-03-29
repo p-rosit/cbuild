@@ -217,20 +217,20 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX], **flag;
-    bld_compiler compiler;
+    bld_compiler* compiler;
     bld_string cmd = string_new();
     bld_path path;
 
-    if (file->compiler != NULL) {
-        compiler = *(file->compiler);
+    if (file->compiler > 0) {
+        compiler = array_get(&project->base.file_compilers, file->compiler);
     } else {
-        compiler = project->compiler;
+        compiler = &project->base.compiler;
     }
 
-    string_append_string(&cmd, compiler.executable);
+    string_append_string(&cmd, compiler->executable);
     string_append_space(&cmd);
 
-    bld_iter iter = iter_array(&compiler.flags);
+    bld_iter iter = iter_array(&compiler->flags);
     while (iter_next(&iter, (void**) &flag)) {
         string_append_string(&cmd, *flag);
         string_append_space(&cmd);
