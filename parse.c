@@ -99,7 +99,7 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
     path_free(&path);
 }
 
-int parse_cache(bld_project* cache, bld_path* root) {
+int parse_cache(bld_project_cache* cache, bld_path* root) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
@@ -123,25 +123,22 @@ int parse_cache(bld_project* cache, bld_path* root) {
         return -1;
     }
 
-    cache->graph.files = &cache->files;
-
     fclose(f);
     path_free(&path);
     return 0;
 }
 
-int parse_project_compiler(FILE* file, bld_project* project) {
-    int result = parse_compiler(file, &project->compiler);
+int parse_project_compiler(FILE* file, bld_project_cache* cache) {
+    int result = parse_compiler(file, &cache->compiler);
     if (result) {log_warn("Could not parse compiler for project.");}
     return result;
 }
 
-int parse_project_files(FILE* file, bld_project* project) {
+int parse_project_files(FILE* file, bld_project_cache* cache) {
     int amount_parsed;
-    bld_set* files = &project->files;
 
-    project->files = set_new(sizeof(bld_file));
-    amount_parsed = parse_array(file, files, (bld_parse_func) parse_file);
+    cache->files = set_new(sizeof(bld_file));
+    amount_parsed = parse_array(file, cache, (bld_parse_func) parse_file);
     if (amount_parsed < 0) {
         log_warn("Could not parse graph");
         return -1;
@@ -150,7 +147,7 @@ int parse_project_files(FILE* file, bld_project* project) {
     return 0;
 }
 
-int parse_file(FILE* file, bld_set* files) {
+int parse_file(FILE* file, bld_project_cache* cache) {
     bld_file temp, *f;
     int amount_parsed;
     int size = 8;
@@ -167,12 +164,14 @@ int parse_file(FILE* file, bld_set* files) {
         (bld_parse_func) parse_file_undefined_symbols,
     };
 
+    temp.path = path_new();
+    temp.compiler = -1;
     temp.defined_symbols = set_new(sizeof(char*));
     temp.undefined_symbols = set_new(sizeof(char*));
+    set_add(&cache->files, BLD_INVALID_IDENITIFIER, &temp);
+    f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
 
-    f = &temp;
-    f->compiler = NULL;
-    amount_parsed = parse_map(file, f, size, parsed, keys, funcs);
+    amount_parsed = parse_map(file, cache, size, parsed, keys, funcs);
     if (amount_parsed < 0) {return -1;}
     if (!parsed[0]) {return -1;} /* Fail if file type was not parsed */
 
@@ -195,12 +194,14 @@ int parse_file(FILE* file, bld_set* files) {
         }
     }
 
-    f->path = path_new();
-    set_add(files, f->identifier.id, f);
+    f = set_remove(&cache->files, BLD_INVALID_IDENITIFIER);
+    set_add(&cache->files, f->identifier.id, f);
+
     return 0;
 }
 
-int parse_file_type(FILE* file, bld_file* f) {
+int parse_file_type(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     bld_string str = string_new();
     char* temp;
     int result = parse_string(file, &str);
@@ -227,7 +228,8 @@ int parse_file_type(FILE* file, bld_file* f) {
     return result;
 }
 
-int parse_file_id(FILE* file, bld_file* f) {
+int parse_file_id(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     uintmax_t num;
     int result = parse_uintmax(file, &num);
     if (result) {
@@ -238,7 +240,8 @@ int parse_file_id(FILE* file, bld_file* f) {
     return 0;
 }
 
-int parse_file_hash(FILE* file, bld_file* f) {
+int parse_file_hash(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     uintmax_t num;
     int result = parse_uintmax(file, &num);
     if (result) {
@@ -249,7 +252,8 @@ int parse_file_hash(FILE* file, bld_file* f) {
     return 0;
 }
 
-int parse_file_name(FILE* file, bld_file* f) {
+int parse_file_name(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     bld_string str = string_new();
     int result = parse_string(file, &str);
     if (result) {
@@ -262,17 +266,22 @@ int parse_file_name(FILE* file, bld_file* f) {
     return result;
 }
 
-int parse_file_compiler(FILE* file, bld_file* f) {
+int parse_file_compiler(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
+    bld_compiler temp, *compiler;
     int result;
-    f->compiler = malloc(sizeof(bld_compiler));
-    if (f->compiler == NULL) {log_fatal("Could not allocate compiler for file");}
 
-    result = parse_compiler(file, f->compiler);
+    array_push(&cache->file_compilers, &temp);
+    f->compiler = cache->file_compilers.size - 1;
+    compiler = array_get(&cache->file_compilers, f->compiler);
+
+    result = parse_compiler(file, compiler);
     if (result) {log_warn("Could not parse compiler for file.");}
     return result;
 }
 
-int parse_file_includes(FILE* file, bld_file* f) {
+int parse_file_includes(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     int amount_parsed;
 
     f->includes = set_new(0);
@@ -296,7 +305,8 @@ int parse_file_include(FILE* file, bld_set* set) {
     return 0;
 }
 
-int parse_file_defined_symbols(FILE* file, bld_file* f) {
+int parse_file_defined_symbols(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     int amount_parsed;
 
     amount_parsed = parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
@@ -308,7 +318,8 @@ int parse_file_defined_symbols(FILE* file, bld_file* f) {
     return 0;
 }
 
-int parse_file_undefined_symbols(FILE* file, bld_file* f) {
+int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     int amount_parsed;
 
     amount_parsed = parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
