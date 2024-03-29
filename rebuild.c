@@ -25,13 +25,15 @@ int run_new_build(bld_path* root, char* executable) {
 
 bld_project_base project_base_new(bld_path, bld_compiler);
 bld_forward_project new_rebuild(bld_path root, bld_compiler compiler) {
-    return (bld_forward_project) {
-        .rebuilding = 1,
-        .base = project_base_new(root, compiler),
-        .extra_paths = array_new(sizeof(bld_path)),
-        .ignore_paths = set_new(0),
-        .file_names = array_new(sizeof(bld_string)),
-    };
+    bld_forward_project fbuild;
+
+    fbuild.rebuilding = 1;
+    fbuild.base = project_base_new(root, compiler);
+    fbuild.extra_paths = array_new(sizeof(bld_path));
+    fbuild.ignore_paths = set_new(0);
+    fbuild.file_names = array_new(sizeof(bld_string));
+
+    return fbuild;
 }
 
 void extract_names(int argc, char** argv, char** file, char** old_file) {
@@ -98,8 +100,8 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
 
     compiler = compiler_with_flags(
         BLD_GCC, "/usr/bin/gcc", /* TODO: don't hardcode compiler */
-        "-std=c99",
-        // "-fsanitize=address",
+        "-std=c89",
+        "-fsanitize=address",
         "-Wall",
         "-Wextra",
         "-Werror",
