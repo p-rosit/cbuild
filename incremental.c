@@ -17,6 +17,58 @@ void    incremental_mark_changed_files(bld_project*, bld_set*);
 int     incremental_cached_compilation(bld_project*, bld_file*);
 int     incremental_compile_changed_files(bld_project*, bld_set*, int*);
 
+bld_project project_resolve(bld_forward_project* fproject) {
+    bld_project project;
+    uintmax_t hash;
+    bld_iter iter;
+    bld_file* file;
+
+    project = (bld_project) {
+        .base = fproject->base,
+        .files = set_new(sizeof(bld_file)),
+        .graph = dependency_graph_new(),
+    };
+
+    if (fproject->rebuilding) {
+        bld_path main_path = (bld_path) {.str = fproject->main_file_name};
+        char* main_name = path_get_last_string(&main_path);
+        incremental_index_possible_file(&project, &main_path, main_name);
+    }
+    incremental_index_project(&project, fproject);
+
+    incremental_apply_main_file(&project, fproject);
+    incremental_apply_compilers(&project, fproject);
+
+    hash = compiler_hash(&project.base.compiler, 5031);
+    iter = iter_set(&project.files);
+    while (iter_next(&iter, (void**) &file)) {
+        file->identifier.hash = file_hash(file, &project.base.file_compilers, hash);
+    }
+
+    incremental_apply_cache(&project);
+
+    {
+        bld_iter iter;
+        bld_path* path;
+        bld_string* str;
+
+        iter = iter_array(&fproject->extra_paths);
+        while (iter_next(&iter, (void**) &path)) {
+            path_free(path);
+        }
+
+        set_free(&fproject->ignore_paths);
+        string_free(&fproject->main_file_name);
+
+        iter = iter_array(&fproject->file_names);
+        while (iter_next(&iter, (void**) &str)) {
+            string_free(str);
+        }
+    }
+
+    return project;
+}
+
 void incremental_apply_cache(bld_project* project) {
     bld_iter iter;
     bld_file *file, *cached;
