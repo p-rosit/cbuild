@@ -22,7 +22,7 @@
 [x] separate file and graph data in serialized cache
 [x] move compilation of project to different file
 [x] move functions and includes to `bld_file` keep edges in `bld_node`
-[ ] handle failed compilation
+[x] handle failed compilation
 [ ] make sure no path separator is passed when removing file ending
 [x] use realloc instead of memcpy and free
 [x] move value size from function call to generic container struct
