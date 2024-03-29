@@ -82,10 +82,13 @@ void project_set_main_file(bld_forward_project* project, char* file_name) {
 }
 
 void project_set_compiler(bld_forward_project* project, char* file_name, bld_compiler compiler) {
+    bld_string str = string_new();
+    string_append_string(&str, file_name);
+
+    array_push(&project->file_names, &str);
+    array_push(&project->base.file_compilers, &compiler);
 }
 
-void project_save_cache(bld_project* project) {
-}
 
 void project_free(bld_project* project) {
     bld_iter iter;
