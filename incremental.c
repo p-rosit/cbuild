@@ -443,7 +443,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     path = path_copy(&project->base.root);
     path_append_path(&path, &project->base.cache.root);
 
-    dependency_graph_extract_symbols(&project->graph, &path);
+    dependency_graph_extract_symbols(&project->graph, &project->files, &path);
     path_free(&path);
 
     if (!any_compiled) {
