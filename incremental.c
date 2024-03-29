@@ -271,6 +271,7 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX], **flag;
+    bld_iter iter;
     bld_compiler* compiler;
     bld_string cmd = string_new();
     bld_path path;
@@ -283,12 +284,6 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
 
     string_append_string(&cmd, compiler->executable);
     string_append_space(&cmd);
-
-    bld_iter iter = iter_array(&compiler->flags);
-    while (iter_next(&iter, (void**) &flag)) {
-        string_append_string(&cmd, *flag);
-        string_append_space(&cmd);
-    }
 
     string_append_string(&cmd, "-c ");
     string_append_string(&cmd, path_to_string(&file->path));
@@ -306,7 +301,13 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, ".o");
     path_free(&path);
 
-    // log_warn("File: \"%s\"", string_unpack(&cmd));
+    iter = iter_array(&compiler->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_append_space(&cmd);
+        string_append_string(&cmd, *flag);
+    }
+
+    // log_warn("Compiling: \"%s\"", string_unpack(&cmd));
     result = system(string_unpack(&cmd));
     string_free(&cmd);
     return result;
@@ -331,18 +332,14 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     string_append_string(&cmd, compiler.executable);
     string_append_space(&cmd);
 
-    bld_iter iter_flags = iter_array(&compiler.flags);
-    while (iter_next(&iter_flags, (void**) &flag)) {
-        string_append_string(&cmd, *flag);
-        string_append_space(&cmd);
-    }
-
     string_append_string(&cmd, "-o ");
     string_append_string(&cmd, executable_name);
     string_append_space(&cmd);
 
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        string_append_space(&cmd);
+
         path = path_copy(&project->base.root);
         if (project->base.cache.loaded) {
             path_append_path(&path, &project->base.cache.root);
@@ -351,8 +348,14 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
         path_append_string(&path, name);
         
         string_append_string(&cmd, path_to_string(&path));
-        string_append_string(&cmd, ".o ");
+        string_append_string(&cmd, ".o");
         path_free(&path);
+    }
+
+    iter = iter_array(&compiler.flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_append_space(&cmd);
+        string_append_string(&cmd, *flag);
     }
 
     // log_warn("Final: \"%s\"", string_unpack(&cmd));
