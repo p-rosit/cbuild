@@ -245,6 +245,44 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
     return 0;
 }
 
+void* set_remove(bld_set* set, bld_hash hash) {
+    int error;
+    size_t target, i;
+    bld_offset offset = 0;
+
+    if (set->capacity <= 0) {
+        return NULL;
+    }
+
+    error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
+    target = hash_target(set->capacity, offset, hash);
+
+    if (error || set->offset[target] >= set->max_offset) {
+        return NULL;
+    }
+
+    if (set->hash[target] != hash) {
+        return NULL;
+    }
+
+    set->size -= 1;
+    set->offset[target] = set->max_offset;
+
+    for (i = target; ; i++) {
+        if (i + 1 >= set->capacity + set->max_offset) {
+            break;
+        }
+        if (set->offset[i + 1] == 0 || set->offset[i + 1] >= set->max_offset) {
+            break;
+        }
+
+        set_swap_value(set, i, &set->offset[i + 1], &set->hash[i + 1], ((char*) set->values) + (i + 1) * set->value_size);
+        set->offset[i] -= 1;
+    }
+
+    return ((char*) set->values) + i * set->value_size;
+}
+
 void* set_get(const bld_set* set, bld_hash hash) {
     int error;
     size_t offset = 0, target;

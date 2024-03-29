@@ -79,6 +79,7 @@ void        set_free(bld_set*);
 bld_set     set_copy(const bld_set*);
 void        set_clear(bld_set*);
 int         set_add(bld_set*, bld_hash, void*);
+void*       set_remove(bld_set*, bld_hash);
 void*       set_get(const bld_set*, bld_hash);
 int         set_has(const bld_set*, bld_hash);
 int         set_empty_intersection(const bld_set*, const bld_set*);
