@@ -430,7 +430,6 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         set_add(&changed_files, file->identifier.id, &temp);
     }
 
-    incremental_apply_cache(project);
 
     dependency_graph_extract_includes(&project->graph);
     incremental_mark_changed_files(project);
