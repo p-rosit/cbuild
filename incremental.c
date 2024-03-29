@@ -77,7 +77,7 @@ void incremental_index_possible_file(bld_project* project, bld_path* path, char*
     if (exists) {file_free(&file);}
 }
 
-void incremental_index_recursive(bld_project* project, bld_path* path, char* name) {
+void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, bld_path* path, char* name) {
     char* str_path;
     bld_path sub_path;
     DIR* dir;
@@ -103,39 +103,40 @@ void incremental_index_recursive(bld_project* project, bld_path* path, char* nam
         if (file_ptr->d_name[0] == '.') {
             continue;
         }
-        if (set_has(&project->ignore_paths, file_ptr->d_ino)) {
+        if (set_has(&forward_project->ignore_paths, file_ptr->d_ino)) {
             log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name);
             continue;
         }
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_ptr->d_name);
-        incremental_index_recursive(project, &sub_path, file_ptr->d_name);
+        incremental_index_recursive(project, forward_project, &sub_path, file_ptr->d_name);
         path_free(&sub_path);
     }
     
     closedir(dir);
 }
-void incremental_index_project(bld_project* project) {
+
+void incremental_index_project(bld_project* project, bld_forward_project* forward_project) {
+    DIR* dir;
     bld_path *path, extra_path;
     char* name;
-    DIR* dir;
 
-    dir = opendir(path_to_string(&project->root));
-    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&project->root));}
+    dir = opendir(path_to_string(&forward_project->base.root));
+    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&forward_project->base.root));}
     closedir(dir);
 
     log_info("Indexing project under root");
-    incremental_index_recursive(project, &project->root, NULL);
+    incremental_index_recursive(project, forward_project, &forward_project->base.root, NULL);
 
-    bld_iter iter = iter_array(&project->extra_paths);
+    bld_iter iter = iter_array(&forward_project->extra_paths);
     while (iter_next(&iter, (void**) &path)) {
-        extra_path = path_copy(&project->root);
+        extra_path = path_copy(&project->base.root);
         path_append_path(&extra_path, path);
         name = path_get_last_string(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
-        incremental_index_recursive(project, &extra_path, name);
+        incremental_index_recursive(project, forward_project, &extra_path, name);
         path_free(&extra_path);
     }
 }
