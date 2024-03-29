@@ -5,12 +5,13 @@
 #include "file.h"
 #include "project.h"
 
-bld_project_cache project_cache_new();
+bld_project_base    project_base_new(bld_path, bld_compiler);
+void                project_base_free(bld_project_base*);
 
-bld_path    extract_build_path(bld_path*);
-bld_project make_project(bld_path, bld_compiler);
-void        free_cache(bld_project*);
+bld_project_cache   project_cache_new(void);
+void                project_cache_free(bld_project_cache*);
 
+bld_path            extract_build_path(bld_path*);
 
 bld_forward_project project_new(bld_path path, bld_compiler compiler) {
     return (bld_forward_project) {
@@ -48,6 +49,31 @@ void project_save_cache(bld_project* project) {
 }
 
 void project_free(bld_project* project) {
+bld_project_base project_base_new(bld_path path, bld_compiler compiler) {
+    return (bld_project_base) {
+        .root = path,
+        .build = path_new(),
+        .compiler = compiler,
+        .file_compilers = array_new(sizeof(bld_compiler)),
+        .cache = project_cache_new(),
+    };
+}
+
+void project_base_free(bld_project_base* base) {
+    bld_iter iter;
+    bld_compiler* compiler;
+
+    path_free(&base->root);
+    path_free(&base->build);
+    compiler_free(&base->compiler);
+    project_cache_free(&base->cache);
+
+    iter = iter_array(&base->file_compilers);
+    while (iter_next(&iter, (void**) &compiler)) {
+        compiler_free(compiler);
+    }
+    array_free(&base->file_compilers);
+}
 }
 
 bld_path project_path_extract(int argc, char** argv) {
