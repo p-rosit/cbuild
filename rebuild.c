@@ -66,19 +66,10 @@ char* infer_build_name(char* name) {
     return path_to_string(&path);
 }
 
-void set_main_rebuild(bld_project* build, bld_path* path) {
-    struct stat file_stat;
-    bld_file* file;
-
-    if (stat(path_to_string(path), &file_stat) < 0) {
-        log_fatal("Expected \"%s\" to be a valid path to the build file", path_to_string(path));
-    }
-
-    file = set_get(&build->files, file_stat.st_ino);
-    
-    if (file == NULL) {log_fatal("Main file has not been indexed");}
-
-    build->main_file = file->identifier.id;
+void set_main_rebuild(bld_forward_project* build, bld_path* path) {
+    bld_string str = string_new();
+    string_append_string(&str, path_to_string(path));
+    build->main_file_name = str;
 }
 
 void incremental_index_possible_file(bld_project*, bld_path*, char*);
