@@ -10,21 +10,20 @@
 typedef int (*bld_parse_func)(FILE*, void*);
 
 void ensure_directory_exists(bld_path*);
-bld_project make_project(bld_path, bld_compiler);
-int parse_cache(bld_project*, bld_path*);
-int parse_project_compiler(FILE*, bld_project*);
+int parse_cache(bld_project_cache*, bld_path*);
+int parse_project_compiler(FILE*, bld_project_cache*);
 
-int parse_project_files(FILE*, bld_project*);
-int parse_file(FILE*, bld_set*);
-int parse_file_type(FILE*, bld_file*);
-int parse_file_id(FILE*, bld_file*);
-int parse_file_hash(FILE*, bld_file*);
-int parse_file_name(FILE*, bld_file*);
-int parse_file_compiler(FILE*, bld_file*);
-int parse_file_defined_symbols(FILE*, bld_file*);
-int parse_file_undefined_symbols(FILE*, bld_file*);
+int parse_project_files(FILE*, bld_project_cache*);
+int parse_file(FILE*, bld_project_cache*);
+int parse_file_type(FILE*, bld_project_cache*);
+int parse_file_id(FILE*, bld_project_cache*);
+int parse_file_hash(FILE*, bld_project_cache*);
+int parse_file_name(FILE*, bld_project_cache*);
+int parse_file_compiler(FILE*, bld_project_cache*);
+int parse_file_defined_symbols(FILE*, bld_project_cache*);
+int parse_file_undefined_symbols(FILE*, bld_project_cache*);
 int parse_file_function(FILE*, bld_set*);
-int parse_file_includes(FILE*, bld_file*);
+int parse_file_includes(FILE*, bld_project_cache*);
 int parse_file_include(FILE*, bld_set*);
 
 int parse_compiler(FILE*, bld_compiler*);
@@ -65,22 +64,20 @@ void ensure_directory_exists(bld_path* directory_path) {
     }
 }
 
-void project_load_cache(bld_project* project, char* cache_path) {
+void project_load_cache(bld_forward_project* fproject, char* cache_path) {
     FILE* file;
-    bld_path path, temp;
-    bld_project* cache;
+    bld_path path;
 
-    path = path_copy(&project->root);
+    path = path_copy(&fproject->base.root);
     path_append_string(&path, cache_path);
     ensure_directory_exists(&path);
 
     path_append_string(&path, BLD_CACHE_NAME);
     file = fopen(path_to_string(&path), "r");
 
-    cache = malloc(sizeof(bld_project));
-    if (cache == NULL) {log_fatal("Could not allocate cache.");}
-    temp = path_from_string(cache_path);
-    *cache = make_project(temp, compiler_new(BLD_INVALID_COMPILER, ""));
+    fproject->base.cache.loaded = 1;
+    fproject->base.cache.root = path_from_string(cache_path);
+    fproject->base.cache.file_compilers = array_new(sizeof(bld_compiler));
 
     if (file == NULL) {
         log_debug("No cache file found.");
@@ -89,17 +86,16 @@ void project_load_cache(bld_project* project, char* cache_path) {
 
         fclose(file);
         log_debug("Found cache file, attempting to parse.");
-        compiler_free(&cache->compiler);
-        result = parse_cache(cache, &project->root);
+        result = parse_cache(&fproject->base.cache, &fproject->base.root);
 
         if (result) {
             log_warn("Could not parse cache, ignoring.");
         } else {
             log_info("Loaded cache.");
+            fproject->base.cache.set = 1;
         }
     }
 
-    project->cache = cache;
     path_free(&path);
 }
 
