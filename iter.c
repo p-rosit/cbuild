@@ -2,15 +2,13 @@
 #include "container.h"
 
 bld_iter iter_array(const bld_array* array) {
-    return (bld_iter) {
-        .type = BLD_ARRAY,
-        .as = (union bld_iter_container) {
-            .array_iter = (bld_iter_array) {
-                .array = array,
-                .index = 0,
-            },
-        },
-    };
+    bld_iter iter;
+
+    iter.type = BLD_ARRAY;
+    iter.as.array_iter.array = array;
+    iter.as.array_iter.index = 0;
+
+    return iter;
 }
 
 int array_next(bld_iter_array* iter, void** value_ptr_ptr) {
@@ -27,15 +25,13 @@ int array_next(bld_iter_array* iter, void** value_ptr_ptr) {
 }
 
 bld_iter iter_set(const bld_set* set) {
-    return (bld_iter) {
-        .type = BLD_SET,
-        .as = (union bld_iter_container) {
-            .set_iter = (bld_iter_set) {
-                .set = set,
-                .index = 0,
-            },
-        },
-    };
+    bld_iter iter;
+
+    iter.type = BLD_SET;
+    iter.as.set_iter.set = set;
+    iter.as.set_iter.index = 0;
+
+    return iter;
 }
 
 int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
@@ -59,20 +55,15 @@ int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
 }
 
 bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
-    bld_iter iter = (bld_iter) {
-        .type = BLD_GRAPH,
-        .as = (union bld_iter_container) {
-            .graph_iter = (bld_iter_graph) {
-                .type = BLD_DFS,
-                .graph = graph,
-                .stack = array_new(sizeof(uintmax_t)),
-                .visited = set_new(0),
-            },
-        },
-    };
+    bld_iter iter;
+
+    iter.type = BLD_GRAPH;
+    iter.as.graph_iter.type = BLD_DFS;
+    iter.as.graph_iter.graph = graph;
+    iter.as.graph_iter.stack = array_new(sizeof(uintmax_t));
+    iter.as.graph_iter.visited = set_new(0);
 
     if (!set_has(&graph->edges, root)) {log_fatal("Root does not exist");}
-
     array_push(&iter.as.graph_iter.stack, &root);
 
     return iter;
@@ -88,6 +79,8 @@ int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
     }
 
     while (node_visited) {
+        bld_iter edges;
+
         if (iter->stack.size <= 0) {
             iter->type = BLD_GRAPH_DONE;
             array_free(&iter->stack);
@@ -105,7 +98,7 @@ int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
         set_add(&iter->visited, id, NULL);
 
         edge_array = set_get(&iter->graph->edges, id);
-        bld_iter edges = iter_array(edge_array);
+        edges = iter_array(edge_array);
         while (iter_next(&edges, (void**) &node_id)) {
             array_push(&iter->stack, node_id);
         }
