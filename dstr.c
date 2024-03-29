@@ -5,18 +5,22 @@
 int push_character(bld_string*, char);
 
 bld_string string_new(void) {
-    char* chars = malloc(1);
+    char* chars;
+    bld_string str;
+
+    chars = malloc(1);
     if (chars == NULL) {log_fatal("Could not allocate minimal string.");}
 
-    return (bld_string) {
-        .capacity = 1,
-        .size = 0,
-        .chars = chars,
-    };
+    str.capacity = 1;
+    str.size = 0;
+    str.chars = chars;
+
+    return str;
 }
 
 bld_string string_copy(bld_string* str) {
     char* chars;
+    bld_string cpy;
 
     chars = malloc(str->size + 1);
     if (chars == NULL) {
@@ -25,11 +29,11 @@ bld_string string_copy(bld_string* str) {
 
     memcpy(chars, str->chars, str->size);
 
-    return (bld_string) {
-        .capacity = str->size + 1,
-        .size = str->size,
-        .chars = chars,
-    };
+    cpy.capacity = str->size + 1;
+    cpy.size = str->size;
+    cpy.chars = chars;
+
+    return cpy;
 }
 
 void string_free(bld_string* str) {
