@@ -192,7 +192,8 @@ bld_project_cache project_cache_new(void) {
 
 void project_cache_free(bld_project_cache* cache) {
     bld_iter iter;
-    bld_file *file;
+    bld_file* file;
+    bld_compiler* compiler;
     
     if (!cache->loaded) {return;}
     path_free(&cache->root);
@@ -205,6 +206,12 @@ void project_cache_free(bld_project_cache* cache) {
         file_free(file);
     }
     set_free(&cache->files);
+
+    iter = iter_array(&cache->file_compilers);
+    while (iter_next(&iter, (void**) &compiler)) {
+        compiler_free(compiler);
+    }
+    array_free(&cache->file_compilers);
 }
 
 bld_path project_path_extract(int argc, char** argv) {
