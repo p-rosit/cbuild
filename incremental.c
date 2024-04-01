@@ -50,24 +50,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
         incremental_apply_cache(&project);
     }
 
-    {
-        bld_iter iter;
-        bld_path* path;
-        bld_string* str;
-
-        iter = iter_array(&fproject->extra_paths);
-        while (iter_next(&iter, (void**) &path)) {
-            path_free(path);
-        }
-
-        set_free(&fproject->ignore_paths);
-        string_free(&fproject->main_file_name);
-
-        iter = iter_array(&fproject->file_names);
-        while (iter_next(&iter, (void**) &str)) {
-            string_free(str);
-        }
-    }
+    project_partial_free(fproject);
 
     return project;
 }

@@ -148,25 +148,8 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     project_free(&build);
 
     if (result == 0) {
-        bld_iter iter;
-        bld_path* path;
-        bld_string* str;
-
         project_base_free(&fproject->base);
-
-        iter = iter_array(&fproject->extra_paths);
-        while (iter_next(&iter, (void**) &path)) {
-            path_free(path);
-        }
-
-        set_free(&fproject->ignore_paths);
-        string_free(&fproject->main_file_name);
-
-        iter = iter_array(&fproject->file_names);
-        while (iter_next(&iter, (void**) &str)) {
-            string_free(str);
-        }
-
+        project_partial_free(fproject);
         exit(new_result);
     }
 
