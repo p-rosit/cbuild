@@ -346,11 +346,10 @@ int parse_file_function(FILE* file, bld_set* set) {
 
 int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
-    int size = 3;
-    int parsed[3];
-    char *keys[3] = {"type", "executable", "flags"};
-    bld_parse_func funcs[3] = {
-        (bld_parse_func) parse_compiler_type,
+    int size = 2;
+    int parsed[2];
+    char *keys[2] = {"executable", "flags"};
+    bld_parse_func funcs[2] = {
         (bld_parse_func) parse_compiler_executable,
         (bld_parse_func) parse_compiler_flags,
     };
@@ -358,34 +357,10 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     compiler->flags = array_new(sizeof(char*));
     amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
 
-    if (amount_parsed < size && parsed[2]) {
+    if (amount_parsed < size && !parsed[0]) {
         return -1;
     }
     return 0;
-}
-
-int parse_compiler_type(FILE* file, bld_compiler* compiler) {
-    bld_string str = string_new();
-    char* temp;
-    int result = parse_string(file, &str);
-    if (result) {
-        string_free(&str);
-        log_warn("Could not parse compiler type");
-        return -1;
-    }
-    
-    temp = string_unpack(&str);
-    if (strcmp(temp, "gcc") == 0) {
-        compiler->type = BLD_GCC;
-    } else if (strcmp(temp, "clang") == 0) {
-        compiler->type = BLD_CLANG;
-    } else {
-        log_warn("Not a valid compiler type: \"%s\"", temp);
-        result = -1;
-    }
-
-    string_free(&str);
-    return result;
 }
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {

@@ -3,25 +3,24 @@
 #include "logging.h"
 #include "compiler.h"
 
-bld_compiler compiler_new(bld_compiler_type type, char* executable) {
+bld_compiler compiler_new(char* executable) {
     bld_compiler compiler;
     bld_string str = string_new();
 
     string_append_string(&str, executable);
 
-    compiler.type = type;
     compiler.executable = string_unpack(&str);
     compiler.flags = array_new(sizeof(char*));
 
     return compiler;
 }
 
-bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
+bld_compiler compiler_with_flags(char* executable, ...) {
     bld_compiler compiler;
     va_list args;
     char* flag;
 
-    compiler = compiler_new(type, executable);
+    compiler = compiler_new(executable);
 
     va_start(args, executable);
     while (1) {
@@ -69,7 +68,6 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
         *flag = temp;
     }
 
-    cpy.type = compiler->type;
     cpy.executable = string_unpack(&executable);
     cpy.flags = flags;
 

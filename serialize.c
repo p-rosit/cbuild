@@ -4,7 +4,6 @@
 #include "project.h"
 
 void serialize_compiler(FILE*, bld_compiler*, int);
-void serialize_compiler_type(FILE*, bld_compiler_type);
 void serialize_compiler_flags(FILE*, bld_array*, int);
 
 void serialize_files(FILE*, bld_set*, bld_array*, int);
@@ -51,10 +50,6 @@ void project_save_cache(bld_project* project) {
 
 void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     fprintf(cache, "{\n");
-    
-    serialize_key(cache, "type", depth);
-    serialize_compiler_type(cache, compiler->type);
-    fprintf(cache, ",\n");
 
     serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", compiler->executable);
@@ -67,18 +62,6 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
 
     fprintf(cache, "\n");
     fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
-}
-
-void serialize_compiler_type(FILE* cache, bld_compiler_type type) {
-    switch (type) {
-        case (BLD_GCC): {
-            fprintf(cache, "\"gcc\"");
-        } break;
-        case (BLD_CLANG): {
-            fprintf(cache, "\"clang\"");
-        } break;
-        default: log_fatal("serialize_compiler_type: unreachable error???");
-    }
 }
 
 void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {

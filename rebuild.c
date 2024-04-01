@@ -100,7 +100,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
     compiler = compiler_with_flags(
-        BLD_GCC, "/usr/bin/gcc", /* TODO: don't hardcode compiler */
+        "/usr/bin/gcc", /* TODO: don't hardcode compiler */
         "-std=c89",
         "-fsanitize=address",
         "-Wall",

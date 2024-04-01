@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
     bld_forward_project forward_project;
     bld_project project;
 
-    project_compiler = compiler_new(BLD_GCC, "/usr/bin/gcc");
+    project_compiler = compiler_new("/usr/bin/gcc");
     compiler_add_flag(&project_compiler, "-lm");
     compiler_add_flag(&project_compiler, "-fsanitize=address");
     compiler_add_flag(&project_compiler, "-std=c99");
@@ -25,10 +25,7 @@ int main(int argc, char** argv) {
     /* Optional, add specific compiler to any files in project */
     project_set_compiler(
         &forward_project, "file.c",
-        compiler_with_flags(
-            BLD_CLANG, "/usr/bin/clang",
-            "-Weverything", NULL
-        )
+        compiler_with_flags("/usr/bin/clang", "-Weverything", NULL)
     );
 
     /* Mandatory */
