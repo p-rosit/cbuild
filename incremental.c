@@ -50,6 +50,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
         incremental_apply_cache(&project);
     }
 
+    fproject->resolved = 1;
     project_partial_free(fproject);
 
     return project;
