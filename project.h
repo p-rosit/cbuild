@@ -55,5 +55,6 @@ void        project_set_compiler(bld_forward_project*, char*, bld_compiler);
 
 void        project_save_cache(bld_project*);
 void        project_free(bld_project*);
+void        project_partial_free(bld_forward_project*);
 
 #endif

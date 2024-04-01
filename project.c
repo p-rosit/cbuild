@@ -104,6 +104,27 @@ void project_free(bld_project* project) {
     set_free(&project->files);
 }
 
+void project_partial_free(bld_forward_project* fproject) {
+    bld_iter iter;
+    bld_path* path;
+    bld_string* str;
+
+    iter = iter_array(&fproject->extra_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        path_free(path);
+    }
+    array_free(&fproject->extra_paths);
+
+    set_free(&fproject->ignore_paths);
+    string_free(&fproject->main_file_name);
+
+    iter = iter_array(&fproject->file_names);
+    while (iter_next(&iter, (void**) &str)) {
+        string_free(str);
+    }
+    array_free(&fproject->file_names);
+}
+
 bld_project_base project_base_new(bld_path path, bld_compiler compiler) {
     bld_project_base base;
 
