@@ -268,15 +268,15 @@ int parse_file_name(FILE* file, bld_project_cache* cache) {
 
 int parse_file_compiler(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
-    bld_compiler temp, *compiler;
+    bld_compiler temp;
     int result;
+
+    result = parse_compiler(file, &temp);
+    if (result) {log_warn("Could not parse compiler for file.");}
 
     array_push(&cache->file_compilers, &temp);
     f->compiler = cache->file_compilers.size - 1;
-    compiler = array_get(&cache->file_compilers, f->compiler);
 
-    result = parse_compiler(file, compiler);
-    if (result) {log_warn("Could not parse compiler for file.");}
     return result;
 }
 
