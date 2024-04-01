@@ -28,6 +28,7 @@ bld_forward_project new_rebuild(bld_path root, bld_compiler compiler) {
     bld_forward_project fbuild;
 
     fbuild.rebuilding = 1;
+    fbuild.resolved = 0;
     fbuild.base = project_base_new(root, compiler);
     fbuild.extra_paths = array_new(sizeof(bld_path));
     fbuild.ignore_paths = set_new(0);
