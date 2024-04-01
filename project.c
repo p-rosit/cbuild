@@ -45,6 +45,10 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler) {
 void project_add_build(bld_forward_project* fproject, char* path) {
     char* current_build = path_to_string(&fproject->base.build);
 
+    if (fproject->resolved) {
+        log_fatal("Trying to add build path \"\" but forward project has already been resolved, perform all setup of project before resolving", path);
+    }
+
     if (current_build[0] != '\0') {
         log_fatal("Trying to add build path to project but build path has already been set to \"%s\"", current_build);
     }
@@ -57,7 +61,11 @@ void project_add_build(bld_forward_project* fproject, char* path) {
 void project_add_path(bld_forward_project* fproject, char* path) {
     bld_path test, extra;
 
-    test = path_copy(&project->base.root);
+    if (fproject->resolved) {
+        log_fatal("Trying to add path \"\" but forward project has already been resolved, perform all setup of project before resolving", path);
+    }
+
+    test = path_copy(&fproject->base.root);
     path_append_string(&test, path);
     file_get_id(&test);
     path_free(&test);
@@ -67,7 +75,13 @@ void project_add_path(bld_forward_project* fproject, char* path) {
 }
 
 void project_ignore_path(bld_forward_project* fproject, char* path) {
-    bld_path test = path_copy(&fproject->base.root);
+    bld_path test;
+
+    if (fproject->resolved) {
+        log_fatal("Trying to ignore path \"%s\" but forward project has already been resolved, perform all setup of project before resolving", path);
+    }
+
+    test = path_copy(&fproject->base.root);
     path_append_string(&test, path);
 
     set_add(&fproject->ignore_paths, file_get_id(&test), NULL);
@@ -75,7 +89,13 @@ void project_ignore_path(bld_forward_project* fproject, char* path) {
 }
 
 void project_set_main_file(bld_forward_project* fproject, char* file_name) {
-    bld_string str = string_new();
+    bld_string str;
+
+    if (fproject->resolved) {
+        log_fatal("Trying to set main file to \"\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
+    }
+
+    str = string_new();
     string_append_string(&str, file_name);
 
     string_free(&fproject->main_file_name);
@@ -83,7 +103,13 @@ void project_set_main_file(bld_forward_project* fproject, char* file_name) {
 }
 
 void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_compiler compiler) {
-    bld_string str = string_new();
+    bld_string str;
+
+    if (fproject->resolved) {
+        log_fatal("Trying to set compiler of \"%s\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
+    }
+
+    str = string_new();
     string_append_string(&str, file_name);
 
     array_push(&fproject->file_names, &str);
