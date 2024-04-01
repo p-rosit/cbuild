@@ -29,6 +29,7 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler) {
     }
 
     project.rebuilding = 0;
+    project.resolved = 0;
     project.base = project_base_new(path, compiler);
     project.extra_paths = array_new(sizeof(bld_path));
     project.ignore_paths = set_new(0);
@@ -41,19 +42,19 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler) {
     return project;
 }
 
-void project_add_build(bld_forward_project* project, char* path) {
-    char* current_build = path_to_string(&project->base.build);
+void project_add_build(bld_forward_project* fproject, char* path) {
+    char* current_build = path_to_string(&fproject->base.build);
 
     if (current_build[0] != '\0') {
         log_fatal("Trying to add build path to project but build path has already been set to \"%s\"", current_build);
     }
 
-    path_free(&project->base.build);
-    project->base.build = path_from_string(path);
-    project_ignore_path(project, path);
+    path_free(&fproject->base.build);
+    fproject->base.build = path_from_string(path);
+    project_ignore_path(fproject, path);
 }
 
-void project_add_path(bld_forward_project* project, char* path) {
+void project_add_path(bld_forward_project* fproject, char* path) {
     bld_path test, extra;
 
     test = path_copy(&project->base.root);
@@ -62,31 +63,31 @@ void project_add_path(bld_forward_project* project, char* path) {
     path_free(&test);
 
     extra = path_from_string(path);
-    array_push(&project->extra_paths, &extra);
+    array_push(&fproject->extra_paths, &extra);
 }
 
-void project_ignore_path(bld_forward_project* project, char* path) {
-    bld_path test = path_copy(&project->base.root);
+void project_ignore_path(bld_forward_project* fproject, char* path) {
+    bld_path test = path_copy(&fproject->base.root);
     path_append_string(&test, path);
 
-    set_add(&project->ignore_paths, file_get_id(&test), NULL);
+    set_add(&fproject->ignore_paths, file_get_id(&test), NULL);
     path_free(&test);
 }
 
-void project_set_main_file(bld_forward_project* project, char* file_name) {
+void project_set_main_file(bld_forward_project* fproject, char* file_name) {
     bld_string str = string_new();
     string_append_string(&str, file_name);
 
-    string_free(&project->main_file_name);
-    project->main_file_name = str;
+    string_free(&fproject->main_file_name);
+    fproject->main_file_name = str;
 }
 
-void project_set_compiler(bld_forward_project* project, char* file_name, bld_compiler compiler) {
+void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_compiler compiler) {
     bld_string str = string_new();
     string_append_string(&str, file_name);
 
-    array_push(&project->file_names, &str);
-    array_push(&project->base.file_compilers, &compiler);
+    array_push(&fproject->file_names, &str);
+    array_push(&fproject->base.file_compilers, &compiler);
 }
 
 
