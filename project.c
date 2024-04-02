@@ -5,7 +5,7 @@
 #include "file.h"
 #include "project.h"
 
-bld_project_base    project_base_new(bld_path, bld_compiler);
+bld_project_base    project_base_new(bld_path, bld_compiler, bld_linker);
 void                project_base_free(bld_project_base*);
 
 bld_project_cache   project_cache_new(void);
@@ -13,7 +13,7 @@ void                project_cache_free(bld_project_cache*);
 
 bld_path            extract_build_path(bld_path*);
 
-bld_forward_project project_new(bld_path path, bld_compiler compiler) {
+bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker linker) {
     FILE* f;
     bld_path build_file_path;
     bld_forward_project project;
@@ -30,11 +30,12 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler) {
 
     project.rebuilding = 0;
     project.resolved = 0;
-    project.base = project_base_new(path, compiler);
+    project.base = project_base_new(path, compiler, linker);
     project.extra_paths = array_new(sizeof(bld_path));
     project.ignore_paths = set_new(0);
     project.main_file_name.chars = NULL;
-    project.file_names = array_new(sizeof(bld_string));
+    project.compiler_file_names = array_new(sizeof(bld_string));
+    project.linker_flags_file_names = array_new(sizeof(bld_string));
 
     project_ignore_path(&project, path_to_string(&build_file_path));
     path_free(&build_file_path);
@@ -112,8 +113,22 @@ void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_co
     str = string_new();
     string_append_string(&str, file_name);
 
-    array_push(&fproject->file_names, &str);
+    array_push(&fproject->compiler_file_names, &str);
     array_push(&fproject->base.file_compilers, &compiler);
+}
+
+void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bld_linker_flags flags) {
+    bld_string str;
+
+    if (fproject->resolved) {
+        log_fatal("Trying to set linker of \"%s\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
+    }
+
+    str = string_new();
+    string_append_string(&str, file_name);
+
+    array_push(&fproject->linker_flags_file_names, &str);
+    array_push(&fproject->base.file_linker_flags, &flags);
 }
 
 
@@ -145,20 +160,28 @@ void project_partial_free(bld_forward_project* fproject) {
     set_free(&fproject->ignore_paths);
     string_free(&fproject->main_file_name);
 
-    iter = iter_array(&fproject->file_names);
+    iter = iter_array(&fproject->compiler_file_names);
     while (iter_next(&iter, (void**) &str)) {
         string_free(str);
     }
-    array_free(&fproject->file_names);
+    array_free(&fproject->compiler_file_names);
+
+    iter = iter_array(&fproject->linker_flags_file_names);
+    while (iter_next(&iter, (void**) &str)) {
+        string_free(str);
+    }
+    array_free(&fproject->linker_flags_file_names);
 }
 
-bld_project_base project_base_new(bld_path path, bld_compiler compiler) {
+bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_linker linker) {
     bld_project_base base;
 
     base.root = path;
     base.build = path_new();
     base.compiler = compiler;
+    base.linker = linker;
     base.file_compilers = array_new(sizeof(bld_compiler));
+    base.file_linker_flags = array_new(sizeof(bld_linker_flags));
     base.cache = project_cache_new();
 
     return base;
@@ -167,10 +190,12 @@ bld_project_base project_base_new(bld_path path, bld_compiler compiler) {
 void project_base_free(bld_project_base* base) {
     bld_iter iter;
     bld_compiler* compiler;
+    bld_linker_flags* linker_flags;
 
     path_free(&base->root);
     path_free(&base->build);
     compiler_free(&base->compiler);
+    linker_free(&base->linker);
     project_cache_free(&base->cache);
 
     iter = iter_array(&base->file_compilers);
@@ -178,6 +203,12 @@ void project_base_free(bld_project_base* base) {
         compiler_free(compiler);
     }
     array_free(&base->file_compilers);
+
+    iter = iter_array(&base->file_linker_flags);
+    while (iter_next(&iter, (void**) &linker_flags)) {
+        linker_flags_free(linker_flags);
+    }
+    array_free(&base->file_linker_flags);
 }
 
 bld_project_cache project_cache_new(void) {
