@@ -3,18 +3,21 @@
 int main(int argc, char** argv) {
     int result = 0;
     bld_compiler project_compiler;
+    bld_linker project_linker;
     bld_forward_project forward_project;
     bld_project project;
 
     project_compiler = compiler_new("/usr/bin/gcc");
     compiler_add_flag(&project_compiler, "-lm");
-    compiler_add_flag(&project_compiler, "-fsanitize=address");
     compiler_add_flag(&project_compiler, "-std=c99");
     compiler_add_flag(&project_compiler, "-Wall");
     compiler_add_flag(&project_compiler, "-Wextra");
     compiler_add_flag(&project_compiler, "-pedantic");
 
-    forward_project = project_new(project_path_extract(argc, argv), project_compiler);
+    project_linker = linker_new("/usr/bin/gcc");
+    linker_add_flag(&project_linker, "-lm");
+
+    forward_project = project_new(project_path_extract(argc, argv), project_compiler, project_linker);
 
     project_add_build(&forward_project, "..");
     rebuild_builder(&forward_project, argc, argv);
