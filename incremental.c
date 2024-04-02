@@ -11,7 +11,7 @@ void    incremental_apply_compilers(bld_project*, bld_forward_project*);
 void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
 
 int     incremental_compile_file(bld_project*, bld_file*);
-int     incremental_compile_total(bld_project*, char*);
+int     incremental_link_executable(bld_project*, char*);
 int     incremental_compile_with_absolute_path(bld_project*, char*);
 
 void    incremental_mark_changed_files(bld_project*, bld_set*);
@@ -342,8 +342,9 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     return result;
 }
 
-int incremental_compile_total(bld_project* project, char* executable_name) {
-    int result;
+int incremental_link_executable(bld_project* project, char* executable_name) {
+    int result, has_flag, has_hash;
+    uintmax_t* flag_hash;
     char name[FILENAME_MAX], **flag;
     bld_path path;
     bld_linker* linker = &project->base.linker;
@@ -552,9 +553,9 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         log_debug("Entire project existed in cache, generating executable");
     }
 
-    temp = incremental_compile_total(project, name);
+    temp = incremental_link_executable(project, name);
     if (temp) {
-        log_warn("Could not compile final executable");
+        log_warn("Could not link final executable");
         result = temp;
     } else {
         log_info("Compiled executable: \"%s\"", name);
