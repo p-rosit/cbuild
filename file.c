@@ -51,6 +51,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     file.name = str;
     file.path = *path;
     file.compiler = -1;
+    file.linker_flags = -1;
     file.defined_symbols = set_new(sizeof(char*));
     file.undefined_symbols = set_new(sizeof(char*));
     file.includes = set_new(0);

@@ -30,6 +30,7 @@ typedef struct bld_file {
     bld_path path;
     bld_string name;
     int compiler;
+    int linker_flags;
     bld_set defined_symbols;
     bld_set undefined_symbols;
     bld_set includes;
