@@ -5,7 +5,7 @@
 #include "rebuild.h"
 
 int                 run_new_build(bld_path*, char*);
-bld_forward_project new_rebuild(bld_path, bld_compiler);
+bld_forward_project new_rebuild(bld_path, bld_compiler, bld_linker);
 void                extract_names(int, char**, char**, char**);
 char*               infer_build_name(char*);
 void                set_main_rebuild(bld_forward_project*, bld_path*);
@@ -23,16 +23,17 @@ int run_new_build(bld_path* root, char* executable) {
     return result;
 }
 
-bld_project_base project_base_new(bld_path, bld_compiler);
-bld_forward_project new_rebuild(bld_path root, bld_compiler compiler) {
+bld_project_base project_base_new(bld_path, bld_compiler, bld_linker);
+bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
     bld_forward_project fbuild;
 
     fbuild.rebuilding = 1;
     fbuild.resolved = 0;
-    fbuild.base = project_base_new(root, compiler);
+    fbuild.base = project_base_new(root, compiler, linker);
     fbuild.extra_paths = array_new(sizeof(bld_path));
     fbuild.ignore_paths = set_new(0);
-    fbuild.file_names = array_new(sizeof(bld_string));
+    fbuild.compiler_file_names = array_new(sizeof(bld_string));
+    fbuild.linker_flags_file_names = array_new(sizeof(bld_string));
 
     return fbuild;
 }
@@ -82,6 +83,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     char *executable, *old_executable, *main_name;
     bld_path build_root, main, executable_path;
     bld_compiler compiler;
+    bld_linker linker;
     bld_forward_project fbuild;
     bld_project build;
 
@@ -103,6 +105,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
         "/usr/bin/gcc", /* TODO: don't hardcode compiler */
         "-std=c89",
         "-fsanitize=address",
+        "-g",
         "-Wall",
         "-Wextra",
         "-Werror",
@@ -111,7 +114,13 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
         NULL
     );
 
-    fbuild = new_rebuild(build_root, compiler);
+    linker = linker_with_flags(
+        "/usr/bin/gcc",
+        "-fsanitize=address",
+        NULL
+    );
+
+    fbuild = new_rebuild(build_root, compiler, linker);
     project_ignore_path(&fbuild, "./test");
 
     main = path_copy(&fproject->base.root);
