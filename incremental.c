@@ -8,6 +8,7 @@ void    incremental_index_possible_file(bld_project*, bld_path*, char*);
 void    incremental_index_recursive(bld_project*, bld_forward_project*, bld_path*, char*);
 void    incremental_apply_main_file(bld_project*, bld_forward_project*);
 void    incremental_apply_compilers(bld_project*, bld_forward_project*);
+void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
 
 int     incremental_compile_file(bld_project*, bld_file*);
 int     incremental_compile_total(bld_project*, char*);
@@ -216,7 +217,7 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
     bld_string* file_name;
     bld_compiler* compiler;
 
-    file_iter = iter_array(&fproject->file_names);
+    file_iter = iter_array(&fproject->compiler_file_names);
     compiler_iter = iter_array(&fproject->base.file_compilers);
 
     index = 0;
@@ -244,6 +245,50 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
                 }
                 match_found = 1;
                 file->compiler = index;
+            }
+        }
+
+        path_free(&path);
+
+        index++;
+    }
+}
+
+void incremental_apply_linker_flags(bld_project* project, bld_forward_project* fproject) {
+    int has_file, has_flags;
+    size_t index;
+    bld_iter file_iter, flag_iter;
+    bld_string* file_name;
+    bld_compiler* compiler;
+
+    file_iter = iter_array(&fproject->compiler_file_names);
+    flag_iter = iter_array(&fproject->base.file_compilers);
+
+    index = 0;
+    while (1) {
+        int match_found;
+        bld_iter iter;
+        bld_file* file;
+        bld_path path;
+
+        has_file = iter_next(&file_iter, (void**) &file_name);
+        has_flags = iter_next(&flag_iter, (void**) &compiler);
+
+        if (has_file != has_flags) {
+            log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
+        }
+        if (!has_file && !has_flags) {break;}
+
+        match_found = 0;
+        path = path_from_string(string_unpack(file_name));
+        iter = iter_set(&project->files);
+        while (iter_next(&iter, (void**) &file)) {
+            if (path_ends_with(&file->path, &path)) {
+                if (match_found) {
+                    log_fatal("Applying compiler to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
+                }
+                match_found = 1;
+                file->linker_flags = index;
             }
         }
 
@@ -301,10 +346,12 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     int result;
     char name[FILENAME_MAX], **flag;
     bld_path path;
-    bld_compiler compiler = project->base.compiler;
+    bld_linker* linker = &project->base.linker;
     bld_file *main_file, *file;
     bld_string cmd;
-    bld_iter iter;
+    bld_set added_flags;
+    bld_array linker_flags;
+    bld_iter iter, hash_iter;
 
     main_file = set_get(&project->files, project->main_file);
     if (main_file == NULL) {
@@ -313,15 +360,45 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
     }
 
     cmd = string_new();
-    string_append_string(&cmd, compiler.executable);
+    string_append_string(&cmd, linker->executable);
     string_append_space(&cmd);
 
     string_append_string(&cmd, "-o ");
     string_append_string(&cmd, executable_name);
     string_append_space(&cmd);
 
+    added_flags = set_new(0);
+    linker_flags = array_new(sizeof(char*));
+
+    iter = iter_array(&linker->flags.flag);
+    hash_iter = iter_array(&linker->flags.hash);
+    while (1) {
+        has_flag = iter_next(&iter, (void**) &flag);
+        has_hash = iter_next(&hash_iter, (void**) &flag_hash);
+
+        if (has_flag != has_hash) {
+            log_fatal("incremental_link_executable: internal error, project linker does not have equal amount of flags and hashes");
+        }
+        if (!has_flag && !has_hash) {
+            break;
+        }
+
+        if (set_has(&added_flags, *flag_hash)) {
+            continue;
+        }
+
+        array_push(&linker_flags, flag);
+        set_add(&added_flags, *flag_hash, NULL);
+    }
+
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        bld_iter iter, hash_iter;
+        bld_linker_flags* file_flags;
+        char** flag;
+        uintmax_t* flag_hash;
+        int has_flag, has_hash;
+
         string_append_space(&cmd);
 
         path = path_copy(&project->base.root);
@@ -334,13 +411,39 @@ int incremental_compile_total(bld_project* project, char* executable_name) {
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o");
         path_free(&path);
+
+        if (file->linker_flags < 0) {continue;}
+
+        file_flags = array_get(&project->base.file_linker_flags, file->linker_flags);
+        iter = iter_array(&file_flags->flag);
+        hash_iter = iter_array(&file_flags->hash);
+        while (1) {
+            has_flag = iter_next(&iter, (void**) &flag);
+            has_hash = iter_next(&hash_iter, (void**) &flag_hash);
+
+            if (has_flag != has_hash) {
+                log_fatal("incremental_link_executable: internal error, file linker flags does not have equal amount of flags and hashes");
+            }
+            if (!has_flag && !has_hash) {
+                break;
+            }
+
+            if (set_has(&added_flags, *flag_hash)) {
+                continue;
+            }
+
+            array_push(&linker_flags, flag);
+            set_add(&added_flags, *flag_hash, NULL);
+        }
     }
 
-    iter = iter_array(&compiler.flags);
+    iter = iter_array(&linker_flags);
     while (iter_next(&iter, (void**) &flag)) {
         string_append_space(&cmd);
         string_append_string(&cmd, *flag);
     }
+    array_free(&linker_flags);
+    set_free(&added_flags);
 
     result = system(string_unpack(&cmd));
     if (result < 0) {
