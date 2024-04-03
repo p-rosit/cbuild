@@ -4,7 +4,7 @@
 #include "dstr.h"
 #include "json.h"
 
-int parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
+int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
     int value_num = 0;
     int result, parse_complete;
     int c;

@@ -182,7 +182,7 @@ int parse_linker_linker_flags(FILE* file, bld_linker* linker) {
 int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
     int values;
 
-    values = parse_array(file, flags, (bld_parse_func) parse_linker_flag);
+    values = json_parse_array(file, flags, (bld_parse_func) parse_linker_flag);
     if (values < 0) {
         log_warn("Could not parse linker flags");
         return -1;

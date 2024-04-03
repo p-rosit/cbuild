@@ -167,7 +167,7 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
     int amount_parsed;
 
     cache->files = set_new(sizeof(bld_file));
-    amount_parsed = parse_array(file, cache, (bld_parse_func) parse_file);
+    amount_parsed = json_parse_array(file, cache, (bld_parse_func) parse_file);
     if (amount_parsed < 0) {
         bld_iter iter = iter_set(&cache->files);
         bld_file* file;
@@ -386,7 +386,7 @@ int parse_file_includes(FILE* file, bld_project_cache* cache) {
     int amount_parsed;
 
     f->includes = set_new(0);
-    amount_parsed = parse_array(file, &f->includes, (bld_parse_func) parse_file_include);
+    amount_parsed = json_parse_array(file, &f->includes, (bld_parse_func) parse_file_include);
     if (amount_parsed < 0) {
         set_free(&f->includes);
         log_warn("Could not parse file includes");
@@ -411,7 +411,7 @@ int parse_file_defined_symbols(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     int amount_parsed;
 
-    amount_parsed = parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
+    amount_parsed = json_parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
         bld_iter iter = iter_set(&f->defined_symbols);
         char** flag;
@@ -432,7 +432,7 @@ int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     int amount_parsed;
 
-    amount_parsed = parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
+    amount_parsed = json_parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
         bld_iter iter = iter_set(&f->undefined_symbols);
         char** flag;

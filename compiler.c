@@ -138,7 +138,7 @@ int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
     char** flag;
     bld_array flags = array_new(sizeof(char*));
 
-    values = parse_array(file, &flags, (bld_parse_func) parse_compiler_option);
+    values = json_parse_array(file, &flags, (bld_parse_func) parse_compiler_option);
     if (values < 0) {
         iter = iter_array(&flags);
         while (iter_next(&iter, (void**) &flag)) {
