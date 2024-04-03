@@ -12,6 +12,7 @@ typedef int (*bld_parse_func)(FILE*, void*);
 void ensure_directory_exists(bld_path*);
 int parse_cache(bld_project_cache*, bld_path*);
 int parse_project_compiler(FILE*, bld_project_cache*);
+int parse_project_linker(FILE*, bld_project_cache*);
 
 int parse_project_files(FILE*, bld_project_cache*);
 int parse_file(FILE*, bld_project_cache*);
@@ -20,6 +21,7 @@ int parse_file_id(FILE*, bld_project_cache*);
 int parse_file_hash(FILE*, bld_project_cache*);
 int parse_file_name(FILE*, bld_project_cache*);
 int parse_file_compiler(FILE*, bld_project_cache*);
+int parse_file_linker_flags(FILE*, bld_project_cache*);
 int parse_file_defined_symbols(FILE*, bld_project_cache*);
 int parse_file_undefined_symbols(FILE*, bld_project_cache*);
 int parse_file_function(FILE*, bld_set*);
@@ -31,6 +33,12 @@ int parse_compiler_type(FILE*, bld_compiler*);
 int parse_compiler_executable(FILE*, bld_compiler*);
 int parse_compiler_flags(FILE*, bld_compiler*);
 int parse_compiler_option(FILE*, bld_array*);
+
+int parse_linker(FILE*, bld_linker*);
+int parse_linker_executable(FILE*, bld_linker*);
+int parse_linker_linker_flags(FILE*, bld_linker*);
+int parse_linker_flags(FILE*, bld_linker_flags*);
+int parse_linker_flag(FILE*, bld_linker_flags*);
 
 int parse_string(FILE*, bld_string*);
 int parse_uintmax(FILE*, uintmax_t*);
@@ -101,11 +109,12 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
     int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"compiler", "files"};
-    bld_parse_func funcs[2] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"compiler", "linker", "files"};
+    bld_parse_func funcs[3] = {
         (bld_parse_func) parse_project_compiler,
+        (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
     };
     bld_path path = path_copy(root);
@@ -115,6 +124,8 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
     path_append_string(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
+    cache->file_compilers = array_new(sizeof(bld_compiler));
+    cache->file_linker_flags = array_new(sizeof(bld_linker_flags));
     amount_parsed = parse_map(f, cache, size, parsed, keys, funcs);
 
     if (amount_parsed != size) {
@@ -134,6 +145,12 @@ int parse_project_compiler(FILE* file, bld_project_cache* cache) {
     return result;
 }
 
+int parse_project_linker(FILE* file, bld_project_cache* cache) {
+    int result = parse_linker(file, &cache->linker);
+    if (result) {log_warn("Could not parse linker for project.");}
+    return result;
+}
+
 int parse_project_files(FILE* file, bld_project_cache* cache) {
     int amount_parsed;
 
@@ -150,15 +167,16 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
 int parse_file(FILE* file, bld_project_cache* cache) {
     bld_file temp, *f;
     int amount_parsed;
-    int size = 8;
-    int parsed[8];
-    char *keys[8] = {"type", "id", "hash", "name", "compiler", "includes", "defined_symbols", "undefined_symbols"};
-    bld_parse_func funcs[8] = {
+    int size = 9;
+    int parsed[9];
+    char *keys[9] = {"type", "id", "hash", "name", "compiler", "linker_flags", "includes", "defined_symbols", "undefined_symbols"};
+    bld_parse_func funcs[9] = {
         (bld_parse_func) parse_file_type,
         (bld_parse_func) parse_file_id,
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
         (bld_parse_func) parse_file_compiler,
+        (bld_parse_func) parse_file_linker_flags,
         (bld_parse_func) parse_file_includes,
         (bld_parse_func) parse_file_defined_symbols,
         (bld_parse_func) parse_file_undefined_symbols,
@@ -177,18 +195,18 @@ int parse_file(FILE* file, bld_project_cache* cache) {
 
     if (f->type == BLD_HEADER) {
         /* Header must have: id, hash, name, includes */
-        if (!parsed[1] || !parsed[2] || !parsed[3] || !parsed[5]) {
+        if (!parsed[1] || !parsed[2] || !parsed[3] || !parsed[6]) {
             log_warn("Header did not have required fields");
             return -1;
         }
         /* Header cannot have: defined_symbols, undefined_symbols */
-        if (parsed[6] || parsed[7]) {
+        if (parsed[7] || parsed[8]) {
             log_warn("Header had forbidden fields");
             return -1;
         }
     } else {
         /* File must have every key except an optional compiler */
-        if ((amount_parsed < size - 1) || ((amount_parsed == size - 1) && parsed[4])) {
+        if ((amount_parsed < size - 2) || ((amount_parsed == size - 1) && parsed[4] && parsed[5])) {
             log_warn("File is missing required field");
             return -1;
         }
@@ -276,6 +294,21 @@ int parse_file_compiler(FILE* file, bld_project_cache* cache) {
 
     array_push(&cache->file_compilers, &temp);
     f->compiler = cache->file_compilers.size - 1;
+
+    return result;
+}
+
+int parse_file_linker_flags(FILE* file, bld_project_cache* cache) {
+    bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
+    bld_linker_flags temp;
+    int result;
+
+    temp = linker_flags_new();
+    result = parse_linker_flags(file, &temp);
+    if (result) {log_warn("Could not parse linker flags for file");}
+
+    array_push(&cache->file_linker_flags, &temp);
+    f->linker_flags = cache->file_linker_flags.size - 1;
 
     return result;
 }
@@ -403,6 +436,84 @@ int parse_compiler_option(FILE* file, bld_array* flags) {
     
     temp = string_unpack(&str);
     array_push(flags, &temp);
+
+    return result;
+}
+
+int parse_linker(FILE* file, bld_linker* linker) {
+    int amount_parsed;
+    int size = 2;
+    int parsed[2];
+    char *keys[2] = {"executable", "linker_flags"};
+    bld_parse_func funcs[2] = {
+        (bld_parse_func) parse_linker_executable,
+        (bld_parse_func) parse_linker_linker_flags,
+    };
+
+    linker->flags = linker_flags_new();
+    amount_parsed = parse_map(file, linker, size, parsed, (char**) keys, funcs);
+
+    if (amount_parsed < size && !parsed[0]) {
+        return -1;
+    }
+    return 0;
+}
+
+int parse_linker_executable(FILE* file, bld_linker* linker) {
+    bld_string str = string_new();
+    char* temp;
+    int result = parse_string(file, &str);
+
+    if (result) {
+        string_free(&str);
+        log_warn("Could not parse linker executable");
+        return -1;
+    }
+
+    temp = string_unpack(&str);
+    linker->executable = temp;
+    return result;
+}
+
+int parse_linker_linker_flags(FILE* file, bld_linker* linker) {
+    bld_linker_flags flags = linker_flags_new();
+    int result = parse_linker_flags(file, &flags);
+    if (result) {
+        linker_flags_free(&flags);
+        log_warn("Could not parse linker flags");
+    }
+
+    linker->flags = flags;
+    return result;
+}
+
+int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
+    int values;
+
+    values = parse_array(file, flags, (bld_parse_func) parse_linker_flag);
+    if (values < 0) {
+        log_warn("Could not parse linker flags");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
+    bld_string str = string_new();
+    char* temp;
+    uintmax_t temp_hash;
+    int result = parse_string(file, &str);
+    if (result) {
+        string_free(&str);
+        log_warn("Could not parse linker flag");
+        return -1;
+    }
+
+    temp = string_unpack(&str);
+    temp_hash = string_hash(temp, 76502);  /* Magic number from linker_flags_add_flag */
+    array_push(&flags->flag, &temp);
+    array_push(&flags->hash, &temp_hash);
 
     return result;
 }
