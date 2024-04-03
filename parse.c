@@ -370,7 +370,7 @@ int parse_file_function(FILE* file, bld_set* set) {
     int result;
 
     result = parse_string(file, &str);
-    if (result) {return -1;}
+    if (result) {string_free(&str); return -1;}
 
     temp = string_unpack(&str);
     set_add(set, string_hash(temp, 0), &temp);
