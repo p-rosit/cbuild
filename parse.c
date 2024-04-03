@@ -27,10 +27,6 @@ int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_project_cache*);
 int parse_file_include(FILE*, bld_set*);
 
-
-int parse_uintmax_array(FILE*, bld_array*);
-int parse_uintmax_set(FILE*, bld_set*);
-
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
     mkdir(path_to_string(directory_path), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
