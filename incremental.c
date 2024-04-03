@@ -259,10 +259,10 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
     size_t index;
     bld_iter file_iter, flag_iter;
     bld_string* file_name;
-    bld_compiler* compiler;
+    bld_linker_flags* flags;
 
-    file_iter = iter_array(&fproject->compiler_file_names);
-    flag_iter = iter_array(&fproject->base.file_compilers);
+    file_iter = iter_array(&fproject->linker_flags_file_names);
+    flag_iter = iter_array(&fproject->base.file_linker_flags);
 
     index = 0;
     while (1) {
@@ -272,10 +272,10 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
         bld_path path;
 
         has_file = iter_next(&file_iter, (void**) &file_name);
-        has_flags = iter_next(&flag_iter, (void**) &compiler);
+        has_flags = iter_next(&flag_iter, (void**) &flags);
 
         if (has_file != has_flags) {
-            log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
+            log_fatal("incremental_apply_linker_flags: internal error, there is not an equal amount of files and linker flags");
         }
         if (!has_file && !has_flags) {break;}
 
