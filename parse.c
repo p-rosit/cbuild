@@ -157,6 +157,29 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
     cache->files = set_new(sizeof(bld_file));
     amount_parsed = parse_array(file, cache, (bld_parse_func) parse_file);
     if (amount_parsed < 0) {
+        bld_iter iter = iter_set(&cache->files);
+        bld_file* file;
+        bld_compiler* compiler;
+        bld_linker_flags* flags;
+
+        iter = iter_set(&cache->files);
+        while (iter_next(&iter, (void**) &file)) {
+            file_free(file);
+        }
+        set_free(&cache->files);
+
+        iter = iter_array(&cache->file_compilers);
+        while (iter_next(&iter, (void**) &compiler)) {
+            compiler_free(compiler);
+        }
+        array_free(&cache->file_compilers);
+
+        iter = iter_array(&cache->file_linker_flags);
+        while (iter_next(&iter, (void**) &flags)) {
+            linker_flags_free(flags);
+        }
+        array_free(&cache->file_linker_flags);
+
         log_warn("Could not parse graph");
         return -1;
     }
