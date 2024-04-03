@@ -95,7 +95,7 @@ char* string_unpack(bld_string* str) {
     return str->chars;
 }
 
-int parse_string(FILE* file, bld_string* str) {
+int string_parse(FILE* file, bld_string* str) {
     int c;
 
     c = next_character(file);

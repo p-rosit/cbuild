@@ -290,7 +290,7 @@ int parse_file_type(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     bld_string str = string_new();
     char* temp;
-    int result = parse_string(file, &str);
+    int result = string_parse(file, &str);
 
     if (result) {
         string_free(&str);
@@ -341,7 +341,7 @@ int parse_file_hash(FILE* file, bld_project_cache* cache) {
 int parse_file_name(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
     bld_string str = string_new();
-    int result = parse_string(file, &str);
+    int result = string_parse(file, &str);
     if (result) {
         string_free(&str);
         log_warn("Could not parse file name");
@@ -454,7 +454,7 @@ int parse_file_function(FILE* file, bld_set* set) {
     char* temp;
     int result;
 
-    result = parse_string(file, &str);
+    result = string_parse(file, &str);
     if (result) {string_free(&str); return -1;}
 
     temp = string_unpack(&str);

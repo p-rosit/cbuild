@@ -21,6 +21,6 @@ void        string_append_space(bld_string*);
 void        string_append_char(bld_string*, char);
 void        string_append_string(bld_string*, char*);
 
-int         parse_string(FILE*, bld_string*);
+int         string_parse(FILE*, bld_string*);
 
 #endif

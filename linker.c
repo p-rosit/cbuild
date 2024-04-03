@@ -154,7 +154,7 @@ int parse_linker(FILE* file, bld_linker* linker) {
 int parse_linker_executable(FILE* file, bld_linker* linker) {
     bld_string str = string_new();
     char* temp;
-    int result = parse_string(file, &str);
+    int result = string_parse(file, &str);
 
     if (result) {
         string_free(&str);
@@ -195,7 +195,7 @@ int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
     bld_string str = string_new();
     char* temp;
     uintmax_t temp_hash;
-    int result = parse_string(file, &str);
+    int result = string_parse(file, &str);
     if (result) {
         string_free(&str);
         log_warn("Could not parse linker flag");

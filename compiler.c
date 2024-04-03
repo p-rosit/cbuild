@@ -120,7 +120,7 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     bld_string str = string_new();
     char* temp;
-    int result = parse_string(file, &str);
+    int result = string_parse(file, &str);
     if (result) {
         string_free(&str);
         log_warn("Could not parse compiler executable");
@@ -157,7 +157,7 @@ int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
 int parse_compiler_option(FILE* file, bld_array* flags) {
     bld_string str = string_new();
     char* temp;
-    int result = parse_string(file, &str);
+    int result = string_parse(file, &str);
     if (result) {
         string_free(&str);
         log_warn("Could not parse compiler flag");

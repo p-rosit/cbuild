@@ -77,7 +77,7 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
 
         key_num += 1;
         str = string_new();
-        result = parse_string(file, &str);
+        result = string_parse(file, &str);
         if (result) {
             log_warn("Key %d could not be parsed, expected: [", key_num);
             for (i = 0; i < entries; i++) {
