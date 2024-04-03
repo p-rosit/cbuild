@@ -225,12 +225,14 @@ void project_cache_free(bld_project_cache* cache) {
     bld_iter iter;
     bld_file* file;
     bld_compiler* compiler;
-    
+    bld_linker_flags* flags;
+
     if (!cache->loaded) {return;}
     path_free(&cache->root);
 
     if (!cache->set) {return;}
     compiler_free(&cache->compiler);
+    linker_free(&cache->linker);
 
     iter = iter_set(&cache->files);
     while (iter_next(&iter, (void**) &file)) {
@@ -243,6 +245,12 @@ void project_cache_free(bld_project_cache* cache) {
         compiler_free(compiler);
     }
     array_free(&cache->file_compilers);
+
+    iter = iter_array(&cache->file_linker_flags);
+    while (iter_next(&iter, (void**) &flags)) {
+        linker_flags_free(flags);
+    }
+    array_free(&cache->file_linker_flags);
 }
 
 bld_path project_path_extract(int argc, char** argv) {
