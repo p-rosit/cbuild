@@ -1,3 +1,4 @@
+- [ ] make generic map and array function for serialization mirroring the parsing
 - [ ] only use `bld_string` interally instead of raw strings
 - [x] add linker as a concept to the system
 - [ ] rebuild with less restrictive flags
@@ -48,4 +49,3 @@
 - [ ] implement generic hash map
 - [x] implement generic hash set for faster access
 - [x] implement generic array to reduce code duplication
-
