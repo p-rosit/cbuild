@@ -82,8 +82,6 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     int result, new_result, log_level;
     char *executable, *old_executable, *main_name;
     bld_path build_root, main, executable_path;
-    bld_compiler compiler;
-    bld_linker linker;
     bld_forward_project fbuild;
     bld_project build;
 
@@ -101,26 +99,27 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     path_append_path(&build_root, &fproject->base.build);
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
-    compiler = compiler_with_flags(
-        "/usr/bin/gcc", /* TODO: don't hardcode compiler */
-        "-std=c89",
-        "-fsanitize=address",
-        "-g",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        "-pedantic",
-        "-Wmissing-prototypes",
-        NULL
-    );
 
-    linker = linker_with_flags(
-        "/usr/bin/gcc",
-        "-fsanitize=address",
-        NULL
+    fbuild = new_rebuild(
+        build_root,
+        compiler_with_flags(
+            "/usr/bin/gcc", /* TODO: don't hardcode compiler */
+            "-std=c89",
+            "-fsanitize=address",
+            "-g",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-pedantic",
+            "-Wmissing-prototypes",
+            NULL
+        ),
+        linker_with_flags(
+            "/usr/bin/gcc",
+            "-fsanitize=address",
+            NULL
+        )
     );
-
-    fbuild = new_rebuild(build_root, compiler, linker);
     project_ignore_path(&fbuild, "./test");
 
     main = path_copy(&fproject->base.root);
