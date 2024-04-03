@@ -1,3 +1,4 @@
+- [ ] move generic array and map parsing to new file
 - [ ] move each serialization and parsing function into their respective struct file
 - [ ] make generic map and array function for serialization mirroring the parsing
 - [ ] only use `bld_string` interally instead of raw strings
