@@ -24,4 +24,10 @@ bld_linker_flags    linker_flags_copy(bld_linker_flags*);
 void                linker_flags_free(bld_linker_flags*);
 void                linker_flags_add_flag(bld_linker_flags*, char*);
 
+int parse_linker(FILE*, bld_linker*);
+int parse_linker_executable(FILE*, bld_linker*);
+int parse_linker_linker_flags(FILE*, bld_linker*);
+int parse_linker_flags(FILE*, bld_linker_flags*);
+int parse_linker_flag(FILE*, bld_linker_flags*);
+
 #endif
