@@ -320,6 +320,7 @@ int parse_file_includes(FILE* file, bld_project_cache* cache) {
     f->includes = set_new(0);
     amount_parsed = parse_array(file, &f->includes, (bld_parse_func) parse_file_include);
     if (amount_parsed < 0) {
+        set_free(&f->includes);
         log_warn("Could not parse file includes");
         return -1;
     }
