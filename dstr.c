@@ -99,9 +99,10 @@ int string_parse(FILE* file, bld_string* str) {
     int c;
 
     c = next_character(file);
-    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
-    if (c != '\"') {log_warn("Expected string to start with \'\"\', got \'%c\'", c); goto parse_failed;}
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_early_fail;}
+    if (c != '\"') {log_warn("Expected string to start with \'\"\', got \'%c\'", c); goto parse_early_fail;}
 
+    *str = string_new();
     c = getc(file);
     while (c != '\"' && c != EOF) {
         string_append_char(str, c);
@@ -111,5 +112,7 @@ int string_parse(FILE* file, bld_string* str) {
 
     return 0;
     parse_failed:
+    string_free(str);
+    parse_early_fail:
     return -1;
 }
