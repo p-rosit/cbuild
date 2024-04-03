@@ -1,3 +1,4 @@
+- [ ] only use `bld_string` interally instead of raw strings
 - [x] add linker as a concept to the system
 - [ ] rebuild with less restrictive flags
 - [x] write project with c89
