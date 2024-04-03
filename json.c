@@ -76,7 +76,6 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
         int i;
 
         key_num += 1;
-        str = string_new();
         result = string_parse(file, &str);
         if (result) {
             log_warn("Key %d could not be parsed, expected: [", key_num);
@@ -85,7 +84,7 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
                 printf("  \"%s\"", keys[i]);
             }
             printf("\n]\n");
-            goto parse_failed;
+            goto parse_key_failed;
         }
 
         exists = 0;
@@ -104,21 +103,21 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
                 printf("  \"%s\"", keys[i]);
             }
             printf("\n]\n");
-            goto parse_failed;
+            goto parse_value_failed;
         }
         if (parsed[index]) {
             log_warn("Duplicate key \"%s\" encountered", keys[index]);
-            goto parse_failed;
+            goto parse_value_failed;
         }
 
         c = next_character(file);
         if (c != ':') {
             log_warn("Expected \':\', got \'%c\'", c);
-            goto parse_failed;
+            goto parse_value_failed;
         }
 
         result = parse_funcs[index](file, obj);
-        if (result) {goto parse_failed;}
+        if (result) {goto parse_value_failed;}
         parsed[index] = 1;
 
         c = next_character(file);
@@ -133,18 +132,20 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
             } break;
             case (EOF): {
                 log_warn("Unexpected EOF");
-                goto parse_failed;
+                goto parse_value_failed;
             } break;
             default: {
                 log_warn("Unexpected character, got \'%c\'", c);
-                goto parse_failed;
+                goto parse_value_failed;
             } break;
         }
     }
 
     return key_num;
-    parse_failed:
+    parse_value_failed:
     string_free(&str);
+    parse_key_failed:
+    parse_failed:
     return -1;
 }
 

@@ -288,12 +288,11 @@ int parse_file(FILE* file, bld_project_cache* cache) {
 
 int parse_file_type(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
-    bld_string str = string_new();
+    bld_string str;
     char* temp;
     int result = string_parse(file, &str);
 
     if (result) {
-        string_free(&str);
         log_warn("Could not parse compiler type");
         return -1;
     }
@@ -340,10 +339,9 @@ int parse_file_hash(FILE* file, bld_project_cache* cache) {
 
 int parse_file_name(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
-    bld_string str = string_new();
+    bld_string str;
     int result = string_parse(file, &str);
     if (result) {
-        string_free(&str);
         log_warn("Could not parse file name");
         return -1;
     }
@@ -450,12 +448,12 @@ int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
 }
 
 int parse_file_function(FILE* file, bld_set* set) {
-    bld_string str = string_new();
+    bld_string str;
     char* temp;
     int result;
 
     result = string_parse(file, &str);
-    if (result) {string_free(&str); return -1;}
+    if (result) {return -1;}
 
     temp = string_unpack(&str);
     set_add(set, string_hash(temp, 0), &temp);

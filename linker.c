@@ -152,12 +152,11 @@ int parse_linker(FILE* file, bld_linker* linker) {
 }
 
 int parse_linker_executable(FILE* file, bld_linker* linker) {
-    bld_string str = string_new();
+    bld_string str;
     char* temp;
     int result = string_parse(file, &str);
 
     if (result) {
-        string_free(&str);
         log_warn("Could not parse linker executable");
         return -1;
     }
@@ -192,12 +191,11 @@ int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
 }
 
 int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
-    bld_string str = string_new();
+    bld_string str;
     char* temp;
     uintmax_t temp_hash;
     int result = string_parse(file, &str);
     if (result) {
-        string_free(&str);
         log_warn("Could not parse linker flag");
         return -1;
     }
