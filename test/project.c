@@ -15,7 +15,6 @@ int main(int argc, char** argv) {
     compiler_add_flag(&project_compiler, "-pedantic");
 
     project_linker = linker_new("/usr/bin/gcc");
-    linker_add_flag(&project_linker, "-lm");
 
     forward_project = project_new(project_path_extract(argc, argv), project_compiler, project_linker);
 
@@ -29,6 +28,10 @@ int main(int argc, char** argv) {
     project_set_compiler(
         &forward_project, "file.c",
         compiler_with_flags("/usr/bin/clang", "-Weverything", NULL)
+    );
+    project_set_linker_flags(
+        &forward_project, "file.c",
+        linker_flags_with_flags("-lm", NULL)
     );
 
     /* Mandatory */
