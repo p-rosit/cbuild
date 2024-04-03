@@ -190,32 +190,65 @@ int parse_file(FILE* file, bld_project_cache* cache) {
     f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
 
     amount_parsed = parse_map(file, cache, size, parsed, keys, funcs);
-    if (amount_parsed < 0) {return -1;}
-    if (!parsed[0]) {return -1;} /* Fail if file type was not parsed */
+    f = set_remove(&cache->files, BLD_INVALID_IDENITIFIER);
+
+    if (amount_parsed < 0) {goto parse_failed;}
+    if (!parsed[0]) {goto parse_failed;} /* Fail if file type was not parsed */
 
     if (f->type == BLD_HEADER) {
         /* Header must have: id, hash, name, includes */
         if (!parsed[1] || !parsed[2] || !parsed[3] || !parsed[6]) {
             log_warn("Header did not have required fields");
-            return -1;
+            goto parse_failed;
         }
         /* Header cannot have: defined_symbols, undefined_symbols */
         if (parsed[7] || parsed[8]) {
             log_warn("Header had forbidden fields");
-            return -1;
+            goto parse_failed;
         }
     } else {
         /* File must have every key except an optional compiler */
         if ((amount_parsed < size - 2) || ((amount_parsed == size - 1) && parsed[4] && parsed[5])) {
             log_warn("File is missing required field");
-            return -1;
+            goto parse_failed;
         }
     }
 
-    f = set_remove(&cache->files, BLD_INVALID_IDENITIFIER);
     set_add(&cache->files, f->identifier.id, f);
 
     return 0;
+
+    parse_failed:
+    path_free(&f->path);
+    if (parsed[3]) {
+        string_free(&f->name);
+    }
+
+    if (parsed[6]) {
+        set_free(&f->includes);
+    }
+
+    if (parsed[7]) {
+        bld_iter iter = iter_set(&f->defined_symbols);
+        char** str;
+
+        while (iter_next(&iter, (void**) &str)) {
+            free(*str);
+        }
+        set_free(&f->defined_symbols);
+    }
+
+    if (parsed[8]) {
+        bld_iter iter = iter_set(&f->undefined_symbols);
+        char** str;
+
+        while (iter_next(&iter, (void**) &str)) {
+            free(*str);
+        }
+        set_free(&f->undefined_symbols);
+    }
+
+    return -1;
 }
 
 int parse_file_type(FILE* file, bld_project_cache* cache) {
