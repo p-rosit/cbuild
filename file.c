@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <sys/stat.h>
 #include "logging.h"
 #include "file.h"
 

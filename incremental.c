@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
 #include "logging.h"
 #include "incremental.h"
 
