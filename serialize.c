@@ -5,9 +5,11 @@
 
 void serialize_compiler(FILE*, bld_compiler*, int);
 void serialize_compiler_flags(FILE*, bld_array*, int);
+void serialize_linker(FILE*, bld_linker*, int);
+void serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
-void serialize_files(FILE*, bld_set*, bld_array*, int);
-void serialize_file(FILE*, bld_file*, bld_array*, int);
+void serialize_files(FILE*, bld_set*, bld_array*, bld_array*, int);
+void serialize_file(FILE*, bld_file*, bld_array*, bld_array*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_symbols(FILE*, bld_set*, int);
@@ -38,8 +40,12 @@ void project_save_cache(bld_project* project) {
     serialize_compiler(cache, &project->base.compiler, depth + 1);
     fprintf(cache, ",\n");
 
+    serialize_key(cache, "linker", depth);
+    serialize_linker(cache, &project->base.linker, depth + 1);
+    fprintf(cache, ",\n");
+
     serialize_key(cache, "files", depth);
-    serialize_files(cache, &project->files, &project->base.file_compilers, depth + 1);
+    serialize_files(cache, &project->files, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
     fprintf(cache, "\n");
 
     fprintf(cache, "}\n");
@@ -82,26 +88,78 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
     fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
 }
 
-void serialize_files(FILE* cache, bld_set* files, bld_array* compilers, int depth) {
+void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
+    fprintf(cache, "{\n");
+
+    serialize_key(cache, "executable", depth);
+    fprintf(cache, "\"%s\"", linker->executable);
+
+    if (linker->flags.flag.size > 0) {
+        fprintf(cache, ",\n");
+        serialize_key(cache, "linker_flags", depth);
+        serialize_linker_flags(cache, &linker->flags, depth + 1);
+    }
+
+    fprintf(cache, "\n");
+    fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
+}
+
+void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
+    char** flag;
+    int first = 1;
+    bld_iter iter;
+
+    fprintf(cache, "[");
+    if (flags->flag.size > 1) {
+        fprintf(cache, "\n");
+    }
+    
+    iter = iter_array(&flags->flag);
+    while (iter_next(&iter, (void**) &flag)) {
+        if (!first) {fprintf(cache, ",\n");}
+        else {first = 0;}
+        if (flags->flag.size > 1) {
+            fprintf(cache, "%*c", 2 * depth, ' ');
+        }
+        fprintf(cache, "\"%s\"", *flag);
+    }
+
+    if (flags->flag.size > 1) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
+}
+
+void serialize_files(FILE* cache, bld_set* files, bld_array* compilers, bld_array* linker_flags, int depth) {
     int first = 1;
     bld_iter iter = iter_set(files);
     bld_file* file;
 
-    fprintf(cache, "[\n");
+    fprintf(cache, "[");
+    if (files->size > 1) {
+        fprintf(cache, "\n");
+    }
+
     while (iter_next(&iter, (void**) &file)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
             first = 0;
         }
-        fprintf(cache, "%*c", 2 * depth, ' ');
-        serialize_file(cache, file, compilers, depth + 1);
+
+        if (files->size > 1) {
+            fprintf(cache, "%*c", 2 * depth, ' ');
+        }
+        serialize_file(cache, file, compilers, linker_flags, depth + 1);
     }
-    fprintf(cache, "\n");
-    fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
+
+    if (files->size > 1) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
 }
 
-void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, int depth) {
+void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, bld_array* linker_flags, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "type", depth);
@@ -123,6 +181,12 @@ void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, int depth
     if (file->compiler >= 0) {
         serialize_key(cache, "compiler", depth);
         serialize_compiler(cache, array_get(compilers, file->compiler), depth + 1);
+        fprintf(cache, ",\n");
+    }
+
+    if (file->linker_flags >= 0) {
+        serialize_key(cache, "linker_flags", depth);
+        serialize_linker_flags(cache, array_get(linker_flags, file->linker_flags), depth + 1);
         fprintf(cache, ",\n");
     }
 
