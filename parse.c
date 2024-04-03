@@ -414,13 +414,22 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
     int values;
+    bld_iter iter;
+    char** flag;
     bld_array flags = array_new(sizeof(char*));
 
     values = parse_array(file, &flags, (bld_parse_func) parse_compiler_option);
     if (values < 0) {
+        iter = iter_array(&flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            free(*flag);
+        }
+        array_free(&flags);
+
         log_warn("Could not parse compiler flags");
         return -1;
     }
+
     compiler->flags = flags;
     return 0;
 }
