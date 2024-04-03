@@ -75,17 +75,25 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
     int first = 1;
     bld_iter iter;
 
-    fprintf(cache, "[\n");
+    fprintf(cache, "[");
+    if (flags->size > 1) {
+        fprintf(cache, "\n");
+    }
     
     iter = iter_array(flags);
     while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
-        fprintf(cache, "%*c\"%s\"", 2 * depth, ' ', *flag);
+        if (flags->size > 1) {
+            fprintf(cache, "%*c", 2 * depth, ' ');
+        }
+        fprintf(cache, "\"%s\"", *flag);
     }
 
-    fprintf(cache, "\n");
-    fprintf(cache, "%*c]", 2 * (depth - 1), ' ');
+    if (flags->size > 1) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
 }
 
 void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
@@ -232,23 +240,38 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
     char** symbol;
     bld_iter iter = iter_set(symbols);
 
-    fprintf(cache, "[\n");
+    fprintf(cache, "[");
+    if (symbols->size > 1) {
+        fprintf(cache, "\n");
+    }
+
     while (iter_next(&iter, (void**) &symbol)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
             first = 0;
         }
-        fprintf(cache, "%*c\"%s\"", 2 * depth, ' ', *symbol);
+        if (symbols->size > 1) {
+            fprintf(cache, "%*c", 2 * depth, ' ');
+        }
+        fprintf(cache, "\"%s\"", *symbol);
     }
-    fprintf(cache, "\n%*c]", 2 * (depth - 1), ' ');
+
+    if (symbols->size > 1) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
 }
 
 void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
     int first = 1;
     size_t i;
 
-    fprintf(cache, "[\n");
+    fprintf(cache, "[");
+    if (includes->size > 1) {
+        fprintf(cache, "\n");
+    }
+
     for (i = 0; i < includes->capacity + includes->max_offset; i++) {
         if (includes->offset[i] >= includes->max_offset) {continue;}
         if (!first) {
@@ -256,9 +279,16 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
         } else {
             first = 0;
         }
-        fprintf(cache, "%*c%" PRIuMAX, 2 * depth, ' ', includes->hash[i]);
+        if (includes->size > 1) {
+            fprintf(cache, "%*c", 2 * depth, ' ');
+        }
+        fprintf(cache, "%" PRIuMAX, includes->hash[i]);
     }
-    fprintf(cache, "\n%*c]", 2 * (depth - 1), ' ');
+
+    if (includes->size > 1) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
 }
 
 void serialize_key(FILE* cache, char* key, int depth) {
