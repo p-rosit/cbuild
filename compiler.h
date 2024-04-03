@@ -16,4 +16,10 @@ void            compiler_free(bld_compiler*);
 uintmax_t       compiler_hash(bld_compiler*, uintmax_t);
 void            compiler_add_flag(bld_compiler*, char*);
 
+int parse_compiler(FILE*, bld_compiler*);
+int parse_compiler_type(FILE*, bld_compiler*);
+int parse_compiler_executable(FILE*, bld_compiler*);
+int parse_compiler_flags(FILE*, bld_compiler*);
+int parse_compiler_option(FILE*, bld_array*);
+
 #endif

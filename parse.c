@@ -27,11 +27,6 @@ int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_project_cache*);
 int parse_file_include(FILE*, bld_set*);
 
-int parse_compiler(FILE*, bld_compiler*);
-int parse_compiler_type(FILE*, bld_compiler*);
-int parse_compiler_executable(FILE*, bld_compiler*);
-int parse_compiler_flags(FILE*, bld_compiler*);
-int parse_compiler_option(FILE*, bld_array*);
 
 int parse_uintmax_array(FILE*, bld_array*);
 int parse_uintmax_set(FILE*, bld_set*);
@@ -469,76 +464,4 @@ int parse_file_function(FILE* file, bld_set* set) {
     temp = string_unpack(&str);
     set_add(set, string_hash(temp, 0), &temp);
     return 0;
-}
-
-int parse_compiler(FILE* file, bld_compiler* compiler) {
-    int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"executable", "flags"};
-    bld_parse_func funcs[2] = {
-        (bld_parse_func) parse_compiler_executable,
-        (bld_parse_func) parse_compiler_flags,
-    };
-
-    compiler->flags = array_new(sizeof(char*));
-    amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
-
-    if (amount_parsed < size && !parsed[0]) {
-        return -1;
-    }
-    return 0;
-}
-
-int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
-    bld_string str = string_new();
-    char* temp;
-    int result = parse_string(file, &str);
-    if (result) {
-        string_free(&str);
-        log_warn("Could not parse compiler executable");
-        return -1;
-    }
-    
-    temp = string_unpack(&str);
-    compiler->executable = temp;
-    return result;
-}
-
-int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
-    int values;
-    bld_iter iter;
-    char** flag;
-    bld_array flags = array_new(sizeof(char*));
-
-    values = parse_array(file, &flags, (bld_parse_func) parse_compiler_option);
-    if (values < 0) {
-        iter = iter_array(&flags);
-        while (iter_next(&iter, (void**) &flag)) {
-            free(*flag);
-        }
-        array_free(&flags);
-
-        log_warn("Could not parse compiler flags");
-        return -1;
-    }
-
-    compiler->flags = flags;
-    return 0;
-}
-
-int parse_compiler_option(FILE* file, bld_array* flags) {
-    bld_string str = string_new();
-    char* temp;
-    int result = parse_string(file, &str);
-    if (result) {
-        string_free(&str);
-        log_warn("Could not parse compiler flag");
-        return -1;
-    }
-    
-    temp = string_unpack(&str);
-    array_push(flags, &temp);
-
-    return result;
 }
