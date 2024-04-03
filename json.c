@@ -148,6 +148,27 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
     return -1;
 }
 
+int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
+    uintmax_t num = 0;
+    int c;
+
+    c = next_character(file);
+    if (!isdigit(c)) {
+        log_warn("Expected number, got: \'%c\'", c);
+        return -1;
+    }
+
+    while (c != EOF && isdigit(c)) {
+        /* Warning: number is assumed to be valid, no overflow etc. */
+        num = 10 * num + (c - '0');
+        c = getc(file);
+    }
+    ungetc(c, file);
+
+    *num_ptr = num;
+    return 0;
+}
+
 int next_character(FILE* file) {
     int c = getc(file);
     while (c != EOF && isspace(c)) {c = getc(file);}

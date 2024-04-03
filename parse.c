@@ -39,8 +39,6 @@ int parse_linker_linker_flags(FILE*, bld_linker*);
 int parse_linker_flags(FILE*, bld_linker_flags*);
 int parse_linker_flag(FILE*, bld_linker_flags*);
 
-int parse_string(FILE*, bld_string*);
-int parse_uintmax(FILE*, uintmax_t*);
 int parse_uintmax_array(FILE*, bld_array*);
 int parse_uintmax_set(FILE*, bld_set*);
 
@@ -627,25 +625,4 @@ int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
     array_push(&flags->hash, &temp_hash);
 
     return result;
-}
-
-int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
-    uintmax_t num = 0;
-    int c;
-
-    c = next_character(file);
-    if (!isdigit(c)) {
-        log_warn("Expected number, got: \'%c\'", c);
-        return -1;
-    }
-
-    while (c != EOF && isdigit(c)) {
-        /* Warning: number is assumed to be valid, no overflow etc. */
-        num = 10 * num + (c - '0');
-        c = getc(file);
-    }
-    ungetc(c, file);
-
-    *num_ptr = num;
-    return 0;
 }
