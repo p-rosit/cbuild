@@ -131,6 +131,40 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
     if (amount_parsed != size) {
         fclose(f);
         path_free(&path);
+
+        if (parsed[0]) {
+            compiler_free(&cache->compiler);
+        }
+
+        if (parsed[1]) {
+            linker_free(&cache->linker);
+        }
+
+        if (parsed[2]) {
+            bld_iter iter;
+            bld_file* file;
+            bld_compiler* compiler;
+            bld_linker_flags* flags;
+
+            iter = iter_set(&cache->files);
+            while (iter_next(&iter, (void**) &file)) {
+                file_free(file);
+            }
+            set_free(&cache->files);
+
+            iter = iter_array(&cache->file_compilers);
+            while (iter_next(&iter, (void**) &compiler)) {
+                compiler_free(compiler);
+            }
+            array_free(&cache->file_compilers);
+
+            iter = iter_array(&cache->file_linker_flags);
+            while (iter_next(&iter, (void**) &flags)) {
+                linker_flags_free(flags);
+            }
+            array_free(&cache->file_linker_flags);
+        }
+
         return -1;
     }
 
