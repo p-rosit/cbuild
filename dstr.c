@@ -9,7 +9,7 @@ bld_string string_new(void) {
     char* chars;
     bld_string str;
 
-    chars = malloc(1);
+    chars = calloc(1, 1);
     if (chars == NULL) {log_fatal("Could not allocate minimal string.");}
 
     str.capacity = 1;
@@ -25,10 +25,11 @@ bld_string string_copy(bld_string* str) {
 
     chars = malloc(str->size + 1);
     if (chars == NULL) {
-        log_fatal("Could not null terminate string \"%*s\".", (int) str->size, str->chars);
+        log_fatal("Could not allocate copy of \"%s\".", str->chars);
     }
 
     memcpy(chars, str->chars, str->size);
+    chars[str->size] = '\0';
 
     cpy.capacity = str->size + 1;
     cpy.size = str->size;
@@ -64,7 +65,9 @@ int push_character(bld_string* str, char c) {
         str->capacity = capacity;
     }
 
-    str->chars[str->size++] = c;
+    str->chars[str->size] = c;
+    str->chars[str->size + 1] = '\0';
+    str->size += 1;
     return 1;
 }
 
@@ -91,7 +94,6 @@ void string_append_string(bld_string* str, char* s) {
 }
 
 char* string_unpack(bld_string* str) {
-    str->chars[str->size] = '\0';
     return str->chars;
 }
 
