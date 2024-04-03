@@ -629,25 +629,6 @@ int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
     return result;
 }
 
-int parse_string(FILE* file, bld_string* str) {
-    int c;
-
-    c = next_character(file);
-    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
-    if (c != '\"') {log_warn("Expected string to start with \'\"\', got \'%c\'", c); goto parse_failed;}
-
-    c = getc(file);
-    while (c != '\"' && c != EOF) {
-        string_append_char(str, c);
-        c = getc(file);
-    }
-    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
-
-    return 0;
-    parse_failed:
-    return -1;
-}
-
 int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
     uintmax_t num = 0;
     int c;

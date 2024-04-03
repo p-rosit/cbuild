@@ -1,5 +1,6 @@
 #include <string.h>
 #include "logging.h"
+#include "json.h"
 #include "dstr.h"
 
 int push_character(bld_string*, char);
@@ -92,4 +93,23 @@ void string_append_string(bld_string* str, char* s) {
 char* string_unpack(bld_string* str) {
     str->chars[str->size] = '\0';
     return str->chars;
+}
+
+int parse_string(FILE* file, bld_string* str) {
+    int c;
+
+    c = next_character(file);
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
+    if (c != '\"') {log_warn("Expected string to start with \'\"\', got \'%c\'", c); goto parse_failed;}
+
+    c = getc(file);
+    while (c != '\"' && c != EOF) {
+        string_append_char(str, c);
+        c = getc(file);
+    }
+    if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
+
+    return 0;
+    parse_failed:
+    return -1;
 }
