@@ -40,6 +40,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     incremental_apply_main_file(&project, fproject);
     incremental_apply_compilers(&project, fproject);
+    incremental_apply_linker_flags(&project, fproject);
 
     hash = compiler_hash(&project.base.compiler, 5031);
     iter = iter_set(&project.files);
