@@ -71,6 +71,7 @@ bld_linker_flags linker_flags_with_flags(char* first_flag, ...) {
     if (first_flag == NULL) {
         return flags;
     }
+    linker_flags_add_flag(&flags, first_flag);
 
     va_start(args, first_flag);
     while (1) {
