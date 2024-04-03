@@ -670,7 +670,6 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
             log_warn("Duplicate key \"%s\" encountered", keys[index]);
             goto parse_failed;
         }
-        parsed[index] = 1;
 
         c = next_character(file);
         if (c != ':') {
@@ -680,14 +679,16 @@ int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_
 
         result = parse_funcs[index](file, obj);
         if (result) {goto parse_failed;}
+        parsed[index] = 1;
 
-        string_free(&str);
         c = next_character(file);
         switch (c) {
             case ('}'): {
+                string_free(&str);
                 parse_complete = 1;
             } break;
             case (','): {
+                string_free(&str);
                 continue;
             } break;
             case (EOF): {
