@@ -143,7 +143,7 @@ int parse_linker(FILE* file, bld_linker* linker) {
     };
 
     linker->flags = linker_flags_new();
-    amount_parsed = parse_map(file, linker, size, parsed, (char**) keys, funcs);
+    amount_parsed = json_parse_map(file, linker, size, parsed, (char**) keys, funcs);
 
     if (amount_parsed < size && !parsed[0]) {
         return -1;

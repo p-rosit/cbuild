@@ -109,7 +109,7 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     };
 
     compiler->flags = array_new(sizeof(char*));
-    amount_parsed = parse_map(file, compiler, size, parsed, (char**) keys, funcs);
+    amount_parsed = json_parse_map(file, compiler, size, parsed, (char**) keys, funcs);
 
     if (amount_parsed < size && !parsed[0]) {
         return -1;

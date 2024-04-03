@@ -104,7 +104,7 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
 
     cache->file_compilers = array_new(sizeof(bld_compiler));
     cache->file_linker_flags = array_new(sizeof(bld_linker_flags));
-    amount_parsed = parse_map(f, cache, size, parsed, keys, funcs);
+    amount_parsed = json_parse_map(f, cache, size, parsed, keys, funcs);
 
     if (amount_parsed != size) {
         fclose(f);
@@ -224,7 +224,7 @@ int parse_file(FILE* file, bld_project_cache* cache) {
     set_add(&cache->files, BLD_INVALID_IDENITIFIER, &temp);
     f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
 
-    amount_parsed = parse_map(file, cache, size, parsed, keys, funcs);
+    amount_parsed = json_parse_map(file, cache, size, parsed, keys, funcs);
     f = set_remove(&cache->files, BLD_INVALID_IDENITIFIER);
 
     if (amount_parsed < 0) {goto parse_failed;}

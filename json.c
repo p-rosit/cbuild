@@ -51,7 +51,7 @@ int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
     return -1;
 }
 
-int parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
+int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
     int exists, index, key_num = 0;
     int result, parse_complete;
     bld_string str;
