@@ -1,4 +1,4 @@
-[ ] add linker as a concept to the system
+[x] add linker as a concept to the system
 [ ] rebuild with less restrictive flags
 [x] write project with c89
 [ ] allow using compiler different from default in linking step
