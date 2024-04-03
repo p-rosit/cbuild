@@ -345,6 +345,14 @@ int parse_file_defined_symbols(FILE* file, bld_project_cache* cache) {
 
     amount_parsed = parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
+        bld_iter iter = iter_set(&f->defined_symbols);
+        char** flag;
+
+        while (iter_next(&iter, (void**) &flag)) {
+            free(*flag);
+        }
+        set_free(&f->defined_symbols);
+
         log_warn("Could not parse defined symbols");
         return -1;
     }
@@ -358,6 +366,14 @@ int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
 
     amount_parsed = parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
+        bld_iter iter = iter_set(&f->undefined_symbols);
+        char** flag;
+
+        while (iter_next(&iter, (void**) &flag)) {
+            free(*flag);
+        }
+        set_free(&f->undefined_symbols);
+
         log_warn("Could not parse defined symbols");
         return -1;
     }
