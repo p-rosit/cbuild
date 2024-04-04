@@ -42,7 +42,6 @@ char* path_get_last_string(bld_path* path) {
     char* str;
 
     sep_len = sizeof(BLD_PATH_SEP) - 1;
-    path_to_string(path);
     for (i = 0; i < path->str.size; i++) {
         str = path->str.chars + path->str.size - i - 1;
         if (strncmp(str, BLD_PATH_SEP, sep_len) == 0) {
