@@ -56,6 +56,7 @@ char* path_get_last_string(bld_path* path) {
 char* path_remove_last_string(bld_path* path) {
     char* name = path_get_last_string(path);
     path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    path->str.chars[path->str.size] = '\0';
     return name;
 }
 
