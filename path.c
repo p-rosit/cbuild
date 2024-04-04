@@ -79,9 +79,13 @@ int path_ends_with(bld_path* path, bld_path* suffix) {
 }
 
 void path_remove_file_ending(bld_path* path) {
-    size_t i;
-    /* TODO: make sure we don't pass a path separator */
+    size_t i, sep_len;
+
+    sep_len = sizeof(BLD_PATH_SEP) - 1;
     for (i = path->str.size; 0 < i; i--) {
+        if (strncmp(path->str.chars, BLD_PATH_SEP, sep_len) == 0) {
+            return;
+        }
         if (path->str.chars[i - 1] == '.') {
             path->str.size = i - 1;
             path->str.chars[i - 1] = '\0';
