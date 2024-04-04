@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
-#include <sys/stat.h>
 #include <string.h>
+#include "os.h"
 #include "logging.h"
 #include "path.h"
 #include "project.h"
@@ -29,7 +29,7 @@ int parse_file_include(FILE*, bld_set*);
 
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
-    mkdir(path_to_string(directory_path), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    os_dir_make(path_to_string(directory_path));
     switch (errno) {
         case 0: {
             log_debug("Creating cache directory.");
