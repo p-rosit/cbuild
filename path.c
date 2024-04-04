@@ -49,7 +49,7 @@ char* path_get_last_string(bld_path* path) {
         }
     }
 
-    log_fatal("path_remove_last_string: directory contains only one name...");
+    log_fatal("path_get_last_string: directory contains only one name...");
     return NULL; /* Unreachable */
 }
 
