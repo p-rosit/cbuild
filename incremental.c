@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
+#include "os.h"
 #include "logging.h"
 #include "incremental.h"
 
@@ -119,13 +119,13 @@ void incremental_index_possible_file(bld_project* project, bld_path* path, char*
 }
 
 void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, bld_path* path, char* name) {
-    char* str_path;
+    char *str_path, *file_name;
     bld_path sub_path;
-    DIR* dir;
-    struct dirent* file_ptr;
+    bld_os_dir* dir;
+    bld_os_file* file_ptr;
 
     str_path = path_to_string(path);
-    dir = opendir(str_path);
+    dir = os_dir_open(str_path);
     if (dir == NULL) {
         incremental_index_possible_file(project, path, name);
         return;
@@ -137,36 +137,37 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
     }
 
-    while ((file_ptr = readdir(dir)) != NULL) {
-        if (strcmp(file_ptr->d_name, ".") == 0 || strcmp(file_ptr->d_name, "..") == 0) {
+    while ((file_ptr = os_dir_read(dir)) != NULL) {
+        file_name = os_file_name(file_ptr);
+        if (strcmp(file_name, ".") == 0 || strcmp(file_name, "..") == 0) {
             continue;
         }
-        if (file_ptr->d_name[0] == '.') {
+        if (file_name[0] == '.') {
             continue;
         }
-        if (set_has(&forward_project->ignore_paths, file_ptr->d_ino)) {
-            log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_ptr->d_name);
+        if (set_has(&forward_project->ignore_paths, os_file_id(file_ptr))) {
+            log_debug("Ignoring: \"%s" BLD_PATH_SEP "%s\"", path_to_string(path), file_name);
             continue;
         }
 
         sub_path = path_copy(path);
-        path_append_string(&sub_path, file_ptr->d_name);
-        incremental_index_recursive(project, forward_project, &sub_path, file_ptr->d_name);
+        path_append_string(&sub_path, file_name);
+        incremental_index_recursive(project, forward_project, &sub_path, file_name);
         path_free(&sub_path);
     }
     
-    closedir(dir);
+    os_dir_close(dir);
 }
 
 void incremental_index_project(bld_project* project, bld_forward_project* forward_project) {
-    DIR* dir;
+    bld_os_dir* dir;
     char* name;
     bld_path *path, extra_path;
     bld_iter iter;
 
-    dir = opendir(path_to_string(&forward_project->base.root));
+    dir = os_dir_open(path_to_string(&forward_project->base.root));
     if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&forward_project->base.root));}
-    closedir(dir);
+    os_dir_close(dir);
 
     log_info("Indexing project under root");
     incremental_index_recursive(project, forward_project, &forward_project->base.root, NULL);
