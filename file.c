@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
-#include <sys/stat.h>
+#include "os.h"
 #include "logging.h"
 #include "file.h"
 
@@ -10,25 +10,28 @@ bld_file make_file(bld_file_type, bld_path*, char*);
 bld_set file_copy_symbol_set(bld_set*);
 
 uintmax_t file_get_id(bld_path* path) {
-    struct stat file_stat;
+    uintmax_t id = os_info_id(path_to_string(path));
 
-    if (stat(path_to_string(path), &file_stat) < 0) {
+    if (id == BLD_INVALID_IDENITIFIER) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
     }
 
-    return file_stat.st_ino;
+    return id;
 }
 
 bld_file_identifier get_identifier(bld_path* path) {
-    struct stat file_stat;
     bld_file_identifier identifier;
+    uintmax_t id, mtime;
 
-    if (stat(path_to_string(path), &file_stat) < 0) {
+    id = os_info_id(path_to_string(path));
+    mtime = os_info_id(path_to_string(path));
+
+    if (id == BLD_INVALID_IDENITIFIER) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
     }
 
-    identifier.id = file_stat.st_ino;
-    identifier.time = file_stat.st_mtime;
+    identifier.id = id;
+    identifier.time = mtime; 
     identifier.hash = 0;
 
     return identifier;
