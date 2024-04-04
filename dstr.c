@@ -19,6 +19,12 @@ bld_string string_new(void) {
     return str;
 }
 
+bld_string string_pack(char* char_ptr) {
+    bld_string str = string_new();
+    string_append_string(&str, char_ptr);
+    return str;
+}
+
 bld_string string_copy(bld_string* str) {
     char* chars;
     bld_string cpy;

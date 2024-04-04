@@ -12,6 +12,7 @@ typedef struct bld_string {
 } bld_string;
 
 bld_string  string_new(void);
+bld_string  string_pack(char*);
 bld_string  string_copy(bld_string*);
 char*       string_unpack(bld_string*);
 void        string_free(bld_string*);
