@@ -2,6 +2,8 @@
 #define OS_H
 #include <inttypes.h>
 
+#define BLD_INVALID_IDENITIFIER (0)
+
 typedef void bld_os_dir;
 typedef void bld_os_file;
 
