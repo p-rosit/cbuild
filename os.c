@@ -27,6 +27,22 @@
     uintmax_t os_file_id(bld_os_file* file) {
         return ((struct dirent*) file)->d_ino;
     }
+
+    uintmax_t os_info_id(char* path) {
+        struct stat file;
+        if (stat(path, &file) < 0) {
+            return BLD_INVALID_IDENITIFIER;
+        }
+        return file.st_ino;
+    }
+
+    uintmax_t os_info_mtime(char* path) {
+        struct stat file;
+        if (stat(path, &file) < 0) {
+            return 0;
+        }
+        return file.st_mtime;
+    }
 #elif defined(_WIN32)
     #error "No support for windows yet"
 #endif

@@ -15,4 +15,7 @@ bld_os_file*    os_dir_read(bld_os_dir*);
 char*           os_file_name(bld_os_file*);
 uintmax_t       os_file_id(bld_os_file*);
 
+uintmax_t       os_info_id(char*);
+uintmax_t       os_info_mtime(char*);
+
 #endif
