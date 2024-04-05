@@ -72,7 +72,6 @@ bld_array   array_copy(const bld_array*);
 void        array_push(bld_array*, void*);
 void*       array_pop(bld_array*);
 void*       array_get(bld_array*, size_t);
-int         array_next(bld_iter_array*, void**);
 void        array_reverse(bld_array*);
 
 bld_set     set_new(size_t);
@@ -84,18 +83,19 @@ void*       set_remove(bld_set*, bld_hash);
 void*       set_get(const bld_set*, bld_hash);
 int         set_has(const bld_set*, bld_hash);
 int         set_empty_intersection(const bld_set*, const bld_set*);
-int         set_next(bld_iter_set*, void**);
 
 bld_graph   graph_new(void);
 void        graph_free(bld_graph*);
 void        graph_add_node(bld_graph*, uintmax_t);
 void        graph_add_edge(bld_graph*, uintmax_t, uintmax_t);
 int         graph_has_node(const bld_graph*, uintmax_t);
-int         graph_next(bld_iter_graph*, uintmax_t*);
 
 bld_iter    iter_array(const bld_array*);
 bld_iter    iter_set(const bld_set*);
 bld_iter    iter_graph(const bld_graph*, uintmax_t);
 int         iter_next(bld_iter*, void**);
+int         array_next(bld_iter_array*, void**);
+int         set_next(bld_iter_set*, void**);
+int         graph_next(bld_iter_graph*, uintmax_t*);
 
 #endif
