@@ -73,6 +73,7 @@ void        array_push(bld_array*, void*);
 void*       array_pop(bld_array*);
 void*       array_get(bld_array*, size_t);
 int         array_next(bld_iter_array*, void**);
+void        array_reverse(bld_array*);
 
 bld_set     set_new(size_t);
 void        set_free(bld_set*);

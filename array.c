@@ -64,3 +64,23 @@ void* array_get(bld_array* array, size_t index) {
     if (index >= array->size) {log_fatal("Trying to get item from index %lu but array is of size %lu", index, array->size);}
     return ((char*) array->values) + index * array->value_size;
 }
+
+void array_reverse(bld_array* array) {
+    void *head, *tail, *temp;
+    temp = malloc(array->value_size);
+    if (temp == NULL) {log_fatal("array_reverse: internal error, could not allocate temp");}
+
+    head = array->values;
+    tail = ((char*) array->values) + (array->size - 1) * array->value_size;
+
+    while (head < tail) {
+        memcpy(temp, head, array->value_size);
+        memcpy(head, tail, array->value_size);
+        memcpy(tail, temp, array->value_size);
+
+        head = ((char*) head) + array->value_size;
+        tail = ((char*) tail) - array->value_size;
+    }
+
+    free(temp);
+}
