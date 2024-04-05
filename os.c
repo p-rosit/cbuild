@@ -1,4 +1,16 @@
 #include "os.h"
+#include <stdio.h>
+
+int os_file_exists(char* path) {
+    FILE* file = fopen(path, "r");
+
+    if (file == NULL) {
+        return 0;
+    } else {
+        fclose(file);
+        return 1;
+    }
+}
 
 #if defined(__linux__)
     #include <dirent.h>
