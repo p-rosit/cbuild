@@ -214,29 +214,21 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
 }
 
 void incremental_apply_compilers(bld_project* project, bld_forward_project* fproject) {
-    int has_file, has_compiler;
     size_t index;
-    bld_iter file_iter, compiler_iter;
+    bld_iter iter;
     bld_string* file_name;
-    bld_compiler* compiler;
 
-    file_iter = iter_array(&fproject->compiler_file_names);
-    compiler_iter = iter_array(&fproject->base.file_compilers);
+    if (fproject->compiler_file_names.size != fproject->base.file_compilers.size) {
+        log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
+    }
 
     index = 0;
-    while (1) {
+    iter = iter_array(&fproject->compiler_file_names);
+    while (iter_next(&iter, (void**) &file_name)) {
         int match_found;
         bld_iter iter;
         bld_file* file;
         bld_path path;
-
-        has_file = iter_next(&file_iter, (void**) &file_name);
-        has_compiler = iter_next(&compiler_iter, (void**) &compiler);
-
-        if (has_file != has_compiler) {
-            log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
-        }
-        if (!has_file && !has_compiler) {break;}
 
         match_found = 0;
         path = path_from_string(string_unpack(file_name));
@@ -258,29 +250,17 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
 }
 
 void incremental_apply_linker_flags(bld_project* project, bld_forward_project* fproject) {
-    int has_file, has_flags;
     size_t index;
-    bld_iter file_iter, flag_iter;
+    bld_iter iter;
     bld_string* file_name;
-    bld_linker_flags* flags;
-
-    file_iter = iter_array(&fproject->linker_flags_file_names);
-    flag_iter = iter_array(&fproject->base.file_linker_flags);
 
     index = 0;
-    while (1) {
+    iter = iter_array(&fproject->linker_flags_file_names);
+    while (iter_next(&iter, (void**) &file_name)) {
         int match_found;
         bld_iter iter;
         bld_file* file;
         bld_path path;
-
-        has_file = iter_next(&file_iter, (void**) &file_name);
-        has_flags = iter_next(&flag_iter, (void**) &flags);
-
-        if (has_file != has_flags) {
-            log_fatal("incremental_apply_linker_flags: internal error, there is not an equal amount of files and linker flags");
-        }
-        if (!has_file && !has_flags) {break;}
 
         match_found = 0;
         path = path_from_string(string_unpack(file_name));
