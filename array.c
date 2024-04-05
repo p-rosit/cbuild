@@ -62,5 +62,5 @@ void* array_pop(bld_array* array) {
 
 void* array_get(bld_array* array, size_t index) {
     if (index >= array->size) {log_fatal("Trying to get item from index %lu but array is of size %lu", index, array->size);}
-    return ((char*) array->values) + (array->size - 1) * array->value_size;
+    return ((char*) array->values) + index * array->value_size;
 }
