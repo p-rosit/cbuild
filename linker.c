@@ -132,6 +132,34 @@ void linker_flags_add_flag(bld_linker_flags* linker, char* flag) {
     array_push(&linker->hash, &flag_hash);
 }
 
+void linker_flags_collect(bld_string* str, bld_array* linker_flags) {
+    bld_set added;
+    bld_iter iter;
+    bld_linker_flags** flags;
+
+    added = set_new(0);
+    iter = iter_array(linker_flags);
+    while (iter_next(&iter, (void**) &flags)) {
+        bld_iter flag_iter, hash_iter;
+        char** f;
+        uintmax_t* hash;
+
+        flag_iter = iter_array(&(*flags)->flag);
+        hash_iter = iter_array(&(*flags)->hash);
+        while (iter_next(&flag_iter, (void**) &f) && iter_next(&hash_iter, (void**) &hash)) {
+            if (set_has(&added, *hash)) {
+                continue;
+            }
+
+            set_add(&added, *hash, NULL);
+            string_append_space(str);
+            string_append_string(str, *f);
+        }
+    }
+
+    set_free(&added);
+}
+
 int parse_linker(FILE* file, bld_linker* linker) {
     int amount_parsed;
     int size = 2;
