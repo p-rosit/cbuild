@@ -24,7 +24,7 @@ bld_file_identifier get_identifier(bld_path* path) {
     uintmax_t id, mtime;
 
     id = os_info_id(path_to_string(path));
-    mtime = os_info_id(path_to_string(path));
+    mtime = os_info_mtime(path_to_string(path));
 
     if (id == BLD_INVALID_IDENITIFIER) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
