@@ -40,7 +40,7 @@
 - [ ] hide ubuntu dependencies in building behind interface
 - [x] find include dependencies and put in graph
 - [x] make graph optional (graph is now internal)
-- [ ] make cache optional
+- [x] make cache optional
 - [x] recompile if file changed due to include dependency
 - [x] use cache to populate graph
 - [x] split generating dependency graph from indexing project
