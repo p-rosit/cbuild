@@ -1,3 +1,4 @@
+- [ ] fix issue where introducing a compilation error in a build file will break all future builds with that cache (duplicate function definitions, depends on changing several files in sequence), (compilation step is able to save file with incorrect name...)
 - [ ] move generic array and map parsing to new file
 - [ ] move each serialization and parsing function into their respective struct file
 - [ ] make generic map and array function for serialization mirroring the parsing
