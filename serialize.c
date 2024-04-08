@@ -12,6 +12,7 @@ void serialize_files(FILE*, bld_set*, bld_array*, bld_array*, int);
 void serialize_file(FILE*, bld_file*, bld_array*, bld_array*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
+void serialize_file_mtime(FILE*, bld_file_identifier);
 void serialize_file_symbols(FILE*, bld_set*, int);
 void serialize_file_includes(FILE*, bld_set*, int);
 
@@ -178,6 +179,10 @@ void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, bld_array
     serialize_file_id(cache, file->identifier);
     fprintf(cache, ",\n");
 
+    serialize_key(cache, "mtime", depth);
+    serialize_file_mtime(cache, file->identifier);
+    fprintf(cache, ",\n");
+
     serialize_key(cache, "hash", depth);
     fprintf(cache, "%" PRIuMAX, file->identifier.hash);
     fprintf(cache, ",\n");
@@ -233,6 +238,10 @@ void serialize_file_type(FILE* cache, bld_file_type type) {
 
 void serialize_file_id(FILE* cache, bld_file_identifier id) {
     fprintf(cache, "%" PRIuMAX, id.id);
+}
+
+void serialize_file_mtime(FILE* cache, bld_file_identifier id) {
+    fprintf(cache, "%" PRIuMAX, id.time);
 }
 
 void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
