@@ -5,7 +5,7 @@
 #include "container.h"
 
 typedef struct bld_compiler {
-    char* executable;
+    bld_string executable;
     bld_array flags;
 } bld_compiler;
 

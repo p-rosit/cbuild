@@ -59,7 +59,7 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "executable", depth);
-    fprintf(cache, "\"%s\"", compiler->executable);
+    fprintf(cache, "\"%s\"", string_unpack(&compiler->executable));
 
     if (compiler->flags.size > 0) {
         fprintf(cache, ",\n");
@@ -72,9 +72,9 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
 }
 
 void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
-    char** flag;
     int first = 1;
     bld_iter iter;
+    bld_string* flag;
 
     fprintf(cache, "[");
     if (flags->size > 1) {
@@ -88,7 +88,7 @@ void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
         if (flags->size > 1) {
             fprintf(cache, "%*c", 2 * depth, ' ');
         }
-        fprintf(cache, "\"%s\"", *flag);
+        fprintf(cache, "\"%s\"", string_unpack(flag));
     }
 
     if (flags->size > 1) {

@@ -295,7 +295,7 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
         compiler = &project->base.compiler;
     }
 
-    string_append_string(&cmd, compiler->executable);
+    string_append_string(&cmd, string_unpack(&compiler->executable));
     string_append_space(&cmd);
 
     string_append_string(&cmd, "-c ");
