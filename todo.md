@@ -14,7 +14,7 @@
 - [x] add prototypes to private functions
 - [ ] add documentation to functions
 - [x] join graph with containers if possible
-- [ ] handle failed parse
+- [ ] handle failed parse (at minimum: no memory leaks)
 - [x] rename functions into a consistent style
 - [x] hide compilation (incremental/from scratch) behind single function
 - [x] replace wrappers to generic array and set by array/set
