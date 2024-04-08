@@ -22,7 +22,7 @@
 - [ ] add functions to analyze the dependency graph
 - [x] parse symbols that are variables ("B" entries when running nm)
 - [ ] expose api to generate human-readable dependency graph
-- [ ] collapse array when only serializing 0 or 1 element/s
+- [x] collapse array when only serializing 0 or 1 element/s
 - [ ] find build directory automatically by searching upwards for cbuild and verify that correct files are present
 - [x] use prefix on functions to avoid collisions
 - [x] handle forward declarations of compiler associated with file
