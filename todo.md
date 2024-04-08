@@ -10,7 +10,7 @@
 - [ ] allow setting compiler for all files under directory
 - [ ] represent project files as tree
 - [x] figure out how to handle special cases for the rebuilder
-- [ ] remove tiny mallocs from set
+- [ ] remove tiny mallocs from set and array
 - [x] add prototypes to private functions
 - [ ] add documentation to functions
 - [x] join graph with containers if possible
