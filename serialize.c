@@ -101,7 +101,7 @@ void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "executable", depth);
-    fprintf(cache, "\"%s\"", linker->executable);
+    fprintf(cache, "\"%s\"", string_unpack(&linker->executable));
 
     if (linker->flags.flag.size > 0) {
         fprintf(cache, ",\n");
@@ -114,7 +114,7 @@ void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
 }
 
 void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
-    char** flag;
+    bld_string* flag;
     int first = 1;
     bld_iter iter;
 
@@ -130,7 +130,7 @@ void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
         if (flags->flag.size > 1) {
             fprintf(cache, "%*c", 2 * depth, ' ');
         }
-        fprintf(cache, "\"%s\"", *flag);
+        fprintf(cache, "\"%s\"", string_unpack(flag));
     }
 
     if (flags->flag.size > 1) {

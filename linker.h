@@ -10,7 +10,7 @@ typedef struct bld_linker_flags {
 } bld_linker_flags;
 
 typedef struct bld_linker {
-    char* executable;
+    bld_string executable;
     bld_linker_flags flags;
 } bld_linker;
 

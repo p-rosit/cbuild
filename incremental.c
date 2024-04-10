@@ -343,7 +343,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     }
 
     cmd = string_new();
-    string_append_string(&cmd, project->base.linker.executable);
+    string_append_string(&cmd, string_unpack(&project->base.linker.executable));
     string_append_space(&cmd);
 
     string_append_string(&cmd, "-o ");
