@@ -1,4 +1,4 @@
-#include "../cbuild.h"
+#include "../../cbuild.h"
 
 int main(int argc, char** argv) {
     int result = 0;
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
         linker_new("gcc")
     );
 
-    project_add_build(&forward_project, "..");
+    project_add_build(&forward_project, "../..");
     rebuild_builder(&forward_project, argc, argv);
 
     /* Optional */
