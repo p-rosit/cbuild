@@ -221,8 +221,8 @@ int parse_file(FILE* file, bld_project_cache* cache) {
 
     temp.path = path_new();
     temp.compiler = -1;
-    temp.defined_symbols = set_new(sizeof(char*));
-    temp.undefined_symbols = set_new(sizeof(char*));
+    temp.defined_symbols = set_new(sizeof(bld_string));
+    temp.undefined_symbols = set_new(sizeof(bld_string));
     set_add(&cache->files, BLD_INVALID_IDENITIFIER, &temp);
     f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
 
@@ -267,20 +267,20 @@ int parse_file(FILE* file, bld_project_cache* cache) {
 
     if (parsed[8]) {
         bld_iter iter = iter_set(&f->defined_symbols);
-        char** str;
+        bld_string* str;
 
         while (iter_next(&iter, (void**) &str)) {
-            free(*str);
+            string_free(str);
         }
         set_free(&f->defined_symbols);
     }
 
     if (parsed[9]) {
         bld_iter iter = iter_set(&f->undefined_symbols);
-        char** str;
+        bld_string* str;
 
         while (iter_next(&iter, (void**) &str)) {
-            free(*str);
+            string_free(str);
         }
         set_free(&f->undefined_symbols);
     }
@@ -426,10 +426,10 @@ int parse_file_defined_symbols(FILE* file, bld_project_cache* cache) {
     amount_parsed = json_parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
         bld_iter iter = iter_set(&f->defined_symbols);
-        char** flag;
+        bld_string* flag;
 
         while (iter_next(&iter, (void**) &flag)) {
-            free(*flag);
+            string_free(flag);
         }
         set_free(&f->defined_symbols);
 
@@ -447,10 +447,10 @@ int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
     amount_parsed = json_parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
         bld_iter iter = iter_set(&f->undefined_symbols);
-        char** flag;
+        bld_string* flag;
 
         while (iter_next(&iter, (void**) &flag)) {
-            free(*flag);
+            string_free(flag);
         }
         set_free(&f->undefined_symbols);
 
@@ -463,13 +463,11 @@ int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
 
 int parse_file_function(FILE* file, bld_set* set) {
     bld_string str;
-    char* temp;
     int result;
 
     result = string_parse(file, &str);
     if (result) {return -1;}
 
-    temp = string_unpack(&str);
-    set_add(set, string_hash(temp, 0), &temp);
+    set_add(set, string_hash(string_unpack(&str), 0), &str);
     return 0;
 }

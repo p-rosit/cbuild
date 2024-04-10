@@ -246,7 +246,7 @@ void serialize_file_mtime(FILE* cache, bld_file_identifier id) {
 
 void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
     int first = 1;
-    char** symbol;
+    bld_string* symbol;
     bld_iter iter = iter_set(symbols);
 
     fprintf(cache, "[");
@@ -263,7 +263,7 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
         if (symbols->size > 1) {
             fprintf(cache, "%*c", 2 * depth, ' ');
         }
-        fprintf(cache, "\"%s\"", *symbol);
+        fprintf(cache, "\"%s\"", string_unpack(symbol));
     }
 
     if (symbols->size > 1) {

@@ -283,10 +283,11 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
-    char name[FILENAME_MAX], **flag;
+    char name[FILENAME_MAX];
     bld_iter iter;
     bld_compiler* compiler;
     bld_string cmd = string_new();
+    bld_string* flag;
     bld_path path;
 
     if (file->compiler > 0) {
@@ -317,7 +318,7 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     iter = iter_array(&compiler->flags);
     while (iter_next(&iter, (void**) &flag)) {
         string_append_space(&cmd);
-        string_append_string(&cmd, *flag);
+        string_append_string(&cmd, string_unpack(flag));
     }
 
     result = system(string_unpack(&cmd));

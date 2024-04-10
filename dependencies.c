@@ -212,8 +212,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
 }
 
 void add_symbol(bld_set* set, bld_string* str) {
-    char* temp = string_unpack(str);
-    set_add(set, string_hash(temp, 0), &temp);
+    set_add(set, string_hash(string_unpack(str), 0), str);
 }
 
 int get_next(FILE*);

@@ -56,8 +56,8 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     file.path = *path;
     file.compiler = -1;
     file.linker_flags = -1;
-    file.defined_symbols = set_new(sizeof(char*));
-    file.undefined_symbols = set_new(sizeof(char*));
+    file.defined_symbols = set_new(sizeof(bld_string));
+    file.undefined_symbols = set_new(sizeof(bld_string));
     file.includes = set_new(0);
 
     return file;
@@ -79,21 +79,21 @@ bld_file file_test_new(bld_path* path, char* name) {
 }
 
 void file_free(bld_file* file) {
-    char** symbol;
     bld_iter iter;
+    bld_string* symbol;
 
     path_free(&file->path);
     string_free(&file->name);
 
     iter = iter_set(&file->defined_symbols);
     while (iter_next(&iter, (void**) &symbol)) {
-        free(*symbol);
+        string_free(symbol);
     }
     set_free(&file->defined_symbols);
 
     iter = iter_set(&file->undefined_symbols);
     while (iter_next(&iter, (void**) &symbol)) {
-        free(*symbol);
+        string_free(symbol);
     }
     set_free(&file->undefined_symbols);
     set_free(&file->includes);
@@ -116,15 +116,13 @@ void file_symbols_copy(bld_file* file, bld_set* defined, bld_set* undefined) {
 bld_set file_copy_symbol_set(bld_set* set) {
     bld_iter iter;
     bld_set cpy;
-    bld_string str;
-    char** symbol;
+    bld_string str, *symbol;
 
     cpy = set_copy(set);
     iter = iter_set(&cpy);
     while (iter_next(&iter, (void**) &symbol)) {
-        str = string_new();
-        string_append_string(&str, *symbol);
-        *symbol = string_unpack(&str);
+        str = string_copy(symbol);
+        *symbol = str;
     }
 
     return cpy;
