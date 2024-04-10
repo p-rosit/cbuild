@@ -510,6 +510,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
             string_append_string(&str, ".o");
 
             remove(string_unpack(&str));
+            string_free(&str);
         }
     }
 
