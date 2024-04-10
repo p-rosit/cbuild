@@ -103,7 +103,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     fbuild = new_rebuild(
         build_root,
         compiler_with_flags(
-            "/usr/bin/gcc", /* TODO: don't hardcode compiler */
+            "gcc", /* TODO: don't hardcode compiler */
             "-std=c89",
             "-fsanitize=address",
             "-g",
@@ -115,7 +115,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
             NULL
         ),
         linker_with_flags(
-            "/usr/bin/gcc",
+            "gcc",
             "-fsanitize=address",
             NULL
         )

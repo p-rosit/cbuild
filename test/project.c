@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     forward_project = project_new(
         project_path_extract(argc, argv),
         compiler_with_flags(
-            "/usr/bin/gcc",
+            "gcc",
             "-lm",
             "-std=c99",
             "-Wall",
@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
             "-pedantic",
             NULL
         ),
-        linker_new("/usr/bin/gcc")
+        linker_new("gcc")
     );
 
     project_add_build(&forward_project, "..");
