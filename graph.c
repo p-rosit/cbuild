@@ -1,5 +1,7 @@
 #include "logging.h"
-#include "container.h"
+#include "array.h"
+#include "graph.h"
+#include "iter.h"
 
 bld_graph graph_new(void) {
     bld_graph graph;

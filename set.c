@@ -1,6 +1,6 @@
 #include <string.h>
 #include "logging.h"
-#include "container.h"
+#include "set.h"
 
 bld_offset  hash_compute_offset(size_t);
 size_t      hash_target(size_t, bld_offset, bld_hash);

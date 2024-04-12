@@ -1,6 +1,6 @@
 #include <string.h>
 #include "logging.h"
-#include "container.h"
+#include "array.h"
 
 
 bld_array array_new(size_t value_size) {
