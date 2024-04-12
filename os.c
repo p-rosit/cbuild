@@ -1,5 +1,6 @@
-#include "os.h"
 #include <stdio.h>
+#include "logging.h"
+#include "os.h"
 
 int os_file_exists(char* path) {
     FILE* file = fopen(path, "r");
@@ -13,8 +14,14 @@ int os_file_exists(char* path) {
 }
 
 #if defined(__linux__)
+    #include <unistd.h>
     #include <dirent.h>
     #include <sys/stat.h>
+
+    int os_cwd(char* buffer, int length) {
+        if (length <= 0) {log_fatal("os_cwd: negative buffer length");}
+        return getcwd(buffer, length) != NULL;
+    }
 
     int os_dir_make(char* path) {
         return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
