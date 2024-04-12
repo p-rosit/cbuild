@@ -6,8 +6,10 @@
 
 bld_linker linker_new(char* executable) {
     bld_linker linker;
+    bld_string str;
 
-    linker.executable = string_pack(executable);
+    str = string_pack(executable);
+    linker.executable = string_copy(&str);
     linker.flags = linker_flags_new();
     
     return linker;
@@ -116,7 +118,8 @@ void linker_flags_add_flag(bld_linker_flags* linker, char* flag) {
     bld_string str;
 
     str = string_pack(flag);
-    hash= string_hash(string_unpack(&str), 76502);
+    str = string_copy(&str);
+    hash = string_hash(flag, 76502);
 
     array_push(&linker->flag, &str);
     array_push(&linker->hash, &hash);

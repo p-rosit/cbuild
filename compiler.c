@@ -6,8 +6,10 @@
 
 bld_compiler compiler_new(char* executable) {
     bld_compiler compiler;
+    bld_string str;
 
-    compiler.executable = string_pack(executable);
+    str = string_pack(executable);
+    compiler.executable = string_copy(&str);
     compiler.flags = array_new(sizeof(bld_string));
 
     return compiler;
@@ -82,6 +84,7 @@ uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
 
 void compiler_add_flag(bld_compiler* compiler, char* flag) {
     bld_string str = string_pack(flag);
+    str = string_copy(&str);
     array_push(&compiler->flags, &str);
 }
 

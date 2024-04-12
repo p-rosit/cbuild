@@ -20,8 +20,11 @@ bld_string string_new(void) {
 }
 
 bld_string string_pack(char* char_ptr) {
-    bld_string str = string_new();
-    string_append_string(&str, char_ptr);
+    bld_string str;
+
+    str.capacity = strlen(char_ptr);
+    str.size = str.capacity;
+    str.chars = char_ptr;
     return str;
 }
 
