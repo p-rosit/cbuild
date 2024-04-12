@@ -1,6 +1,7 @@
 #ifndef JSON_H
 #include <stdio.h>
-#include "container.h"
+#include <inttypes.h>
+#include "iter.h"
 
 typedef void (*bld_serialize_func)(FILE*, void*);
 typedef int (*bld_parse_func)(FILE*, void*);

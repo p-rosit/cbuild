@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include "container.h"
 #include "logging.h"
+#include "graph.h"
 #include "dependencies.h"
 
 void parse_included_files(bld_file*);

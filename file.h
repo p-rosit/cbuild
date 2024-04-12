@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include "set.h"
 #include "path.h"
 #include "compiler.h"
 

@@ -2,7 +2,7 @@
 #define COMPILER_H
 
 #include "dstr.h"
-#include "container.h"
+#include "array.h"
 
 typedef struct bld_compiler {
     bld_string executable;
