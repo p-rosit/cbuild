@@ -1,7 +1,6 @@
 #ifndef PATH_H
 #define PATH_H
 
-#include "container.h"
 #include "dstr.h"
 
 #define BLD_PATH_SEP "/"

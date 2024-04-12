@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include "dstr.h"
-#include "container.h"
+#include "array.h"
 
 typedef struct bld_linker_flags {
     bld_array flag;

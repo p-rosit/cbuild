@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include "os.h"
 #include "logging.h"
+#include "iter.h"
 #include "file.h"
 
 bld_file_identifier get_identifier(bld_path*);

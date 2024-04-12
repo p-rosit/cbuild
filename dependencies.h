@@ -1,7 +1,9 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef DEPENDENCY_H
+#define DEPENDENCY_H
 
-#include "container.h"
+#include "set.h"
+#include "graph.h"
+#include "iter.h"
 #include "path.h"
 #include "file.h"
 
