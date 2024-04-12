@@ -1,3 +1,4 @@
+#ifndef CBUILD_H
 #include "logging.h"
 #include "dstr.h"
 #include "path.h"
@@ -8,3 +9,4 @@
 #include "incremental.h"
 
 #include "rebuild.h"
+#endif
