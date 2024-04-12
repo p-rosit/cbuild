@@ -1,4 +1,4 @@
-- [ ] make new function to copy string with (use `string_pack` to put `char*` in `bld_string` without allocation)
+- [x] make new function to copy string with (use `string_pack` to put `char*` in `bld_string` without allocation)
 - [ ] move command construction to os abstraction layer
 - [x] fix issue where introducing a compilation error in a build file will break all future builds with that cache (duplicate function definitions, depends on changing several files in sequence), (compilation step is able to save file with incorrect name...)
 - [ ] move generic array and map parsing to new file
