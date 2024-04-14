@@ -69,6 +69,32 @@ void* array_pop(bld_array* array) {
     return ((char*) array->values) + --array->size * array->value_size;
 }
 
+void array_insert(bld_array* array, size_t index, void* value) {
+    size_t capacity = array->capacity;
+    char* ptr;
+
+    if (index > array->size) {
+        log_fatal("Cannot insert at index %lu into array with size %lu", index, array->size);
+    }
+
+    if (array->size >= array->capacity) {
+        capacity += (capacity / 2) + 2 * (capacity < 2);
+
+        if (!array_increase_capacity(array, capacity)) {
+            log_fatal("Could not increase capacity of array from %lu to %lu", array->capacity, capacity);
+        }
+    }
+
+    ptr = array->values;
+    ptr += index * array->value_size;
+
+    if (index < array->size) {
+        memmove(ptr + 1, ptr, array->size - index);
+    }
+
+    memcpy(ptr, value, array->value_size);
+}
+
 void* array_get(bld_array* array, size_t index) {
     if (index >= array->size) {log_fatal("Trying to get item from index %lu but array is of size %lu", index, array->size);}
     return ((char*) array->values) + index * array->value_size;
