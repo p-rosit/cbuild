@@ -2,6 +2,8 @@
 #include "logging.h"
 #include "array.h"
 
+int array_increase_capacity(bld_array*, size_t);
+
 
 bld_array array_new(size_t value_size) {
     bld_array array;
@@ -34,21 +36,28 @@ bld_array array_copy(const bld_array* array) {
     return cpy;
 }
 
+int array_increase_capacity(bld_array* array, size_t capacity) {
+    void* values;
+
+    values = realloc(array->values, capacity * array->value_size);
+    if (values == NULL) {return 0;}
+
+    array->capacity = capacity;
+    array->values = values;
+
+    return 1;
+}
+
 void array_push(bld_array* array, void* value) {
     size_t capacity = array->capacity;
-    void* values;
     char* ptr;
 
     if (array->size >= array->capacity) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
 
-        values = realloc(array->values, capacity * array->value_size);
-        if (values == NULL) {
+        if (!array_increase_capacity(array, capacity)) {
             log_fatal("Could not increase capacity of array from %lu to %lu", array->capacity, capacity);
         }
-
-        array->capacity = capacity;
-        array->values = values;
     }
 
     ptr = array->values;
