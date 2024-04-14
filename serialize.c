@@ -206,15 +206,26 @@ void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, bld_array
     serialize_key(cache, "includes", depth);
     serialize_file_includes(cache, &file->includes, depth + 1);
 
-    if (file->type != BLD_HEADER) {
-        fprintf(cache, ",\n");
+    switch (file->type) {
+        case (BLD_IMPL): {
+            fprintf(cache, ",\n");
 
-        serialize_key(cache, "defined_symbols", depth);
-        serialize_file_symbols(cache, &file->defined_symbols, depth + 1);
-        fprintf(cache, ",\n");
+            serialize_key(cache, "undefined_symbols", depth);
+            serialize_file_symbols(cache, &file->info.impl.undefined_symbols, depth + 1);
+            fprintf(cache, ",\n");
 
-        serialize_key(cache, "undefined_symbols", depth);
-        serialize_file_symbols(cache, &file->undefined_symbols, depth + 1);
+            serialize_key(cache, "defined_symbols", depth);
+            serialize_file_symbols(cache, &file->info.impl.defined_symbols, depth + 1);
+
+        } break;
+        case (BLD_HEADER): break;
+        case (BLD_TEST): {
+            fprintf(cache, ",\n");
+
+            serialize_key(cache, "undefined_symbols", depth);
+            serialize_file_symbols(cache, &file->info.test.undefined_symbols, depth + 1);
+        } break;
+        default: log_fatal("serialize_file: unrecognized file type, unreachable error");
     }
 
     fprintf(cache, "\n");

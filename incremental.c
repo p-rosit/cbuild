@@ -74,18 +74,27 @@ void incremental_apply_cache(bld_project* project) {
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
-        if (file->identifier.hash != cached->identifier.hash) {
-            continue;
-        }
+        if (file->identifier.hash != cached->identifier.hash) {continue;}
 
-        log_debug("Found \"%s\" in cache: %lu include(s), %lu defined, %lu undefined", string_unpack(&file->name), cached->includes.size, cached->defined_symbols.size, cached->undefined_symbols.size);
+        switch (file->type) {
+            case (BLD_IMPL): {
+                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
+            } break;
+            case (BLD_HEADER): {
+                log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->includes.size);
+            } break;
+            case (BLD_TEST): {
+                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->includes.size, cached->info.test.undefined_symbols.size);
+            } break;
+            default: {log_fatal("incremental_apply_cache: unrecognized file type, unreachable error");}
+        }
 
         file->includes = set_copy(&cached->includes);
         graph_add_node(&project->graph.include_graph, file->identifier.id);
 
         if (file->type == BLD_HEADER) {continue;}
-        
-        file_symbols_copy(file, &cached->defined_symbols, &cached->undefined_symbols);
+
+        file_symbols_copy(file, cached);
         graph_add_node(&project->graph.symbol_graph, file->identifier.id);
     }
 
