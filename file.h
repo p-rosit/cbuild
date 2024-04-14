@@ -20,6 +20,25 @@ typedef struct bld_file_identifier {
     uintmax_t time;
 } bld_file_identifier;
 
+typedef struct bld_file_impl {
+    bld_set undefined_symbols;
+    bld_set defined_symbols;
+} bld_file_impl;
+
+typedef struct bld_file_header {
+    int placeholder;
+} bld_file_header;
+
+typedef struct bld_file_test {
+    bld_set undefined_symbols;
+} bld_file_test;
+
+typedef union bld_file_info {
+    bld_file_impl impl;
+    bld_file_header header;
+    bld_file_test test;
+} bld_file_info;
+
 typedef struct bld_file {
     bld_file_type type;
     bld_file_identifier identifier;
@@ -27,9 +46,8 @@ typedef struct bld_file {
     bld_string name;
     int compiler;
     int linker_flags;
-    bld_set defined_symbols;
-    bld_set undefined_symbols;
     bld_set includes;
+    bld_file_info info;
 } bld_file;
 
 bld_file    file_header_new(bld_path*, char*);
