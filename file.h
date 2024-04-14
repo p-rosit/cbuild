@@ -9,6 +9,7 @@
 
 typedef enum bld_file_type {
     BLD_INVALID_FILE,
+    BLD_DIR,
     BLD_IMPL,
     BLD_HEADER,
     BLD_TEST
@@ -19,6 +20,10 @@ typedef struct bld_file_identifier {
     uintmax_t hash;
     uintmax_t time;
 } bld_file_identifier;
+
+typedef struct bld_file_dir {
+    int placeholder;
+} bld_file_dir;
 
 typedef struct bld_file_impl {
     bld_set undefined_symbols;
@@ -34,6 +39,7 @@ typedef struct bld_file_test {
 } bld_file_test;
 
 typedef union bld_file_info {
+    bld_file_dir dir;
     bld_file_impl impl;
     bld_file_header header;
     bld_file_test test;
