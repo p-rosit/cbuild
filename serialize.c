@@ -150,6 +150,8 @@ void serialize_files(FILE* cache, bld_set* files, bld_array* compilers, bld_arra
     }
 
     while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_DIR) {continue;}
+
         if (!first) {
             fprintf(cache, ",\n");
         } else {

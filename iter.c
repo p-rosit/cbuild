@@ -63,7 +63,7 @@ bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
     iter.as.graph_iter.stack = array_new(sizeof(uintmax_t));
     iter.as.graph_iter.visited = set_new(0);
 
-    if (!set_has(&graph->edges, root)) {log_fatal("Root does not exist");}
+    if (!set_has(&graph->edges, root)) {log_fatal("root does not exist");}
     array_push(&iter.as.graph_iter.stack, &root);
 
     return iter;

@@ -46,6 +46,7 @@ typedef struct bld_forward_project {
 typedef struct bld_project {
     bld_project_base base;
     uintmax_t main_file;
+    uintmax_t root_dir;
     bld_set files;
     bld_dependency_graph graph;
 } bld_project;

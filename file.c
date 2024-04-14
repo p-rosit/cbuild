@@ -53,12 +53,11 @@ void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
 
 bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     bld_file file;
-    bld_string str = string_new();
-    string_append_string(&str, name);
+    bld_string str = string_pack(name);
 
     file.type = type;
     file.identifier = get_identifier(path);
-    file.name = str;
+    file.name = string_copy(&str);
     file.path = *path;
     file.compiler = -1;
     file.linker_flags = -1;
@@ -94,6 +93,9 @@ void file_free(bld_file* file) {
     file_free_base(file);
 
     switch (file->type) {
+        case (BLD_DIR): {
+            file_free_dir(&file->info.dir);
+        } break;
         case (BLD_IMPL): {
             file_free_impl(&file->info.impl);
         } break;

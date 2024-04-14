@@ -53,6 +53,8 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_DIR) {continue;}
+
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
         }
@@ -89,6 +91,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_DIR) {continue;}
         if (file->type == BLD_HEADER) {continue;}
 
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
