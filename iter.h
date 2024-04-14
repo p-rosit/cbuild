@@ -16,14 +16,6 @@ enum bld_graph_search_type {
     BLD_DFS
 };
 
-typedef struct bld_iter_graph {
-    enum bld_graph_search_type type;
-    const bld_graph* graph;
-    bld_array stack;
-    bld_set visited;
-} bld_iter_graph;
-
-
 typedef struct bld_iter_array {
     const bld_array* array;
     size_t index;
@@ -33,6 +25,13 @@ typedef struct bld_iter_set {
     const bld_set* set;
     size_t index;
 } bld_iter_set;
+
+typedef struct bld_iter_graph {
+    enum bld_graph_search_type type;
+    const bld_graph* graph;
+    bld_array stack;
+    bld_set visited;
+} bld_iter_graph;
 
 union bld_iter_container {
     bld_iter_array array_iter;
