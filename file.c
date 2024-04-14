@@ -10,6 +10,7 @@ bld_file_identifier get_identifier(bld_path*);
 bld_file make_file(bld_file_type, bld_path*, char*);
 bld_set file_copy_symbol_set(const bld_set*);
 void file_free_base(bld_file*);
+void file_free_dir(bld_file_dir*);
 void file_free_impl(bld_file_impl*);
 void file_free_header(bld_file_header*);
 void file_free_test(bld_file_test*);
@@ -66,6 +67,11 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     return file;
 }
 
+bld_file file_dir_new(bld_path* path, char* name) {
+    bld_file dir = make_file(BLD_DIR, path, name);
+    return dir;
+}
+
 bld_file file_header_new(bld_path* path, char* name) {
     bld_file header = make_file(BLD_HEADER, path, name);
     return header;
@@ -105,6 +111,10 @@ void file_free_base(bld_file* file) {
     path_free(&file->path);
     string_free(&file->name);
     set_free(&file->includes);
+}
+
+void file_free_dir(bld_file_dir* dir) {
+    (void)(dir);
 }
 
 void file_free_impl(bld_file_impl* impl) {

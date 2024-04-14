@@ -56,6 +56,7 @@ typedef struct bld_file {
     bld_file_info info;
 } bld_file;
 
+bld_file    file_dir_new(bld_path*, char*);
 bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
