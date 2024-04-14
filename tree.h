@@ -4,10 +4,11 @@
 #include "array.h"
 
 typedef struct bld_tree_node {
-    size_t parent;
-    size_t self;
-    size_t next;
-    size_t size;
+    size_t parent; /* Relative index to parent (negative) */
+    size_t next; /* Relative index to next sibling */
+    size_t self; /* Absolute index of self */
+    size_t last; /* Relative index to last child */
+    size_t size; /* Total size of subtree */
 } bld_tree_node;
 
 typedef struct bld_tree {

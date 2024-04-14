@@ -2,6 +2,7 @@
 #define ITER_H
 #include "array.h"
 #include "set.h"
+#include "tree.h"
 #include "graph.h"
 
 enum bld_container_type {
@@ -16,6 +17,11 @@ enum bld_graph_search_type {
     BLD_DFS
 };
 
+enum bld_tree_traverse_type {
+    BLD_TREE_BRANCH,
+    BLD_TREE_CHILDREN
+};
+
 typedef struct bld_iter_array {
     const bld_array* array;
     size_t index;
@@ -25,6 +31,13 @@ typedef struct bld_iter_set {
     const bld_set* set;
     size_t index;
 } bld_iter_set;
+
+typedef struct bld_iter_tree {
+    enum bld_tree_traverse_type type;
+    const bld_tree* tree;
+    bld_tree_node* root;
+    size_t index;
+} bld_iter_tree;
 
 typedef struct bld_iter_graph {
     enum bld_graph_search_type type;
@@ -46,6 +59,8 @@ typedef struct bld_iter {
 
 bld_iter    iter_array(const bld_array*);
 bld_iter    iter_set(const bld_set*);
+bld_iter    iter_tree(const bld_tree*, void*);
+bld_iter    iter_tree_children(const bld_tree*, void*);
 bld_iter    iter_graph(const bld_graph*, uintmax_t);
 int         iter_next(bld_iter*, void**);
 int         array_next(bld_iter_array*, void**);

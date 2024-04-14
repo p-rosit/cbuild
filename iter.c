@@ -54,6 +54,77 @@ int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
     return has_next;
 }
 
+bld_iter iter_tree(const bld_tree* tree, void* root) {
+    bld_iter iter;
+    char* data;
+    size_t index;
+
+    iter.type = BLD_TREE;
+    iter.as.tree_iter.type = BLD_TREE_BRANCH;
+    iter.as.tree_iter.tree = tree;
+
+    if (root == NULL) {
+        iter.as.tree_iter.root = array_get(&tree->nodes, 0);
+    } else {
+        data = array_get(&tree->data, 0);
+
+        if (((char*) root) < data) {
+            log_fatal("iter_tree: invalid pointer, either the pointer to the root was always invalid or the tree was modified during iteration");
+        }
+
+        index = ((char*) root) - data;
+        if (tree->data.size <= index) {
+            log_fatal("iter_tree: invalid pointer, either the pointer to the root was always invalid or the tree was modified during iteration");
+        }
+
+        iter.as.tree_iter.root = array_get(&tree->nodes, index);
+    }
+
+    iter.as.tree_iter.index = iter.as.tree_iter.root->self;
+    return iter;
+}
+
+bld_iter iter_tree_children(const bld_tree* tree, void* root) {
+    bld_iter iter = iter_tree(tree, root);
+    iter.as.tree_iter.type = BLD_TREE_CHILDREN;
+    iter.as.tree_iter.index += 1;
+    return iter;
+}
+
+int tree_next(bld_iter_tree* iter, void** value_ptr_ptr) {
+    switch (iter->type) {
+        case (BLD_TREE_BRANCH): {
+            size_t last_index = iter->root->self + iter->root->size;
+
+            if (iter->index >= last_index) {
+                return 0;
+            }
+
+            *value_ptr_ptr = array_get(&iter->tree->data, iter->index++);
+
+            return 1;
+        }
+        case (BLD_TREE_CHILDREN): {
+            size_t last_index = iter->root->self + iter->root->last;
+            bld_tree_node* node;
+
+            if (iter->index >= last_index) {
+                return 0;
+            }
+
+            *value_ptr_ptr = array_get(&iter->tree->data, iter->index);
+            node = array_get(&iter->tree->nodes, iter->index);
+
+            iter->index += node->next;
+
+            return 1;
+        }
+    }
+
+    log_fatal("tree_next: unrecognized tree traversal, unreachable error");
+    return 0; /* Unreachable */
+}
+
 bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
     bld_iter iter;
 
@@ -116,6 +187,9 @@ int iter_next(bld_iter* iter, void** value_ptr_ptr) {
         } break;
         case (BLD_SET): {
             return set_next(&iter->as.set_iter, value_ptr_ptr);
+        } break;
+        case (BLD_TREE): {
+            return tree_next(&iter->as.tree_iter, value_ptr_ptr);
         } break;
         case (BLD_GRAPH): {
             return graph_next(&iter->as.graph_iter, (uintmax_t*) value_ptr_ptr);
