@@ -8,7 +8,7 @@
 
 bld_file_identifier get_identifier(bld_path*);
 bld_file make_file(bld_file_type, bld_path*, char*);
-bld_set file_copy_symbol_set(bld_set*);
+bld_set file_copy_symbol_set(const bld_set*);
 void file_free_base(bld_file*);
 void file_free_impl(bld_file_impl*);
 void file_free_header(bld_file_header*);
@@ -148,12 +148,24 @@ uintmax_t file_hash(bld_file* file, bld_array* compilers, uintmax_t seed) {
     return seed;
 }
 
-void file_symbols_copy(bld_file* file, bld_set* defined, bld_set* undefined) {
-    file->defined_symbols = file_copy_symbol_set(defined);
-    file->undefined_symbols = file_copy_symbol_set(undefined);
+void file_symbols_copy(bld_file* file, const bld_file* from) {
+    if (file->type != from->type) {
+        log_fatal("file_symbols_copy: files do not have same type");
+    }
+
+    switch (file->type) {
+        case (BLD_IMPL): {
+            file->info.impl.undefined_symbols = file_copy_symbol_set(&from->info.impl.undefined_symbols);
+            file->info.impl.defined_symbols = file_copy_symbol_set(&from->info.impl.defined_symbols);
+        } break;
+        case (BLD_TEST): {
+            file->info.test.undefined_symbols = file_copy_symbol_set(&from->info.test.undefined_symbols);
+        } break;
+        default: log_fatal("file_symbols_copy: file does not have any symbols to copy");
+    }
 }
 
-bld_set file_copy_symbol_set(bld_set* set) {
+bld_set file_copy_symbol_set(const bld_set* set) {
     bld_iter iter;
     bld_set cpy;
     bld_string str, *symbol;

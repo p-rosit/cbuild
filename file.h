@@ -57,7 +57,7 @@ void        file_free(bld_file*);
 uintmax_t   file_hash(bld_file*, bld_array*, uintmax_t);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
-void        file_symbols_copy(bld_file*, bld_set*, bld_set*);
+void        file_symbols_copy(bld_file*, const bld_file*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 #endif
