@@ -137,6 +137,7 @@ void project_free(bld_project* project) {
     bld_file* file;
 
     project_base_free(&project->base);
+    file_tree_free(&project->file_tree);
     dependency_graph_free(&project->graph);
 
     iter = iter_set(&project->files);

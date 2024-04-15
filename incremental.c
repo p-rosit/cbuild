@@ -28,6 +28,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     project.base = fproject->base;
     project.files = set_new(sizeof(bld_file));
+    project.file_tree = file_tree_new();
     project.graph = dependency_graph_new();
 
     incremental_make_root(&project);
@@ -132,10 +133,12 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_dir,
         log_error("encountered \"%s\" multiple times while indexing", string_unpack(&file.name));
         file_free(&file);
     }
+
+    file_tree_add(&project->file_tree, parent_dir, file.identifier.id);
 }
 
 void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_dir, bld_path* path, char* name) {
-    uintmax_t parent_id;
+    uintmax_t current_id;
     char *str_path, *file_name;
     bld_path dir_path, sub_path;
     bld_os_dir* dir;
@@ -168,11 +171,11 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
             return;
         }
 
-        parent_id = dir.identifier.id;
+        current_id = dir.identifier.id;
+        file_tree_add(&project->file_tree, parent_dir, current_id);
     } else {
-        parent_id = project->root_dir;
+        current_id = project->root_dir;
     }
-
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
         file_name = os_file_name(file_ptr);
@@ -189,7 +192,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_name);
-        incremental_index_recursive(project, forward_project, parent_id, &sub_path, file_name);
+        incremental_index_recursive(project, forward_project, current_id, &sub_path, file_name);
         path_free(&sub_path);
     }
     
@@ -230,6 +233,8 @@ void incremental_make_root(bld_project* project) {
     exists = set_add(&project->files, root.identifier.id, &root);
 
     if (exists) {log_fatal("incremental_make_root: root has already been initialized, has the project already been resolved?");}
+
+    file_tree_set_root(&project->file_tree, root.identifier.id);
 }
 
 void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {

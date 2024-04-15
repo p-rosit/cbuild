@@ -6,6 +6,7 @@
 #include "compiler.h"
 #include "linker.h"
 #include "file.h"
+#include "file_tree.h"
 #include "dependencies.h"
 
 #define BLD_CACHE_NAME "cache.json"
@@ -48,6 +49,7 @@ typedef struct bld_project {
     uintmax_t main_file;
     uintmax_t root_dir;
     bld_set files;
+    bld_file_tree file_tree;
     bld_dependency_graph graph;
 } bld_project;
 
