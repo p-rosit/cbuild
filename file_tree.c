@@ -36,3 +36,7 @@ uintmax_t file_tree_get_parent(bld_file_tree* tree, uintmax_t file) {
         return BLD_INVALID_IDENITIFIER;
     }
 }
+
+bld_iter file_tree_files(bld_file_tree* tree, uintmax_t root) {
+    return iter_graph(&tree->tree, root);
+}
