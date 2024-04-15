@@ -53,6 +53,8 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_DIR) {continue;}
+
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
         }
@@ -89,6 +91,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_DIR) {continue;}
         if (file->type == BLD_HEADER) {continue;}
 
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
@@ -109,11 +112,24 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
         bld_file* to_file;
+        bld_set* undefined;
 
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type != BLD_IMPL && file->type != BLD_TEST) {continue;}
+
+        switch (file->type) {
+            case (BLD_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
+            case (BLD_TEST): {undefined = &file->info.test.undefined_symbols;} break;
+            default: {log_fatal("dependency_graph_extract_symbols: unrecognized file type, unreachable error");}
+        }
+
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
-            if (set_empty_intersection(&file->undefined_symbols, &to_file->defined_symbols)) {
+            bld_set* defined;
+
+            if (to_file->type != BLD_IMPL) {continue;}
+            defined = &to_file->info.impl.defined_symbols;
+
+            if (set_empty_intersection(undefined, defined)) {
                 continue;
             }
             graph_add_edge(&graph->symbol_graph, file->identifier.id, to_file->identifier.id);
@@ -195,9 +211,25 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
         }
 
         if (symbol_type == 'T' || symbol_type == 'B') {
-            add_symbol(&file->defined_symbols, &func);
+            switch (file->type) {
+                case (BLD_IMPL): {
+                    add_symbol(&file->info.impl.defined_symbols, &func);
+                } break;
+                case (BLD_TEST): {
+                    string_free(&func);
+                } break;
+                default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
+            }
         } else if (symbol_type == 'U') {
-            add_symbol(&file->undefined_symbols, &func);
+            switch (file->type) {
+                case (BLD_IMPL): {
+                    add_symbol(&file->info.impl.undefined_symbols, &func);
+                } break;
+                case (BLD_TEST): {
+                    add_symbol(&file->info.test.undefined_symbols, &func);
+                } break;
+                default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
+            }
         } else {
             log_fatal("parse_symbols: unreachable error");
         }

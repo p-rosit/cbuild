@@ -4,9 +4,10 @@
 #include "logging.h"
 #include "incremental.h"
 
+void    incremental_make_root(bld_project*);
 void    incremental_index_project(bld_project*, bld_forward_project*);
-void    incremental_index_possible_file(bld_project*, bld_path*, char*);
-void    incremental_index_recursive(bld_project*, bld_forward_project*, bld_path*, char*);
+void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, char*);
+void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, char*);
 void    incremental_apply_main_file(bld_project*, bld_forward_project*);
 void    incremental_apply_compilers(bld_project*, bld_forward_project*);
 void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
@@ -27,7 +28,10 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     project.base = fproject->base;
     project.files = set_new(sizeof(bld_file));
+    project.file_tree = file_tree_new();
     project.graph = dependency_graph_new();
+
+    incremental_make_root(&project);
 
     if (fproject->rebuilding) {
         char* main_name;
@@ -35,7 +39,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
         main_path.str = fproject->main_file_name;
 
         main_name = path_get_last_string(&main_path);
-        incremental_index_possible_file(&project, &main_path, main_name);
+        incremental_index_possible_file(&project, project.root_dir, &main_path, main_name);
     }
     incremental_index_project(&project, fproject);
 
@@ -74,18 +78,27 @@ void incremental_apply_cache(bld_project* project) {
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
-        if (file->identifier.hash != cached->identifier.hash) {
-            continue;
-        }
+        if (file->identifier.hash != cached->identifier.hash) {continue;}
 
-        log_debug("Found \"%s\" in cache: %lu include(s), %lu defined, %lu undefined", string_unpack(&file->name), cached->includes.size, cached->defined_symbols.size, cached->undefined_symbols.size);
+        switch (file->type) {
+            case (BLD_IMPL): {
+                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
+            } break;
+            case (BLD_HEADER): {
+                log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->includes.size);
+            } break;
+            case (BLD_TEST): {
+                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->includes.size, cached->info.test.undefined_symbols.size);
+            } break;
+            default: {log_fatal("incremental_apply_cache: unrecognized file type, unreachable error");}
+        }
 
         file->includes = set_copy(&cached->includes);
         graph_add_node(&project->graph.include_graph, file->identifier.id);
 
         if (file->type == BLD_HEADER) {continue;}
-        
-        file_symbols_copy(file, &cached->defined_symbols, &cached->undefined_symbols);
+
+        file_symbols_copy(file, cached);
         graph_add_node(&project->graph.symbol_graph, file->identifier.id);
     }
 
@@ -93,11 +106,12 @@ void incremental_apply_cache(bld_project* project) {
 }
 
 
-void incremental_index_possible_file(bld_project* project, bld_path* path, char* name) {
+void incremental_index_possible_file(bld_project* project, uintmax_t parent_dir, bld_path* path, char* name) {
     int exists;
     char* file_ending;
     bld_path file_path;
     bld_file file;
+    (void)(parent_dir);
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
@@ -115,19 +129,26 @@ void incremental_index_possible_file(bld_project* project, bld_path* path, char*
     }
 
     exists = set_add(&project->files, file.identifier.id, &file);
-    if (exists) {file_free(&file);}
+    if (exists) {
+        log_error("encountered \"%s\" multiple times while indexing", string_unpack(&file.name));
+        file_free(&file);
+    }
+
+    file_tree_add(&project->file_tree, parent_dir, file.identifier.id);
 }
 
-void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, bld_path* path, char* name) {
+void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_dir, bld_path* path, char* name) {
+    uintmax_t current_id;
     char *str_path, *file_name;
-    bld_path sub_path;
+    bld_path dir_path, sub_path;
     bld_os_dir* dir;
     bld_os_file* file_ptr;
+    (void)(parent_dir);
 
     str_path = path_to_string(path);
     dir = os_dir_open(str_path);
     if (dir == NULL) {
-        incremental_index_possible_file(project, path, name);
+        incremental_index_possible_file(project, parent_dir, path, name);
         return;
     }
 
@@ -135,6 +156,25 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         log_debug("Searching under root: \"%s\"", path_to_string(path));
     } else {
         log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
+    }
+
+    if (name != NULL) {
+        int exists;
+        bld_file dir;
+
+        dir_path = path_copy(path);
+        dir = file_dir_new(&dir_path, name);
+        exists = set_add(&project->files, dir.identifier.id, &dir);
+        if (exists) {
+            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&dir.name));
+            file_free(&dir);
+            return;
+        }
+
+        current_id = dir.identifier.id;
+        file_tree_add(&project->file_tree, parent_dir, current_id);
+    } else {
+        current_id = project->root_dir;
     }
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
@@ -152,7 +192,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_name);
-        incremental_index_recursive(project, forward_project, &sub_path, file_name);
+        incremental_index_recursive(project, forward_project, current_id, &sub_path, file_name);
         path_free(&sub_path);
     }
     
@@ -170,7 +210,7 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
     os_dir_close(dir);
 
     log_info("Indexing project under root");
-    incremental_index_recursive(project, forward_project, &forward_project->base.root, NULL);
+    incremental_index_recursive(project, forward_project, project->root_dir, &forward_project->base.root, NULL);
 
     iter = iter_array(&forward_project->extra_paths);
     while (iter_next(&iter, (void**) &path)) {
@@ -179,9 +219,22 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
         name = path_get_last_string(&extra_path);
         log_info("Indexing files under \"%s\"", path_to_string(&extra_path));
 
-        incremental_index_recursive(project, forward_project, &extra_path, name);
+        incremental_index_recursive(project, forward_project, project->root_dir, &extra_path, name);
         path_free(&extra_path);
     }
+}
+
+void incremental_make_root(bld_project* project) {
+    int exists;
+    bld_path path = path_copy(&project->base.root);
+    bld_file root = file_dir_new(&path, ".");
+
+    project->root_dir = root.identifier.id;
+    exists = set_add(&project->files, root.identifier.id, &root);
+
+    if (exists) {log_fatal("incremental_make_root: root has already been initialized, has the project already been resolved?");}
+
+    file_tree_set_root(&project->file_tree, root.identifier.id);
 }
 
 void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {
@@ -394,6 +447,7 @@ void incremental_mark_changed_files(bld_project* project, bld_set* changed_files
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
+        if (file->type == BLD_DIR) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
         if (!project->base.cache.set) {
@@ -533,7 +587,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     result = 0;
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BLD_HEADER || file->type == BLD_DIR) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("incremental_compile_with_absolute_path: internal error");}

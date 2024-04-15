@@ -219,10 +219,9 @@ int parse_file(FILE* file, bld_project_cache* cache) {
         (bld_parse_func) parse_file_undefined_symbols,
     };
 
+    temp.type = BLD_INVALID_FILE;
     temp.path = path_new();
     temp.compiler = -1;
-    temp.defined_symbols = set_new(sizeof(bld_string));
-    temp.undefined_symbols = set_new(sizeof(bld_string));
     set_add(&cache->files, BLD_INVALID_IDENITIFIER, &temp);
     f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
 
@@ -244,7 +243,7 @@ int parse_file(FILE* file, bld_project_cache* cache) {
             goto parse_failed;
         }
     } else {
-        /* File must have every key except an optional compiler */
+        /* File must have every key except an optional compiler and optional linker */
         if ((amount_parsed < size - 2) || ((amount_parsed == size - 1) && parsed[5] && parsed[6])) {
             log_warn("File is missing required field");
             goto parse_failed;
@@ -266,24 +265,44 @@ int parse_file(FILE* file, bld_project_cache* cache) {
     }
 
     if (parsed[8]) {
-        bld_iter iter = iter_set(&f->defined_symbols);
+        bld_set* defined;
+        bld_iter iter;
         bld_string* str;
 
+        if (f->type != BLD_IMPL) {goto defined_freed;}
+
+        defined = &f->info.impl.defined_symbols;
+
+        iter = iter_set(defined);
         while (iter_next(&iter, (void**) &str)) {
             string_free(str);
         }
-        set_free(&f->defined_symbols);
+        set_free(defined);
     }
+    defined_freed:
 
     if (parsed[9]) {
-        bld_iter iter = iter_set(&f->undefined_symbols);
+        bld_set* undefined;
+        bld_iter iter;
         bld_string* str;
 
+        switch (f->type) {
+            case (BLD_IMPL): {
+                undefined = &f->info.impl.undefined_symbols;
+            } break;
+            case (BLD_TEST): {
+                undefined = &f->info.test.undefined_symbols;
+            } break;
+            default: goto undefined_freed;
+        }
+
+        iter = iter_set(undefined);
         while (iter_next(&iter, (void**) &str)) {
             string_free(str);
         }
-        set_free(&f->undefined_symbols);
+        set_free(undefined);
     }
+    undefined_freed:
 
     return -1;
 }
@@ -302,10 +321,13 @@ int parse_file_type(FILE* file, bld_project_cache* cache) {
     temp = string_unpack(&str);
     if (strcmp(temp, "implementation") == 0) {
         f->type = BLD_IMPL;
+        f->info.impl.undefined_symbols = set_new(sizeof(bld_string));
+        f->info.impl.defined_symbols = set_new(sizeof(bld_string));
     } else if (strcmp(temp, "header") == 0) {
         f->type = BLD_HEADER;
     } else if (strcmp(temp, "test") == 0) {
         f->type = BLD_TEST;
+        f->info.test.undefined_symbols = set_new(sizeof(bld_string));
     } else {
         log_warn("Not a valid file type: \"%s\"", temp);
         result = -1;
@@ -421,17 +443,24 @@ int parse_file_include(FILE* file, bld_set* set) {
 
 int parse_file_defined_symbols(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
+    bld_set* defined;
     int amount_parsed;
 
-    amount_parsed = json_parse_array(file, &f->defined_symbols, (bld_parse_func) parse_file_function);
+    if (f->type != BLD_IMPL) {
+        log_warn("Could not parse defined symbols, file type cannot defined contain symbols");
+        return -1;
+    }
+
+    defined = &f->info.impl.defined_symbols;
+    amount_parsed = json_parse_array(file, defined, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
-        bld_iter iter = iter_set(&f->defined_symbols);
+        bld_iter iter = iter_set(defined);
         bld_string* flag;
 
         while (iter_next(&iter, (void**) &flag)) {
             string_free(flag);
         }
-        set_free(&f->defined_symbols);
+        set_free(defined);
 
         log_warn("Could not parse defined symbols");
         return -1;
@@ -442,19 +471,35 @@ int parse_file_defined_symbols(FILE* file, bld_project_cache* cache) {
 
 int parse_file_undefined_symbols(FILE* file, bld_project_cache* cache) {
     bld_file* f = set_get(&cache->files, BLD_INVALID_IDENITIFIER);
+    bld_set* undefined;
     int amount_parsed;
 
-    amount_parsed = json_parse_array(file, &f->undefined_symbols, (bld_parse_func) parse_file_function);
+    if (f->type != BLD_IMPL && f->type != BLD_TEST) {
+        log_fatal("Could not parse undefined symbols, file type cannot contain undefined symbols");
+        return -1;
+    }
+
+    switch (f->type) {
+        case (BLD_IMPL): {
+            undefined = &f->info.impl.undefined_symbols;
+        } break;
+        case (BLD_TEST): {
+            undefined = &f->info.test.undefined_symbols;
+        } break;
+        default: log_fatal("parse_file_undefined_symbols: unreachable error");
+    }
+
+    amount_parsed = json_parse_array(file, undefined, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
-        bld_iter iter = iter_set(&f->undefined_symbols);
+        bld_iter iter = iter_set(undefined);
         bld_string* flag;
 
         while (iter_next(&iter, (void**) &flag)) {
             string_free(flag);
         }
-        set_free(&f->undefined_symbols);
+        set_free(undefined);
 
-        log_warn("Could not parse defined symbols");
+        log_warn("Could not parse undefined symbols");
         return -1;
     }
 
