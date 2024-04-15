@@ -14,6 +14,7 @@ bld_file_tree   file_tree_new(void);
 void            file_tree_free(bld_file_tree*);
 void            file_tree_set_root(bld_file_tree*, uintmax_t);
 void            file_tree_add(bld_file_tree*, uintmax_t, uintmax_t);
+uintmax_t       file_tree_get_parent(bld_file_tree*, uintmax_t);
 
 bld_iter        file_tree_files(bld_file_tree*, uintmax_t);
 int             file_tree_next(bld_file_tree*, uintmax_t);

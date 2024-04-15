@@ -17,9 +17,7 @@ void file_tree_free(bld_file_tree* tree) {
 }
 
 void file_tree_set_root(bld_file_tree* tree, uintmax_t root) {
-    uintmax_t invalid = BLD_INVALID_IDENITIFIER;
     tree->root = root;
-    set_add(&tree->parents, root, &invalid);
     graph_add_node(&tree->tree, root);
 }
 
@@ -27,4 +25,14 @@ void file_tree_add(bld_file_tree* tree, uintmax_t parent, uintmax_t file) {
     set_add(&tree->parents, file, &parent);
     graph_add_node(&tree->tree, file);
     graph_add_edge(&tree->tree, parent, file);
+}
+
+uintmax_t file_tree_get_parent(bld_file_tree* tree, uintmax_t file) {
+    uintmax_t* parent = set_get(&tree->parents, file);
+
+    if (parent != NULL) {
+        return *parent;
+    } else {
+        return BLD_INVALID_IDENITIFIER;
+    }
 }
