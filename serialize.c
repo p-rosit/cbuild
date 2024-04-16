@@ -8,8 +8,8 @@ void serialize_compiler_flags(FILE*, bld_array*, int);
 void serialize_linker(FILE*, bld_linker*, int);
 void serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
-void serialize_files(FILE*, bld_set*, bld_array*, bld_array*, int);
-void serialize_file(FILE*, bld_file*, bld_array*, bld_array*, int);
+void serialize_files(FILE*, bld_set*, bld_file_tree*, bld_array*, bld_array*, int);
+void serialize_file(FILE*, bld_file*, bld_set*, bld_file_tree*, bld_array*, bld_array*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_mtime(FILE*, bld_file_identifier);
@@ -46,7 +46,7 @@ void project_save_cache(bld_project* project) {
     fprintf(cache, ",\n");
 
     serialize_key(cache, "files", depth);
-    serialize_files(cache, &project->files, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
+    serialize_files(cache, &project->files, &project->file_tree, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
     fprintf(cache, "\n");
 
     fprintf(cache, "}\n");
@@ -139,95 +139,103 @@ void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
     fprintf(cache, "]");
 }
 
-void serialize_files(FILE* cache, bld_set* files, bld_array* compilers, bld_array* linker_flags, int depth) {
-    int first = 1;
-    bld_iter iter = iter_set(files);
-    bld_file* file;
+void serialize_files(FILE* cache, bld_set* files, bld_file_tree* tree, bld_array* compilers, bld_array* linker_flags, int depth) {
+    bld_file* root = set_get(files, tree->root);
+    if (root == NULL) {log_fatal("serialize_files: no root exists, internal error");}
 
-    fprintf(cache, "[");
-    if (files->size > 1) {
-        fprintf(cache, "\n");
-    }
-
-    while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
-
-        if (!first) {
-            fprintf(cache, ",\n");
-        } else {
-            first = 0;
-        }
-
-        if (files->size > 1) {
-            fprintf(cache, "%*c", 2 * depth, ' ');
-        }
-        serialize_file(cache, file, compilers, linker_flags, depth + 1);
-    }
-
-    if (files->size > 1) {
-        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
-    }
-    fprintf(cache, "]");
+    serialize_file(cache, root, files, tree, compilers, linker_flags, depth);
 }
 
-void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, bld_array* linker_flags, int depth) {
+void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* tree, bld_array* compilers, bld_array* linker_flags, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "type", depth);
     serialize_file_type(cache, file->type);
-    fprintf(cache, ",\n");
 
+    fprintf(cache, ",\n");
     serialize_key(cache, "id", depth);
     serialize_file_id(cache, file->identifier);
-    fprintf(cache, ",\n");
 
-    serialize_key(cache, "mtime", depth);
-    serialize_file_mtime(cache, file->identifier);
-    fprintf(cache, ",\n");
+    if (file->type != BLD_DIR) {
+        fprintf(cache, ",\n");
+        serialize_key(cache, "mtime", depth);
+        serialize_file_mtime(cache, file->identifier);
 
-    serialize_key(cache, "hash", depth);
-    fprintf(cache, "%" PRIuMAX, file->identifier.hash);
-    fprintf(cache, ",\n");
+        fprintf(cache, ",\n");
+        serialize_key(cache, "hash", depth);
+        fprintf(cache, "%" PRIuMAX, file->identifier.hash);
+    }
 
+    fprintf(cache, ",\n");
     serialize_key(cache, "name", depth);
     fprintf(cache, "\"%s\"", string_unpack(&file->name));
-    fprintf(cache, ",\n");
 
     if (file->compiler >= 0) {
+        fprintf(cache, ",\n");
         serialize_key(cache, "compiler", depth);
         serialize_compiler(cache, array_get(compilers, file->compiler), depth + 1);
-        fprintf(cache, ",\n");
     }
 
     if (file->linker_flags >= 0) {
+        fprintf(cache, ",\n");
         serialize_key(cache, "linker_flags", depth);
         serialize_linker_flags(cache, array_get(linker_flags, file->linker_flags), depth + 1);
-        fprintf(cache, ",\n");
     }
 
-    serialize_key(cache, "includes", depth);
-    serialize_file_includes(cache, &file->includes, depth + 1);
+    if (file->type != BLD_DIR) {
+        fprintf(cache, ",\n");
+        serialize_key(cache, "includes", depth);
+        serialize_file_includes(cache, &file->includes, depth + 1);
+    }
 
     switch (file->type) {
+        case (BLD_DIR): break;
+        case (BLD_HEADER): break;
         case (BLD_IMPL): {
             fprintf(cache, ",\n");
 
             serialize_key(cache, "undefined_symbols", depth);
             serialize_file_symbols(cache, &file->info.impl.undefined_symbols, depth + 1);
-            fprintf(cache, ",\n");
 
+            fprintf(cache, ",\n");
             serialize_key(cache, "defined_symbols", depth);
             serialize_file_symbols(cache, &file->info.impl.defined_symbols, depth + 1);
 
         } break;
-        case (BLD_HEADER): break;
         case (BLD_TEST): {
             fprintf(cache, ",\n");
-
             serialize_key(cache, "undefined_symbols", depth);
             serialize_file_symbols(cache, &file->info.test.undefined_symbols, depth + 1);
         } break;
         default: log_fatal("serialize_file: unrecognized file type, unreachable error");
+    }
+
+    if (file->type == BLD_DIR) {
+        int first = 1;
+        bld_iter iter;
+        uintmax_t* child_id;
+        bld_file* child;
+
+        fprintf(cache, ",\n");
+        serialize_key(cache, "files", depth);
+        fprintf(cache, "[\n");
+
+        iter = file_tree_children(tree, file->identifier.id);
+        while (iter_next(&iter, (void**) &child_id)) {
+            child = set_get(files, *child_id);
+            if (child == NULL) {log_fatal("serialize_file: internal error");}
+
+            if (!first) {
+                fprintf(cache, ",\n");
+            } else {
+                first = 0;
+            }
+            fprintf(cache, "%*c", 2 * (depth + 1), ' ');
+            serialize_file(cache, child, files, tree, compilers, linker_flags, depth + 2);
+        }
+
+        fprintf(cache, "\n%*c", 2 * depth, ' ');
+        fprintf(cache, "]");
     }
 
     fprintf(cache, "\n");
@@ -236,6 +244,9 @@ void serialize_file(FILE* cache, bld_file* file, bld_array* compilers, bld_array
 
 void serialize_file_type(FILE* cache, bld_file_type type) {
     switch (type) {
+        case (BLD_DIR): {
+            fprintf(cache, "\"directory\"");
+        } break;
         case (BLD_IMPL): {
             fprintf(cache, "\"implementation\"");
         } break;
