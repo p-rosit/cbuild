@@ -46,6 +46,7 @@ typedef struct bld_iter {
 bld_iter    iter_array(const bld_array*);
 bld_iter    iter_set(const bld_set*);
 bld_iter    iter_graph(const bld_graph*, uintmax_t);
+bld_iter    iter_graph_children(const bld_graph*, uintmax_t);
 int         iter_next(bld_iter*, void**);
 int         array_next(bld_iter_array*, void**);
 int         set_next(bld_iter_set*, void**);

@@ -69,6 +69,16 @@ bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
     return iter;
 }
 
+bld_iter iter_graph_children(const bld_graph* graph, uintmax_t parent) {
+    bld_array* children = set_get(&graph->edges, parent);
+
+    if (children == NULL) {
+        log_fatal("Requested node %lu does not exist in graph", parent);
+    }
+
+    return iter_array(children);
+}
+
 int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
     int node_visited = 1;
     uintmax_t *ptr_id, id;
