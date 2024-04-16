@@ -17,5 +17,6 @@ void            file_tree_add(bld_file_tree*, uintmax_t, uintmax_t);
 uintmax_t       file_tree_get_parent(bld_file_tree*, uintmax_t);
 
 bld_iter        file_tree_files(bld_file_tree*, uintmax_t);
+bld_iter        file_tree_children(bld_file_tree*, uintmax_t);
 
 #endif
