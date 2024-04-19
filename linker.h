@@ -6,7 +6,6 @@
 
 typedef struct bld_linker_flags {
     bld_array flags;
-    bld_array hash;
 } bld_linker_flags;
 
 typedef struct bld_linker {
