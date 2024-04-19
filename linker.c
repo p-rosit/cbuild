@@ -54,7 +54,7 @@ void linker_add_flag(bld_linker* linker, char* flag) {
 bld_linker_flags linker_flags_new(void) {
     bld_linker_flags flags;
 
-    flags.flag = array_new(sizeof(bld_string));
+    flags.flags = array_new(sizeof(bld_string));
     flags.hash = array_new(sizeof(uintmax_t));
 
     return flags;
@@ -87,11 +87,11 @@ void linker_flags_free(bld_linker_flags* flags) {
     bld_iter iter;
     bld_string* flag;
 
-    iter = iter_array(&flags->flag);
+    iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         string_free(flag);
     }
-    array_free(&flags->flag);
+    array_free(&flags->flags);
     array_free(&flags->hash);
 }
 
@@ -101,10 +101,10 @@ bld_linker_flags linker_flags_copy(bld_linker_flags* flags) {
     bld_iter iter;
     bld_linker_flags cpy;
 
-    cpy.flag = array_copy(&flags->flag);
+    cpy.flags = array_copy(&flags->flags);
     cpy.hash = array_copy(&flags->hash);
 
-    iter = iter_array(&cpy.flag);
+    iter = iter_array(&cpy.flags);
     while (iter_next(&iter, (void**) &flag)) {
         str = string_copy(flag);
         *flag = str;
@@ -121,7 +121,7 @@ void linker_flags_add_flag(bld_linker_flags* linker, char* flag) {
     str = string_copy(&str);
     hash = string_hash(flag, 76502);
 
-    array_push(&linker->flag, &str);
+    array_push(&linker->flags, &str);
     array_push(&linker->hash, &hash);
 }
 
@@ -137,7 +137,7 @@ void linker_flags_collect(bld_string* str, bld_array* linker_flags) {
         bld_string* f;
         uintmax_t* hash;
 
-        flag_iter = iter_array(&(*flags)->flag);
+        flag_iter = iter_array(&(*flags)->flags);
         hash_iter = iter_array(&(*flags)->hash);
         while (iter_next(&flag_iter, (void**) &f) && iter_next(&hash_iter, (void**) &hash)) {
             if (set_has(&added, *hash)) {
@@ -219,7 +219,7 @@ int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
     }
 
     hash = string_hash(string_unpack(&str), 76502);  /* Magic number from linker_flags_add_flag */
-    array_push(&flags->flag, &str);
+    array_push(&flags->flags, &str);
     array_push(&flags->hash, &hash);
 
     return result;

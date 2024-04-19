@@ -5,7 +5,7 @@
 #include "array.h"
 
 typedef struct bld_linker_flags {
-    bld_array flag;
+    bld_array flags;
     bld_array hash;
 } bld_linker_flags;
 
