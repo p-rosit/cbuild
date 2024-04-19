@@ -68,9 +68,10 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
     return cpy;
 }
 
-uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
+uintmax_t compiler_hash(bld_compiler* compiler) {
     bld_iter iter;
     bld_string* flag;
+    uintmax_t seed = 2349;
 
     seed = (seed << 5) + string_hash(string_unpack(&compiler->executable));
     

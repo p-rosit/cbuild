@@ -160,7 +160,7 @@ uintmax_t file_hash(bld_file* file, bld_array* compilers, uintmax_t seed) {
     seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
     if (file->compiler > 0) {
-        seed = compiler_hash(array_get(compilers, file->compiler), seed);
+        seed = (seed << 5) + seed * compiler_hash(array_get(compilers, file->compiler));
     }
     return seed;
 }

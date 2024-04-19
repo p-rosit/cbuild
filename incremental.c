@@ -47,7 +47,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
     incremental_apply_compilers(&project, fproject);
     incremental_apply_linker_flags(&project, fproject);
 
-    hash = compiler_hash(&project.base.compiler, 5031);
+    hash = compiler_hash(&project.base.compiler);
     iter = iter_set(&project.files);
     while (iter_next(&iter, (void**) &file)) {
         file->identifier.hash = file_hash(file, &project.base.file_compilers, hash);
