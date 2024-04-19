@@ -183,9 +183,23 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* 
     }
 
     if (file->type != BLD_DIR) {
+        bld_set* includes;
+        switch (file->type) {
+            case (BLD_HEADER): {
+                includes = &file->info.header.includes;
+            } break;
+            case (BLD_IMPL): {
+                includes = &file->info.impl.includes;
+            } break;
+            case (BLD_TEST): {
+                includes = &file->info.test.includes;
+            } break;
+            default: log_fatal("serialize_file: unrecognized file type, unreachable error");
+        }
+
         fprintf(cache, ",\n");
         serialize_key(cache, "includes", depth);
-        serialize_file_includes(cache, &file->includes, depth + 1);
+        serialize_file_includes(cache, includes, depth + 1);
     }
 
     switch (file->type) {
