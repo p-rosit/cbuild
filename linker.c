@@ -116,6 +116,19 @@ void linker_flags_add_flag(bld_linker_flags* linker, char* flag) {
     array_push(&linker->flags, &str);
 }
 
+uintmax_t linker_flags_hash(bld_linker_flags* linker_flags) {
+    uintmax_t seed = 335545;
+    bld_iter iter;
+    bld_string* flag;
+
+    iter = iter_array(&linker_flags->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        seed = (seed << 7) + string_hash(string_unpack(flag));
+    }
+
+    return seed;
+}
+
 void linker_flags_collect(bld_string* str, bld_array* linker_flags) {
     bld_set added;
     bld_iter iter;
