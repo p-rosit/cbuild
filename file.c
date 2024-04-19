@@ -4,6 +4,7 @@
 #include "os.h"
 #include "logging.h"
 #include "iter.h"
+#include "linker.h"
 #include "file.h"
 
 bld_file_identifier get_identifier(bld_path*);
@@ -162,6 +163,9 @@ uintmax_t file_hash(bld_file* file, bld_array* compilers, bld_array* linkers) {
     seed = (seed << 4) + seed + file->identifier.time;
     if (file->compiler > 0) {
         seed = (seed << 5) + seed * compiler_hash(array_get(compilers, file->compiler));
+    }
+    if (file->linker_flags > 0) {
+        seed = (seed << 5) + seed * linker_flags_hash(array_get(linkers, file->linker_flags));
     }
     return seed;
 }
