@@ -26,15 +26,17 @@ typedef struct bld_file_dir {
 } bld_file_dir;
 
 typedef struct bld_file_impl {
+    bld_set includes;
     bld_set undefined_symbols;
     bld_set defined_symbols;
 } bld_file_impl;
 
 typedef struct bld_file_header {
-    int placeholder;
+    bld_set includes;
 } bld_file_header;
 
 typedef struct bld_file_test {
+    bld_set includes;
     bld_set undefined_symbols;
 } bld_file_test;
 
@@ -52,7 +54,6 @@ typedef struct bld_file {
     bld_string name;
     int compiler;
     int linker_flags;
-    bld_set includes;
     bld_file_info info;
 } bld_file;
 

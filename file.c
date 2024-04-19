@@ -61,7 +61,6 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     file.path = *path;
     file.compiler = -1;
     file.linker_flags = -1;
-    file.includes = set_new(0);
 
     return file;
 }
@@ -73,11 +72,13 @@ bld_file file_dir_new(bld_path* path, char* name) {
 
 bld_file file_header_new(bld_path* path, char* name) {
     bld_file header = make_file(BLD_HEADER, path, name);
+    header.info.header.includes = set_new(0);
     return header;
 }
 
 bld_file file_impl_new(bld_path* path, char* name) {
     bld_file impl = make_file(BLD_IMPL, path, name);
+    impl.info.impl.includes = set_new(0);
     impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
     impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
     return impl;
@@ -85,6 +86,7 @@ bld_file file_impl_new(bld_path* path, char* name) {
 
 bld_file file_test_new(bld_path* path, char* name) {
     bld_file test = make_file(BLD_TEST, path, name);
+    test.info.test.includes = set_new(0);
     test.info.test.undefined_symbols = set_new(sizeof(bld_string));
     return test;
 }
@@ -112,7 +114,6 @@ void file_free(bld_file* file) {
 void file_free_base(bld_file* file) {
     path_free(&file->path);
     string_free(&file->name);
-    set_free(&file->includes);
 }
 
 void file_free_dir(bld_file_dir* dir) {
@@ -122,6 +123,8 @@ void file_free_dir(bld_file_dir* dir) {
 void file_free_impl(bld_file_impl* impl) {
     bld_iter iter;
     bld_string* symbol;
+
+    set_free(&impl->includes);
 
     iter = iter_set(&impl->undefined_symbols);
     while (iter_next(&iter, (void**) &symbol)) {
@@ -137,12 +140,14 @@ void file_free_impl(bld_file_impl* impl) {
 }
 
 void file_free_header(bld_file_header* header) {
-    (void)(header);
+    set_free(&header->includes);
 }
 
 void file_free_test(bld_file_test* test) {
     bld_iter iter;
     bld_string* symbol;
+
+    set_free(&test->includes);
 
     iter = iter_set(&test->undefined_symbols);
     while (iter_next(&iter, (void**) &symbol)) {
