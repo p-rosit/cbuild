@@ -70,7 +70,23 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
-            if (!set_has(&to_file->includes, file->identifier.id)) {
+            bld_set* includes;
+            if (to_file->type == BLD_DIR) {continue;}
+
+            switch (to_file->type) {
+                case (BLD_IMPL): {
+                    includes = &to_file->info.impl.includes;
+                } break;
+                case (BLD_TEST): {
+                    includes = &to_file->info.test.includes;
+                } break;
+                case (BLD_HEADER): {
+                    includes = &to_file->info.header.includes;
+                } break;
+                default: log_fatal("dependency_graph_extract_includes: internal error");
+            }
+
+            if (!set_has(includes, file->identifier.id)) {
                 continue;
             }
             graph_add_edge(&graph->include_graph, file->identifier.id, to_file->identifier.id);
@@ -288,7 +304,25 @@ void parse_included_files(bld_file* file) {
     bld_string str;
     uintmax_t include_id;
     FILE *f, *included_file;
+    bld_set* includes;
     int c;
+
+    if (file->type == BLD_DIR) {
+        log_fatal("parse_included_files: cannot parse includes for directory \"%s\"", string_unpack(&file->name));
+    }
+
+    switch (file->type) {
+        case (BLD_IMPL): {
+            includes = &file->info.impl.includes;
+        } break;
+        case (BLD_TEST): {
+            includes = &file->info.test.includes;
+        } break;
+        case (BLD_HEADER): {
+            includes = &file->info.header.includes;
+        } break;
+        default: log_fatal("parse_included_files: internal error");
+    }
 
     f = fopen(path_to_string(&file->path), "r");
     if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", string_unpack(&file->name));}
@@ -324,7 +358,7 @@ void parse_included_files(bld_file* file) {
         fclose(included_file);
 
         include_id = file_get_id(&file_path);
-        set_add(&file->includes, include_id, &include_id);
+        set_add(includes, include_id, &include_id);
 
         path_free(&file_path);
         string_free(&str);

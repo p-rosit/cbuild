@@ -40,3 +40,7 @@ uintmax_t file_tree_get_parent(bld_file_tree* tree, uintmax_t file) {
 bld_iter file_tree_files(bld_file_tree* tree, uintmax_t root) {
     return iter_graph(&tree->tree, root);
 }
+
+bld_iter file_tree_children(bld_file_tree* tree, uintmax_t parent) {
+    return iter_graph_children(&tree->tree, parent);
+}

@@ -21,6 +21,7 @@ typedef struct bld_project_cache {
     bld_array file_compilers;
     bld_array file_linker_flags;
     bld_set files;
+    bld_file_tree tree;
 } bld_project_cache;
 
 typedef struct bld_project_base {
