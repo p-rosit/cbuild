@@ -260,7 +260,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
 }
 
 void add_symbol(bld_set* set, bld_string* str) {
-    set_add(set, string_hash(string_unpack(str), 0), str);
+    set_add(set, string_hash(string_unpack(str)), str);
 }
 
 int get_next(FILE*);

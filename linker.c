@@ -130,7 +130,7 @@ void linker_flags_collect(bld_string* str, bld_array* linker_flags) {
 
         iter = iter_array(&(*flags)->flags);
         while (iter_next(&iter, (void**) &f)) {
-            hash = string_hash(string_unpack(f), 0);
+            hash = string_hash(string_unpack(f));
 
             if (set_has(&added, hash)) {
                 continue;

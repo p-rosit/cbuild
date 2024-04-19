@@ -72,11 +72,11 @@ uintmax_t compiler_hash(bld_compiler* compiler, uintmax_t seed) {
     bld_iter iter;
     bld_string* flag;
 
-    seed = string_hash(string_unpack(&compiler->executable), seed);
+    seed = (seed << 5) + string_hash(string_unpack(&compiler->executable));
     
     iter = iter_array(&compiler->flags);
     while (iter_next(&iter, (void**) &flag)) {
-        seed = string_hash(string_unpack(flag), seed);
+        seed = (seed << 5) + string_hash(string_unpack(flag));
     }
 
     return seed;

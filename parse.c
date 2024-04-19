@@ -650,7 +650,7 @@ int parse_file_function(FILE* file, bld_set* set) {
     result = string_parse(file, &str);
     if (result) {return -1;}
 
-    set_add(set, string_hash(string_unpack(&str), 0), &str);
+    set_add(set, string_hash(string_unpack(&str)), &str);
     return 0;
 }
 
