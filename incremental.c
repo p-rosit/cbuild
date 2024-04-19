@@ -75,6 +75,8 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        if (file->type == BLD_DIR) {continue;}
+
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
@@ -82,18 +84,20 @@ void incremental_apply_cache(bld_project* project) {
 
         switch (file->type) {
             case (BLD_IMPL): {
-                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
+                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->info.impl.includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
+                file->info.impl.includes = set_copy(&cached->info.impl.includes);
             } break;
             case (BLD_HEADER): {
-                log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->includes.size);
+                log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->info.header.includes.size);
+                file->info.header.includes = set_copy(&cached->info.header.includes);
             } break;
             case (BLD_TEST): {
-                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->includes.size, cached->info.test.undefined_symbols.size);
+                log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->info.test.includes.size, cached->info.test.undefined_symbols.size);
+                file->info.test.includes = set_copy(&cached->info.test.includes);
             } break;
             default: {log_fatal("incremental_apply_cache: unrecognized file type, unreachable error");}
         }
 
-        file->includes = set_copy(&cached->includes);
         graph_add_node(&project->graph.include_graph, file->identifier.id);
 
         if (file->type == BLD_HEADER) {continue;}
