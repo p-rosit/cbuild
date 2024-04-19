@@ -156,7 +156,8 @@ void file_free_test(bld_file_test* test) {
     set_free(&test->undefined_symbols);
 }
 
-uintmax_t file_hash(bld_file* file, bld_array* compilers, uintmax_t seed) {
+uintmax_t file_hash(bld_file* file, bld_array* compilers, bld_array* linkers) {
+    uintmax_t seed = 3401;
     seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
     if (file->compiler > 0) {

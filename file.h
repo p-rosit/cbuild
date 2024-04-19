@@ -62,7 +62,7 @@ bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
-uintmax_t   file_hash(bld_file*, bld_array*, uintmax_t);
+uintmax_t   file_hash(bld_file*, bld_array*, bld_array*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
 void        file_symbols_copy(bld_file*, const bld_file*);
