@@ -252,6 +252,8 @@ void project_cache_free(bld_project_cache* cache) {
         linker_flags_free(flags);
     }
     array_free(&cache->file_linker_flags);
+
+    file_tree_free(&cache->tree);
 }
 
 bld_path project_path_extract(int argc, char** argv) {
