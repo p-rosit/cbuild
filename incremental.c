@@ -372,7 +372,7 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, ".o");
     path_free(&path);
 
-    iter = iter_array(&compiler->flags);
+    iter = iter_array(&compiler->flags.flags);
     while (iter_next(&iter, (void**) &flag)) {
         string_append_space(&cmd);
         string_append_string(&cmd, string_unpack(flag));

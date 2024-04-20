@@ -4,7 +4,7 @@
 #include "project.h"
 
 void serialize_compiler(FILE*, bld_compiler*, int);
-void serialize_compiler_flags(FILE*, bld_array*, int);
+void serialize_compiler_flags(FILE*, bld_compiler_flags*, int);
 void serialize_linker(FILE*, bld_linker*, int);
 void serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
@@ -61,7 +61,7 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", string_unpack(&compiler->executable));
 
-    if (compiler->flags.size > 0) {
+    if (compiler->flags.flags.size > 0) {
         fprintf(cache, ",\n");
         serialize_key(cache, "flags", depth);
         serialize_compiler_flags(cache, &compiler->flags, depth + 1);
@@ -71,27 +71,27 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
 }
 
-void serialize_compiler_flags(FILE* cache, bld_array* flags, int depth) {
+void serialize_compiler_flags(FILE* cache, bld_compiler_flags* flags, int depth) {
     int first = 1;
     bld_iter iter;
     bld_string* flag;
 
     fprintf(cache, "[");
-    if (flags->size > 1) {
+    if (flags->flags.size > 1) {
         fprintf(cache, "\n");
     }
     
-    iter = iter_array(flags);
+    iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
-        if (flags->size > 1) {
+        if (flags->flags.size > 1) {
             fprintf(cache, "%*c", 2 * depth, ' ');
         }
         fprintf(cache, "\"%s\"", string_unpack(flag));
     }
 
-    if (flags->size > 1) {
+    if (flags->flags.size > 1) {
         fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
     }
     fprintf(cache, "]");

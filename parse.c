@@ -176,8 +176,18 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
 }
 
 int parse_project_compiler(FILE* file, bld_project_cache* cache) {
-    int result = parse_compiler(file, &cache->compiler);
+    bld_compiler_or_flags temp;
+    int result = parse_compiler(file, &temp);
     if (result) {log_warn("Could not parse compiler for project.");}
+
+    if (temp.type == BLD_COMPILER_FLAGS) {
+        log_warn("parse_project_compiler: base compiler had no executable");
+        compiler_flags_free(&temp.as.flags);
+        return -1;
+    }
+
+    cache->compiler = temp.as.compiler;
+
     return result;
 }
 
@@ -511,13 +521,20 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
 }
 
 int parse_file_compiler(FILE* file, bld_parsing_file* f) {
-    bld_compiler temp;
+    bld_compiler_or_flags temp;
     int result;
 
     result = parse_compiler(file, &temp);
     if (result) {log_warn("Could not parse compiler for file.");}
+    if (temp.type == BLD_COMPILER_FLAGS) {
+        log_warn("parse_file_compiler: no executable");
+        compiler_flags_free(&temp.as.flags);
+        return -1;
+    }
+    log_warn("HAS TO BE COMPILER?");
+    log_error("Accept more compilers");
 
-    array_push(&f->cache->file_compilers, &temp);
+    array_push(&f->cache->file_compilers, &temp.as.compiler);
     f->file.compiler = f->cache->file_compilers.size - 1;
 
     return result;
