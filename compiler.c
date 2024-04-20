@@ -62,10 +62,15 @@ void compiler_add_flag(bld_compiler* compiler, char* flag) {
     compiler_flags_add_flag(&compiler->flags, flag);
 }
 
+void compiler_remove_flag(bld_compiler* compiler, char* flag) {
+    compiler_flags_remove_flag(&compiler->flags, flag);
+}
+
 bld_compiler_flags compiler_flags_new(void) {
     bld_compiler_flags flags;
     flags.flags = array_new(sizeof(bld_string));
-    flags.ignore = set_new(0);
+    flags.flag_hash = set_new(0);
+    flags.removed = set_new(sizeof(bld_string));
     return flags;
 }
 
@@ -77,9 +82,14 @@ void compiler_flags_free(bld_compiler_flags* flags) {
     while (iter_next(&iter, (void**) &flag)) {
         string_free(flag);
     }
-
     array_free(&flags->flags);
-    set_free(&flags->ignore);
+    set_free(&flags->flag_hash);
+
+    iter = iter_set(&flags->removed);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(flag);
+    }
+    set_free(&flags->removed);
 }
 
 bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
@@ -111,8 +121,16 @@ bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
     bld_string* flag;
 
     cpy.flags = array_copy(&flags->flags);
+    cpy.flag_hash = set_copy(&flags->flag_hash);
+    cpy.removed = set_copy(&flags->removed);
 
     iter = iter_array(&cpy.flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        bld_string temp = string_copy(flag);
+        *flag = temp;
+    }
+
+    iter = iter_set(&cpy.removed);
     while (iter_next(&iter, (void**) &flag)) {
         bld_string temp = string_copy(flag);
         *flag = temp;
@@ -131,13 +149,41 @@ uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
         seed = (seed << 5) + string_hash(string_unpack(flag));
     }
 
+    iter = iter_set(&flags->removed);
+    while (iter_next(&iter, (void**) &flag)) {
+        seed = (seed << 5) + string_hash(string_unpack(flag));
+    }
+
     return seed;
 }
 
 void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
     bld_string temp = string_pack(flag);
+    uintmax_t hash = string_hash(flag);
     temp = string_copy(&temp);
+
+    if (set_has(&flags->removed, hash)) {
+        log_fatal("compiler_flags_add_flag: trying to add flag \"%s\" which has already been removed by this set of flags", flag);
+    }
+
     array_push(&flags->flags, &temp);
+    if (set_add(&flags->flag_hash, hash, NULL)) {
+        log_fatal("compiler_flags_add_flag: tried to add flag \"%s\" twice", flag);
+    }
+}
+
+void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
+    bld_string temp = string_pack(flag);
+    uintmax_t hash = string_hash(flag);
+
+    if (set_has(&flags->flag_hash, hash)) {
+        log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" which has already been added by this set of flags", flag);
+    }
+
+    temp = string_copy(&temp);
+    if (set_add(&flags->removed, string_hash(flag), &temp)) {
+        log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" twice", flag);
+    }
 }
 
 int parse_compiler(FILE* file, bld_compiler_or_flags* compiler) {

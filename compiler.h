@@ -8,7 +8,8 @@
 
 typedef struct bld_compiler_flags {
     bld_array flags;
-    bld_set ignore;
+    bld_set flag_hash;
+    bld_set removed;
 } bld_compiler_flags;
 
 typedef struct bld_compiler {
