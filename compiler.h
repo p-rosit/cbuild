@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include "dstr.h"
 #include "array.h"
+#include "set.h"
 
 typedef struct bld_compiler_flags {
     bld_array flags;
+    bld_set ignore;
 } bld_compiler_flags;
 
 typedef struct bld_compiler {
@@ -35,6 +37,7 @@ bld_compiler        compiler_copy(bld_compiler*);
 void                compiler_free(bld_compiler*);
 uintmax_t           compiler_hash(bld_compiler*);
 void                compiler_add_flag(bld_compiler*, char*);
+void                compiler_remove_flag(bld_compiler*, char*);
 
 bld_compiler_flags  compiler_flags_new(void);
 bld_compiler_flags  compiler_flags_with_flags(char*, ...);
@@ -42,6 +45,7 @@ bld_compiler_flags  compiler_flags_copy(bld_compiler_flags*);
 void                compiler_flags_free(bld_compiler_flags*);
 uintmax_t           compiler_flags_hash(bld_compiler_flags*);
 void                compiler_flags_add_flag(bld_compiler_flags*, char*);
+void                compiler_flags_remove_flag(bld_compiler_flags*, char*);
 
 void                compiler_flags_collect(bld_string*, bld_array*);
 

@@ -65,6 +65,7 @@ void compiler_add_flag(bld_compiler* compiler, char* flag) {
 bld_compiler_flags compiler_flags_new(void) {
     bld_compiler_flags flags;
     flags.flags = array_new(sizeof(bld_string));
+    flags.ignore = set_new(0);
     return flags;
 }
 
@@ -78,6 +79,7 @@ void compiler_flags_free(bld_compiler_flags* flags) {
     }
 
     array_free(&flags->flags);
+    set_free(&flags->ignore);
 }
 
 bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
