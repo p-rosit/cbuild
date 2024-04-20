@@ -186,7 +186,7 @@ void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
     }
 }
 
-int parse_compiler(FILE* file, bld_compiler_or_flags* compiler) {
+int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
@@ -195,26 +195,25 @@ int parse_compiler(FILE* file, bld_compiler_or_flags* compiler) {
         (bld_parse_func) parse_compiler_executable,
         (bld_parse_func) parse_compiler_flags,
     };
-    bld_compiler temp;
 
-    temp.flags = compiler_flags_new();
-    amount_parsed = json_parse_map(file, &temp, size, parsed, (char**) keys, funcs);
-    if (amount_parsed < 0) {
+    compiler->flags = compiler_flags_new();
+    amount_parsed = json_parse_map(file, compiler, size, parsed, (char**) keys, funcs);
+    if (amount_parsed != size) {
         log_warn("parse_compiler: could not parse compiler");
-        return -1;
-    }
-
-    if (!parsed[0] && !parsed[1]) {
-        return -1;
-    } else if (parsed[0]) {
-        compiler->type = BLD_COMPILER;
-        compiler->as.compiler = temp;
-    } else {
-        compiler->type = BLD_COMPILER_FLAGS;
-        compiler->as.flags = temp.flags;
+        goto parse_failed;
     }
 
     return 0;
+    parse_failed:
+    if (parsed[0]) {
+        string_free(&compiler->executable);
+    }
+
+    if (parsed[1]) {
+        compiler_flags_free(&compiler->flags);
+    }
+
+    return -1;
 }
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
