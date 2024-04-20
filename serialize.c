@@ -105,7 +105,7 @@ void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
 
     if (linker->flags.flags.size > 0) {
         fprintf(cache, ",\n");
-        serialize_key(cache, "linker_flags", depth);
+        serialize_key(cache, "flags", depth);
         serialize_linker_flags(cache, &linker->flags, depth + 1);
     }
 

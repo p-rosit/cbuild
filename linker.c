@@ -162,7 +162,7 @@ int parse_linker(FILE* file, bld_linker* linker) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
-    char *keys[2] = {"executable", "linker_flags"};
+    char *keys[2] = {"executable", "flags"};
     bld_parse_func funcs[2] = {
         (bld_parse_func) parse_linker_executable,
         (bld_parse_func) parse_linker_linker_flags,
