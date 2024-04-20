@@ -193,7 +193,7 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     char *keys[2] = {"executable", "flags"};
     bld_parse_func funcs[2] = {
         (bld_parse_func) parse_compiler_executable,
-        (bld_parse_func) parse_compiler_flags,
+        (bld_parse_func) parse_compiler_compiler_flags,
     };
 
     compiler->flags = compiler_flags_new();
@@ -225,6 +225,17 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     }
 
     compiler->executable = str;
+    return result;
+}
+
+int parse_compiler_compiler_flags(FILE* file, bld_compiler* compiler) {
+    int result;
+    result = parse_compiler_flags(file, &compiler->flags);
+    if (result) {
+        log_warn("parse_compiler_compiler_flags: could not parse flags");
+        return result;
+    }
+
     return result;
 }
 
