@@ -171,9 +171,20 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* 
     fprintf(cache, "\"%s\"", string_unpack(&file->name));
 
     if (file->compiler >= 0) {
+        bld_compiler_or_flags* compiler = array_get(compilers, file->compiler);
         fprintf(cache, ",\n");
         serialize_key(cache, "compiler", depth);
-        serialize_compiler(cache, array_get(compilers, file->compiler), depth + 1);
+
+        if (compiler == NULL) {log_fatal("serialize_file: internal error");}
+
+        switch (compiler->type) {
+            case (BLD_COMPILER): {
+                serialize_compiler(cache, &compiler->as.compiler, depth + 1);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                log_fatal("seriali file internal error");
+            } break;
+        }
     }
 
     if (file->linker_flags >= 0) {

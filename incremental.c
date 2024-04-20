@@ -348,7 +348,10 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     bld_path path;
 
     if (file->compiler > 0) {
-        compiler = array_get(&project->base.file_compilers, file->compiler);
+        bld_compiler_or_flags* temp;
+        temp = array_get(&project->base.file_compilers, file->compiler);
+        if (temp->type == BLD_COMPILER_FLAGS) {log_fatal("Cannot handle flags right now");}
+        compiler = &temp->as.compiler;
     } else {
         compiler = &project->base.compiler;
     }

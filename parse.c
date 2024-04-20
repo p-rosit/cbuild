@@ -86,7 +86,7 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
     fproject->base.cache.loaded = 1;
     fproject->base.cache.root = path_from_string(cache_path);
-    fproject->base.cache.file_compilers = array_new(sizeof(bld_compiler));
+    fproject->base.cache.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     fproject->base.cache.file_linker_flags = array_new(sizeof(bld_linker_flags));
     fproject->base.cache.files = set_new(sizeof(bld_file));
     fproject->base.cache.tree = file_tree_new();
@@ -145,7 +145,7 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
         if (parsed[2]) {
             bld_iter iter;
             bld_file* file;
-            bld_compiler* compiler;
+            bld_compiler_or_flags* compiler;
             bld_linker_flags* flags;
 
             iter = iter_set(&cache->files);
@@ -156,7 +156,15 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
 
             iter = iter_array(&cache->file_compilers);
             while (iter_next(&iter, (void**) &compiler)) {
-                compiler_free(compiler);
+                switch (compiler->type) {
+                    case (BLD_COMPILER): {
+                        compiler_free(&compiler->as.compiler);
+                    } break;
+                    case (BLD_COMPILER_FLAGS): {
+                        compiler_flags_free(&compiler->as.flags);
+                    } break;
+                    default: log_fatal("parse_cache: internal error");
+                }
             }
             array_free(&cache->file_compilers);
 
@@ -534,7 +542,7 @@ int parse_file_compiler(FILE* file, bld_parsing_file* f) {
     log_warn("HAS TO BE COMPILER?");
     log_error("Accept more compilers");
 
-    array_push(&f->cache->file_compilers, &temp.as.compiler);
+    array_push(&f->cache->file_compilers, &temp);
     f->file.compiler = f->cache->file_compilers.size - 1;
 
     return result;

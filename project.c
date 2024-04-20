@@ -105,16 +105,20 @@ void project_set_main_file(bld_forward_project* fproject, char* file_name) {
 
 void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_compiler compiler) {
     bld_string str;
+    bld_compiler_or_flags temp;
 
     if (fproject->resolved) {
         log_fatal("Trying to set compiler of \"%s\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
     }
 
-    str = string_new();
-    string_append_string(&str, file_name);
+    str = string_pack(file_name);
+    str = string_copy(&str);
+
+    temp.type = BLD_COMPILER;
+    temp.as.compiler = compiler;
 
     array_push(&fproject->compiler_file_names, &str);
-    array_push(&fproject->base.file_compilers, &compiler);
+    array_push(&fproject->base.file_compilers, &temp);
 }
 
 void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bld_linker_flags flags) {
@@ -181,7 +185,7 @@ bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_link
     base.build = path_new();
     base.compiler = compiler;
     base.linker = linker;
-    base.file_compilers = array_new(sizeof(bld_compiler));
+    base.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     base.file_linker_flags = array_new(sizeof(bld_linker_flags));
     base.cache = project_cache_new();
 
@@ -190,7 +194,7 @@ bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_link
 
 void project_base_free(bld_project_base* base) {
     bld_iter iter;
-    bld_compiler* compiler;
+    bld_compiler_or_flags* compiler;
     bld_linker_flags* linker_flags;
 
     path_free(&base->root);
@@ -201,7 +205,15 @@ void project_base_free(bld_project_base* base) {
 
     iter = iter_array(&base->file_compilers);
     while (iter_next(&iter, (void**) &compiler)) {
-        compiler_free(compiler);
+        switch (compiler->type) {
+            case (BLD_COMPILER): {
+                compiler_free(&compiler->as.compiler);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                compiler_flags_free(&compiler->as.flags);
+            } break;
+            default: log_fatal("project_base_free: internal error");
+        }
     }
     array_free(&base->file_compilers);
 
@@ -225,7 +237,7 @@ bld_project_cache project_cache_new(void) {
 void project_cache_free(bld_project_cache* cache) {
     bld_iter iter;
     bld_file* file;
-    bld_compiler* compiler;
+    bld_compiler_or_flags* compiler;
     bld_linker_flags* flags;
 
     if (!cache->loaded) {return;}
@@ -243,7 +255,15 @@ void project_cache_free(bld_project_cache* cache) {
 
     iter = iter_array(&cache->file_compilers);
     while (iter_next(&iter, (void**) &compiler)) {
-        compiler_free(compiler);
+        switch (compiler->type) {
+            case (BLD_COMPILER): {
+                compiler_free(&compiler->as.compiler);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                compiler_flags_free(&compiler->as.flags);
+            } break;
+            default: log_fatal("project_cache_free: internal error");
+        }
     }
     array_free(&cache->file_compilers);
 
