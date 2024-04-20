@@ -228,31 +228,128 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     return result;
 }
 
-int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
-    int values;
-    bld_compiler_flags flags;
+int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
+    int amount_parsed;
+    int size = 2;
+    int parsed[2];
+    char *keys[2] = {"added", "removed"};
+    bld_parse_func funcs[2] = {
+        (bld_parse_func) parse_compiler_flags_added_flags,
+        (bld_parse_func) parse_compiler_flags_removed_flags,
+    };
 
-    flags = compiler_flags_new();
-    values = json_parse_array(file, &flags, (bld_parse_func) parse_compiler_flag);
+    *flags = compiler_flags_new();
+    amount_parsed = json_parse_map(file, flags, size, parsed, (char**) keys, funcs);
+    if (amount_parsed != size) {
+        log_warn("parse_compiler_flags: could not parse compiler flags");
+        goto parse_failed;
+    }
+
+    return 0;
+    parse_failed:
+    if (parsed[0]) {
+        bld_iter iter;
+        bld_string* flag;
+
+        iter = iter_array(&flags->flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            string_free(flag);
+        }
+        array_free(&flags->flags);
+        set_free(&flags->flag_hash);
+    }
+
+    if (parsed[1]) {
+        bld_iter iter;
+        bld_string* flag;
+
+        iter = iter_set(&flags->removed);
+        while (iter_next(&iter, (void**) &flag)) {
+            string_free(flag);
+        }
+        set_free(&flags->removed);
+    }
+
+    return -1;
+}
+
+int parse_compiler_flags_added_flags(FILE* file, bld_compiler_flags* flags) {
+    int values;
+
+    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_added_flag);
     if (values < 0) {
-        compiler_flags_free(&flags);
         log_warn("Could not parse compiler flags");
         return -1;
     }
 
-    compiler->flags = flags;
     return 0;
 }
 
-int parse_compiler_flag(FILE* file, bld_compiler_flags* flags) {
-    bld_string str;
-    int result = string_parse(file, &str);
+int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
+    bld_string flag;
+    uintmax_t hash;
+    int result = string_parse(file, &flag);
     if (result) {
-        log_warn("Could not parse compiler flag");
+        log_warn("Could not parse added flag");
         return -1;
     }
 
-    array_push(&flags->flags, &str);
+    hash = string_hash(string_unpack(&flag));
+    if (set_has(&flags->flag_hash, hash)) {
+        log_warn("parse_compiler_flags_added_flag: duplicate flag, \"%s\"", string_unpack(&flag));
+        goto parse_failed;
+    }
 
-    return result;
+    if (set_has(&flags->removed, hash)) {
+        log_warn("parse_compiler_flags_added_flag: flag exists in both lists \"%s\"", string_unpack(&flag));
+        goto parse_failed;
+    }
+
+    array_push(&flags->flags, &flag);
+    set_add(&flags->flag_hash, hash, NULL);
+
+    return 0;
+    parse_failed:
+    string_free(&flag);
+    return -1;
+}
+
+int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
+    int values;
+
+    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_removed_flags);
+    if (values < 0) {
+        log_warn("Could not parse compiler flags");
+        return -1;
+    }
+
+    return 0;
+}
+
+int parse_compiler_flags_removed_flag(FILE* file, bld_compiler_flags* flags) {
+    bld_string flag;
+    uintmax_t hash;
+    int result = string_parse(file, &flag);
+    if (result) {
+        log_warn("Could not parse removed flag");
+        return -1;
+    }
+
+    hash = string_hash(string_unpack(&flag));
+    if (set_has(&flags->flag_hash, hash)) {
+        log_warn("parse_compiler_flags_removed_flag: flag exists in both lists, \"%s\"", string_unpack(&flag));
+        goto parse_failed;
+    }
+
+    if (set_has(&flags->removed, hash)) {
+        log_warn("parse_compiler_flags_removed_flag: duplicate flag \"%s\"", string_unpack(&flag));
+        goto parse_failed;
+    }
+
+    set_add(&flags->flag_hash, hash, &flag);
+
+    return 0;
+    parse_failed:
+    string_free(&flag);
+    return -1;
 }
