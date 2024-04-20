@@ -50,10 +50,14 @@ void                compiler_flags_remove_flag(bld_compiler_flags*, char*);
 
 void                compiler_flags_collect(bld_string*, bld_array*);
 
-int                 parse_compiler(FILE*, bld_compiler_or_flags*);
-int                 parse_compiler_type(FILE*, bld_compiler*);
+int                 parse_compiler(FILE*, bld_compiler*);
 int                 parse_compiler_executable(FILE*, bld_compiler*);
-int                 parse_compiler_flags(FILE*, bld_compiler*);
-int                 parse_compiler_flag(FILE*, bld_compiler_flags*);
+int                 parse_compiler_compiler_flags(FILE*, bld_compiler*);
+
+int                 parse_compiler_flags(FILE*, bld_compiler_flags*);
+int                 parse_compiler_flags_added_flags(FILE*, bld_compiler_flags*);
+int                 parse_compiler_flags_added_flag(FILE*, bld_compiler_flags*);
+int                 parse_compiler_flags_removed_flags(FILE*, bld_compiler_flags*);
+int                 parse_compiler_flags_removed_flag(FILE*, bld_compiler_flags*);
 
 #endif
