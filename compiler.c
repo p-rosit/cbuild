@@ -10,7 +10,7 @@ bld_compiler compiler_new(char* executable) {
 
     str = string_pack(executable);
     compiler.executable = string_copy(&str);
-    compiler.flags = array_new(sizeof(bld_string));
+    compiler.flags = compiler_flags_new();
 
     return compiler;
 }
@@ -34,48 +34,97 @@ bld_compiler compiler_with_flags(char* executable, ...) {
 }
 
 void compiler_free(bld_compiler* compiler) {
-    bld_iter iter;
-    bld_string* flag;
-
     if (compiler == NULL) {return;}
     
     string_free(&compiler->executable);
-
-    iter = iter_array(&compiler->flags);
-    while (iter_next(&iter, (void**) &flag)) {
-        string_free(flag);
-    }
-    array_free(&compiler->flags);
+    compiler_flags_free(&compiler->flags);
 }
 
 bld_compiler compiler_copy(bld_compiler* compiler) {
-    bld_string str, *flag;
     bld_compiler cpy;
-    bld_iter iter;
-    bld_array flags;
-
-    flags = array_copy(&compiler->flags);
-
-    iter = iter_array(&flags);
-    while (iter_next(&iter, (void**) &flag)) {
-        str = string_copy(flag);
-        *flag = str;
-    }
 
     cpy.executable = string_copy(&compiler->executable);
-    cpy.flags = flags;
+    cpy.flags = compiler_flags_copy(&compiler->flags);
 
     return cpy;
 }
 
 uintmax_t compiler_hash(bld_compiler* compiler) {
-    bld_iter iter;
-    bld_string* flag;
     uintmax_t seed = 2349;
 
     seed = (seed << 5) + string_hash(string_unpack(&compiler->executable));
-    
-    iter = iter_array(&compiler->flags);
+    seed = (seed << 5) + compiler_flags_hash(&compiler->flags);
+
+    return seed;
+}
+
+void compiler_add_flag(bld_compiler* compiler, char* flag) {
+    compiler_flags_add_flag(&compiler->flags, flag);
+}
+
+bld_compiler_flags compiler_flags_new(void) {
+    bld_compiler_flags flags;
+    flags.flags = array_new(sizeof(bld_string));
+    return flags;
+}
+
+void compiler_flags_free(bld_compiler_flags* flags) {
+    bld_iter iter;
+    bld_string* flag;
+
+    iter = iter_array(&flags->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(flag);
+    }
+
+    array_free(&flags->flags);
+}
+
+bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
+    bld_compiler_flags flags;
+    va_list args;
+    char* flag;
+
+    flags = compiler_flags_new();
+
+    if (first_flag == NULL) {
+        return flags;
+    }
+    compiler_flags_add_flag(&flags, first_flag);
+
+    va_start(args, first_flag);
+    while (1) {
+        flag = va_arg(args, char*);
+        if (flag == NULL) {break;}
+
+        compiler_flags_add_flag(&flags, flag);
+    }
+
+    return flags;
+}
+
+bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
+    bld_compiler_flags cpy;
+    bld_iter iter;
+    bld_string* flag;
+
+    cpy.flags = array_copy(&flags->flags);
+
+    iter = iter_array(&cpy.flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        bld_string temp = string_copy(flag);
+        *flag = temp;
+    }
+
+    return cpy;
+}
+
+uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
+    uintmax_t seed = 2346;
+    bld_iter iter;
+    bld_string* flag;
+
+    iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         seed = (seed << 5) + string_hash(string_unpack(flag));
     }
@@ -83,13 +132,13 @@ uintmax_t compiler_hash(bld_compiler* compiler) {
     return seed;
 }
 
-void compiler_add_flag(bld_compiler* compiler, char* flag) {
-    bld_string str = string_pack(flag);
-    str = string_copy(&str);
-    array_push(&compiler->flags, &str);
+void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
+    bld_string temp = string_pack(flag);
+    temp = string_copy(&temp);
+    array_push(&flags->flags, &temp);
 }
 
-int parse_compiler(FILE* file, bld_compiler* compiler) {
+int parse_compiler(FILE* file, bld_compiler_or_flags* compiler) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
@@ -98,13 +147,25 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
         (bld_parse_func) parse_compiler_executable,
         (bld_parse_func) parse_compiler_flags,
     };
+    bld_compiler temp;
 
-    compiler->flags = array_new(sizeof(bld_string));
-    amount_parsed = json_parse_map(file, compiler, size, parsed, (char**) keys, funcs);
-
-    if (amount_parsed < size && !parsed[0]) {
+    temp.flags = compiler_flags_new();
+    amount_parsed = json_parse_map(file, &temp, size, parsed, (char**) keys, funcs);
+    if (amount_parsed < 0) {
+        log_warn("parse_compiler: could not parse compiler");
         return -1;
     }
+
+    if (!parsed[0] && !parsed[1]) {
+        return -1;
+    } else if (parsed[0]) {
+        compiler->type = BLD_COMPILER;
+        compiler->as.compiler = temp;
+    } else {
+        compiler->type = BLD_COMPILER_FLAGS;
+        compiler->as.flags = temp.flags;
+    }
+
     return 0;
 }
 
@@ -122,19 +183,12 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
     int values;
-    bld_iter iter;
-    bld_string* flag;
-    bld_array flags;
+    bld_compiler_flags flags;
 
-    flags = array_new(sizeof(bld_string));
-    values = json_parse_array(file, &flags, (bld_parse_func) parse_compiler_option);
+    flags = compiler_flags_new();
+    values = json_parse_array(file, &flags, (bld_parse_func) parse_compiler_flag);
     if (values < 0) {
-        iter = iter_array(&flags);
-        while (iter_next(&iter, (void**) &flag)) {
-            string_free(flag);
-        }
-        array_free(&flags);
-
+        compiler_flags_free(&flags);
         log_warn("Could not parse compiler flags");
         return -1;
     }
@@ -143,7 +197,7 @@ int parse_compiler_flags(FILE* file, bld_compiler* compiler) {
     return 0;
 }
 
-int parse_compiler_option(FILE* file, bld_array* flags) {
+int parse_compiler_flag(FILE* file, bld_compiler_flags* flags) {
     bld_string str;
     int result = string_parse(file, &str);
     if (result) {
@@ -151,7 +205,7 @@ int parse_compiler_option(FILE* file, bld_array* flags) {
         return -1;
     }
 
-    array_push(flags, &str);
+    array_push(&flags->flags, &str);
 
     return result;
 }
