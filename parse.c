@@ -86,7 +86,9 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
     fproject->base.cache.loaded = 1;
     fproject->base.cache.root = path_from_string(cache_path);
+    fproject->base.cache.file2compiler = set_new(sizeof(size_t));
     fproject->base.cache.file_compilers = array_new(sizeof(bld_compiler_or_flags));
+    fproject->base.cache.file2linker_flags = set_new(sizeof(size_t));
     fproject->base.cache.file_linker_flags = array_new(sizeof(bld_linker_flags));
     fproject->base.cache.files = set_new(sizeof(bld_file));
     fproject->base.cache.tree = file_tree_new();

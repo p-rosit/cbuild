@@ -18,7 +18,9 @@ typedef struct bld_project_cache {
     bld_path root;
     bld_compiler compiler;
     bld_linker linker;
+    bld_set file2compiler;
     bld_array file_compilers;
+    bld_set file2linker_flags;
     bld_array file_linker_flags;
     bld_set files;
     bld_file_tree tree;
@@ -52,6 +54,8 @@ typedef struct bld_project {
     bld_set files;
     bld_file_tree file_tree;
     bld_dependency_graph graph;
+    bld_set file2compiler;
+    bld_set file2linker_flags;
 } bld_project;
 
 bld_path    project_path_extract(int, char**);

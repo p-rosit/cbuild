@@ -149,6 +149,9 @@ void project_free(bld_project* project) {
         file_free(file);
     }
     set_free(&project->files);
+
+    set_free(&project->file2compiler);
+    set_free(&project->file2linker_flags);
 }
 
 void project_partial_free(bld_forward_project* fproject) {
@@ -266,12 +269,14 @@ void project_cache_free(bld_project_cache* cache) {
         }
     }
     array_free(&cache->file_compilers);
+    set_free(&cache->file2compiler);
 
     iter = iter_array(&cache->file_linker_flags);
     while (iter_next(&iter, (void**) &flags)) {
         linker_flags_free(flags);
     }
     array_free(&cache->file_linker_flags);
+    set_free(&cache->file2linker_flags);
 
     file_tree_free(&cache->tree);
 }
