@@ -524,6 +524,7 @@ int parse_file_compiler(FILE* file, bld_parsing_file* f) {
     bld_compiler temp;
     bld_compiler_or_flags cf;
     int result;
+    size_t index;
 
     result = parse_compiler(file, &temp);
     if (result) {log_warn("Could not parse compiler for file.");}
@@ -532,7 +533,9 @@ int parse_file_compiler(FILE* file, bld_parsing_file* f) {
     cf.as.compiler = temp;
 
     array_push(&f->cache->file_compilers, &cf);
-    f->file.compiler = f->cache->file_compilers.size - 1;
+    index = f->cache->file_compilers.size - 1;
+    f->file.compiler = index;
+    set_add(&f->cache->file2compiler, f->file.identifier.id, &index);
 
     return result;
 }
@@ -540,13 +543,16 @@ int parse_file_compiler(FILE* file, bld_parsing_file* f) {
 int parse_file_linker_flags(FILE* file, bld_parsing_file* f) {
     bld_linker_flags temp;
     int result;
+    size_t index;
 
     temp = linker_flags_new();
     result = parse_linker_flags(file, &temp);
     if (result) {log_warn("Could not parse linker flags for file");}
 
     array_push(&f->cache->file_linker_flags, &temp);
+    index = f->cache->file2linker_flags.size - 1;
     f->file.linker_flags = f->cache->file_linker_flags.size - 1;
+    set_add(&f->cache->file2linker_flags, f->file.identifier.id, &index);
 
     return result;
 }
