@@ -233,12 +233,6 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* 
         }
     }
 
-    if (file->linker_flags >= 0) {
-        fprintf(cache, ",\n");
-        serialize_key(cache, "linker_flags", depth);
-        serialize_linker_flags(cache, array_get(linker_flags, file->linker_flags), depth + 1);
-    }
-
     if (file->type != BLD_DIR) {
         bld_set* includes;
         switch (file->type) {
