@@ -208,6 +208,7 @@ int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
     values = json_parse_array(file, flags, (bld_parse_func) parse_linker_flag);
     if (values < 0) {
         log_warn("Could not parse linker flags");
+        log_fatal("Free correctly");
         return -1;
     }
 
