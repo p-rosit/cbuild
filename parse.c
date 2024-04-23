@@ -550,7 +550,7 @@ int parse_file_linker_flags(FILE* file, bld_parsing_file* f) {
     if (result) {log_warn("Could not parse linker flags for file");}
 
     array_push(&f->cache->file_linker_flags, &temp);
-    index = f->cache->file2linker_flags.size - 1;
+    index = f->cache->file_linker_flags.size - 1;
     f->file.linker_flags = f->cache->file_linker_flags.size - 1;
     set_add(&f->cache->file2linker_flags, f->file.identifier.id, &index);
 
