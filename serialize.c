@@ -18,6 +18,9 @@ void serialize_file_mtime(FILE*, bld_file_identifier);
 void serialize_file_symbols(FILE*, bld_set*, int);
 void serialize_file_includes(FILE*, bld_set*, int);
 
+void serialize_project_linker_flags(FILE*, bld_project*, int);
+void serialize_project_file_linker_flags(FILE*, uintmax_t, bld_linker_flags*, int);
+
 void serialize_key(FILE*, char*, int);
 
 void project_save_cache(bld_project* project) {
@@ -49,6 +52,10 @@ void project_save_cache(bld_project* project) {
     fprintf(cache, ",\n");
     serialize_key(cache, "files", depth);
     serialize_files(cache, &project->files, &project->file_tree, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
+
+    fprintf(cache, ",\n");
+    serialize_key(cache, "file_linker_flags", depth);
+    serialize_project_linker_flags(cache, project, depth + 1);
 
     fprintf(cache, "\n}\n");
 
@@ -386,6 +393,54 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
         fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
     }
     fprintf(cache, "]");
+}
+
+void serialize_project_linker_flags(FILE* cache, bld_project* project, int depth) {
+    int first = 1;
+    bld_iter iter;
+    bld_file* file;
+    size_t* linker_flags_index;
+    fprintf(cache, "[");
+    if (project->file2linker_flags.size > 0) {
+        fprintf(cache, "\n");
+    }
+
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        bld_linker_flags* flags;
+
+        linker_flags_index = set_get(&project->file2linker_flags, file->identifier.id);
+        if (linker_flags_index == NULL) {continue;}
+        flags = array_get(&project->base.file_linker_flags, *linker_flags_index);
+        if (flags == NULL) {log_fatal("serialize_project_linker_flags: internal error");}
+
+        if (!first) {
+            fprintf(cache, ",\n");
+        } else {
+            first = 0;
+        }
+
+        fprintf(cache, "%*c", 2 * depth, ' ');
+        serialize_project_file_linker_flags(cache, file->identifier.id, flags, depth + 1);
+    }
+
+    if (project->file2linker_flags.size > 0) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
+}
+
+void serialize_project_file_linker_flags(FILE* cache, uintmax_t file_id, bld_linker_flags* linker_flags, int depth) {
+    fprintf(cache, "{\n");
+
+    serialize_key(cache, "file_id", depth);
+    fprintf(cache, "%" PRIuMAX, file_id);
+
+    fprintf(cache, ",\n");
+    serialize_key(cache, "linker_flags", depth);
+    serialize_linker_flags(cache, linker_flags, depth + 1);
+
+    fprintf(cache, "\n%*c}", 2 * (depth - 1), ' ');
 }
 
 void serialize_key(FILE* cache, char* key, int depth) {
