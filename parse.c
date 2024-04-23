@@ -21,12 +21,11 @@ typedef enum bld_file_fields {
     BLD_PARSE_HASH = 3,
     BLD_PARSE_NAME = 4,
     BLD_PARSE_COMPILER = 5,
-    BLD_PARSE_LINKER = 6,
-    BLD_PARSE_INCLUDES = 7,
-    BLD_PARSE_DEFINED = 8,
-    BLD_PARSE_UNDEFINED = 9,
-    BLD_PARSE_FILES = 10,
-    BLD_TOTAL_FIELDS = 11
+    BLD_PARSE_INCLUDES = 6,
+    BLD_PARSE_DEFINED = 7,
+    BLD_PARSE_UNDEFINED = 8,
+    BLD_PARSE_FILES = 9,
+    BLD_TOTAL_FIELDS = 10
 } bld_file_fields;
 
 typedef struct bld_parsing_linker_flags {
@@ -267,7 +266,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         "hash",
         "name",
         "compiler",
-        "linker_flags",
         "includes",
         "defined_symbols",
         "undefined_symbols",
@@ -280,7 +278,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
         (bld_parse_func) parse_file_compiler,
-        (bld_parse_func) parse_file_linker_flags,
         (bld_parse_func) parse_file_includes,
         (bld_parse_func) parse_file_defined_symbols,
         (bld_parse_func) parse_file_undefined_symbols,
@@ -311,12 +308,11 @@ int parse_file(FILE* file, bld_parsing_file* f) {
                 parsed[BLD_PARSE_MTIME]
                 || parsed[BLD_PARSE_HASH]
                 || parsed[BLD_PARSE_COMPILER]
-                || parsed[BLD_PARSE_LINKER]
                 || parsed[BLD_PARSE_INCLUDES]
                 || parsed[BLD_PARSE_DEFINED]
                 || parsed[BLD_PARSE_UNDEFINED]
             ) {
-                log_warn("Directory cannot have any of the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_COMPILER], keys[BLD_PARSE_LINKER], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
+                log_warn("Directory cannot have any of the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_COMPILER], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
                 goto parse_failed;
             }
         } break;
