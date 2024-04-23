@@ -29,6 +29,16 @@ typedef enum bld_file_fields {
     BLD_TOTAL_FIELDS = 11
 } bld_file_fields;
 
+typedef struct bld_parsing_linker_flags {
+    bld_set file2linker_flags;
+    bld_array linker_flags;
+} bld_parsing_linker_flags;
+
+typedef struct bld_parsing_file_linker_flags {
+    uintmax_t file_id;
+    bld_linker_flags flags;
+} bld_parsing_file_linker_flags;
+
 void ensure_directory_exists(bld_path*);
 int parse_cache(bld_project_cache*, bld_path*);
 int parse_project_compiler(FILE*, bld_project_cache*);
@@ -42,13 +52,17 @@ int parse_file_mtime(FILE*, bld_parsing_file*);
 int parse_file_hash(FILE*, bld_parsing_file*);
 int parse_file_name(FILE*, bld_parsing_file*);
 int parse_file_compiler(FILE*, bld_parsing_file*);
-int parse_file_linker_flags(FILE*, bld_parsing_file*);
 int parse_file_defined_symbols(FILE*, bld_parsing_file*);
 int parse_file_undefined_symbols(FILE*, bld_parsing_file*);
 int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_parsing_file*);
 int parse_file_include(FILE*, bld_set*);
 int parse_file_sub_files(FILE*, bld_parsing_file*);
+
+int parse_project_linker_flags(FILE*, bld_project_cache*);
+int parse_file_linker_flags(FILE*, bld_parsing_linker_flags*);
+int parse_file_linker_flags_id(FILE*, bld_parsing_file_linker_flags*);
+int parse_file_linker_flags_linker_flags(FILE*, bld_parsing_file_linker_flags*);
 
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
