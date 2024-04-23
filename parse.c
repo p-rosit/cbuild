@@ -129,13 +129,14 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
     int amount_parsed;
-    int size = 3;
-    int parsed[3];
-    char *keys[3] = {"compiler", "linker", "files"};
-    bld_parse_func funcs[3] = {
+    int size = 4;
+    int parsed[4];
+    char *keys[4] = {"compiler", "linker", "files", "file_linker_flags"};
+    bld_parse_func funcs[4] = {
         (bld_parse_func) parse_project_compiler,
         (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
+        (bld_parse_func) parse_project_linker_flags,
     };
     bld_path path = path_copy(root);
     FILE* f;
@@ -162,7 +163,6 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
             bld_iter iter;
             bld_file* file;
             bld_compiler_or_flags* compiler;
-            bld_linker_flags* flags;
 
             iter = iter_set(&cache->files);
             while (iter_next(&iter, (void**) &file)) {
@@ -183,12 +183,18 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
                 }
             }
             array_free(&cache->file_compilers);
+        }
+
+        if (parsed[3]) {
+            bld_iter iter;
+            bld_linker_flags* flags;
 
             iter = iter_array(&cache->file_linker_flags);
             while (iter_next(&iter, (void**) &flags)) {
                 linker_flags_free(flags);
             }
             array_free(&cache->file_linker_flags);
+            set_free(&cache->file2linker_flags);
         }
 
         return -1;
@@ -698,6 +704,82 @@ int parse_file_sub_files(FILE* file, bld_parsing_file* f) {
     if (amount_parsed < 0) {
         return -1;
     }
+
+    return 0;
+}
+
+int parse_project_linker_flags(FILE* file, bld_project_cache* cache) {
+    int amount_parsed;
+    bld_parsing_linker_flags temp_flags;
+
+    temp_flags.file2linker_flags = set_new(sizeof(size_t));
+    temp_flags.linker_flags = array_new(sizeof(bld_linker_flags));
+    amount_parsed = json_parse_array(file, &temp_flags, (bld_parse_func) parse_file_linker_flags);
+    if (amount_parsed < 0) {
+        bld_iter iter;
+        bld_linker_flags* flags;
+
+        iter = iter_array(&temp_flags.linker_flags);
+        while (iter_next(&iter, (void**) &flags)) {
+            linker_flags_free(flags);
+        }
+        array_free(&temp_flags.linker_flags);
+        set_free(&temp_flags.file2linker_flags);
+        return -1;
+    }
+
+    cache->file2linker_flags = temp_flags.file2linker_flags;
+    cache->file_linker_flags = temp_flags.linker_flags;
+    return 0;
+}
+
+int parse_file_linker_flags(FILE* file, bld_parsing_linker_flags* flags) {
+    int amount_parsed;
+    int size = 2;
+    int parsed[2];
+    char *keys[2] = {"file_id", "linker_flags"};
+    bld_parse_func funcs[2] = {
+        (bld_parse_func) parse_file_linker_flags_id,
+        (bld_parse_func) parse_file_linker_flags_linker_flags,
+    };
+    size_t index;
+    bld_parsing_file_linker_flags file_flags;
+
+    amount_parsed = json_parse_map(file, &file_flags, size, parsed, keys, funcs);
+
+    if (amount_parsed != size) {
+        if (parsed[1]) {
+            linker_flags_free(&file_flags.flags);
+        }
+        return -1;
+    }
+
+    index = flags->linker_flags.size;
+
+    set_add(&flags->file2linker_flags, file_flags.file_id, &index);
+    array_push(&flags->linker_flags, &file_flags.flags);
+    return 0;
+}
+
+int parse_file_linker_flags_id(FILE* file, bld_parsing_file_linker_flags* flags) {
+    uintmax_t file_id;
+    int result = parse_uintmax(file, &file_id);
+    if (result) {
+        return -1;
+    }
+
+    flags->file_id = file_id;
+    return 0;
+}
+
+int parse_file_linker_flags_linker_flags(FILE* file, bld_parsing_file_linker_flags* flags) {
+    bld_linker_flags file_flags = linker_flags_new();
+    int result = parse_linker_flags(file, &file_flags);
+    if (result) {
+        return -1;
+    }
+
+    flags->flags = file_flags;
 
     return 0;
 }
