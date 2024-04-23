@@ -41,17 +41,16 @@ void project_save_cache(bld_project* project) {
     fprintf(cache, "{\n");
     serialize_key(cache, "compiler", depth);
     serialize_compiler(cache, &project->base.compiler, depth + 1);
-    fprintf(cache, ",\n");
 
+    fprintf(cache, ",\n");
     serialize_key(cache, "linker", depth);
     serialize_linker(cache, &project->base.linker, depth + 1);
-    fprintf(cache, ",\n");
 
+    fprintf(cache, ",\n");
     serialize_key(cache, "files", depth);
     serialize_files(cache, &project->files, &project->file_tree, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
-    fprintf(cache, "\n");
 
-    fprintf(cache, "}\n");
+    fprintf(cache, "\n}\n");
 
     fclose(cache);
     path_free(&cache_path);
