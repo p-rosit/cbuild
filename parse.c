@@ -66,6 +66,7 @@ int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_parsing_file*);
 int parse_file_include(FILE*, bld_set*);
 int parse_file_sub_files(FILE*, bld_parsing_file*);
+int parse_file_sub_file(FILE*, bld_parsing_file*);
 
 int parse_project_linker_flags(FILE*, bld_project_cache*);
 int parse_file_linker_flags(FILE*, bld_parsing_linker_flags*);
@@ -400,6 +401,7 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     }
 
     set_add(&f->cache->files, f->file.identifier.id, &f->file);
+
     return 0;
 
     parse_failed:
@@ -510,12 +512,6 @@ int parse_file_id(FILE* file, bld_parsing_file* f) {
         return -1;
     }
     f->file.identifier.id = num;
-
-    if (f->parent != BLD_INVALID_IDENITIFIER) {
-        file_tree_add(&f->cache->tree, f->parent, f->file.identifier.id);
-    } else {
-        file_tree_set_root(&f->cache->tree, f->file.identifier.id);
-    }
     return 0;
 }
 
@@ -672,15 +668,32 @@ int parse_file_function(FILE* file, bld_set* set) {
 
 int parse_file_sub_files(FILE* file, bld_parsing_file* f) {
     int amount_parsed;
-    bld_parsing_file child;
 
-    child.cache = f->cache;
-    child.parent = f->file.identifier.id;
-    amount_parsed = json_parse_array(file, &child, (bld_parse_func) parse_file);
-    if (amount_parsed < 0) {
+    if (f->file.type != BLD_DIR) {
+        log_warn("parse_file_sub_files: attempting to parse sub files to file which is not a directory");
         return -1;
     }
 
+    f->file.info.dir.files = array_new(sizeof(uintmax_t));
+    amount_parsed = json_parse_array(file, f, (bld_parse_func) parse_file_sub_file);
+    if (amount_parsed < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+int parse_file_sub_file(FILE* file, bld_parsing_file* f) {
+    int result;
+    bld_parsing_file sub_file;
+
+    sub_file.cache = f->cache;
+    sub_file.parent = f->file.identifier.id;
+    result = parse_file(file, &sub_file);
+    if (result) {
+        return -1;
+    }
+
+    file_dir_add_file(&f->file, &sub_file.file);
     return 0;
 }
 
