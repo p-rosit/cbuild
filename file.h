@@ -22,7 +22,7 @@ typedef struct bld_file_identifier {
 } bld_file_identifier;
 
 typedef struct bld_file_dir {
-    int placeholder;
+    bld_array files;
 } bld_file_dir;
 
 typedef struct bld_file_impl {
@@ -49,6 +49,7 @@ typedef union bld_file_info {
 
 typedef struct bld_file {
     bld_file_type type;
+    uintmax_t parent_id;
     bld_file_identifier identifier;
     bld_path path;
     bld_string name;
@@ -62,10 +63,13 @@ bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
+
 uintmax_t   file_hash(bld_file*, bld_array*, bld_array*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
 void        file_symbols_copy(bld_file*, const bld_file*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
+
+void        file_dir_add_file(bld_file*, bld_file*);
 
 #endif

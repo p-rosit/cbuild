@@ -68,6 +68,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
 
 bld_file file_dir_new(bld_path* path, char* name) {
     bld_file dir = make_file(BLD_DIR, path, name);
+    dir.info.dir.files = array_new(sizeof(uintmax_t));
     return dir;
 }
 
@@ -118,7 +119,7 @@ void file_free_base(bld_file* file) {
 }
 
 void file_free_dir(bld_file_dir* dir) {
-    (void)(dir);
+    array_free(&dir->files);
 }
 
 void file_free_impl(bld_file_impl* impl) {
@@ -200,4 +201,11 @@ bld_set file_copy_symbol_set(const bld_set* set) {
     }
 
     return cpy;
+}
+
+void file_dir_add_file(bld_file* dir, bld_file* file) {
+    if (dir->type != BLD_DIR) {log_fatal("file_dir_add_file: trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
+
+    file->parent_id = dir->identifier.id;
+    array_push(&dir->info.dir.files, &file->identifier.id);
 }
