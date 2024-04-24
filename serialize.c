@@ -10,8 +10,8 @@ void serialize_compiler_flags_removed_flags(FILE*, bld_compiler_flags*, int);
 void serialize_linker(FILE*, bld_linker*, int);
 void serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
-void serialize_files(FILE*, bld_set*, bld_file_tree*, bld_array*, bld_array*, int);
-void serialize_file(FILE*, bld_file*, bld_set*, bld_file_tree*, bld_array*, bld_array*, int);
+void serialize_files(FILE*, bld_file*, bld_set*, bld_array*, bld_array*, int);
+void serialize_file(FILE*, bld_file*, bld_set*, bld_array*, bld_array*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_mtime(FILE*, bld_file_identifier);
@@ -29,11 +29,14 @@ void serialize_key(FILE*, char*, int);
 void project_save_cache(bld_project* project) {
     FILE* cache;
     bld_path cache_path;
+    bld_file* root;
     int depth = 1;
 
     if (!project->base.cache.loaded) {
         log_fatal("Trying to save cache without a corresponding load cache, i.e. no cache path has been set.");
     }
+    root = set_get(&project->files, project->root_dir);
+    if (root == NULL) {log_fatal("project_save_cache: internal error");}
 
     cache_path = path_copy(&project->base.root);
     path_append_path(&cache_path, &project->base.cache.root);
@@ -54,7 +57,7 @@ void project_save_cache(bld_project* project) {
 
     fprintf(cache, ",\n");
     serialize_key(cache, "files", depth);
-    serialize_files(cache, &project->files, &project->file_tree, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
+    serialize_files(cache, root, &project->files, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
 
     fprintf(cache, ",\n");
     serialize_key(cache, "file_compilers", depth);
@@ -192,14 +195,11 @@ void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
     fprintf(cache, "]");
 }
 
-void serialize_files(FILE* cache, bld_set* files, bld_file_tree* tree, bld_array* compilers, bld_array* linker_flags, int depth) {
-    bld_file* root = set_get(files, tree->root);
-    if (root == NULL) {log_fatal("serialize_files: no root exists, internal error");}
-
-    serialize_file(cache, root, files, tree, compilers, linker_flags, depth);
+void serialize_files(FILE* cache, bld_file* root, bld_set* files, bld_array* compilers, bld_array* linker_flags, int depth) {
+    serialize_file(cache, root, files, compilers, linker_flags, depth);
 }
 
-void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* tree, bld_array* compilers, bld_array* linker_flags, int depth) {
+void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_array* compilers, bld_array* linker_flags, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "type", depth);
@@ -275,7 +275,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* 
         serialize_key(cache, "files", depth);
         fprintf(cache, "[\n");
 
-        iter = file_tree_children(tree, file->identifier.id);
+        iter = iter_array(&file->info.dir.files);
         while (iter_next(&iter, (void**) &child_id)) {
             child = set_get(files, *child_id);
             if (child == NULL) {log_fatal("serialize_file: internal error");}
@@ -286,7 +286,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_file_tree* 
                 first = 0;
             }
             fprintf(cache, "%*c", 2 * (depth + 1), ' ');
-            serialize_file(cache, child, files, tree, compilers, linker_flags, depth + 2);
+            serialize_file(cache, child, files, compilers, linker_flags, depth + 2);
         }
 
         fprintf(cache, "\n%*c", 2 * depth, ' ');
