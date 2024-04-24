@@ -37,6 +37,17 @@ typedef struct bld_parsing_file_linker_flags {
     bld_linker_flags flags;
 } bld_parsing_file_linker_flags;
 
+typedef struct bld_parsing_compilers {
+    bld_set file2compiler;
+    bld_array compilers;
+} bld_parsing_compilers;
+
+typedef struct bld_parsing_file_compiler {
+    uintmax_t file_id;
+    bld_compiler compiler;
+    bld_compiler_flags flags;
+} bld_parsing_file_compiler;
+
 void ensure_directory_exists(bld_path*);
 int parse_cache(bld_project_cache*, bld_path*);
 int parse_project_compiler(FILE*, bld_project_cache*);
@@ -60,6 +71,12 @@ int parse_project_linker_flags(FILE*, bld_project_cache*);
 int parse_file_linker_flags(FILE*, bld_parsing_linker_flags*);
 int parse_file_linker_flags_id(FILE*, bld_parsing_file_linker_flags*);
 int parse_file_linker_flags_linker_flags(FILE*, bld_parsing_file_linker_flags*);
+
+int parse_project_compilers(FILE*, bld_project_cache*);
+int parse_file_compiler(FILE*, bld_parsing_compilers*);
+int parse_file_compiler_id(FILE*, bld_parsing_file_compiler*);
+int parse_file_compiler_compiler(FILE*, bld_parsing_file_compiler*);
+int parse_file_compiler_compiler_flags(FILE*, bld_parsing_file_compiler*);
 
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
