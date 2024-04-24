@@ -6,7 +6,6 @@
 #include "compiler.h"
 #include "linker.h"
 #include "file.h"
-#include "file_tree.h"
 #include "dependencies.h"
 
 #define BLD_CACHE_NAME "cache.json"
