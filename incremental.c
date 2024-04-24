@@ -112,12 +112,11 @@ void incremental_apply_cache(bld_project* project) {
 }
 
 
-void incremental_index_possible_file(bld_project* project, uintmax_t parent_dir, bld_path* path, char* name) {
+void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, bld_path* path, char* name) {
     int exists;
     char* file_ending;
     bld_path file_path;
-    bld_file file;
-    (void)(parent_dir);
+    bld_file file, *parent;
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
@@ -140,21 +139,23 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_dir,
         file_free(&file);
     }
 
-    file_tree_add(&project->file_tree, parent_dir, file.identifier.id);
+    parent = set_get(&project->files, parent_id);
+    if (parent == NULL) {log_fatal("incremental_index_possible_file: internal error");}
+
+    file_dir_add_file(parent, &file);
 }
 
-void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_dir, bld_path* path, char* name) {
-    uintmax_t current_id;
+void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, char* name) {
     char *str_path, *file_name;
+    uintmax_t directory_id;
     bld_path dir_path, sub_path;
     bld_os_dir* dir;
     bld_os_file* file_ptr;
-    (void)(parent_dir);
 
     str_path = path_to_string(path);
     dir = os_dir_open(str_path);
     if (dir == NULL) {
-        incremental_index_possible_file(project, parent_dir, path, name);
+        incremental_index_possible_file(project, parent_id, path, name);
         return;
     }
 
@@ -166,21 +167,25 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
     if (name != NULL) {
         int exists;
-        bld_file dir;
+        bld_file directory;
+        bld_file* parent;
 
         dir_path = path_copy(path);
-        dir = file_dir_new(&dir_path, name);
-        exists = set_add(&project->files, dir.identifier.id, &dir);
+        directory = file_dir_new(&dir_path, name);
+        exists = set_add(&project->files, directory.identifier.id, &directory);
         if (exists) {
-            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&dir.name));
-            file_free(&dir);
+            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
+            file_free(&directory);
             return;
         }
 
-        current_id = dir.identifier.id;
-        file_tree_add(&project->file_tree, parent_dir, current_id);
+        parent = set_get(&project->files, parent_id);
+        if (parent == NULL) {log_fatal("incremental_index_recursive: internal error");}
+
+        directory_id = directory.identifier.id;
+        file_dir_add_file(parent, &directory);
     } else {
-        current_id = project->root_dir;
+        directory_id = parent_id;
     }
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
@@ -198,7 +203,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_name);
-        incremental_index_recursive(project, forward_project, current_id, &sub_path, file_name);
+        incremental_index_recursive(project, forward_project, directory_id, &sub_path, file_name);
         path_free(&sub_path);
     }
     
@@ -239,8 +244,6 @@ void incremental_make_root(bld_project* project) {
     exists = set_add(&project->files, root.identifier.id, &root);
 
     if (exists) {log_fatal("incremental_make_root: root has already been initialized, has the project already been resolved?");}
-
-    file_tree_set_root(&project->file_tree, root.identifier.id);
 }
 
 void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {
