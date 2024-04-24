@@ -141,7 +141,6 @@ void project_free(bld_project* project) {
     bld_file* file;
 
     project_base_free(&project->base);
-    file_tree_free(&project->file_tree);
     dependency_graph_free(&project->graph);
 
     iter = iter_set(&project->files);
@@ -277,8 +276,6 @@ void project_cache_free(bld_project_cache* cache) {
     }
     array_free(&cache->file_linker_flags);
     set_free(&cache->file2linker_flags);
-
-    file_tree_free(&cache->tree);
 }
 
 bld_path project_path_extract(int argc, char** argv) {

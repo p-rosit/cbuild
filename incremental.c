@@ -28,7 +28,6 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     project.base = fproject->base;
     project.files = set_new(sizeof(bld_file));
-    project.file_tree = file_tree_new();
     project.graph = dependency_graph_new();
     project.file2compiler = set_new(sizeof(size_t));
     project.file2linker_flags = set_new(sizeof(size_t));

@@ -23,7 +23,6 @@ typedef struct bld_project_cache {
     bld_set file2linker_flags;
     bld_array file_linker_flags;
     bld_set files;
-    bld_file_tree tree;
 } bld_project_cache;
 
 typedef struct bld_project_base {
@@ -52,7 +51,6 @@ typedef struct bld_project {
     uintmax_t main_file;
     uintmax_t root_dir;
     bld_set files;
-    bld_file_tree file_tree;
     bld_dependency_graph graph;
     bld_set file2compiler;
     bld_set file2linker_flags;

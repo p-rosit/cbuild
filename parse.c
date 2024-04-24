@@ -120,7 +120,6 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
     fproject->base.cache.file2linker_flags = set_new(sizeof(size_t));
     fproject->base.cache.file_linker_flags = array_new(sizeof(bld_linker_flags));
     fproject->base.cache.files = set_new(sizeof(bld_file));
-    fproject->base.cache.tree = file_tree_new();
 
     if (file == NULL) {
         log_debug("No cache file found.");
@@ -269,7 +268,6 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
         }
         array_free(&cache->file_linker_flags);
 
-        file_tree_free(&cache->tree);
         log_warn("Could not parse file tree");
         return -1;
     }
