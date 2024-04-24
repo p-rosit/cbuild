@@ -143,13 +143,14 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
     int amount_parsed;
-    int size = 4;
-    int parsed[4];
-    char *keys[4] = {"compiler", "linker", "files", "file_linker_flags"};
-    bld_parse_func funcs[4] = {
+    int size = 5;
+    int parsed[5];
+    char *keys[5] = {"compiler", "linker", "files", "file_compilers", "file_linker_flags"};
+    bld_parse_func funcs[5] = {
         (bld_parse_func) parse_project_compiler,
         (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
+        (bld_parse_func) parse_project_compilers,
         (bld_parse_func) parse_project_linker_flags,
     };
     bld_path path = path_copy(root);
@@ -176,13 +177,17 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
         if (parsed[2]) {
             bld_iter iter;
             bld_file* file;
-            bld_compiler_or_flags* compiler;
 
             iter = iter_set(&cache->files);
             while (iter_next(&iter, (void**) &file)) {
                 file_free(file);
             }
             set_free(&cache->files);
+        }
+
+        if (parsed[3]) {
+            bld_iter iter;
+            bld_compiler_or_flags* compiler;
 
             iter = iter_array(&cache->file_compilers);
             while (iter_next(&iter, (void**) &compiler)) {
@@ -199,7 +204,7 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
             array_free(&cache->file_compilers);
         }
 
-        if (parsed[3]) {
+        if (parsed[4]) {
             bld_iter iter;
             bld_linker_flags* flags;
 
@@ -677,6 +682,114 @@ int parse_file_sub_files(FILE* file, bld_parsing_file* f) {
     }
 
     return 0;
+}
+
+int parse_project_compilers(FILE* file, bld_project_cache* cache) {
+    int amount_parsed;
+    bld_parsing_compilers temp_compilers;
+
+    temp_compilers.file2compiler = set_new(sizeof(size_t));
+    temp_compilers.compilers = array_new(sizeof(bld_compiler_or_flags));
+    amount_parsed = json_parse_array(file, &temp_compilers, (bld_parse_func) parse_file_compiler);
+    if (amount_parsed < 0) {
+        bld_iter iter;
+        bld_compiler_or_flags* compiler_or_flags;
+
+        iter = iter_array(&temp_compilers.compilers);
+        while (iter_next(&iter, (void**) &compiler_or_flags)) {
+            switch (compiler_or_flags->type) {
+                case (BLD_COMPILER): {
+                    compiler_free(&compiler_or_flags->as.compiler);
+                } break;
+                case (BLD_COMPILER_FLAGS): {
+                    compiler_flags_free(&compiler_or_flags->as.flags);
+                } break;
+            }
+        }
+        array_free(&temp_compilers.compilers);
+        set_free(&temp_compilers.file2compiler);
+        return -1;
+    }
+
+    cache->file2compiler = temp_compilers.file2compiler;
+    cache->file_compilers = temp_compilers.compilers;
+    return 0;
+}
+
+int parse_file_compiler(FILE* file, bld_parsing_compilers* compilers) {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"file_id", "compiler", "compiler_flags"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_file_compiler_id,
+        (bld_parse_func) parse_file_compiler_compiler,
+        (bld_parse_func) parse_file_compiler_compiler_flags,
+    };
+    size_t index;
+    bld_parsing_file_compiler file_compiler;
+    bld_compiler_or_flags temp;
+
+    json_parse_map(file, &file_compiler, size, parsed, keys, funcs);
+
+    if (!parsed[0] || (parsed[1] == parsed[2])) {
+        if (parsed[1]) {
+            compiler_free(&file_compiler.compiler);
+        }
+
+        if (parsed[2]) {
+            compiler_flags_free(&file_compiler.flags);
+        }
+
+        return -1;
+    }
+
+    index = compilers->compilers.size;
+    set_add(&compilers->file2compiler, file_compiler.file_id, &index);
+
+    if (parsed[1]) {
+        temp.type = BLD_COMPILER;
+        temp.as.compiler = file_compiler.compiler;
+    } else if (parsed[2]) {
+        temp.type = BLD_COMPILER_FLAGS;
+        temp.as.flags = file_compiler.flags;
+    } else {
+        log_fatal("parse_file_compiler: internal error");
+    }
+
+    array_push(&compilers->compilers, &temp);
+    return 0;
+}
+
+int parse_file_compiler_id(FILE* file, bld_parsing_file_compiler* compiler) {
+    uintmax_t file_id;
+    int result = parse_uintmax(file, &file_id);
+    if (result) {
+        return -1;
+    }
+
+    compiler->file_id = file_id;
+    return 0;
+}
+
+int parse_file_compiler_compiler(FILE* file, bld_parsing_file_compiler* compiler) {
+    int result = parse_compiler(file, &compiler->compiler);
+    if (result) {
+        log_warn("Could not parse file compiler");
+    }
+
+    return result;
+}
+
+int parse_file_compiler_compiler_flags(FILE* file, bld_parsing_file_compiler* compiler) {
+    int result;
+
+    compiler->flags = compiler_flags_new();
+    result = parse_compiler_flags(file, &compiler->flags);
+    if (result) {
+        log_warn("Could not parse file compiler flags");
+    }
+
+    return result;
 }
 
 int parse_project_linker_flags(FILE* file, bld_project_cache* cache) {
