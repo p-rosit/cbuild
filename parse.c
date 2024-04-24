@@ -20,12 +20,11 @@ typedef enum bld_file_fields {
     BLD_PARSE_MTIME = 2,
     BLD_PARSE_HASH = 3,
     BLD_PARSE_NAME = 4,
-    BLD_PARSE_COMPILER = 5,
-    BLD_PARSE_INCLUDES = 6,
-    BLD_PARSE_DEFINED = 7,
-    BLD_PARSE_UNDEFINED = 8,
-    BLD_PARSE_FILES = 9,
-    BLD_TOTAL_FIELDS = 10
+    BLD_PARSE_INCLUDES = 5,
+    BLD_PARSE_DEFINED = 6,
+    BLD_PARSE_UNDEFINED = 7,
+    BLD_PARSE_FILES = 8,
+    BLD_TOTAL_FIELDS = 9
 } bld_file_fields;
 
 typedef struct bld_parsing_linker_flags {
@@ -50,7 +49,6 @@ int parse_file_id(FILE*, bld_parsing_file*);
 int parse_file_mtime(FILE*, bld_parsing_file*);
 int parse_file_hash(FILE*, bld_parsing_file*);
 int parse_file_name(FILE*, bld_parsing_file*);
-int parse_file_compiler(FILE*, bld_parsing_file*);
 int parse_file_defined_symbols(FILE*, bld_parsing_file*);
 int parse_file_undefined_symbols(FILE*, bld_parsing_file*);
 int parse_file_function(FILE*, bld_set*);
@@ -265,7 +263,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         "mtime",
         "hash",
         "name",
-        "compiler",
         "includes",
         "defined_symbols",
         "undefined_symbols",
@@ -277,7 +274,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         (bld_parse_func) parse_file_mtime,
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
-        (bld_parse_func) parse_file_compiler,
         (bld_parse_func) parse_file_includes,
         (bld_parse_func) parse_file_defined_symbols,
         (bld_parse_func) parse_file_undefined_symbols,
@@ -307,12 +303,11 @@ int parse_file(FILE* file, bld_parsing_file* f) {
             if (
                 parsed[BLD_PARSE_MTIME]
                 || parsed[BLD_PARSE_HASH]
-                || parsed[BLD_PARSE_COMPILER]
                 || parsed[BLD_PARSE_INCLUDES]
                 || parsed[BLD_PARSE_DEFINED]
                 || parsed[BLD_PARSE_UNDEFINED]
             ) {
-                log_warn("Directory cannot have any of the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_COMPILER], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
+                log_warn("Directory cannot have any of the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
                 goto parse_failed;
             }
         } break;
@@ -533,26 +528,6 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
     }
     
     f->file.name = str;
-    return result;
-}
-
-int parse_file_compiler(FILE* file, bld_parsing_file* f) {
-    bld_compiler temp;
-    bld_compiler_or_flags cf;
-    int result;
-    size_t index;
-
-    result = parse_compiler(file, &temp);
-    if (result) {log_warn("Could not parse compiler for file.");}
-
-    cf.type = BLD_COMPILER;
-    cf.as.compiler = temp;
-
-    array_push(&f->cache->file_compilers, &cf);
-    index = f->cache->file_compilers.size - 1;
-    f->file.compiler = index;
-    set_add(&f->cache->file2compiler, f->file.identifier.id, &index);
-
     return result;
 }
 
