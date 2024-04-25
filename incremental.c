@@ -276,16 +276,18 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
 
 void incremental_apply_compilers(bld_project* project, bld_forward_project* fproject) {
     size_t index;
-    bld_iter iter;
+    bld_iter name_iter, compiler_iter;
     bld_string* file_name;
+    bld_compiler_or_flags* compiler;
 
     if (fproject->compiler_file_names.size != fproject->base.file_compilers.size) {
         log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
     }
 
     index = 0;
-    iter = iter_array(&fproject->compiler_file_names);
-    while (iter_next(&iter, (void**) &file_name)) {
+    name_iter = iter_array(&fproject->compiler_file_names);
+    compiler_iter = iter_array(&fproject->base.file_compilers);
+    while (iter_next(&name_iter, (void**) &file_name) && iter_next(&compiler_iter, (void**) &compiler)) {
         int match_found;
         bld_iter iter;
         bld_file* file;
@@ -301,6 +303,8 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
                 }
                 match_found = 1;
                 file->compiler = index;
+                file->build_info.compiler_set = 1;
+                file->build_info.compiler = *compiler;
                 set_add(&project->file2compiler, file->identifier.id, &index);
             }
         }
@@ -313,12 +317,14 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
 
 void incremental_apply_linker_flags(bld_project* project, bld_forward_project* fproject) {
     size_t index;
-    bld_iter iter;
+    bld_iter name_iter, linker_flags_iter;
     bld_string* file_name;
+    bld_linker_flags* flags;
 
     index = 0;
-    iter = iter_array(&fproject->linker_flags_file_names);
-    while (iter_next(&iter, (void**) &file_name)) {
+    name_iter = iter_array(&fproject->linker_flags_file_names);
+    linker_flags_iter = iter_array(&fproject->base.file_linker_flags);
+    while (iter_next(&name_iter, (void**) &file_name) && iter_next(&linker_flags_iter, (void**) &flags)) {
         int match_found;
         bld_iter iter;
         bld_file* file;
@@ -334,6 +340,8 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
                 }
                 match_found = 1;
                 file->linker_flags = index;
+                file->build_info.linker_set = 1;
+                file->build_info.linker_flags = *flags;
                 set_add(&project->file2linker_flags, file->identifier.id, &index);
             }
         }
