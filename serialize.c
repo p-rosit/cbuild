@@ -223,6 +223,26 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_array* comp
     serialize_key(cache, "name", depth);
     fprintf(cache, "\"%s\"", string_unpack(&file->name));
 
+    if (file->build_info.compiler_set) {
+        fprintf(cache, ",\n");
+        switch (file->build_info.compiler.type) {
+            case (BLD_COMPILER): {
+                serialize_key(cache, "compiler", depth);
+                serialize_compiler(cache, &file->build_info.compiler.as.compiler, depth + 1);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                serialize_key(cache, "compiler_flags", depth);
+                serialize_compiler_flags(cache, &file->build_info.compiler.as.flags, depth + 1);
+            } break;
+        }
+    }
+
+    if (file->build_info.linker_set) {
+        fprintf(cache, ",\n");
+        serialize_key(cache, "linker_flags", depth);
+        serialize_linker_flags(cache, &file->build_info.linker_flags, depth + 1);
+    }
+
     if (file->type != BLD_DIR) {
         bld_set* includes;
         switch (file->type) {
