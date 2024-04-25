@@ -6,6 +6,7 @@
 #include "set.h"
 #include "path.h"
 #include "compiler.h"
+#include "linker.h"
 
 typedef enum bld_file_type {
     BLD_INVALID_FILE,
@@ -14,6 +15,13 @@ typedef enum bld_file_type {
     BLD_HEADER,
     BLD_TEST
 } bld_file_type;
+
+typedef struct bld_file_build_information {
+    int compiler_set;
+    int linker_set;
+    bld_compiler_or_flags compiler;
+    bld_linker_flags linker_flags;
+} bld_file_build_information;
 
 typedef struct bld_file_identifier {
     uintmax_t id;
@@ -56,6 +64,7 @@ typedef struct bld_file {
     int compiler;
     int linker_flags;
     bld_file_info info;
+    bld_file_build_information build_info;
 } bld_file;
 
 bld_file    file_dir_new(bld_path*, char*);

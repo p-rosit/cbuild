@@ -305,6 +305,8 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     f->file.path = path_new();
     f->file.compiler = -1;
     f->file.linker_flags = -1;
+    f->file.build_info.compiler_set = 0;
+    f->file.build_info.linker_set = 0;
 
     amount_parsed = json_parse_map(file, f, BLD_TOTAL_FIELDS, parsed, keys, funcs);
 

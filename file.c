@@ -62,6 +62,8 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     file.path = *path;
     file.compiler = -1;
     file.linker_flags = -1;
+    file.build_info.compiler_set = 0;
+    file.build_info.linker_set = 0;
 
     return file;
 }
@@ -116,6 +118,22 @@ void file_free(bld_file* file) {
 void file_free_base(bld_file* file) {
     path_free(&file->path);
     string_free(&file->name);
+
+    if (file->build_info.compiler_set) {
+        switch (file->build_info.compiler.type) {
+            case (BLD_COMPILER): {
+                compiler_free(&file->build_info.compiler.as.compiler);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                compiler_flags_free(&file->build_info.compiler.as.flags);
+            } break;
+            default: log_fatal("file_free_base: internal error");
+        }
+    }
+
+    if (file->build_info.linker_set) {
+        linker_flags_free(&file->build_info.linker_flags);
+    }
 }
 
 void file_free_dir(bld_file_dir* dir) {
