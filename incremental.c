@@ -29,8 +29,6 @@ bld_project project_resolve(bld_forward_project* fproject) {
     project.base = fproject->base;
     project.files = set_new(sizeof(bld_file));
     project.graph = dependency_graph_new();
-    project.file2compiler = set_new(sizeof(size_t));
-    project.file2linker_flags = set_new(sizeof(size_t));
 
     incremental_make_root(&project);
 
@@ -305,7 +303,6 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
                 file->compiler = index;
                 file->build_info.compiler_set = 1;
                 file->build_info.compiler = *compiler;
-                set_add(&project->file2compiler, file->identifier.id, &index);
             }
         }
 
@@ -342,7 +339,6 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
                 file->linker_flags = index;
                 file->build_info.linker_set = 1;
                 file->build_info.linker_flags = *flags;
-                set_add(&project->file2linker_flags, file->identifier.id, &index);
             }
         }
 

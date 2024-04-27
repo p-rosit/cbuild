@@ -148,9 +148,6 @@ void project_free(bld_project* project) {
         file_free(file);
     }
     set_free(&project->files);
-
-    set_free(&project->file2compiler);
-    set_free(&project->file2linker_flags);
 }
 
 void project_partial_free(bld_forward_project* fproject) {
