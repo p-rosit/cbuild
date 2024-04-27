@@ -20,11 +20,14 @@ typedef enum bld_file_fields {
     BLD_PARSE_MTIME = 2,
     BLD_PARSE_HASH = 3,
     BLD_PARSE_NAME = 4,
-    BLD_PARSE_INCLUDES = 5,
-    BLD_PARSE_DEFINED = 6,
-    BLD_PARSE_UNDEFINED = 7,
-    BLD_PARSE_FILES = 8,
-    BLD_TOTAL_FIELDS = 9
+    BLD_PARSE_COMPILER = 5,
+    BLD_PARSE_COMPILER_FLAGS = 6,
+    BLD_PARSE_LINKER_FLAGS = 7,
+    BLD_PARSE_INCLUDES = 8,
+    BLD_PARSE_DEFINED = 9,
+    BLD_PARSE_UNDEFINED = 10,
+    BLD_PARSE_FILES = 11,
+    BLD_TOTAL_FIELDS = 12
 } bld_file_fields;
 
 typedef struct bld_parsing_linker_flags {
@@ -60,6 +63,9 @@ int parse_file_id(FILE*, bld_parsing_file*);
 int parse_file_mtime(FILE*, bld_parsing_file*);
 int parse_file_hash(FILE*, bld_parsing_file*);
 int parse_file_name(FILE*, bld_parsing_file*);
+int parse_file_compiler(FILE*, bld_parsing_file*);
+int parse_file_compiler_flags(FILE*, bld_parsing_file*);
+int parse_file_linker_flags(FILE*, bld_parsing_file*);
 int parse_file_defined_symbols(FILE*, bld_parsing_file*);
 int parse_file_undefined_symbols(FILE*, bld_parsing_file*);
 int parse_file_function(FILE*, bld_set*);
@@ -69,15 +75,15 @@ int parse_file_sub_files(FILE*, bld_parsing_file*);
 int parse_file_sub_file(FILE*, bld_parsing_file*);
 
 int parse_project_linker_flags(FILE*, bld_project_cache*);
-int parse_file_linker_flags(FILE*, bld_parsing_linker_flags*);
-int parse_file_linker_flags_id(FILE*, bld_parsing_file_linker_flags*);
-int parse_file_linker_flags_linker_flags(FILE*, bld_parsing_file_linker_flags*);
+int parse_project_file_linker_flags(FILE*, bld_parsing_linker_flags*);
+int parse_project_file_linker_flags_id(FILE*, bld_parsing_file_linker_flags*);
+int parse_project_file_linker_flags_linker_flags(FILE*, bld_parsing_file_linker_flags*);
 
 int parse_project_compilers(FILE*, bld_project_cache*);
-int parse_file_compiler(FILE*, bld_parsing_compilers*);
-int parse_file_compiler_id(FILE*, bld_parsing_file_compiler*);
-int parse_file_compiler_compiler(FILE*, bld_parsing_file_compiler*);
-int parse_file_compiler_compiler_flags(FILE*, bld_parsing_file_compiler*);
+int parse_project_file_compiler(FILE*, bld_parsing_compilers*);
+int parse_project_file_compiler_id(FILE*, bld_parsing_file_compiler*);
+int parse_project_file_compiler_compiler(FILE*, bld_parsing_file_compiler*);
+int parse_project_file_compiler_compiler_flags(FILE*, bld_parsing_file_compiler*);
 
 void ensure_directory_exists(bld_path* directory_path) {
     errno = 0;
