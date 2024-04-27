@@ -149,15 +149,13 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
     int amount_parsed;
-    int size = 5;
-    int parsed[5];
-    char *keys[5] = {"compiler", "linker", "files", "file_compilers", "file_linker_flags"};
-    bld_parse_func funcs[5] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"compiler", "linker", "files"};
+    bld_parse_func funcs[3] = {
         (bld_parse_func) parse_project_compiler,
         (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
-        (bld_parse_func) parse_project_compilers,
-        (bld_parse_func) parse_project_linker_flags,
     };
     bld_path path = path_copy(root);
     FILE* f;
@@ -189,37 +187,6 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
                 file_free(file);
             }
             set_free(&cache->files);
-        }
-
-        if (parsed[3]) {
-            bld_iter iter;
-            bld_compiler_or_flags* compiler;
-
-            iter = iter_array(&cache->file_compilers);
-            while (iter_next(&iter, (void**) &compiler)) {
-                switch (compiler->type) {
-                    case (BLD_COMPILER): {
-                        compiler_free(&compiler->as.compiler);
-                    } break;
-                    case (BLD_COMPILER_FLAGS): {
-                        compiler_flags_free(&compiler->as.flags);
-                    } break;
-                    default: log_fatal("parse_cache: internal error");
-                }
-            }
-            array_free(&cache->file_compilers);
-        }
-
-        if (parsed[4]) {
-            bld_iter iter;
-            bld_linker_flags* flags;
-
-            iter = iter_array(&cache->file_linker_flags);
-            while (iter_next(&iter, (void**) &flags)) {
-                linker_flags_free(flags);
-            }
-            array_free(&cache->file_linker_flags);
-            set_free(&cache->file2linker_flags);
         }
 
         return -1;
