@@ -89,10 +89,6 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
     fproject->base.cache.loaded = 1;
     fproject->base.cache.root = path_from_string(cache_path);
-    fproject->base.cache.file2compiler = set_new(sizeof(size_t));
-    fproject->base.cache.file_compilers = array_new(sizeof(bld_compiler_or_flags));
-    fproject->base.cache.file2linker_flags = set_new(sizeof(size_t));
-    fproject->base.cache.file_linker_flags = array_new(sizeof(bld_linker_flags));
     fproject->base.cache.files = set_new(sizeof(bld_file));
 
     if (file == NULL) {
@@ -188,26 +184,12 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
     if (result) {
         bld_iter iter = iter_set(&cache->files);
         bld_file* file;
-        bld_compiler* compiler;
-        bld_linker_flags* flags;
 
         iter = iter_set(&cache->files);
         while (iter_next(&iter, (void**) &file)) {
             file_free(file);
         }
         set_free(&cache->files);
-
-        iter = iter_array(&cache->file_compilers);
-        while (iter_next(&iter, (void**) &compiler)) {
-            compiler_free(compiler);
-        }
-        array_free(&cache->file_compilers);
-
-        iter = iter_array(&cache->file_linker_flags);
-        while (iter_next(&iter, (void**) &flags)) {
-            linker_flags_free(flags);
-        }
-        array_free(&cache->file_linker_flags);
 
         log_warn("Could not parse file tree");
         return -1;

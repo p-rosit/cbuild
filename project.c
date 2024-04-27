@@ -217,8 +217,6 @@ bld_project_cache project_cache_new(void) {
 void project_cache_free(bld_project_cache* cache) {
     bld_iter iter;
     bld_file* file;
-    bld_compiler_or_flags* compiler;
-    bld_linker_flags* flags;
 
     if (!cache->loaded) {return;}
     path_free(&cache->root);
@@ -232,28 +230,6 @@ void project_cache_free(bld_project_cache* cache) {
         file_free(file);
     }
     set_free(&cache->files);
-
-    iter = iter_array(&cache->file_compilers);
-    while (iter_next(&iter, (void**) &compiler)) {
-        switch (compiler->type) {
-            case (BLD_COMPILER): {
-                compiler_free(&compiler->as.compiler);
-            } break;
-            case (BLD_COMPILER_FLAGS): {
-                compiler_flags_free(&compiler->as.flags);
-            } break;
-            default: log_fatal("project_cache_free: internal error");
-        }
-    }
-    array_free(&cache->file_compilers);
-    set_free(&cache->file2compiler);
-
-    iter = iter_array(&cache->file_linker_flags);
-    while (iter_next(&iter, (void**) &flags)) {
-        linker_flags_free(flags);
-    }
-    array_free(&cache->file_linker_flags);
-    set_free(&cache->file2linker_flags);
 }
 
 bld_path project_path_extract(int argc, char** argv) {
