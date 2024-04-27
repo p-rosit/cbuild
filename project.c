@@ -195,34 +195,12 @@ bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_link
 }
 
 void project_base_free(bld_project_base* base) {
-    bld_iter iter;
-    bld_compiler_or_flags* compiler;
-    bld_linker_flags* linker_flags;
-
     path_free(&base->root);
     path_free(&base->build);
     compiler_free(&base->compiler);
     linker_free(&base->linker);
     project_cache_free(&base->cache);
-
-    iter = iter_array(&base->file_compilers);
-    while (iter_next(&iter, (void**) &compiler)) {
-        switch (compiler->type) {
-            case (BLD_COMPILER): {
-                compiler_free(&compiler->as.compiler);
-            } break;
-            case (BLD_COMPILER_FLAGS): {
-                compiler_flags_free(&compiler->as.flags);
-            } break;
-            default: log_fatal("project_base_free: internal error");
-        }
-    }
     array_free(&base->file_compilers);
-
-    iter = iter_array(&base->file_linker_flags);
-    while (iter_next(&iter, (void**) &linker_flags)) {
-        linker_flags_free(linker_flags);
-    }
     array_free(&base->file_linker_flags);
 }
 
