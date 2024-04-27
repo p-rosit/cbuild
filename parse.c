@@ -676,7 +676,7 @@ int parse_project_compilers(FILE* file, bld_project_cache* cache) {
 
     temp_compilers.file2compiler = set_new(sizeof(size_t));
     temp_compilers.compilers = array_new(sizeof(bld_compiler_or_flags));
-    amount_parsed = json_parse_array(file, &temp_compilers, (bld_parse_func) parse_file_compiler);
+    amount_parsed = json_parse_array(file, &temp_compilers, (bld_parse_func) parse_project_file_compiler);
     if (amount_parsed < 0) {
         bld_iter iter;
         bld_compiler_or_flags* compiler_or_flags;
@@ -702,14 +702,14 @@ int parse_project_compilers(FILE* file, bld_project_cache* cache) {
     return 0;
 }
 
-int parse_file_compiler(FILE* file, bld_parsing_compilers* compilers) {
+int parse_project_file_compiler(FILE* file, bld_parsing_compilers* compilers) {
     int size = 3;
     int parsed[3];
     char *keys[3] = {"file_id", "compiler", "compiler_flags"};
     bld_parse_func funcs[3] = {
-        (bld_parse_func) parse_file_compiler_id,
-        (bld_parse_func) parse_file_compiler_compiler,
-        (bld_parse_func) parse_file_compiler_compiler_flags,
+        (bld_parse_func) parse_project_file_compiler_id,
+        (bld_parse_func) parse_project_file_compiler_compiler,
+        (bld_parse_func) parse_project_file_compiler_compiler_flags,
     };
     size_t index;
     bld_parsing_file_compiler file_compiler;
@@ -746,7 +746,7 @@ int parse_file_compiler(FILE* file, bld_parsing_compilers* compilers) {
     return 0;
 }
 
-int parse_file_compiler_id(FILE* file, bld_parsing_file_compiler* compiler) {
+int parse_project_file_compiler_id(FILE* file, bld_parsing_file_compiler* compiler) {
     uintmax_t file_id;
     int result = parse_uintmax(file, &file_id);
     if (result) {
@@ -757,7 +757,7 @@ int parse_file_compiler_id(FILE* file, bld_parsing_file_compiler* compiler) {
     return 0;
 }
 
-int parse_file_compiler_compiler(FILE* file, bld_parsing_file_compiler* compiler) {
+int parse_project_file_compiler_compiler(FILE* file, bld_parsing_file_compiler* compiler) {
     int result = parse_compiler(file, &compiler->compiler);
     if (result) {
         log_warn("Could not parse file compiler");
@@ -766,7 +766,7 @@ int parse_file_compiler_compiler(FILE* file, bld_parsing_file_compiler* compiler
     return result;
 }
 
-int parse_file_compiler_compiler_flags(FILE* file, bld_parsing_file_compiler* compiler) {
+int parse_project_file_compiler_compiler_flags(FILE* file, bld_parsing_file_compiler* compiler) {
     int result;
 
     compiler->flags = compiler_flags_new();
@@ -784,7 +784,7 @@ int parse_project_linker_flags(FILE* file, bld_project_cache* cache) {
 
     temp_flags.file2linker_flags = set_new(sizeof(size_t));
     temp_flags.linker_flags = array_new(sizeof(bld_linker_flags));
-    amount_parsed = json_parse_array(file, &temp_flags, (bld_parse_func) parse_file_linker_flags);
+    amount_parsed = json_parse_array(file, &temp_flags, (bld_parse_func) parse_project_file_linker_flags);
     if (amount_parsed < 0) {
         bld_iter iter;
         bld_linker_flags* flags;
@@ -803,14 +803,14 @@ int parse_project_linker_flags(FILE* file, bld_project_cache* cache) {
     return 0;
 }
 
-int parse_file_linker_flags(FILE* file, bld_parsing_linker_flags* flags) {
+int parse_project_file_linker_flags(FILE* file, bld_parsing_linker_flags* flags) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
     char *keys[2] = {"file_id", "linker_flags"};
     bld_parse_func funcs[2] = {
-        (bld_parse_func) parse_file_linker_flags_id,
-        (bld_parse_func) parse_file_linker_flags_linker_flags,
+        (bld_parse_func) parse_project_file_linker_flags_id,
+        (bld_parse_func) parse_project_file_linker_flags_linker_flags,
     };
     size_t index;
     bld_parsing_file_linker_flags file_flags;
@@ -831,7 +831,7 @@ int parse_file_linker_flags(FILE* file, bld_parsing_linker_flags* flags) {
     return 0;
 }
 
-int parse_file_linker_flags_id(FILE* file, bld_parsing_file_linker_flags* flags) {
+int parse_project_file_linker_flags_id(FILE* file, bld_parsing_file_linker_flags* flags) {
     uintmax_t file_id;
     int result = parse_uintmax(file, &file_id);
     if (result) {
@@ -842,7 +842,7 @@ int parse_file_linker_flags_id(FILE* file, bld_parsing_file_linker_flags* flags)
     return 0;
 }
 
-int parse_file_linker_flags_linker_flags(FILE* file, bld_parsing_file_linker_flags* flags) {
+int parse_project_file_linker_flags_linker_flags(FILE* file, bld_parsing_file_linker_flags* flags) {
     bld_linker_flags file_flags = linker_flags_new();
     int result = parse_linker_flags(file, &file_flags);
     if (result) {
