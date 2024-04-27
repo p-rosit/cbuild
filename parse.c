@@ -257,6 +257,9 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         "mtime",
         "hash",
         "name",
+        "compiler",
+        "compiler_flags",
+        "linker_flags",
         "includes",
         "defined_symbols",
         "undefined_symbols",
@@ -268,6 +271,9 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         (bld_parse_func) parse_file_mtime,
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
+        (bld_parse_func) parse_file_compiler,
+        (bld_parse_func) parse_file_compiler_flags,
+        (bld_parse_func) parse_file_linker_flags,
         (bld_parse_func) parse_file_includes,
         (bld_parse_func) parse_file_defined_symbols,
         (bld_parse_func) parse_file_undefined_symbols,
@@ -381,6 +387,18 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     path_free(&f->file.path);
     if (parsed[BLD_PARSE_NAME]) {
         string_free(&f->file.name);
+    }
+
+    if (parsed[BLD_PARSE_COMPILER]) {
+        compiler_free(&f->file.build_info.compiler.as.compiler);
+    }
+
+    if (parsed[BLD_PARSE_COMPILER_FLAGS]) {
+        compiler_flags_free(&f->file.build_info.compiler.as.flags);
+    }
+
+    if (parsed[BLD_PARSE_LINKER_FLAGS]) {
+        linker_flags_free(&f->file.build_info.linker_flags);
     }
 
     if (parsed[BLD_PARSE_INCLUDES]) {
@@ -519,6 +537,58 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
     }
     
     f->file.name = str;
+    return result;
+}
+
+int parse_file_compiler(FILE* file, bld_parsing_file* f) {
+    int result;
+    bld_compiler compiler;
+
+    if (f->file.build_info.compiler_set) {
+        log_warn("parse_file_compiler: could not parse cache, \"%s\" has multiple mutually exclusive fields set (compiler and compiler_flags)", string_unpack(&f->file.name));
+        return -1;
+    }
+
+    result = parse_compiler(file, &compiler);
+    if (result) {
+        log_warn("Could not parse file compiler");
+    }
+
+    f->file.build_info.compiler_set = 1;
+    f->file.build_info.compiler.type = BLD_COMPILER;
+    f->file.build_info.compiler.as.compiler = compiler;
+    return result;
+}
+
+int parse_file_compiler_flags(FILE* file, bld_parsing_file* f) {
+    int result;
+    bld_compiler_flags flags;
+
+    if (f->file.build_info.compiler_set) {
+        log_warn("parse_file_compiler_flags: could not parse cache, \"%s\" has multiple mutually exclusive fields set (compiler and compiler_flags)", string_unpack(&f->file.name));
+        return -1;
+    }
+
+    result = parse_compiler_flags(file, &flags);
+    if (result) {
+        log_warn("Could not parse file compiler flags");
+    }
+
+    f->file.build_info.compiler_set = 1;
+    f->file.build_info.compiler.type = BLD_COMPILER_FLAGS;
+    f->file.build_info.compiler.as.flags = flags;
+    return result;
+}
+
+int parse_file_linker_flags(FILE* file, bld_parsing_file* f) {
+    int result;
+    f->file.build_info.linker_flags = linker_flags_new();
+    result = parse_linker_flags(file, &f->file.build_info.linker_flags);
+    if (result) {
+        log_warn("Could not parse linker flags");
+    }
+
+    f->file.build_info.linker_set = 1;
     return result;
 }
 
