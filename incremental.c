@@ -395,7 +395,6 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     bld_file *main_file, *file;
     bld_string cmd;
     bld_array linker_flags;
-    bld_linker_flags* flags;
     bld_iter iter;
 
     main_file = set_get(&project->files, project->main_file);
@@ -414,6 +413,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     linker_flags = array_new(sizeof(bld_linker_flags*));
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        bld_array file_flags;
         string_append_space(&cmd);
 
         path = path_copy(&project->base.root);
@@ -427,16 +427,12 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
         string_append_string(&cmd, ".o");
         path_free(&path);
 
-        if (file->linker_flags < 0) {continue;}
-        flags = array_get(&project->base.file_linker_flags, file->linker_flags);
-        array_push(&linker_flags, &flags);
+        file_assemble_linker_flags(file, &project->files, &file_flags);
+        linker_flags_expand(&cmd, &file_flags);
+        array_free(&file_flags);
     }
 
-    flags = &project->base.linker.flags;
-    array_push(&linker_flags, &flags);
-
-    array_reverse(&linker_flags);
-    linker_flags_collect(&cmd, &linker_flags);
+    linker_flags_append(&cmd, &project->base.linker.flags);
     array_free(&linker_flags);
 
     result = system(string_unpack(&cmd));
