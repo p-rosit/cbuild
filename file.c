@@ -60,8 +60,6 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     file.identifier = get_identifier(path);
     file.name = string_copy(&str);
     file.path = *path;
-    file.compiler = -1;
-    file.linker_flags = -1;
     file.build_info.compiler_set = 0;
     file.build_info.linker_set = 0;
 
