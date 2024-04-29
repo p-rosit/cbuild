@@ -300,7 +300,6 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
                     log_fatal("Applying compiler to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
                 }
                 match_found = 1;
-                file->compiler = index;
                 file->build_info.compiler_set = 1;
                 file->build_info.compiler = *compiler;
             }
@@ -333,10 +332,9 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
         while (iter_next(&iter, (void**) &file)) {
             if (path_ends_with(&file->path, &path)) {
                 if (match_found) {
-                    log_fatal("Applying compiler to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
+                    log_fatal("Applying linker flags to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
                 }
                 match_found = 1;
-                file->linker_flags = index;
                 file->build_info.linker_set = 1;
                 file->build_info.linker_flags = *flags;
             }
