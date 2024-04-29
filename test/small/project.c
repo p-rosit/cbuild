@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
         compiler_with_flags("/usr/bin/clang", "-Weverything", NULL)
     );
     project_set_linker_flags(
-        &forward_project, "file.c",
+        &forward_project, "dist.c",
         linker_flags_with_flags("-lm", NULL)
     );
 
