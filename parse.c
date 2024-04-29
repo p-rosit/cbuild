@@ -232,8 +232,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
 
     f->file.type = BLD_INVALID_FILE;
     f->file.path = path_new();
-    f->file.compiler = -1;
-    f->file.linker_flags = -1;
     f->file.build_info.compiler_set = 0;
     f->file.build_info.linker_set = 0;
 
