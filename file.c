@@ -175,15 +175,39 @@ void file_free_test(bld_file_test* test) {
     set_free(&test->undefined_symbols);
 }
 
-uintmax_t file_hash(bld_file* file, bld_array* compilers, bld_array* linkers) {
-    uintmax_t seed = 3401;
+uintmax_t file_hash(bld_file* file, bld_set* files) {
+    uintmax_t seed, parent_id;
+
+    seed = 3401;
     seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
-    if (file->compiler > 0) {
-        seed = (seed << 5) + seed * compiler_hash(array_get(compilers, file->compiler));
+
+    parent_id = file->identifier.id;
+    while (parent_id != BLD_INVALID_IDENITIFIER) {
+        bld_file* parent = set_get(files, parent_id);
+        if (parent == NULL) {log_fatal("file_hash: internal error, hashing compiler");}
+        parent_id = parent->parent_id;
+        if (!parent->build_info.compiler_set) {continue;}
+
+        switch (parent->build_info.compiler.type) {
+            case (BLD_COMPILER): {
+                seed = (seed << 3) + seed * compiler_hash(&parent->build_info.compiler.as.compiler);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                seed = (seed << 3) + seed * compiler_flags_hash(&parent->build_info.compiler.as.flags);
+            } break;
+        }
+
     }
-    if (file->linker_flags > 0) {
-        seed = (seed << 5) + seed * linker_flags_hash(array_get(linkers, file->linker_flags));
+
+    parent_id = file->identifier.id;
+    while (parent_id != BLD_INVALID_IDENITIFIER) {
+        bld_file* parent = set_get(files, parent_id);
+        if (parent == NULL) {log_fatal("file_hash: internal error, hashing linker_flags");}
+        parent_id = parent->parent_id;
+        if (!parent->build_info.linker_set) {continue;}
+
+        seed = (seed << 3) + seed * linker_flags_hash(&parent->build_info.linker_flags);
     }
     return seed;
 }

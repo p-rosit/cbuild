@@ -49,7 +49,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
     hash = compiler_hash(&project.base.compiler);
     iter = iter_set(&project.files);
     while (iter_next(&iter, (void**) &file)) {
-        file->identifier.hash = hash * file_hash(file, &project.base.file_compilers, &project.base.file_linker_flags);
+        file->identifier.hash = hash * file_hash(file, &project.files);
     }
 
     if (project.base.cache.set) {
