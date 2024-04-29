@@ -9,7 +9,6 @@ int main(int argc, char** argv) {
         project_path_extract(argc, argv),
         compiler_with_flags(
             "gcc",
-            "-lm",
             "-std=c99",
             "-Wall",
             "-Wextra",
