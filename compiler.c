@@ -186,6 +186,62 @@ void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
     }
 }
 
+void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
+    bld_array flags_added = array_new(sizeof(bld_string));
+    bld_set flags_removed = set_new(sizeof(int));
+    bld_iter iter = iter_array(flags);
+    bld_compiler_flags* f;
+    bld_string* str;
+
+    array_reverse(flags);
+    while (iter_next(&iter, (void**) &f)) {
+        bld_iter iter;
+        uintmax_t hash;
+        int* amount;
+        array_reverse(&f->flags);
+
+        iter = iter_array(&f->flags);
+        while (iter_next(&iter, (void**) &str)) {
+            hash = string_hash(string_unpack(str));
+            amount = set_get(&flags_removed, hash);
+            if (amount == NULL) {
+                array_push(&flags_added, str);
+            } else {
+                *amount -= 1;
+                if (*amount == 0) {
+                    set_remove(&flags_removed, hash);
+                }
+            }
+        }
+
+        iter = iter_set(&f->removed);
+        while (iter_next(&iter, (void**) &str)) {
+            hash = string_hash(string_unpack(str));
+
+            amount = set_get(&flags_removed, hash);
+            if (amount != NULL) {
+                int new = 1;
+                set_add(&flags_removed, hash, &new);
+            } else {
+                *amount += 1;
+            }
+        }
+
+        array_reverse(&f->flags);
+    }
+    array_reverse(flags);
+
+    array_reverse(&flags_added);
+    iter = iter_array(&flags_added);
+    while (iter_next(&iter, (void**) &str)) {
+        string_append_space(cmd);
+        string_append_string(cmd, string_unpack(str));
+    }
+
+    array_free(&flags_added);
+    set_free(&flags_removed);
+}
+
 int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
     int size = 2;

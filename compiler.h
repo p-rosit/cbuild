@@ -48,7 +48,7 @@ uintmax_t           compiler_flags_hash(bld_compiler_flags*);
 void                compiler_flags_add_flag(bld_compiler_flags*, char*);
 void                compiler_flags_remove_flag(bld_compiler_flags*, char*);
 
-void                compiler_flags_collect(bld_string*, bld_array*);
+void                compiler_flags_expand(bld_string*, bld_array*);
 
 int                 parse_compiler(FILE*, bld_compiler*);
 int                 parse_compiler_executable(FILE*, bld_compiler*);
