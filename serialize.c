@@ -10,8 +10,8 @@ void serialize_compiler_flags_removed_flags(FILE*, bld_compiler_flags*, int);
 void serialize_linker(FILE*, bld_linker*, int);
 void serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
-void serialize_files(FILE*, bld_file*, bld_set*, bld_array*, bld_array*, int);
-void serialize_file(FILE*, bld_file*, bld_set*, bld_array*, bld_array*, int);
+void serialize_files(FILE*, bld_file*, bld_set*, int);
+void serialize_file(FILE*, bld_file*, bld_set*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_mtime(FILE*, bld_file_identifier);
@@ -51,7 +51,7 @@ void project_save_cache(bld_project* project) {
 
     fprintf(cache, ",\n");
     serialize_key(cache, "files", depth);
-    serialize_files(cache, root, &project->files, &project->base.file_compilers, &project->base.file_linker_flags, depth + 1);
+    serialize_files(cache, root, &project->files, depth + 1);
 
     fprintf(cache, "\n}\n");
 
@@ -181,11 +181,11 @@ void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
     fprintf(cache, "]");
 }
 
-void serialize_files(FILE* cache, bld_file* root, bld_set* files, bld_array* compilers, bld_array* linker_flags, int depth) {
-    serialize_file(cache, root, files, compilers, linker_flags, depth);
+void serialize_files(FILE* cache, bld_file* root, bld_set* files, int depth) {
+    serialize_file(cache, root, files, depth);
 }
 
-void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_array* compilers, bld_array* linker_flags, int depth) {
+void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
     fprintf(cache, "{\n");
 
     serialize_key(cache, "type", depth);
@@ -292,7 +292,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, bld_array* comp
                 first = 0;
             }
             fprintf(cache, "%*c", 2 * (depth + 1), ' ');
-            serialize_file(cache, child, files, compilers, linker_flags, depth + 2);
+            serialize_file(cache, child, files, depth + 2);
         }
 
         fprintf(cache, "\n%*c", 2 * depth, ' ');
