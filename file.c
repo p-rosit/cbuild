@@ -250,3 +250,45 @@ void file_dir_add_file(bld_file* dir, bld_file* file) {
     file->parent_id = dir->identifier.id;
     array_push(&dir->info.dir.files, &file->identifier.id);
 }
+
+void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executable, bld_array* flags) {
+    uintmax_t parent_id = file->identifier.id;
+    *executable = NULL;
+    *flags = array_new(sizeof(bld_compiler_flags));
+
+    while (parent_id != BLD_INVALID_IDENITIFIER) {
+        bld_file* parent;
+        parent = set_get(files, parent_id);
+        if (parent == NULL) {log_fatal("file_assemble_compiler: internal error");}
+        parent_id = parent->parent_id;
+        if (!parent->build_info.compiler_set) {continue;}
+
+        if (parent->build_info.compiler.type == BLD_COMPILER) {
+            *executable = &parent->build_info.compiler.as.compiler.executable;
+            array_push(flags, &parent->build_info.compiler.as.compiler.flags);
+            break;
+        } else if (parent->build_info.compiler.type == BLD_COMPILER_FLAGS) {
+            array_push(flags, &parent->build_info.compiler.as.flags);
+        } else {
+            log_fatal("file_assemble_compiler: internal error, compiler");
+        }
+    }
+
+    array_reverse(flags);
+}
+
+void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
+    uintmax_t parent_id = file->identifier.id;
+    *flags = array_new(sizeof(bld_linker_flags));
+
+    while (parent_id != BLD_INVALID_IDENITIFIER) {
+        bld_file* parent = set_get(files, parent_id);
+        if (parent == NULL) {log_fatal("file_assemble_linker_flags: internal error");}
+        parent_id = parent->parent_id;
+        if (!parent->build_info.linker_set) {continue;}
+
+        array_push(flags, &parent->build_info.linker_flags);
+    }
+
+    array_reverse(flags);
+}
