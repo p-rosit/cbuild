@@ -349,22 +349,19 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX];
-    bld_iter iter;
-    bld_compiler* compiler;
     bld_string cmd = string_new();
-    bld_string* flag;
     bld_path path;
+    bld_string* executable;
+    bld_array compiler_flags;
 
-    if (file->compiler > 0) {
-        bld_compiler_or_flags* temp;
-        temp = array_get(&project->base.file_compilers, file->compiler);
-        if (temp->type == BLD_COMPILER_FLAGS) {log_fatal("Cannot handle flags right now");}
-        compiler = &temp->as.compiler;
-    } else {
-        compiler = &project->base.compiler;
+    file_assemble_compiler(file, &project->files, &executable, &compiler_flags);
+    if (executable == NULL) {
+        /* TODO: fix hack by putting compiler on root file */
+        executable = &project->base.compiler.executable;
+        array_push(&compiler_flags, &project->base.compiler.flags);
     }
 
-    string_append_string(&cmd, string_unpack(&compiler->executable));
+    string_append_string(&cmd, string_unpack(executable));
     string_append_space(&cmd);
 
     string_append_string(&cmd, "-c ");
@@ -383,14 +380,11 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, ".o");
     path_free(&path);
 
-    iter = iter_array(&compiler->flags.flags);
-    while (iter_next(&iter, (void**) &flag)) {
-        string_append_space(&cmd);
-        string_append_string(&cmd, string_unpack(flag));
-    }
+    compiler_flags_expand(&cmd, &compiler_flags);
 
     result = system(string_unpack(&cmd));
     string_free(&cmd);
+    array_free(&compiler_flags);
     return result;
 }
 
