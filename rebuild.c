@@ -33,7 +33,9 @@ bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker
     fbuild.extra_paths = array_new(sizeof(bld_path));
     fbuild.ignore_paths = set_new(0);
     fbuild.compiler_file_names = array_new(sizeof(bld_string));
+    fbuild.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     fbuild.linker_flags_file_names = array_new(sizeof(bld_string));
+    fbuild.file_linker_flags = array_new(sizeof(bld_linker_flags));
 
     return fbuild;
 }

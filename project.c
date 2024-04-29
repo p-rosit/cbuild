@@ -35,7 +35,9 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
     project.ignore_paths = set_new(0);
     project.main_file_name.chars = NULL;
     project.compiler_file_names = array_new(sizeof(bld_string));
+    project.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     project.linker_flags_file_names = array_new(sizeof(bld_string));
+    project.file_linker_flags = array_new(sizeof(bld_linker_flags));
 
     project_ignore_path(&project, path_to_string(&build_file_path));
     path_free(&build_file_path);
@@ -118,7 +120,7 @@ void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_co
     temp.as.compiler = compiler;
 
     array_push(&fproject->compiler_file_names, &str);
-    array_push(&fproject->base.file_compilers, &temp);
+    array_push(&fproject->file_compilers, &temp);
 }
 
 void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bld_linker_flags flags) {
@@ -132,7 +134,7 @@ void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bl
     string_append_string(&str, file_name);
 
     array_push(&fproject->linker_flags_file_names, &str);
-    array_push(&fproject->base.file_linker_flags, &flags);
+    array_push(&fproject->file_linker_flags, &flags);
 }
 
 
@@ -169,12 +171,14 @@ void project_partial_free(bld_forward_project* fproject) {
         string_free(str);
     }
     array_free(&fproject->compiler_file_names);
+    array_free(&fproject->file_compilers);
 
     iter = iter_array(&fproject->linker_flags_file_names);
     while (iter_next(&iter, (void**) &str)) {
         string_free(str);
     }
     array_free(&fproject->linker_flags_file_names);
+    array_free(&fproject->file_linker_flags);
 }
 
 bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_linker linker) {
@@ -184,8 +188,6 @@ bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_link
     base.build = path_new();
     base.compiler = compiler;
     base.linker = linker;
-    base.file_compilers = array_new(sizeof(bld_compiler_or_flags));
-    base.file_linker_flags = array_new(sizeof(bld_linker_flags));
     base.cache = project_cache_new();
 
     return base;
@@ -197,8 +199,6 @@ void project_base_free(bld_project_base* base) {
     compiler_free(&base->compiler);
     linker_free(&base->linker);
     project_cache_free(&base->cache);
-    array_free(&base->file_compilers);
-    array_free(&base->file_linker_flags);
 }
 
 bld_project_cache project_cache_new(void) {
