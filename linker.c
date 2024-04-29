@@ -129,33 +129,31 @@ uintmax_t linker_flags_hash(bld_linker_flags* linker_flags) {
     return seed;
 }
 
-void linker_flags_collect(bld_string* str, bld_array* linker_flags) {
-    bld_set added;
+void linker_flags_expand(bld_string* str, bld_array* linker_flags) {
     bld_iter iter;
-    bld_linker_flags** flags;
+    bld_linker_flags* flags;
+    array_reverse(linker_flags);
 
-    added = set_new(0);
     iter = iter_array(linker_flags);
     while (iter_next(&iter, (void**) &flags)) {
-        bld_iter iter;
-        bld_string* f;
-        uintmax_t hash;
-
-        iter = iter_array(&(*flags)->flags);
-        while (iter_next(&iter, (void**) &f)) {
-            hash = string_hash(string_unpack(f));
-
-            if (set_has(&added, hash)) {
-                continue;
-            }
-
-            set_add(&added, hash, NULL);
-            string_append_space(str);
-            string_append_string(str, string_unpack(f));
-        }
+        linker_flags_append(str, flags);
     }
 
-    set_free(&added);
+    array_reverse(linker_flags);
+}
+
+void linker_flags_append(bld_string* str, bld_linker_flags* flags) {
+    bld_iter iter;
+    bld_string* f;
+    array_reverse(&flags->flags);
+
+    iter = iter_array(&flags->flags);
+    while (iter_next(&iter, (void**) &f)) {
+        string_append_space(str);
+        string_append_string(str, string_unpack(f));
+    }
+
+    array_reverse(&flags->flags);
 }
 
 int parse_linker(FILE* file, bld_linker* linker) {
