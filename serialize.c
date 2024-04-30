@@ -42,10 +42,6 @@ void project_save_cache(bld_project* project) {
     }
 
     fprintf(cache, "{\n");
-    serialize_key(cache, "compiler", depth);
-    serialize_compiler(cache, &project->base.compiler, depth + 1);
-
-    fprintf(cache, ",\n");
     serialize_key(cache, "linker", depth);
     serialize_linker(cache, &project->base.linker, depth + 1);
 
