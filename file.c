@@ -275,6 +275,10 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executa
     }
 
     array_reverse(flags);
+
+    if (*executable == NULL) {
+        log_fatal("file_assemble_compiler: no compiler was encountered while assembling compiler associated with file, only compiler flags. Root has no associated compiler");
+    }
 }
 
 void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {

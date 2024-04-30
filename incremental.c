@@ -359,11 +359,6 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     bld_array compiler_flags;
 
     file_assemble_compiler(file, &project->files, &executable, &compiler_flags);
-    if (executable == NULL) {
-        /* TODO: fix hack by putting compiler on root file */
-        executable = &project->base.compiler.executable;
-        array_push(&compiler_flags, &project->base.compiler.flags);
-    }
 
     string_append_string(&cmd, string_unpack(executable));
     string_append_space(&cmd);
