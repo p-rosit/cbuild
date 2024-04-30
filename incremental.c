@@ -4,7 +4,7 @@
 #include "logging.h"
 #include "incremental.h"
 
-void    incremental_make_root(bld_project*);
+void    incremental_make_root(bld_project*, bld_forward_project*);
 void    incremental_index_project(bld_project*, bld_forward_project*);
 void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, char*);
 void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, char*);
@@ -22,16 +22,14 @@ int     incremental_compile_changed_files(bld_project*, bld_set*, int*);
 
 bld_project project_resolve(bld_forward_project* fproject) {
     bld_project project;
-    uintmax_t hash;
     bld_iter iter;
     bld_file* file;
 
     project.base = fproject->base;
     project.files = set_new(sizeof(bld_file));
-    project.file_tree = file_tree_new();
     project.graph = dependency_graph_new();
 
-    incremental_make_root(&project);
+    incremental_make_root(&project, fproject);
 
     if (fproject->rebuilding) {
         char* main_name;
@@ -47,10 +45,9 @@ bld_project project_resolve(bld_forward_project* fproject) {
     incremental_apply_compilers(&project, fproject);
     incremental_apply_linker_flags(&project, fproject);
 
-    hash = compiler_hash(&project.base.compiler, 5031);
     iter = iter_set(&project.files);
     while (iter_next(&iter, (void**) &file)) {
-        file->identifier.hash = file_hash(file, &project.base.file_compilers, hash);
+        file->identifier.hash = file_hash(file, &project.files);
     }
 
     if (project.base.cache.set) {
@@ -110,12 +107,11 @@ void incremental_apply_cache(bld_project* project) {
 }
 
 
-void incremental_index_possible_file(bld_project* project, uintmax_t parent_dir, bld_path* path, char* name) {
+void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, bld_path* path, char* name) {
     int exists;
     char* file_ending;
     bld_path file_path;
-    bld_file file;
-    (void)(parent_dir);
+    bld_file file, *parent;
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
@@ -132,27 +128,28 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_dir,
         return;
     }
 
+    parent = set_get(&project->files, parent_id);
+    if (parent == NULL) {log_fatal("incremental_index_possible_file: internal error");}
+    file_dir_add_file(parent, &file);
+
     exists = set_add(&project->files, file.identifier.id, &file);
     if (exists) {
         log_error("encountered \"%s\" multiple times while indexing", string_unpack(&file.name));
         file_free(&file);
     }
-
-    file_tree_add(&project->file_tree, parent_dir, file.identifier.id);
 }
 
-void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_dir, bld_path* path, char* name) {
-    uintmax_t current_id;
+void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, char* name) {
     char *str_path, *file_name;
+    uintmax_t directory_id;
     bld_path dir_path, sub_path;
     bld_os_dir* dir;
     bld_os_file* file_ptr;
-    (void)(parent_dir);
 
     str_path = path_to_string(path);
     dir = os_dir_open(str_path);
     if (dir == NULL) {
-        incremental_index_possible_file(project, parent_dir, path, name);
+        incremental_index_possible_file(project, parent_id, path, name);
         return;
     }
 
@@ -164,21 +161,28 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
     if (name != NULL) {
         int exists;
-        bld_file dir;
+        bld_file directory;
+        bld_file* parent;
+        bld_file* temp;
 
         dir_path = path_copy(path);
-        dir = file_dir_new(&dir_path, name);
-        exists = set_add(&project->files, dir.identifier.id, &dir);
+        directory = file_dir_new(&dir_path, name);
+        exists = set_add(&project->files, directory.identifier.id, &directory);
         if (exists) {
-            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&dir.name));
-            file_free(&dir);
+            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
+            file_free(&directory);
             return;
         }
 
-        current_id = dir.identifier.id;
-        file_tree_add(&project->file_tree, parent_dir, current_id);
+        temp = set_get(&project->files, directory.identifier.id);
+        if (temp == NULL) {log_fatal("incremental_index_recursive: internal temp error");}
+        parent = set_get(&project->files, parent_id);
+        if (parent == NULL) {log_fatal("incremental_index_recursive: internal error");}
+
+        directory_id = directory.identifier.id;
+        file_dir_add_file(parent, temp);
     } else {
-        current_id = project->root_dir;
+        directory_id = parent_id;
     }
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
@@ -196,7 +200,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_name);
-        incremental_index_recursive(project, forward_project, current_id, &sub_path, file_name);
+        incremental_index_recursive(project, forward_project, directory_id, &sub_path, file_name);
         path_free(&sub_path);
     }
     
@@ -228,17 +232,18 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
     }
 }
 
-void incremental_make_root(bld_project* project) {
+void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
     bld_path path = path_copy(&project->base.root);
     bld_file root = file_dir_new(&path, ".");
+    root.build_info.compiler_set = 1;
+    root.build_info.compiler.type = BLD_COMPILER;
+    root.build_info.compiler.as.compiler = fproject->compiler;
 
     project->root_dir = root.identifier.id;
     exists = set_add(&project->files, root.identifier.id, &root);
 
     if (exists) {log_fatal("incremental_make_root: root has already been initialized, has the project already been resolved?");}
-
-    file_tree_set_root(&project->file_tree, root.identifier.id);
 }
 
 void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {
@@ -272,16 +277,18 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
 
 void incremental_apply_compilers(bld_project* project, bld_forward_project* fproject) {
     size_t index;
-    bld_iter iter;
+    bld_iter name_iter, compiler_iter;
     bld_string* file_name;
+    bld_compiler_or_flags* compiler;
 
-    if (fproject->compiler_file_names.size != fproject->base.file_compilers.size) {
+    if (fproject->compiler_file_names.size != fproject->file_compilers.size) {
         log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
     }
 
     index = 0;
-    iter = iter_array(&fproject->compiler_file_names);
-    while (iter_next(&iter, (void**) &file_name)) {
+    name_iter = iter_array(&fproject->compiler_file_names);
+    compiler_iter = iter_array(&fproject->file_compilers);
+    while (iter_next(&name_iter, (void**) &file_name) && iter_next(&compiler_iter, (void**) &compiler)) {
         int match_found;
         bld_iter iter;
         bld_file* file;
@@ -296,7 +303,8 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
                     log_fatal("Applying compiler to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
                 }
                 match_found = 1;
-                file->compiler = index;
+                file->build_info.compiler_set = 1;
+                file->build_info.compiler = *compiler;
             }
         }
 
@@ -308,12 +316,18 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
 
 void incremental_apply_linker_flags(bld_project* project, bld_forward_project* fproject) {
     size_t index;
-    bld_iter iter;
+    bld_iter name_iter, linker_flags_iter;
     bld_string* file_name;
+    bld_linker_flags* flags;
+
+    if (fproject->linker_flags_file_names.size != fproject->file_linker_flags.size) {
+        log_fatal("incremental_apply_linker_flags: internal error, there is not an equal amount of files and linker flags");
+    }
 
     index = 0;
-    iter = iter_array(&fproject->linker_flags_file_names);
-    while (iter_next(&iter, (void**) &file_name)) {
+    name_iter = iter_array(&fproject->linker_flags_file_names);
+    linker_flags_iter = iter_array(&fproject->file_linker_flags);
+    while (iter_next(&name_iter, (void**) &file_name) && iter_next(&linker_flags_iter, (void**) &flags)) {
         int match_found;
         bld_iter iter;
         bld_file* file;
@@ -325,10 +339,11 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
         while (iter_next(&iter, (void**) &file)) {
             if (path_ends_with(&file->path, &path)) {
                 if (match_found) {
-                    log_fatal("Applying compiler to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
+                    log_fatal("Applying linker flags to \"%s\" but several matches were found, specify more of path to determine exact match", string_unpack(file_name));
                 }
                 match_found = 1;
-                file->linker_flags = index;
+                file->build_info.linker_set = 1;
+                file->build_info.linker_flags = *flags;
             }
         }
 
@@ -341,19 +356,14 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX];
-    bld_iter iter;
-    bld_compiler* compiler;
     bld_string cmd = string_new();
-    bld_string* flag;
     bld_path path;
+    bld_string* executable;
+    bld_array compiler_flags;
 
-    if (file->compiler > 0) {
-        compiler = array_get(&project->base.file_compilers, file->compiler);
-    } else {
-        compiler = &project->base.compiler;
-    }
+    file_assemble_compiler(file, &project->files, &executable, &compiler_flags);
 
-    string_append_string(&cmd, string_unpack(&compiler->executable));
+    string_append_string(&cmd, string_unpack(executable));
     string_append_space(&cmd);
 
     string_append_string(&cmd, "-c ");
@@ -372,14 +382,11 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, ".o");
     path_free(&path);
 
-    iter = iter_array(&compiler->flags);
-    while (iter_next(&iter, (void**) &flag)) {
-        string_append_space(&cmd);
-        string_append_string(&cmd, string_unpack(flag));
-    }
+    compiler_flags_expand(&cmd, &compiler_flags);
 
     result = system(string_unpack(&cmd));
     string_free(&cmd);
+    array_free(&compiler_flags);
     return result;
 }
 
@@ -390,7 +397,6 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     bld_file *main_file, *file;
     bld_string cmd;
     bld_array linker_flags;
-    bld_linker_flags* flags;
     bld_iter iter;
 
     main_file = set_get(&project->files, project->main_file);
@@ -409,6 +415,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     linker_flags = array_new(sizeof(bld_linker_flags*));
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        bld_array file_flags;
         string_append_space(&cmd);
 
         path = path_copy(&project->base.root);
@@ -422,16 +429,12 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
         string_append_string(&cmd, ".o");
         path_free(&path);
 
-        if (file->linker_flags < 0) {continue;}
-        flags = array_get(&project->base.file_linker_flags, file->linker_flags);
-        array_push(&linker_flags, &flags);
+        file_assemble_linker_flags(file, &project->files, &file_flags);
+        linker_flags_expand(&cmd, &file_flags);
+        array_free(&file_flags);
     }
 
-    flags = &project->base.linker.flags;
-    array_push(&linker_flags, &flags);
-
-    array_reverse(&linker_flags);
-    linker_flags_collect(&cmd, &linker_flags);
+    linker_flags_append(&cmd, &project->base.linker.flags);
     array_free(&linker_flags);
 
     result = system(string_unpack(&cmd));

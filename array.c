@@ -102,6 +102,11 @@ void* array_get(const bld_array* array, size_t index) {
 
 void array_reverse(bld_array* array) {
     void *head, *tail, *temp;
+
+    if (array->size <= 0) {
+        return;
+    }
+
     temp = malloc(array->value_size);
     if (temp == NULL) {log_fatal("array_reverse: internal error, could not allocate temp");}
 

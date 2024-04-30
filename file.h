@@ -6,6 +6,7 @@
 #include "set.h"
 #include "path.h"
 #include "compiler.h"
+#include "linker.h"
 
 typedef enum bld_file_type {
     BLD_INVALID_FILE,
@@ -15,6 +16,13 @@ typedef enum bld_file_type {
     BLD_TEST
 } bld_file_type;
 
+typedef struct bld_file_build_information {
+    int compiler_set;
+    int linker_set;
+    bld_compiler_or_flags compiler;
+    bld_linker_flags linker_flags;
+} bld_file_build_information;
+
 typedef struct bld_file_identifier {
     uintmax_t id;
     uintmax_t hash;
@@ -22,7 +30,7 @@ typedef struct bld_file_identifier {
 } bld_file_identifier;
 
 typedef struct bld_file_dir {
-    int placeholder;
+    bld_array files;
 } bld_file_dir;
 
 typedef struct bld_file_impl {
@@ -49,12 +57,12 @@ typedef union bld_file_info {
 
 typedef struct bld_file {
     bld_file_type type;
+    uintmax_t parent_id;
     bld_file_identifier identifier;
     bld_path path;
     bld_string name;
-    int compiler;
-    int linker_flags;
     bld_file_info info;
+    bld_file_build_information build_info;
 } bld_file;
 
 bld_file    file_dir_new(bld_path*, char*);
@@ -62,10 +70,16 @@ bld_file    file_header_new(bld_path*, char*);
 bld_file    file_impl_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
-uintmax_t   file_hash(bld_file*, bld_array*, uintmax_t);
+
+uintmax_t   file_hash(bld_file*, bld_set*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
 void        file_symbols_copy(bld_file*, const bld_file*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
+
+void        file_dir_add_file(bld_file*, bld_file*);
+
+void        file_assemble_compiler(bld_file*, bld_set*, bld_string**, bld_array*);
+void        file_assemble_linker_flags(bld_file*, bld_set*, bld_array*);
 
 #endif
