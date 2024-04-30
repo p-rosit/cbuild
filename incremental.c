@@ -4,7 +4,7 @@
 #include "logging.h"
 #include "incremental.h"
 
-void    incremental_make_root(bld_project*);
+void    incremental_make_root(bld_project*, bld_forward_project*);
 void    incremental_index_project(bld_project*, bld_forward_project*);
 void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, char*);
 void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, char*);
@@ -30,7 +30,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
     project.files = set_new(sizeof(bld_file));
     project.graph = dependency_graph_new();
 
-    incremental_make_root(&project);
+    incremental_make_root(&project, fproject);
 
     if (fproject->rebuilding) {
         char* main_name;
@@ -234,10 +234,13 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
     }
 }
 
-void incremental_make_root(bld_project* project) {
+void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
     bld_path path = path_copy(&project->base.root);
     bld_file root = file_dir_new(&path, ".");
+    root.build_info.compiler_set = 1;
+    root.build_info.compiler.type = BLD_COMPILER;
+    root.build_info.compiler.as.compiler = fproject->compiler;
 
     project->root_dir = root.identifier.id;
     exists = set_add(&project->files, root.identifier.id, &root);
