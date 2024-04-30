@@ -150,6 +150,8 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
         set_log_level(BLD_INFO);
         log_info("Recompiled build script");
         new_result = run_new_build(&fproject->base.root, executable);
+    } else {
+        new_result = -1;
     }
 
     free(executable);
