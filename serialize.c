@@ -237,7 +237,10 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
             case (BLD_TEST): {
                 includes = &file->info.test.includes;
             } break;
-            default: log_fatal("serialize_file: unrecognized file type, unreachable error");
+            default: {
+                log_fatal("serialize_file: unrecognized file type, unreachable error");
+                return; /* Unreachable */
+            }
         }
 
         fprintf(cache, ",\n");

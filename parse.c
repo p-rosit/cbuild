@@ -353,7 +353,10 @@ int parse_file(FILE* file, bld_parsing_file* f) {
             case (BLD_HEADER): {
                 includes = &f->file.info.header.includes;
             } break;
-            default: log_fatal("freeing includes: unrecognized file type");
+            default: {
+                log_fatal("freeing includes: unrecognized file type");
+                goto includes_freed; /* Unreachable */
+            }
         }
 
         set_free(includes);
@@ -614,7 +617,10 @@ int parse_file_undefined_symbols(FILE* file, bld_parsing_file* f) {
         case (BLD_TEST): {
             undefined = &f->file.info.test.undefined_symbols;
         } break;
-        default: log_fatal("parse_file_undefined_symbols: unreachable error");
+        default: {
+            log_fatal("parse_file_undefined_symbols: unreachable error");
+            return -1; /* Unreachable */
+        }
     }
 
     amount_parsed = json_parse_array(file, undefined, (bld_parse_func) parse_file_function);

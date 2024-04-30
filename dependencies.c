@@ -83,7 +83,10 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
                 case (BLD_HEADER): {
                     includes = &to_file->info.header.includes;
                 } break;
-                default: log_fatal("dependency_graph_extract_includes: internal error");
+                default: {
+                    log_fatal("dependency_graph_extract_includes: internal error");
+                    return; /* Unreachable */
+                }
             }
 
             if (!set_has(includes, file->identifier.id)) {
@@ -135,7 +138,10 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
         switch (file->type) {
             case (BLD_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
             case (BLD_TEST): {undefined = &file->info.test.undefined_symbols;} break;
-            default: {log_fatal("dependency_graph_extract_symbols: unrecognized file type, unreachable error");}
+            default: {
+                log_fatal("dependency_graph_extract_symbols: unrecognized file type, unreachable error");
+                return; /* Unreachable */
+            }
         }
 
         iter = iter_set(files);
@@ -321,7 +327,10 @@ void parse_included_files(bld_file* file) {
         case (BLD_HEADER): {
             includes = &file->info.header.includes;
         } break;
-        default: log_fatal("parse_included_files: internal error");
+        default: {
+            log_fatal("parse_included_files: internal error");
+            return; /* Unreachable */
+        }
     }
 
     f = fopen(path_to_string(&file->path), "r");
