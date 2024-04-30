@@ -22,7 +22,6 @@ int     incremental_compile_changed_files(bld_project*, bld_set*, int*);
 
 bld_project project_resolve(bld_forward_project* fproject) {
     bld_project project;
-    uintmax_t hash;
     bld_iter iter;
     bld_file* file;
 
@@ -46,10 +45,9 @@ bld_project project_resolve(bld_forward_project* fproject) {
     incremental_apply_compilers(&project, fproject);
     incremental_apply_linker_flags(&project, fproject);
 
-    hash = compiler_hash(&project.base.compiler);
     iter = iter_set(&project.files);
     while (iter_next(&iter, (void**) &file)) {
-        file->identifier.hash = hash * file_hash(file, &project.files);
+        file->identifier.hash = file_hash(file, &project.files);
     }
 
     if (project.base.cache.set) {
