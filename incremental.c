@@ -165,6 +165,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         int exists;
         bld_file directory;
         bld_file* parent;
+        bld_file* temp;
 
         dir_path = path_copy(path);
         directory = file_dir_new(&dir_path, name);
@@ -175,11 +176,13 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
             return;
         }
 
+        temp = set_get(&project->files, directory.identifier.id);
+        if (temp == NULL) {log_fatal("incremental_index_recursive: internal temp error");}
         parent = set_get(&project->files, parent_id);
         if (parent == NULL) {log_fatal("incremental_index_recursive: internal error");}
 
         directory_id = directory.identifier.id;
-        file_dir_add_file(parent, &directory);
+        file_dir_add_file(parent, temp);
     } else {
         directory_id = parent_id;
     }
