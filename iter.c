@@ -1,19 +1,19 @@
 #include "logging.h"
 #include "iter.h"
 
-bld_iter iter_array(const bld_array* array) {
-    bld_iter iter;
+bit_iter iter_array(const bit_array* array) {
+    bit_iter iter;
 
-    iter.type = BLD_ARRAY;
+    iter.type = BIT_ARRAY;
     iter.as.array_iter.array = array;
     iter.as.array_iter.index = 0;
 
     return iter;
 }
 
-int array_next(bld_iter_array* iter, void** value_ptr_ptr) {
+int array_next(bit_iter_array* iter, void** value_ptr_ptr) {
     size_t value_size = iter->array->value_size;
-    const bld_array* array = iter->array;
+    const bit_array* array = iter->array;
     char* values = array->values;
 
     if (iter->index >= array->size) {
@@ -24,21 +24,21 @@ int array_next(bld_iter_array* iter, void** value_ptr_ptr) {
     return 1;
 }
 
-bld_iter iter_set(const bld_set* set) {
-    bld_iter iter;
+bit_iter iter_set(const bit_set* set) {
+    bit_iter iter;
 
-    iter.type = BLD_SET;
+    iter.type = BIT_SET;
     iter.as.set_iter.set = set;
     iter.as.set_iter.index = 0;
 
     return iter;
 }
 
-int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
+int set_next(bit_iter_set* iter, void** value_ptr_ptr) {
     int has_next = 0;
     size_t i = iter->index;
     size_t value_size = iter->set->value_size;
-    const bld_set* set = iter->set;
+    const bit_set* set = iter->set;
     char* values = set->values;
     
     while (i < set->capacity + set->max_offset) {
@@ -54,11 +54,11 @@ int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
     return has_next;
 }
 
-bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
-    bld_iter iter;
+bit_iter iter_graph(const bit_graph* graph, uintmax_t root) {
+    bit_iter iter;
 
-    iter.type = BLD_GRAPH;
-    iter.as.graph_iter.type = BLD_DFS;
+    iter.type = BIT_GRAPH;
+    iter.as.graph_iter.type = BIT_DFS;
     iter.as.graph_iter.graph = graph;
     iter.as.graph_iter.stack = array_new(sizeof(uintmax_t));
     iter.as.graph_iter.visited = set_new(0);
@@ -69,8 +69,8 @@ bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
     return iter;
 }
 
-bld_iter iter_graph_children(const bld_graph* graph, uintmax_t parent) {
-    bld_array* children = set_get(&graph->edges, parent);
+bit_iter iter_graph_children(const bit_graph* graph, uintmax_t parent) {
+    bit_array* children = set_get(&graph->edges, parent);
 
     if (children == NULL) {
         log_fatal("Requested node %lu does not exist in graph", parent);
@@ -79,20 +79,20 @@ bld_iter iter_graph_children(const bld_graph* graph, uintmax_t parent) {
     return iter_array(children);
 }
 
-int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
+int graph_next(bit_iter_graph* iter, uintmax_t* node_id) {
     int node_visited = 1;
     uintmax_t *ptr_id, id;
-    bld_array* edge_array;
+    bit_array* edge_array;
 
-    if (iter->type == BLD_GRAPH_DONE) {
+    if (iter->type == BIT_GRAPH_DONE) {
         return 0;
     }
 
     while (node_visited) {
-        bld_iter edges;
+        bit_iter edges;
 
         if (iter->stack.size <= 0) {
-            iter->type = BLD_GRAPH_DONE;
+            iter->type = BIT_GRAPH_DONE;
             array_free(&iter->stack);
             set_free(&iter->visited);
             return 0;
@@ -119,15 +119,15 @@ int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
     return 1;
 }
 
-int iter_next(bld_iter* iter, void** value_ptr_ptr) {
+int iter_next(bit_iter* iter, void** value_ptr_ptr) {
     switch (iter->type) {
-        case (BLD_ARRAY): {
+        case (BIT_ARRAY): {
             return array_next(&iter->as.array_iter, value_ptr_ptr);
         } break;
-        case (BLD_SET): {
+        case (BIT_SET): {
             return set_next(&iter->as.set_iter, value_ptr_ptr);
         } break;
-        case (BLD_GRAPH): {
+        case (BIT_GRAPH): {
             return graph_next(&iter->as.graph_iter, (uintmax_t*) value_ptr_ptr);
         } break;
     }

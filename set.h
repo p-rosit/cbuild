@@ -3,27 +3,27 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-typedef uintmax_t bld_hash;
-typedef size_t bld_offset;
+typedef uintmax_t bit_hash;
+typedef size_t bit_offset;
 
-typedef struct bld_set {
+typedef struct bit_set {
     size_t capacity;
     size_t size;
     size_t value_size;
     size_t max_offset;
-    bld_offset* offset;
-    bld_hash* hash;
+    bit_offset* offset;
+    bit_hash* hash;
     void* values;
-} bld_set;
+} bit_set;
 
-bld_set     set_new(size_t);
-void        set_free(bld_set*);
-bld_set     set_copy(const bld_set*);
-void        set_clear(bld_set*);
-int         set_add(bld_set*, bld_hash, void*);
-void*       set_remove(bld_set*, bld_hash);
-void*       set_get(const bld_set*, bld_hash);
-int         set_has(const bld_set*, bld_hash);
-int         set_empty_intersection(const bld_set*, const bld_set*);
+bit_set     set_new(size_t);
+void        set_free(bit_set*);
+bit_set     set_copy(const bit_set*);
+void        set_clear(bit_set*);
+int         set_add(bit_set*, bit_hash, void*);
+void*       set_remove(bit_set*, bit_hash);
+void*       set_get(const bit_set*, bit_hash);
+int         set_has(const bit_set*, bit_hash);
+int         set_empty_intersection(const bit_set*, const bit_set*);
 
 #endif

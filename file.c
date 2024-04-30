@@ -7,33 +7,33 @@
 #include "linker.h"
 #include "file.h"
 
-bld_file_identifier get_identifier(bld_path*);
-bld_file make_file(bld_file_type, bld_path*, char*);
-bld_set file_copy_symbol_set(const bld_set*);
-void file_free_base(bld_file*);
-void file_free_dir(bld_file_dir*);
-void file_free_impl(bld_file_impl*);
-void file_free_header(bld_file_header*);
-void file_free_test(bld_file_test*);
+bit_file_identifier get_identifier(bit_path*);
+bit_file make_file(bit_file_type, bit_path*, char*);
+bit_set file_copy_symbol_set(const bit_set*);
+void file_free_base(bit_file*);
+void file_free_dir(bit_file_dir*);
+void file_free_impl(bit_file_impl*);
+void file_free_header(bit_file_header*);
+void file_free_test(bit_file_test*);
 
-uintmax_t file_get_id(bld_path* path) {
+uintmax_t file_get_id(bit_path* path) {
     uintmax_t id = os_info_id(path_to_string(path));
 
-    if (id == BLD_INVALID_IDENITIFIER) {
+    if (id == BIT_INVALID_IDENITIFIER) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
     }
 
     return id;
 }
 
-bld_file_identifier get_identifier(bld_path* path) {
-    bld_file_identifier identifier;
+bit_file_identifier get_identifier(bit_path* path) {
+    bit_file_identifier identifier;
     uintmax_t id, mtime;
 
     id = os_info_id(path_to_string(path));
     mtime = os_info_mtime(path_to_string(path));
 
-    if (id == BLD_INVALID_IDENITIFIER) {
+    if (id == BIT_INVALID_IDENITIFIER) {
         log_fatal("Could not extract information about \"%s\"", path_to_string(path));
     }
 
@@ -44,20 +44,20 @@ bld_file_identifier get_identifier(bld_path* path) {
     return identifier;
 }
 
-int file_eq(bld_file* f1, bld_file* f2) {
+int file_eq(bit_file* f1, bit_file* f2) {
     return f1->identifier.id == f2->identifier.id;
 }
 
-void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
+void serialize_identifier(char name[FILENAME_MAX], bit_file* file) {
     sprintf(name, "%" PRIuMAX, (uintmax_t) file->identifier.id);
 }
 
-bld_file make_file(bld_file_type type, bld_path* path, char* name) {
-    bld_file file;
-    bld_string str = string_pack(name);
+bit_file make_file(bit_file_type type, bit_path* path, char* name) {
+    bit_file file;
+    bit_string str = string_pack(name);
 
     file.type = type;
-    file.parent_id = BLD_INVALID_IDENITIFIER;
+    file.parent_id = BIT_INVALID_IDENITIFIER;
     file.identifier = get_identifier(path);
     file.name = string_copy(&str);
     file.path = *path;
@@ -67,60 +67,60 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     return file;
 }
 
-bld_file file_dir_new(bld_path* path, char* name) {
-    bld_file dir = make_file(BLD_DIR, path, name);
+bit_file file_dir_new(bit_path* path, char* name) {
+    bit_file dir = make_file(BIT_DIR, path, name);
     dir.info.dir.files = array_new(sizeof(uintmax_t));
     return dir;
 }
 
-bld_file file_header_new(bld_path* path, char* name) {
-    bld_file header = make_file(BLD_HEADER, path, name);
+bit_file file_header_new(bit_path* path, char* name) {
+    bit_file header = make_file(BIT_HEADER, path, name);
     header.info.header.includes = set_new(0);
     return header;
 }
 
-bld_file file_impl_new(bld_path* path, char* name) {
-    bld_file impl = make_file(BLD_IMPL, path, name);
+bit_file file_impl_new(bit_path* path, char* name) {
+    bit_file impl = make_file(BIT_IMPL, path, name);
     impl.info.impl.includes = set_new(0);
-    impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
-    impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
+    impl.info.impl.defined_symbols = set_new(sizeof(bit_string));
+    impl.info.impl.undefined_symbols = set_new(sizeof(bit_string));
     return impl;
 }
 
-bld_file file_test_new(bld_path* path, char* name) {
-    bld_file test = make_file(BLD_TEST, path, name);
+bit_file file_test_new(bit_path* path, char* name) {
+    bit_file test = make_file(BIT_TEST, path, name);
     test.info.test.includes = set_new(0);
-    test.info.test.undefined_symbols = set_new(sizeof(bld_string));
+    test.info.test.undefined_symbols = set_new(sizeof(bit_string));
     return test;
 }
 
-void file_free(bld_file* file) {
+void file_free(bit_file* file) {
     file_free_base(file);
 
     switch (file->type) {
-        case (BLD_DIR): {
+        case (BIT_DIR): {
             file_free_dir(&file->info.dir);
         } break;
-        case (BLD_IMPL): {
+        case (BIT_IMPL): {
             file_free_impl(&file->info.impl);
         } break;
-        case (BLD_HEADER): {
+        case (BIT_HEADER): {
             file_free_header(&file->info.header);
         } break;
-        case (BLD_TEST): {
+        case (BIT_TEST): {
             file_free_test(&file->info.test);
         } break;
         default: {log_fatal("file_free: unrecognized file type, unreachable error");}
     }
 }
 
-void file_free_base(bld_file* file) {
+void file_free_base(bit_file* file) {
     if (file->build_info.compiler_set) {
         switch (file->build_info.compiler.type) {
-            case (BLD_COMPILER): {
+            case (BIT_COMPILER): {
                 compiler_free(&file->build_info.compiler.as.compiler);
             } break;
-            case (BLD_COMPILER_FLAGS): {
+            case (BIT_COMPILER_FLAGS): {
                 compiler_flags_free(&file->build_info.compiler.as.flags);
             } break;
             default: log_fatal("file_free_base: internal error");
@@ -135,13 +135,13 @@ void file_free_base(bld_file* file) {
     string_free(&file->name);
 }
 
-void file_free_dir(bld_file_dir* dir) {
+void file_free_dir(bit_file_dir* dir) {
     array_free(&dir->files);
 }
 
-void file_free_impl(bld_file_impl* impl) {
-    bld_iter iter;
-    bld_string* symbol;
+void file_free_impl(bit_file_impl* impl) {
+    bit_iter iter;
+    bit_string* symbol;
 
     set_free(&impl->includes);
 
@@ -158,13 +158,13 @@ void file_free_impl(bld_file_impl* impl) {
     set_free(&impl->defined_symbols);
 }
 
-void file_free_header(bld_file_header* header) {
+void file_free_header(bit_file_header* header) {
     set_free(&header->includes);
 }
 
-void file_free_test(bld_file_test* test) {
-    bld_iter iter;
-    bld_string* symbol;
+void file_free_test(bit_file_test* test) {
+    bit_iter iter;
+    bit_string* symbol;
 
     set_free(&test->includes);
 
@@ -175,7 +175,7 @@ void file_free_test(bld_file_test* test) {
     set_free(&test->undefined_symbols);
 }
 
-uintmax_t file_hash(bld_file* file, bld_set* files) {
+uintmax_t file_hash(bit_file* file, bit_set* files) {
     uintmax_t seed, parent_id;
 
     seed = 3401;
@@ -183,17 +183,17 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
     seed = (seed << 4) + seed + file->identifier.time;
 
     parent_id = file->identifier.id;
-    while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent = set_get(files, parent_id);
+    while (parent_id != BIT_INVALID_IDENITIFIER) {
+        bit_file* parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal("file_hash: internal error, hashing compiler");}
         parent_id = parent->parent_id;
         if (!parent->build_info.compiler_set) {continue;}
 
         switch (parent->build_info.compiler.type) {
-            case (BLD_COMPILER): {
+            case (BIT_COMPILER): {
                 seed = (seed << 3) + seed * compiler_hash(&parent->build_info.compiler.as.compiler);
             } break;
-            case (BLD_COMPILER_FLAGS): {
+            case (BIT_COMPILER_FLAGS): {
                 seed = (seed << 3) + seed * compiler_flags_hash(&parent->build_info.compiler.as.flags);
             } break;
         }
@@ -201,8 +201,8 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
     }
 
     parent_id = file->identifier.id;
-    while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent = set_get(files, parent_id);
+    while (parent_id != BIT_INVALID_IDENITIFIER) {
+        bit_file* parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal("file_hash: internal error, hashing linker_flags");}
         parent_id = parent->parent_id;
         if (!parent->build_info.linker_set) {continue;}
@@ -212,27 +212,27 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
     return seed;
 }
 
-void file_symbols_copy(bld_file* file, const bld_file* from) {
+void file_symbols_copy(bit_file* file, const bit_file* from) {
     if (file->type != from->type) {
         log_fatal("file_symbols_copy: files do not have same type");
     }
 
     switch (file->type) {
-        case (BLD_IMPL): {
+        case (BIT_IMPL): {
             file->info.impl.undefined_symbols = file_copy_symbol_set(&from->info.impl.undefined_symbols);
             file->info.impl.defined_symbols = file_copy_symbol_set(&from->info.impl.defined_symbols);
         } break;
-        case (BLD_TEST): {
+        case (BIT_TEST): {
             file->info.test.undefined_symbols = file_copy_symbol_set(&from->info.test.undefined_symbols);
         } break;
         default: log_fatal("file_symbols_copy: file does not have any symbols to copy");
     }
 }
 
-bld_set file_copy_symbol_set(const bld_set* set) {
-    bld_iter iter;
-    bld_set cpy;
-    bld_string str, *symbol;
+bit_set file_copy_symbol_set(const bit_set* set) {
+    bit_iter iter;
+    bit_set cpy;
+    bit_string str, *symbol;
 
     cpy = set_copy(set);
     iter = iter_set(&cpy);
@@ -244,30 +244,30 @@ bld_set file_copy_symbol_set(const bld_set* set) {
     return cpy;
 }
 
-void file_dir_add_file(bld_file* dir, bld_file* file) {
-    if (dir->type != BLD_DIR) {log_fatal("file_dir_add_file: trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
+void file_dir_add_file(bit_file* dir, bit_file* file) {
+    if (dir->type != BIT_DIR) {log_fatal("file_dir_add_file: trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
 
     file->parent_id = dir->identifier.id;
     array_push(&dir->info.dir.files, &file->identifier.id);
 }
 
-void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executable, bld_array* flags) {
+void file_assemble_compiler(bit_file* file, bit_set* files, bit_string** executable, bit_array* flags) {
     uintmax_t parent_id = file->identifier.id;
     *executable = NULL;
-    *flags = array_new(sizeof(bld_compiler_flags));
+    *flags = array_new(sizeof(bit_compiler_flags));
 
-    while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent;
+    while (parent_id != BIT_INVALID_IDENITIFIER) {
+        bit_file* parent;
         parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal("file_assemble_compiler: internal error");}
         parent_id = parent->parent_id;
         if (!parent->build_info.compiler_set) {continue;}
 
-        if (parent->build_info.compiler.type == BLD_COMPILER) {
+        if (parent->build_info.compiler.type == BIT_COMPILER) {
             *executable = &parent->build_info.compiler.as.compiler.executable;
             array_push(flags, &parent->build_info.compiler.as.compiler.flags);
             break;
-        } else if (parent->build_info.compiler.type == BLD_COMPILER_FLAGS) {
+        } else if (parent->build_info.compiler.type == BIT_COMPILER_FLAGS) {
             array_push(flags, &parent->build_info.compiler.as.flags);
         } else {
             log_fatal("file_assemble_compiler: internal error, compiler");
@@ -281,12 +281,12 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executa
     }
 }
 
-void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
+void file_assemble_linker_flags(bit_file* file, bit_set* files, bit_array* flags) {
     uintmax_t parent_id = file->identifier.id;
-    *flags = array_new(sizeof(bld_linker_flags));
+    *flags = array_new(sizeof(bit_linker_flags));
 
-    while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent = set_get(files, parent_id);
+    while (parent_id != BIT_INVALID_IDENITIFIER) {
+        bit_file* parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal("file_assemble_linker_flags: internal error");}
         parent_id = parent->parent_id;
         if (!parent->build_info.linker_set) {continue;}

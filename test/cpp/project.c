@@ -2,8 +2,8 @@
 
 
 int main(int argc, char** argv) {
-    bld_forward_project fproject;
-    bld_project project;
+    bit_forward_project fproject;
+    bit_project project;
 
     fproject = project_new(
         project_path_extract(argc, argv),

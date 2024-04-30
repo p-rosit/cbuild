@@ -2,11 +2,11 @@
 #include "logging.h"
 #include "array.h"
 
-int array_increase_capacity(bld_array*, size_t);
+int array_increase_capacity(bit_array*, size_t);
 
 
-bld_array array_new(size_t value_size) {
-    bld_array array;
+bit_array array_new(size_t value_size) {
+    bit_array array;
 
     array.capacity = 0;
     array.size = 0;
@@ -16,12 +16,12 @@ bld_array array_new(size_t value_size) {
     return array;
 }
 
-void array_free(bld_array* array) {
+void array_free(bit_array* array) {
     free(array->values);
 }
 
-bld_array array_copy(const bld_array* array) {
-    bld_array cpy;
+bit_array array_copy(const bit_array* array) {
+    bit_array cpy;
 
     cpy.capacity = array->size;
     cpy.size = array->size;
@@ -36,7 +36,7 @@ bld_array array_copy(const bld_array* array) {
     return cpy;
 }
 
-int array_increase_capacity(bld_array* array, size_t capacity) {
+int array_increase_capacity(bit_array* array, size_t capacity) {
     void* values;
 
     values = realloc(array->values, capacity * array->value_size);
@@ -48,7 +48,7 @@ int array_increase_capacity(bld_array* array, size_t capacity) {
     return 1;
 }
 
-void array_push(bld_array* array, void* value) {
+void array_push(bit_array* array, void* value) {
     size_t capacity = array->capacity;
     char* ptr;
 
@@ -64,12 +64,12 @@ void array_push(bld_array* array, void* value) {
     memcpy(ptr + array->value_size * array->size++, value, array->value_size);
 }
 
-void* array_pop(bld_array* array) {
+void* array_pop(bit_array* array) {
     if (array->size <= 0) {log_fatal("Trying to pop from empty array");}
     return ((char*) array->values) + --array->size * array->value_size;
 }
 
-void array_insert(bld_array* array, size_t index, void* value) {
+void array_insert(bit_array* array, size_t index, void* value) {
     size_t capacity = array->capacity;
     char* ptr;
 
@@ -95,12 +95,12 @@ void array_insert(bld_array* array, size_t index, void* value) {
     memcpy(ptr, value, array->value_size);
 }
 
-void* array_get(const bld_array* array, size_t index) {
+void* array_get(const bit_array* array, size_t index) {
     if (index >= array->size) {log_fatal("Trying to get item from index %lu but array is of size %lu", index, array->size);}
     return ((char*) array->values) + index * array->value_size;
 }
 
-void array_reverse(bld_array* array) {
+void array_reverse(bit_array* array) {
     void *head, *tail, *temp;
 
     if (array->size <= 0) {

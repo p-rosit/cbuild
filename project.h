@@ -8,59 +8,59 @@
 #include "file.h"
 #include "dependencies.h"
 
-#define BLD_CACHE_NAME "cache.json"
+#define BIT_CACHE_NAME "cache.json"
 
-typedef struct bld_project_cache {
+typedef struct bit_project_cache {
     int loaded;
     int set;
     int applied;
-    bld_path root;
-    bld_linker linker;
-    bld_set files;
-} bld_project_cache;
+    bit_path root;
+    bit_linker linker;
+    bit_set files;
+} bit_project_cache;
 
-typedef struct bld_project_base {
-    bld_path root;
-    bld_path build;
-    bld_linker linker;
-    bld_project_cache cache;
-} bld_project_base;
+typedef struct bit_project_base {
+    bit_path root;
+    bit_path build;
+    bit_linker linker;
+    bit_project_cache cache;
+} bit_project_base;
 
-typedef struct bld_forward_project {
+typedef struct bit_forward_project {
     int rebuilding;
     int resolved;
-    bld_project_base base;
-    bld_array extra_paths;
-    bld_set ignore_paths;
-    bld_compiler compiler;
-    bld_string main_file_name;
-    bld_array compiler_file_names;
-    bld_array linker_flags_file_names;
-    bld_array file_compilers;
-    bld_array file_linker_flags;
-} bld_forward_project;
+    bit_project_base base;
+    bit_array extra_paths;
+    bit_set ignore_paths;
+    bit_compiler compiler;
+    bit_string main_file_name;
+    bit_array compiler_file_names;
+    bit_array linker_flags_file_names;
+    bit_array file_compilers;
+    bit_array file_linker_flags;
+} bit_forward_project;
 
-typedef struct bld_project {
-    bld_project_base base;
+typedef struct bit_project {
+    bit_project_base base;
     uintmax_t main_file;
     uintmax_t root_dir;
-    bld_set files;
-    bld_dependency_graph graph;
-} bld_project;
+    bit_set files;
+    bit_dependency_graph graph;
+} bit_project;
 
-bld_path    project_path_extract(int, char**);
-bld_forward_project project_new(bld_path, bld_compiler, bld_linker);
+bit_path    project_path_extract(int, char**);
+bit_forward_project project_new(bit_path, bit_compiler, bit_linker);
 
-void        project_add_build(bld_forward_project*, char*);
-void        project_add_path(bld_forward_project*, char*);
-void        project_ignore_path(bld_forward_project*, char*);
-void        project_load_cache(bld_forward_project*, char*);
-void        project_set_main_file(bld_forward_project*, char*);
-void        project_set_compiler(bld_forward_project*, char*, bld_compiler);
-void        project_set_linker_flags(bld_forward_project*, char*, bld_linker_flags);
+void        project_add_build(bit_forward_project*, char*);
+void        project_add_path(bit_forward_project*, char*);
+void        project_ignore_path(bit_forward_project*, char*);
+void        project_load_cache(bit_forward_project*, char*);
+void        project_set_main_file(bit_forward_project*, char*);
+void        project_set_compiler(bit_forward_project*, char*, bit_compiler);
+void        project_set_linker_flags(bit_forward_project*, char*, bit_linker_flags);
 
-void        project_save_cache(bld_project*);
-void        project_free(bld_project*);
-void        project_partial_free(bld_forward_project*);
+void        project_save_cache(bit_project*);
+void        project_free(bit_project*);
+void        project_partial_free(bit_forward_project*);
 
 #endif

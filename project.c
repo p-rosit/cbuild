@@ -5,18 +5,18 @@
 #include "file.h"
 #include "project.h"
 
-bld_project_base    project_base_new(bld_path, bld_linker);
-void                project_base_free(bld_project_base*);
+bit_project_base    project_base_new(bit_path, bit_linker);
+void                project_base_free(bit_project_base*);
 
-bld_project_cache   project_cache_new(void);
-void                project_cache_free(bld_project_cache*);
+bit_project_cache   project_cache_new(void);
+void                project_cache_free(bit_project_cache*);
 
-bld_path            extract_build_path(bld_path*);
+bit_path            extract_build_path(bit_path*);
 
-bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker linker) {
+bit_forward_project project_new(bit_path path, bit_compiler compiler, bit_linker linker) {
     FILE* f;
-    bld_path build_file_path;
-    bld_forward_project project;
+    bit_path build_file_path;
+    bit_forward_project project;
     
     build_file_path = extract_build_path(&path);
     path_remove_last_string(&path);
@@ -31,14 +31,14 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
     project.rebuilding = 0;
     project.resolved = 0;
     project.base = project_base_new(path, linker);
-    project.extra_paths = array_new(sizeof(bld_path));
+    project.extra_paths = array_new(sizeof(bit_path));
     project.ignore_paths = set_new(0);
     project.main_file_name.chars = NULL;
     project.compiler = compiler;
-    project.compiler_file_names = array_new(sizeof(bld_string));
-    project.file_compilers = array_new(sizeof(bld_compiler_or_flags));
-    project.linker_flags_file_names = array_new(sizeof(bld_string));
-    project.file_linker_flags = array_new(sizeof(bld_linker_flags));
+    project.compiler_file_names = array_new(sizeof(bit_string));
+    project.file_compilers = array_new(sizeof(bit_compiler_or_flags));
+    project.linker_flags_file_names = array_new(sizeof(bit_string));
+    project.file_linker_flags = array_new(sizeof(bit_linker_flags));
 
     project_ignore_path(&project, path_to_string(&build_file_path));
     path_free(&build_file_path);
@@ -46,7 +46,7 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
     return project;
 }
 
-void project_add_build(bld_forward_project* fproject, char* path) {
+void project_add_build(bit_forward_project* fproject, char* path) {
     char* current_build = path_to_string(&fproject->base.build);
 
     if (fproject->resolved) {
@@ -62,8 +62,8 @@ void project_add_build(bld_forward_project* fproject, char* path) {
     project_ignore_path(fproject, path);
 }
 
-void project_add_path(bld_forward_project* fproject, char* path) {
-    bld_path test, extra;
+void project_add_path(bit_forward_project* fproject, char* path) {
+    bit_path test, extra;
 
     if (fproject->resolved) {
         log_fatal("Trying to add path \"\" but forward project has already been resolved, perform all setup of project before resolving", path);
@@ -78,8 +78,8 @@ void project_add_path(bld_forward_project* fproject, char* path) {
     array_push(&fproject->extra_paths, &extra);
 }
 
-void project_ignore_path(bld_forward_project* fproject, char* path) {
-    bld_path test;
+void project_ignore_path(bit_forward_project* fproject, char* path) {
+    bit_path test;
 
     if (fproject->resolved) {
         log_fatal("Trying to ignore path \"%s\" but forward project has already been resolved, perform all setup of project before resolving", path);
@@ -92,8 +92,8 @@ void project_ignore_path(bld_forward_project* fproject, char* path) {
     path_free(&test);
 }
 
-void project_set_main_file(bld_forward_project* fproject, char* file_name) {
-    bld_string str;
+void project_set_main_file(bit_forward_project* fproject, char* file_name) {
+    bit_string str;
 
     if (fproject->resolved) {
         log_fatal("Trying to set main file to \"\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
@@ -106,9 +106,9 @@ void project_set_main_file(bld_forward_project* fproject, char* file_name) {
     fproject->main_file_name = str;
 }
 
-void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_compiler compiler) {
-    bld_string str;
-    bld_compiler_or_flags temp;
+void project_set_compiler(bit_forward_project* fproject, char* file_name, bit_compiler compiler) {
+    bit_string str;
+    bit_compiler_or_flags temp;
 
     if (fproject->resolved) {
         log_fatal("Trying to set compiler of \"%s\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
@@ -117,15 +117,15 @@ void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_co
     str = string_pack(file_name);
     str = string_copy(&str);
 
-    temp.type = BLD_COMPILER;
+    temp.type = BIT_COMPILER;
     temp.as.compiler = compiler;
 
     array_push(&fproject->compiler_file_names, &str);
     array_push(&fproject->file_compilers, &temp);
 }
 
-void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bld_linker_flags flags) {
-    bld_string str;
+void project_set_linker_flags(bit_forward_project* fproject, char* file_name, bit_linker_flags flags) {
+    bit_string str;
 
     if (fproject->resolved) {
         log_fatal("Trying to set linker of \"%s\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
@@ -139,9 +139,9 @@ void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bl
 }
 
 
-void project_free(bld_project* project) {
-    bld_iter iter;
-    bld_file* file;
+void project_free(bit_project* project) {
+    bit_iter iter;
+    bit_file* file;
 
     project_base_free(&project->base);
     dependency_graph_free(&project->graph);
@@ -153,10 +153,10 @@ void project_free(bld_project* project) {
     set_free(&project->files);
 }
 
-void project_partial_free(bld_forward_project* fproject) {
-    bld_iter iter;
-    bld_path* path;
-    bld_string* str;
+void project_partial_free(bit_forward_project* fproject) {
+    bit_iter iter;
+    bit_path* path;
+    bit_string* str;
 
     iter = iter_array(&fproject->extra_paths);
     while (iter_next(&iter, (void**) &path)) {
@@ -182,8 +182,8 @@ void project_partial_free(bld_forward_project* fproject) {
     array_free(&fproject->file_linker_flags);
 }
 
-bld_project_base project_base_new(bld_path path, bld_linker linker) {
-    bld_project_base base;
+bit_project_base project_base_new(bit_path path, bit_linker linker) {
+    bit_project_base base;
 
     base.root = path;
     base.build = path_new();
@@ -193,15 +193,15 @@ bld_project_base project_base_new(bld_path path, bld_linker linker) {
     return base;
 }
 
-void project_base_free(bld_project_base* base) {
+void project_base_free(bit_project_base* base) {
     path_free(&base->root);
     path_free(&base->build);
     linker_free(&base->linker);
     project_cache_free(&base->cache);
 }
 
-bld_project_cache project_cache_new(void) {
-    bld_project_cache cache;
+bit_project_cache project_cache_new(void) {
+    bit_project_cache cache;
 
     cache.loaded = 0;
     cache.set = 0;
@@ -210,9 +210,9 @@ bld_project_cache project_cache_new(void) {
     return cache;
 }
 
-void project_cache_free(bld_project_cache* cache) {
-    bld_iter iter;
-    bld_file* file;
+void project_cache_free(bit_project_cache* cache) {
+    bit_iter iter;
+    bit_file* file;
 
     if (!cache->loaded) {return;}
     path_free(&cache->root);
@@ -227,9 +227,9 @@ void project_cache_free(bld_project_cache* cache) {
     set_free(&cache->files);
 }
 
-bld_path project_path_extract(int argc, char** argv) {
+bit_path project_path_extract(int argc, char** argv) {
     /* TODO: argv[0] is not guaranteed to contain path to executable */
-    bld_path path;
+    bit_path path;
     if (argc < 1) {
         log_fatal("Not enough input arguments???");
     }
@@ -239,9 +239,9 @@ bld_path project_path_extract(int argc, char** argv) {
     return path;
 }
 
-bld_path extract_build_path(bld_path* root) {
-    bld_path build_path;
-    bld_string str = string_new();
+bit_path extract_build_path(bit_path* root) {
+    bit_path build_path;
+    bit_string str = string_new();
     char* name;
     string_append_string(&str, path_get_last_string(root));
 

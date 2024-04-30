@@ -1,18 +1,18 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
-typedef enum bld_log_level {
-    BLD_DEBUG,
-    BLD_INFO,
-    BLD_WARN,
-    BLD_DEPRECATED,
-    BLD_ERROR,
-    BLD_FATAL
-} bld_log_level;
+typedef enum bit_log_level {
+    BIT_DEBUG,
+    BIT_INFO,
+    BIT_WARN,
+    BIT_DEPRECATED,
+    BIT_ERROR,
+    BIT_FATAL
+} bit_log_level;
 
 extern int log_level;
 
-bld_log_level set_log_level(bld_log_level);
+bit_log_level set_log_level(bit_log_level);
 
 void log_debug(const char*, ...);
 void log_info(const char*, ...);

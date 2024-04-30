@@ -2,50 +2,50 @@
 #include "logging.h"
 #include "path.h"
 
-bld_path path_new(void) {
-    bld_path path;
+bit_path path_new(void) {
+    bit_path path;
     path.str = string_new();
     return path;
 }
 
-bld_path path_copy(bld_path* path) {
-    bld_path cpy;
+bit_path path_copy(bit_path* path) {
+    bit_path cpy;
     cpy.str = string_copy(&path->str);
     return cpy;
 }
 
-void path_free(bld_path* path) {
+void path_free(bit_path* path) {
     string_free(&path->str);
 }
 
-bld_path path_from_string(char* str) {
-    bld_path path = path_new();
+bit_path path_from_string(char* str) {
+    bit_path path = path_new();
     string_append_string(&path.str, str);
     return path;
 }
 
-char* path_to_string(bld_path* path) {
+char* path_to_string(bit_path* path) {
     return string_unpack(&path->str);
 }
 
-void path_append_string(bld_path* path, char* str) {
-    string_append_string(&path->str, BLD_PATH_SEP);
+void path_append_string(bit_path* path, char* str) {
+    string_append_string(&path->str, BIT_PATH_SEP);
     string_append_string(&path->str, str);
 }
 
-void path_append_path(bld_path* root, bld_path* path) {
+void path_append_path(bit_path* root, bit_path* path) {
     path_append_string(root, path_to_string(path));
 }
 
-char* path_get_last_string(bld_path* path) {
+char* path_get_last_string(bit_path* path) {
     size_t i, sep_len;
     char* str;
 
-    sep_len = sizeof(BLD_PATH_SEP) - 1;
+    sep_len = sizeof(BIT_PATH_SEP) - 1;
     for (i = 0; i < path->str.size; i++) {
         str = path->str.chars + path->str.size - i - 1;
-        if (strncmp(str, BLD_PATH_SEP, sep_len) == 0) {
-            return &path->str.chars[path->str.size - i + sizeof(BLD_PATH_SEP) - 2];
+        if (strncmp(str, BIT_PATH_SEP, sep_len) == 0) {
+            return &path->str.chars[path->str.size - i + sizeof(BIT_PATH_SEP) - 2];
         }
     }
 
@@ -53,14 +53,14 @@ char* path_get_last_string(bld_path* path) {
     return NULL; /* Unreachable */
 }
 
-char* path_remove_last_string(bld_path* path) {
+char* path_remove_last_string(bit_path* path) {
     char* name = path_get_last_string(path);
-    path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    path->str.size = name - path->str.chars - sizeof(BIT_PATH_SEP) + 1;
     path->str.chars[path->str.size] = '\0';
     return name;
 }
 
-int path_ends_with(bld_path* path, bld_path* suffix) {
+int path_ends_with(bit_path* path, bit_path* suffix) {
     size_t i, suffix_start;
     char a, b;
 
@@ -78,12 +78,12 @@ int path_ends_with(bld_path* path, bld_path* suffix) {
     return 1;
 }
 
-void path_remove_file_ending(bld_path* path) {
+void path_remove_file_ending(bit_path* path) {
     size_t i, sep_len;
 
-    sep_len = sizeof(BLD_PATH_SEP) - 1;
+    sep_len = sizeof(BIT_PATH_SEP) - 1;
     for (i = path->str.size; 0 < i; i--) {
-        if (strncmp(path->str.chars, BLD_PATH_SEP, sep_len) == 0) {
+        if (strncmp(path->str.chars, BIT_PATH_SEP, sep_len) == 0) {
             return;
         }
         if (path->str.chars[i - 1] == '.') {

@@ -3,6 +3,6 @@
 
 #include "project.h"
 
-void rebuild_builder(bld_forward_project*, int, char**);
+void rebuild_builder(bit_forward_project*, int, char**);
 
 #endif

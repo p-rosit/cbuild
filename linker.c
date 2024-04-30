@@ -4,9 +4,9 @@
 #include "logging.h"
 #include "json.h"
 
-bld_linker linker_new(char* executable) {
-    bld_linker linker;
-    bld_string str;
+bit_linker linker_new(char* executable) {
+    bit_linker linker;
+    bit_string str;
 
     str = string_pack(executable);
     linker.executable = string_copy(&str);
@@ -15,8 +15,8 @@ bld_linker linker_new(char* executable) {
     return linker;
 }
 
-bld_linker linker_with_flags(char* executable, ...) {
-    bld_linker linker;
+bit_linker linker_with_flags(char* executable, ...) {
+    bit_linker linker;
     va_list args;
     char* flag;
 
@@ -33,13 +33,13 @@ bld_linker linker_with_flags(char* executable, ...) {
     return linker;
 }
 
-void linker_free(bld_linker* linker) {
+void linker_free(bit_linker* linker) {
     string_free(&linker->executable);
     linker_flags_free(&linker->flags);
 }
 
-bld_linker linker_copy(bld_linker* linker) {
-    bld_linker cpy;
+bit_linker linker_copy(bit_linker* linker) {
+    bit_linker cpy;
 
     cpy.executable = string_copy(&linker->executable);
     cpy.flags = linker_flags_copy(&linker->flags);
@@ -47,18 +47,18 @@ bld_linker linker_copy(bld_linker* linker) {
     return cpy;
 }
 
-void linker_add_flag(bld_linker* linker, char* flag) {
+void linker_add_flag(bit_linker* linker, char* flag) {
     linker_flags_add_flag(&linker->flags, flag);
 }
 
-bld_linker_flags linker_flags_new(void) {
-    bld_linker_flags flags;
-    flags.flags = array_new(sizeof(bld_string));
+bit_linker_flags linker_flags_new(void) {
+    bit_linker_flags flags;
+    flags.flags = array_new(sizeof(bit_string));
     return flags;
 }
 
-bld_linker_flags linker_flags_with_flags(char* first_flag, ...) {
-    bld_linker_flags flags;
+bit_linker_flags linker_flags_with_flags(char* first_flag, ...) {
+    bit_linker_flags flags;
     va_list args;
     char* flag;
 
@@ -80,9 +80,9 @@ bld_linker_flags linker_flags_with_flags(char* first_flag, ...) {
     return flags;
 }
 
-void linker_flags_free(bld_linker_flags* flags) {
-    bld_iter iter;
-    bld_string* flag;
+void linker_flags_free(bit_linker_flags* flags) {
+    bit_iter iter;
+    bit_string* flag;
 
     iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
@@ -91,11 +91,11 @@ void linker_flags_free(bld_linker_flags* flags) {
     array_free(&flags->flags);
 }
 
-bld_linker_flags linker_flags_copy(bld_linker_flags* flags) {
-    bld_string str;
-    bld_string *flag;
-    bld_iter iter;
-    bld_linker_flags cpy;
+bit_linker_flags linker_flags_copy(bit_linker_flags* flags) {
+    bit_string str;
+    bit_string *flag;
+    bit_iter iter;
+    bit_linker_flags cpy;
 
     cpy.flags = array_copy(&flags->flags);
 
@@ -108,18 +108,18 @@ bld_linker_flags linker_flags_copy(bld_linker_flags* flags) {
     return cpy;
 }
 
-void linker_flags_add_flag(bld_linker_flags* linker, char* flag) {
-    bld_string str;
+void linker_flags_add_flag(bit_linker_flags* linker, char* flag) {
+    bit_string str;
 
     str = string_pack(flag);
     str = string_copy(&str);
     array_push(&linker->flags, &str);
 }
 
-uintmax_t linker_flags_hash(bld_linker_flags* linker_flags) {
+uintmax_t linker_flags_hash(bit_linker_flags* linker_flags) {
     uintmax_t seed = 335545;
-    bld_iter iter;
-    bld_string* flag;
+    bit_iter iter;
+    bit_string* flag;
 
     iter = iter_array(&linker_flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
@@ -129,9 +129,9 @@ uintmax_t linker_flags_hash(bld_linker_flags* linker_flags) {
     return seed;
 }
 
-void linker_flags_expand(bld_string* str, bld_array* linker_flags) {
-    bld_iter iter;
-    bld_linker_flags* flags;
+void linker_flags_expand(bit_string* str, bit_array* linker_flags) {
+    bit_iter iter;
+    bit_linker_flags* flags;
     array_reverse(linker_flags);
 
     iter = iter_array(linker_flags);
@@ -142,9 +142,9 @@ void linker_flags_expand(bld_string* str, bld_array* linker_flags) {
     array_reverse(linker_flags);
 }
 
-void linker_flags_append(bld_string* str, bld_linker_flags* flags) {
-    bld_iter iter;
-    bld_string* f;
+void linker_flags_append(bit_string* str, bit_linker_flags* flags) {
+    bit_iter iter;
+    bit_string* f;
     array_reverse(&flags->flags);
 
     iter = iter_array(&flags->flags);
@@ -156,14 +156,14 @@ void linker_flags_append(bld_string* str, bld_linker_flags* flags) {
     array_reverse(&flags->flags);
 }
 
-int parse_linker(FILE* file, bld_linker* linker) {
+int parse_linker(FILE* file, bit_linker* linker) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
     char *keys[2] = {"executable", "flags"};
-    bld_parse_func funcs[2] = {
-        (bld_parse_func) parse_linker_executable,
-        (bld_parse_func) parse_linker_linker_flags,
+    bit_parse_func funcs[2] = {
+        (bit_parse_func) parse_linker_executable,
+        (bit_parse_func) parse_linker_linker_flags,
     };
 
     linker->flags = linker_flags_new();
@@ -175,8 +175,8 @@ int parse_linker(FILE* file, bld_linker* linker) {
     return 0;
 }
 
-int parse_linker_executable(FILE* file, bld_linker* linker) {
-    bld_string str;
+int parse_linker_executable(FILE* file, bit_linker* linker) {
+    bit_string str;
     int result = string_parse(file, &str);
 
     if (result) {
@@ -188,8 +188,8 @@ int parse_linker_executable(FILE* file, bld_linker* linker) {
     return result;
 }
 
-int parse_linker_linker_flags(FILE* file, bld_linker* linker) {
-    bld_linker_flags flags = linker_flags_new();
+int parse_linker_linker_flags(FILE* file, bit_linker* linker) {
+    bit_linker_flags flags = linker_flags_new();
     int result = parse_linker_flags(file, &flags);
     if (result) {
         linker_flags_free(&flags);
@@ -200,10 +200,10 @@ int parse_linker_linker_flags(FILE* file, bld_linker* linker) {
     return result;
 }
 
-int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
+int parse_linker_flags(FILE* file, bit_linker_flags* flags) {
     int values;
 
-    values = json_parse_array(file, flags, (bld_parse_func) parse_linker_flag);
+    values = json_parse_array(file, flags, (bit_parse_func) parse_linker_flag);
     if (values < 0) {
         log_warn("Could not parse linker flags");
         log_fatal("Free correctly");
@@ -213,8 +213,8 @@ int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
     return 0;
 }
 
-int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
-    bld_string str;
+int parse_linker_flag(FILE* file, bit_linker_flags* flags) {
+    bit_string str;
     int result = string_parse(file, &str);
     if (result) {
         log_warn("Could not parse linker flag");

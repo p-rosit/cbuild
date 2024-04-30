@@ -4,7 +4,7 @@
 #include "dstr.h"
 #include "json.h"
 
-int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
+int json_parse_array(FILE* file, void* obj, bit_parse_func parse_func) {
     int value_num = 0;
     int result, parse_complete;
     int c;
@@ -51,10 +51,10 @@ int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
     return -1;
 }
 
-int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
+int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bit_parse_func* parse_funcs) {
     int exists, index, key_num = 0;
     int result, parse_complete;
-    bld_string str;
+    bit_string str;
     char c, *temp;
 
     memset(parsed, 0, entries * sizeof(int));

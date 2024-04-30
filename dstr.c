@@ -3,11 +3,11 @@
 #include "json.h"
 #include "dstr.h"
 
-int push_character(bld_string*, char);
+int push_character(bit_string*, char);
 
-bld_string string_new(void) {
+bit_string string_new(void) {
     char* chars;
-    bld_string str;
+    bit_string str;
 
     chars = calloc(1, 1);
     if (chars == NULL) {log_fatal("Could not allocate minimal string.");}
@@ -19,8 +19,8 @@ bld_string string_new(void) {
     return str;
 }
 
-bld_string string_pack(char* char_ptr) {
-    bld_string str;
+bit_string string_pack(char* char_ptr) {
+    bit_string str;
 
     str.capacity = strlen(char_ptr);
     str.size = str.capacity;
@@ -28,9 +28,9 @@ bld_string string_pack(char* char_ptr) {
     return str;
 }
 
-bld_string string_copy(bld_string* str) {
+bit_string string_copy(bit_string* str) {
     char* chars;
-    bld_string cpy;
+    bit_string cpy;
 
     chars = malloc(str->size + 1);
     if (chars == NULL) {
@@ -47,7 +47,7 @@ bld_string string_copy(bld_string* str) {
     return cpy;
 }
 
-void string_free(bld_string* str) {
+void string_free(bit_string* str) {
     free(str->chars);
 }
 
@@ -61,7 +61,7 @@ uintmax_t string_hash(char* str) {
     return seed;
 }
 
-int push_character(bld_string* str, char c) {
+int push_character(bit_string* str, char c) {
     size_t capacity = str->capacity;
     char* chars;
     
@@ -82,19 +82,19 @@ int push_character(bld_string* str, char c) {
     return 1;
 }
 
-void string_append_space(bld_string* str) {
+void string_append_space(bit_string* str) {
     if (!push_character(str, ' ')) {
         log_fatal("Could not append space to string.");
     }
 }
 
-void string_append_char(bld_string* str, char c) {
+void string_append_char(bit_string* str, char c) {
     if (!push_character(str, c)) {
         log_fatal("Could not append \'%c\' to string.", c);
     }
 }
 
-void string_append_string(bld_string* str, char* s) {
+void string_append_string(bit_string* str, char* s) {
     char *temp = s, c;
 
     while ((c = *temp++) != '\0') {
@@ -104,11 +104,11 @@ void string_append_string(bld_string* str, char* s) {
     }
 }
 
-char* string_unpack(bld_string* str) {
+char* string_unpack(bit_string* str) {
     return str->chars;
 }
 
-int string_parse(FILE* file, bld_string* str) {
+int string_parse(FILE* file, bit_string* str) {
     int c;
 
     c = next_character(file);

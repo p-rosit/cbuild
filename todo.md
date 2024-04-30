@@ -1,10 +1,10 @@
-- [x] make new function to copy string with (use `string_pack` to put `char*` in `bld_string` without allocation)
+- [x] make new function to copy string with (use `string_pack` to put `char*` in `bit_string` without allocation)
 - [ ] move command construction to os abstraction layer
 - [x] fix issue where introducing a compilation error in a build file will break all future builds with that cache (duplicate function definitions, depends on changing several files in sequence), (compilation step is able to save file with incorrect name...)
 - [ ] move generic array and map parsing to new file
 - [ ] move each serialization and parsing function into their respective struct file
 - [ ] make generic map and array function for serialization mirroring the parsing
-- [x] only use `bld_string` interally instead of raw strings
+- [x] only use `bit_string` interally instead of raw strings
 - [x] add linker as a concept to the system
 - [ ] rebuild with less restrictive flags
 - [x] write project with c89
@@ -33,7 +33,7 @@
 - [x] handle case where cache exists but .o file is missing
 - [x] separate file and graph data in serialized cache
 - [x] move compilation of project to different file
-- [x] move functions and includes to `bld_file` keep edges in `bld_node`
+- [x] move functions and includes to `bit_file` keep edges in `bit_node`
 - [x] handle failed compilation
 - [x] make sure no path separator is passed when removing file ending
 - [x] use realloc instead of memcpy and free

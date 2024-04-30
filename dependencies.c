@@ -5,14 +5,14 @@
 #include "graph.h"
 #include "dependencies.h"
 
-void parse_included_files(bld_file*);
+void parse_included_files(bit_file*);
 
-void parse_symbols(bld_file*, bld_path*);
-void generate_symbol_file(bld_file*, bld_path*, bld_path*);
-void add_symbol(bld_set*, bld_string*);
+void parse_symbols(bit_file*, bit_path*);
+void generate_symbol_file(bit_file*, bit_path*, bit_path*);
+void add_symbol(bit_set*, bit_string*);
 
-bld_dependency_graph dependency_graph_new(void) {
-    bld_dependency_graph graph;
+bit_dependency_graph dependency_graph_new(void) {
+    bit_dependency_graph graph;
 
     graph.include_graph = graph_new();
     graph.symbol_graph = graph_new();
@@ -20,20 +20,20 @@ bld_dependency_graph dependency_graph_new(void) {
     return graph;
 }
 
-void dependency_graph_free(bld_dependency_graph* graph) {
+void dependency_graph_free(bit_dependency_graph* graph) {
     graph_free(&graph->include_graph);
     graph_free(&graph->symbol_graph);
 }
 
-bld_iter dependency_graph_symbols_from(const bld_dependency_graph* graph, bld_file* root) {
+bit_iter dependency_graph_symbols_from(const bit_dependency_graph* graph, bit_file* root) {
     return iter_graph(&graph->symbol_graph, root->identifier.id);
 }
 
-bld_iter dependency_graph_includes_from(const bld_dependency_graph* graph, bld_file* root) {
+bit_iter dependency_graph_includes_from(const bit_dependency_graph* graph, bit_file* root) {
     return  iter_graph(&graph->include_graph, root->identifier.id);
 }
 
-int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** file) {
+int dependency_graph_next_file(bit_iter* iter, const bit_set* files, bit_file** file) {
     uintmax_t file_id;
     int has_next;
     
@@ -46,14 +46,14 @@ int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** 
     return has_next;
 }
 
-void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* files) {
-    bld_iter iter;
-    bld_file *file;
+void dependency_graph_extract_includes(bit_dependency_graph* graph, bit_set* files) {
+    bit_iter iter;
+    bit_file *file;
     log_debug("Extracting includes, files in cache: %lu/%lu", graph->include_graph.edges.size, files->size);
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
+        if (file->type == BIT_DIR) {continue;}
 
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
@@ -65,22 +65,22 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        bld_iter iter;
-        bld_file *to_file;
+        bit_iter iter;
+        bit_file *to_file;
 
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
-            bld_set* includes;
-            if (to_file->type == BLD_DIR) {continue;}
+            bit_set* includes;
+            if (to_file->type == BIT_DIR) {continue;}
 
             switch (to_file->type) {
-                case (BLD_IMPL): {
+                case (BIT_IMPL): {
                     includes = &to_file->info.impl.includes;
                 } break;
-                case (BLD_TEST): {
+                case (BIT_TEST): {
                     includes = &to_file->info.test.includes;
                 } break;
-                case (BLD_HEADER): {
+                case (BIT_HEADER): {
                     includes = &to_file->info.header.includes;
                 } break;
                 default: {
@@ -99,10 +99,10 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
     log_info("Generated include graph with %lu nodes", graph->include_graph.edges.size);
 }
 
-void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* files, bld_path* cache_path) {
-    bld_path symbol_path;
-    bld_iter iter;
-    bld_file* file;
+void dependency_graph_extract_symbols(bit_dependency_graph* graph, bit_set* files, bit_path* cache_path) {
+    bit_path symbol_path;
+    bit_iter iter;
+    bit_file* file;
     log_debug("Extracting symbols, files in cache: %lu/%lu", graph->symbol_graph.edges.size, files->size);
 
     symbol_path = path_copy(cache_path);
@@ -110,8 +110,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BIT_DIR) {continue;}
+        if (file->type == BIT_HEADER) {continue;}
 
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
             continue;
@@ -129,15 +129,15 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        bld_iter iter;
-        bld_file* to_file;
-        bld_set* undefined;
+        bit_iter iter;
+        bit_file* to_file;
+        bit_set* undefined;
 
-        if (file->type != BLD_IMPL && file->type != BLD_TEST) {continue;}
+        if (file->type != BIT_IMPL && file->type != BIT_TEST) {continue;}
 
         switch (file->type) {
-            case (BLD_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
-            case (BLD_TEST): {undefined = &file->info.test.undefined_symbols;} break;
+            case (BIT_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
+            case (BIT_TEST): {undefined = &file->info.test.undefined_symbols;} break;
             default: {
                 log_fatal("dependency_graph_extract_symbols: unrecognized file type, unreachable error");
                 return; /* Unreachable */
@@ -146,9 +146,9 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
-            bld_set* defined;
+            bit_set* defined;
 
-            if (to_file->type != BLD_IMPL) {continue;}
+            if (to_file->type != BIT_IMPL) {continue;}
             defined = &to_file->info.impl.defined_symbols;
 
             if (set_empty_intersection(undefined, defined)) {
@@ -161,10 +161,10 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
     log_info("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
 }
 
-void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol_path) {
+void generate_symbol_file(bit_file* file, bit_path* cache_path, bit_path* symbol_path) {
     int result;
-    bld_string cmd;
-    bld_path path;
+    bit_string cmd;
+    bit_path path;
     char name[FILENAME_MAX];
 
     cmd = string_new();
@@ -190,10 +190,10 @@ void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol
     string_free(&cmd);
 }
 
-void parse_symbols(bld_file* file, bld_path* symbol_path) {
+void parse_symbols(bit_file* file, bit_path* symbol_path) {
     FILE* f;
     int c, symbol_type;
-    bld_string func;
+    bit_string func;
 
     f = fopen(path_to_string(symbol_path), "r");
     if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
@@ -234,20 +234,20 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
 
         if (symbol_type == 'T' || symbol_type == 'B') {
             switch (file->type) {
-                case (BLD_IMPL): {
+                case (BIT_IMPL): {
                     add_symbol(&file->info.impl.defined_symbols, &func);
                 } break;
-                case (BLD_TEST): {
+                case (BIT_TEST): {
                     string_free(&func);
                 } break;
                 default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
             }
         } else if (symbol_type == 'U') {
             switch (file->type) {
-                case (BLD_IMPL): {
+                case (BIT_IMPL): {
                     add_symbol(&file->info.impl.undefined_symbols, &func);
                 } break;
-                case (BLD_TEST): {
+                case (BIT_TEST): {
                     add_symbol(&file->info.test.undefined_symbols, &func);
                 } break;
                 default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
@@ -265,7 +265,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
     fclose(f);
 }
 
-void add_symbol(bld_set* set, bld_string* str) {
+void add_symbol(bit_set* set, bit_string* str) {
     set_add(set, string_hash(string_unpack(str)), str);
 }
 
@@ -303,28 +303,28 @@ int expect_string(FILE* file, char* str) {
     return 1;
 }
 
-void parse_included_files(bld_file* file) {
+void parse_included_files(bit_file* file) {
     size_t line_number;
-    bld_path parent_path;
-    bld_path file_path;
-    bld_string str;
+    bit_path parent_path;
+    bit_path file_path;
+    bit_string str;
     uintmax_t include_id;
     FILE *f, *included_file;
-    bld_set* includes;
+    bit_set* includes;
     int c;
 
-    if (file->type == BLD_DIR) {
+    if (file->type == BIT_DIR) {
         log_fatal("parse_included_files: cannot parse includes for directory \"%s\"", string_unpack(&file->name));
     }
 
     switch (file->type) {
-        case (BLD_IMPL): {
+        case (BIT_IMPL): {
             includes = &file->info.impl.includes;
         } break;
-        case (BLD_TEST): {
+        case (BIT_TEST): {
             includes = &file->info.test.includes;
         } break;
-        case (BLD_HEADER): {
+        case (BIT_HEADER): {
             includes = &file->info.header.includes;
         } break;
         default: {

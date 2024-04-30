@@ -27,30 +27,30 @@ int os_file_exists(char* path) {
         return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
 
-    bld_os_dir* os_dir_open(char* path) {
-        return (bld_os_dir*) opendir(path);
+    bit_os_dir* os_dir_open(char* path) {
+        return (bit_os_dir*) opendir(path);
     }
 
-    int os_dir_close(bld_os_dir* dir) {
+    int os_dir_close(bit_os_dir* dir) {
         return closedir((DIR*) dir);
     }
 
-    bld_os_file* os_dir_read(bld_os_dir* dir) {
+    bit_os_file* os_dir_read(bit_os_dir* dir) {
         return readdir(dir);
     }
 
-    char* os_file_name(bld_os_file* file) {
+    char* os_file_name(bit_os_file* file) {
         return ((struct dirent*) file)->d_name;
     }
 
-    uintmax_t os_file_id(bld_os_file* file) {
+    uintmax_t os_file_id(bit_os_file* file) {
         return ((struct dirent*) file)->d_ino;
     }
 
     uintmax_t os_info_id(char* path) {
         struct stat file;
         if (stat(path, &file) < 0) {
-            return BLD_INVALID_IDENITIFIER;
+            return BIT_INVALID_IDENITIFIER;
         }
         return file.st_ino;
     }

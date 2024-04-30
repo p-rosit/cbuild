@@ -4,9 +4,9 @@
 #include "json.h"
 #include "compiler.h"
 
-bld_compiler compiler_new(char* executable) {
-    bld_compiler compiler;
-    bld_string str;
+bit_compiler compiler_new(char* executable) {
+    bit_compiler compiler;
+    bit_string str;
 
     str = string_pack(executable);
     compiler.executable = string_copy(&str);
@@ -15,8 +15,8 @@ bld_compiler compiler_new(char* executable) {
     return compiler;
 }
 
-bld_compiler compiler_with_flags(char* executable, ...) {
-    bld_compiler compiler;
+bit_compiler compiler_with_flags(char* executable, ...) {
+    bit_compiler compiler;
     va_list args;
     char* flag;
 
@@ -33,15 +33,15 @@ bld_compiler compiler_with_flags(char* executable, ...) {
     return compiler;
 }
 
-void compiler_free(bld_compiler* compiler) {
+void compiler_free(bit_compiler* compiler) {
     if (compiler == NULL) {return;}
     
     string_free(&compiler->executable);
     compiler_flags_free(&compiler->flags);
 }
 
-bld_compiler compiler_copy(bld_compiler* compiler) {
-    bld_compiler cpy;
+bit_compiler compiler_copy(bit_compiler* compiler) {
+    bit_compiler cpy;
 
     cpy.executable = string_copy(&compiler->executable);
     cpy.flags = compiler_flags_copy(&compiler->flags);
@@ -49,7 +49,7 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
     return cpy;
 }
 
-uintmax_t compiler_hash(bld_compiler* compiler) {
+uintmax_t compiler_hash(bit_compiler* compiler) {
     uintmax_t seed = 2349;
 
     seed = (seed << 5) + string_hash(string_unpack(&compiler->executable));
@@ -58,25 +58,25 @@ uintmax_t compiler_hash(bld_compiler* compiler) {
     return seed;
 }
 
-void compiler_add_flag(bld_compiler* compiler, char* flag) {
+void compiler_add_flag(bit_compiler* compiler, char* flag) {
     compiler_flags_add_flag(&compiler->flags, flag);
 }
 
-void compiler_remove_flag(bld_compiler* compiler, char* flag) {
+void compiler_remove_flag(bit_compiler* compiler, char* flag) {
     compiler_flags_remove_flag(&compiler->flags, flag);
 }
 
-bld_compiler_flags compiler_flags_new(void) {
-    bld_compiler_flags flags;
-    flags.flags = array_new(sizeof(bld_string));
+bit_compiler_flags compiler_flags_new(void) {
+    bit_compiler_flags flags;
+    flags.flags = array_new(sizeof(bit_string));
     flags.flag_hash = set_new(0);
-    flags.removed = set_new(sizeof(bld_string));
+    flags.removed = set_new(sizeof(bit_string));
     return flags;
 }
 
-void compiler_flags_free(bld_compiler_flags* flags) {
-    bld_iter iter;
-    bld_string* flag;
+void compiler_flags_free(bit_compiler_flags* flags) {
+    bit_iter iter;
+    bit_string* flag;
 
     iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
@@ -92,8 +92,8 @@ void compiler_flags_free(bld_compiler_flags* flags) {
     set_free(&flags->removed);
 }
 
-bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
-    bld_compiler_flags flags;
+bit_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
+    bit_compiler_flags flags;
     va_list args;
     char* flag;
 
@@ -115,10 +115,10 @@ bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
     return flags;
 }
 
-bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
-    bld_compiler_flags cpy;
-    bld_iter iter;
-    bld_string* flag;
+bit_compiler_flags compiler_flags_copy(bit_compiler_flags* flags) {
+    bit_compiler_flags cpy;
+    bit_iter iter;
+    bit_string* flag;
 
     cpy.flags = array_copy(&flags->flags);
     cpy.flag_hash = set_copy(&flags->flag_hash);
@@ -126,23 +126,23 @@ bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
 
     iter = iter_array(&cpy.flags);
     while (iter_next(&iter, (void**) &flag)) {
-        bld_string temp = string_copy(flag);
+        bit_string temp = string_copy(flag);
         *flag = temp;
     }
 
     iter = iter_set(&cpy.removed);
     while (iter_next(&iter, (void**) &flag)) {
-        bld_string temp = string_copy(flag);
+        bit_string temp = string_copy(flag);
         *flag = temp;
     }
 
     return cpy;
 }
 
-uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
+uintmax_t compiler_flags_hash(bit_compiler_flags* flags) {
     uintmax_t seed = 2346;
-    bld_iter iter;
-    bld_string* flag;
+    bit_iter iter;
+    bit_string* flag;
 
     iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
@@ -157,8 +157,8 @@ uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
     return seed;
 }
 
-void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
-    bld_string temp = string_pack(flag);
+void compiler_flags_add_flag(bit_compiler_flags* flags, char* flag) {
+    bit_string temp = string_pack(flag);
     uintmax_t hash = string_hash(flag);
     temp = string_copy(&temp);
 
@@ -172,8 +172,8 @@ void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
     }
 }
 
-void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
-    bld_string temp = string_pack(flag);
+void compiler_flags_remove_flag(bit_compiler_flags* flags, char* flag) {
+    bit_string temp = string_pack(flag);
     uintmax_t hash = string_hash(flag);
 
     if (set_has(&flags->flag_hash, hash)) {
@@ -186,16 +186,16 @@ void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
     }
 }
 
-void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
-    bld_array flags_added = array_new(sizeof(bld_string));
-    bld_set flags_removed = set_new(sizeof(int));
-    bld_iter iter = iter_array(flags);
-    bld_compiler_flags* f;
-    bld_string* str;
+void compiler_flags_expand(bit_string* cmd, bit_array* flags) {
+    bit_array flags_added = array_new(sizeof(bit_string));
+    bit_set flags_removed = set_new(sizeof(int));
+    bit_iter iter = iter_array(flags);
+    bit_compiler_flags* f;
+    bit_string* str;
 
     array_reverse(flags);
     while (iter_next(&iter, (void**) &f)) {
-        bld_iter iter;
+        bit_iter iter;
         uintmax_t hash;
         int* amount;
         array_reverse(&f->flags);
@@ -242,14 +242,14 @@ void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
     set_free(&flags_removed);
 }
 
-int parse_compiler(FILE* file, bld_compiler* compiler) {
+int parse_compiler(FILE* file, bit_compiler* compiler) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
     char *keys[2] = {"executable", "flags"};
-    bld_parse_func funcs[2] = {
-        (bld_parse_func) parse_compiler_executable,
-        (bld_parse_func) parse_compiler_compiler_flags,
+    bit_parse_func funcs[2] = {
+        (bit_parse_func) parse_compiler_executable,
+        (bit_parse_func) parse_compiler_compiler_flags,
     };
 
     compiler->flags = compiler_flags_new();
@@ -272,8 +272,8 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     return -1;
 }
 
-int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
-    bld_string str;
+int parse_compiler_executable(FILE* file, bit_compiler* compiler) {
+    bit_string str;
     int result = string_parse(file, &str);
     if (result) {
         log_warn("Could not parse compiler executable");
@@ -284,7 +284,7 @@ int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     return result;
 }
 
-int parse_compiler_compiler_flags(FILE* file, bld_compiler* compiler) {
+int parse_compiler_compiler_flags(FILE* file, bit_compiler* compiler) {
     int result;
     result = parse_compiler_flags(file, &compiler->flags);
     if (result) {
@@ -295,14 +295,14 @@ int parse_compiler_compiler_flags(FILE* file, bld_compiler* compiler) {
     return result;
 }
 
-int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
+int parse_compiler_flags(FILE* file, bit_compiler_flags* flags) {
     int amount_parsed;
     int size = 2;
     int parsed[2];
     char *keys[2] = {"added", "removed"};
-    bld_parse_func funcs[2] = {
-        (bld_parse_func) parse_compiler_flags_added_flags,
-        (bld_parse_func) parse_compiler_flags_removed_flags,
+    bit_parse_func funcs[2] = {
+        (bit_parse_func) parse_compiler_flags_added_flags,
+        (bit_parse_func) parse_compiler_flags_removed_flags,
     };
 
     *flags = compiler_flags_new();
@@ -315,8 +315,8 @@ int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
     return 0;
     parse_failed:
     if (parsed[0]) {
-        bld_iter iter;
-        bld_string* flag;
+        bit_iter iter;
+        bit_string* flag;
 
         iter = iter_array(&flags->flags);
         while (iter_next(&iter, (void**) &flag)) {
@@ -327,8 +327,8 @@ int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
     }
 
     if (parsed[1]) {
-        bld_iter iter;
-        bld_string* flag;
+        bit_iter iter;
+        bit_string* flag;
 
         iter = iter_set(&flags->removed);
         while (iter_next(&iter, (void**) &flag)) {
@@ -340,10 +340,10 @@ int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
     return -1;
 }
 
-int parse_compiler_flags_added_flags(FILE* file, bld_compiler_flags* flags) {
+int parse_compiler_flags_added_flags(FILE* file, bit_compiler_flags* flags) {
     int values;
 
-    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_added_flag);
+    values = json_parse_array(file, flags, (bit_parse_func) parse_compiler_flags_added_flag);
     if (values < 0) {
         log_warn("Could not parse compiler flags");
         return -1;
@@ -352,8 +352,8 @@ int parse_compiler_flags_added_flags(FILE* file, bld_compiler_flags* flags) {
     return 0;
 }
 
-int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
-    bld_string flag;
+int parse_compiler_flags_added_flag(FILE* file, bit_compiler_flags* flags) {
+    bit_string flag;
     uintmax_t hash;
     int result = string_parse(file, &flag);
     if (result) {
@@ -381,10 +381,10 @@ int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
     return -1;
 }
 
-int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
+int parse_compiler_flags_removed_flags(FILE* file, bit_compiler_flags* flags) {
     int values;
 
-    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_removed_flags);
+    values = json_parse_array(file, flags, (bit_parse_func) parse_compiler_flags_removed_flags);
     if (values < 0) {
         log_warn("Could not parse compiler flags");
         return -1;
@@ -393,8 +393,8 @@ int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
     return 0;
 }
 
-int parse_compiler_flags_removed_flag(FILE* file, bld_compiler_flags* flags) {
-    bld_string flag;
+int parse_compiler_flags_removed_flag(FILE* file, bit_compiler_flags* flags) {
+    bit_string flag;
     uintmax_t hash;
     int result = string_parse(file, &flag);
     if (result) {

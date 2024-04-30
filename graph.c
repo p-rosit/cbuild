@@ -3,15 +3,15 @@
 #include "graph.h"
 #include "iter.h"
 
-bld_graph graph_new(void) {
-    bld_graph graph;
-    graph.edges = set_new(sizeof(bld_array));
+bit_graph graph_new(void) {
+    bit_graph graph;
+    graph.edges = set_new(sizeof(bit_array));
     return graph;
 }
 
-void graph_free(bld_graph* graph) {
-    bld_iter iter = iter_set(&graph->edges);
-    bld_array* edges;
+void graph_free(bit_graph* graph) {
+    bit_iter iter = iter_set(&graph->edges);
+    bit_array* edges;
 
     while (iter_next(&iter, (void**) &edges)) {
         array_free(edges);
@@ -19,13 +19,13 @@ void graph_free(bld_graph* graph) {
     set_free(&graph->edges);
 }
 
-void graph_add_node(bld_graph* graph, uintmax_t node_id) {
-    bld_array edges = array_new(sizeof(bld_hash));
+void graph_add_node(bit_graph* graph, uintmax_t node_id) {
+    bit_array edges = array_new(sizeof(bit_hash));
     set_add(&graph->edges, node_id, &edges);
 }
 
-void graph_add_edge(bld_graph* graph, uintmax_t from_id, uintmax_t to_id) {
-    bld_array* edges;
+void graph_add_edge(bit_graph* graph, uintmax_t from_id, uintmax_t to_id) {
+    bit_array* edges;
 
     edges = set_get(&graph->edges, from_id);
     if (edges == NULL) {log_fatal("From node does not exist.");}
@@ -34,6 +34,6 @@ void graph_add_edge(bld_graph* graph, uintmax_t from_id, uintmax_t to_id) {
     array_push(edges, &to_id);
 }
 
-int graph_has_node(const bld_graph* graph, uintmax_t node_id) {
+int graph_has_node(const bit_graph* graph, uintmax_t node_id) {
     return set_has(&graph->edges, node_id);
 }

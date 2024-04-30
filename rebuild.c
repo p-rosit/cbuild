@@ -4,15 +4,15 @@
 #include "incremental.h"
 #include "rebuild.h"
 
-int                 run_new_build(bld_path*, char*);
-bld_forward_project new_rebuild(bld_path, bld_compiler, bld_linker);
+int                 run_new_build(bit_path*, char*);
+bit_forward_project new_rebuild(bit_path, bit_compiler, bit_linker);
 void                extract_names(int, char**, char**, char**);
 char*               infer_build_name(char*);
-void                set_main_rebuild(bld_forward_project*, bld_path*);
+void                set_main_rebuild(bit_forward_project*, bit_path*);
 
-int run_new_build(bld_path* root, char* executable) {
+int run_new_build(bit_path* root, char* executable) {
     int result;
-    bld_path cmd = path_copy(root);
+    bit_path cmd = path_copy(root);
     path_append_string(&cmd, executable);
 
     log_info("Running new build script");
@@ -23,27 +23,27 @@ int run_new_build(bld_path* root, char* executable) {
     return result;
 }
 
-bld_project_base project_base_new(bld_path, bld_linker);
-bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
-    bld_forward_project fbuild;
+bit_project_base project_base_new(bit_path, bit_linker);
+bit_forward_project new_rebuild(bit_path root, bit_compiler compiler, bit_linker linker) {
+    bit_forward_project fbuild;
 
     fbuild.rebuilding = 1;
     fbuild.resolved = 0;
     fbuild.base = project_base_new(root, linker);
-    fbuild.extra_paths = array_new(sizeof(bld_path));
+    fbuild.extra_paths = array_new(sizeof(bit_path));
     fbuild.ignore_paths = set_new(0);
     fbuild.compiler = compiler;
-    fbuild.compiler_file_names = array_new(sizeof(bld_string));
-    fbuild.file_compilers = array_new(sizeof(bld_compiler_or_flags));
-    fbuild.linker_flags_file_names = array_new(sizeof(bld_string));
-    fbuild.file_linker_flags = array_new(sizeof(bld_linker_flags));
+    fbuild.compiler_file_names = array_new(sizeof(bit_string));
+    fbuild.file_compilers = array_new(sizeof(bit_compiler_or_flags));
+    fbuild.linker_flags_file_names = array_new(sizeof(bit_string));
+    fbuild.file_linker_flags = array_new(sizeof(bit_linker_flags));
 
     return fbuild;
 }
 
 void extract_names(int argc, char** argv, char** file, char** old_file) {
-    bld_path path = project_path_extract(argc, argv);
-    bld_string str;
+    bit_path path = project_path_extract(argc, argv);
+    bit_string str;
     char* name;
     
     name = path_remove_last_string(&path);
@@ -64,7 +64,7 @@ void extract_names(int argc, char** argv, char** file, char** old_file) {
 }
 
 char* infer_build_name(char* name) {
-    bld_path path;
+    bit_path path;
 
     path = path_from_string(name);
     path_remove_file_ending(&path);
@@ -73,22 +73,22 @@ char* infer_build_name(char* name) {
     return path_to_string(&path);
 }
 
-void set_main_rebuild(bld_forward_project* build, bld_path* path) {
-    bld_string str = string_new();
+void set_main_rebuild(bit_forward_project* build, bit_path* path) {
+    bit_string str = string_new();
     string_append_string(&str, path_to_string(path));
     build->main_file_name = str;
 }
 
-void    project_base_free(bld_project_base*);
-int     incremental_compile_with_absolute_path(bld_project*, char*);
-void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
+void    project_base_free(bit_project_base*);
+int     incremental_compile_with_absolute_path(bit_project*, char*);
+void rebuild_builder(bit_forward_project* fproject, int argc, char** argv) {
     int result, new_result, log_level;
     char *executable, *old_executable, *main_name;
-    bld_path build_root, main, executable_path;
-    bld_forward_project fbuild;
-    bld_project build;
+    bit_path build_root, main, executable_path;
+    bit_forward_project fbuild;
+    bit_project build;
 
-    log_level = set_log_level(BLD_WARN);
+    log_level = set_log_level(BIT_WARN);
 
     extract_names(argc, argv, &executable, &old_executable);
     main_name = infer_build_name(executable);
@@ -147,7 +147,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     project_save_cache(&build);
 
     if (result == 0) {
-        set_log_level(BLD_INFO);
+        set_log_level(BIT_INFO);
         log_info("Recompiled build script");
         new_result = run_new_build(&fproject->base.root, executable);
     } else {
