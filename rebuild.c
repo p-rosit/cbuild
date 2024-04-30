@@ -23,15 +23,16 @@ int run_new_build(bld_path* root, char* executable) {
     return result;
 }
 
-bld_project_base project_base_new(bld_path, bld_compiler, bld_linker);
+bld_project_base project_base_new(bld_path, bld_linker);
 bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
     bld_forward_project fbuild;
 
     fbuild.rebuilding = 1;
     fbuild.resolved = 0;
-    fbuild.base = project_base_new(root, compiler, linker);
+    fbuild.base = project_base_new(root, linker);
     fbuild.extra_paths = array_new(sizeof(bld_path));
     fbuild.ignore_paths = set_new(0);
+    fbuild.compiler = compiler;
     fbuild.compiler_file_names = array_new(sizeof(bld_string));
     fbuild.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     fbuild.linker_flags_file_names = array_new(sizeof(bld_string));

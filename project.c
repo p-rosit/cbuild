@@ -5,7 +5,7 @@
 #include "file.h"
 #include "project.h"
 
-bld_project_base    project_base_new(bld_path, bld_compiler, bld_linker);
+bld_project_base    project_base_new(bld_path, bld_linker);
 void                project_base_free(bld_project_base*);
 
 bld_project_cache   project_cache_new(void);
@@ -30,10 +30,11 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
 
     project.rebuilding = 0;
     project.resolved = 0;
-    project.base = project_base_new(path, compiler, linker);
+    project.base = project_base_new(path, linker);
     project.extra_paths = array_new(sizeof(bld_path));
     project.ignore_paths = set_new(0);
     project.main_file_name.chars = NULL;
+    project.compiler = compiler;
     project.compiler_file_names = array_new(sizeof(bld_string));
     project.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     project.linker_flags_file_names = array_new(sizeof(bld_string));
@@ -181,12 +182,11 @@ void project_partial_free(bld_forward_project* fproject) {
     array_free(&fproject->file_linker_flags);
 }
 
-bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_linker linker) {
+bld_project_base project_base_new(bld_path path, bld_linker linker) {
     bld_project_base base;
 
     base.root = path;
     base.build = path_new();
-    base.compiler = compiler;
     base.linker = linker;
     base.cache = project_cache_new();
 
@@ -196,7 +196,6 @@ bld_project_base project_base_new(bld_path path, bld_compiler compiler, bld_link
 void project_base_free(bld_project_base* base) {
     path_free(&base->root);
     path_free(&base->build);
-    compiler_free(&base->compiler);
     linker_free(&base->linker);
     project_cache_free(&base->cache);
 }
@@ -219,7 +218,6 @@ void project_cache_free(bld_project_cache* cache) {
     path_free(&cache->root);
 
     if (!cache->set) {return;}
-    compiler_free(&cache->compiler);
     linker_free(&cache->linker);
 
     iter = iter_set(&cache->files);
