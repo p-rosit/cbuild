@@ -32,7 +32,6 @@ typedef enum bld_file_fields {
 
 void ensure_directory_exists(bld_path*);
 int parse_cache(bld_project_cache*, bld_path*);
-int parse_project_compiler(FILE*, bld_project_cache*);
 int parse_project_linker(FILE*, bld_project_cache*);
 
 int parse_project_files(FILE*, bld_project_cache*);
@@ -113,11 +112,10 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
     int amount_parsed;
-    int size = 3;
-    int parsed[3];
-    char *keys[3] = {"compiler", "linker", "files"};
+    int size = 2;
+    int parsed[2];
+    char *keys[2] = {"linker", "files"};
     bld_parse_func funcs[3] = {
-        (bld_parse_func) parse_project_compiler,
         (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
     };
@@ -135,14 +133,10 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
         path_free(&path);
 
         if (parsed[0]) {
-            compiler_free(&cache->compiler);
-        }
-
-        if (parsed[1]) {
             linker_free(&cache->linker);
         }
 
-        if (parsed[2]) {
+        if (parsed[1]) {
             bld_iter iter;
             bld_file* file;
 
@@ -159,12 +153,6 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
     fclose(f);
     path_free(&path);
     return 0;
-}
-
-int parse_project_compiler(FILE* file, bld_project_cache* cache) {
-    int result = parse_compiler(file, &cache->compiler);
-    if (result) {log_warn("Could not parse compiler for project.");}
-    return result;
 }
 
 int parse_project_linker(FILE* file, bld_project_cache* cache) {
