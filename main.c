@@ -1,9 +1,9 @@
 #include "bit_core/args.h"
 #include "bit_core/logging.h"
 #include "bit_core/path.h"
-#include "application/utils.h"
-#include "application/init.h"
-#include "application/remove.h"
+#include "command/utils.h"
+#include "command/init.h"
+#include "command/remove.h"
 
 
 int main(int argc, char** argv) {
