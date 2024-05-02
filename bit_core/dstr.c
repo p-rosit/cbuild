@@ -82,6 +82,11 @@ int push_character(bld_string* str, char c) {
     return 1;
 }
 
+int string_eq(const bld_string* str1, const bld_string* str2) {
+    if (str1->size != str2->size) {return 0;}
+    return strcmp(str1->chars, str2->chars) == 0;
+}
+
 void string_append_space(bld_string* str) {
     if (!push_character(str, ' ')) {
         log_fatal("Could not append space to string.");
@@ -104,7 +109,7 @@ void string_append_string(bld_string* str, char* s) {
     }
 }
 
-char* string_unpack(bld_string* str) {
+char* string_unpack(const bld_string* str) {
     return str->chars;
 }
 
