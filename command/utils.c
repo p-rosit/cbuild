@@ -6,14 +6,18 @@
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 
-bld_path data_find_root(void);
+int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 
 bld_data data_extract(void) {
     bld_data data;
 
-    data.root = data_find_root();
-    data.targets = data_find_targets(&data.root);
+    data.has_root = data_find_root(&data.root);
+    if (data.has_root) {
+        data.targets = data_find_targets(&data.root);
+    } else {
+        data.targets = set_new(sizeof(bld_string));
+    }
 
     return data;
 }
@@ -22,7 +26,9 @@ void data_free(bld_data* data) {
     bld_string* target;
     bld_iter iter;
 
-    path_free(&data->root);
+    if (data->has_root) {
+        path_free(&data->root);
+    }
 
     iter = iter_set(&data->targets);
     while (iter_next(&iter, (void**) &target)) {
@@ -66,17 +72,17 @@ bld_set data_find_targets(bld_path* root) {
     return targets;
 }
 
-bld_path data_find_root(void) {
+int data_find_root(bld_path* root) {
     int root_found = 0;
     char cwd[FILENAME_MAX];
-    bld_path root;
+    bld_path test_root;
 
     os_cwd(cwd, FILENAME_MAX);
-    root = path_from_string(cwd);
+    test_root = path_from_string(cwd);
 
     do {
         bld_os_dir* dir;
-        bld_path temp = path_copy(&root);
+        bld_path temp = path_copy(&test_root);
         path_append_string(&temp, string_unpack(&bld_path_build));
 
         dir = os_dir_open(path_to_string(&temp));
@@ -87,14 +93,15 @@ bld_path data_find_root(void) {
             break;
         }
 
-        if (root.str.size < 1) {break;}
-        path_remove_last_string(&root);
+        if (test_root.str.size < 1) {break;}
+        path_remove_last_string(&test_root);
     } while (!root_found);
 
-    if (!root_found) {
-        path_free(&root);
-        root = path_from_string("");
+    if (root_found) {
+        *root = test_root;
+        return 1;
+    } else {
+        path_free(&test_root);
+        return 0;
     }
-
-    return root;
 }

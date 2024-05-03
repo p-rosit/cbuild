@@ -8,6 +8,7 @@ extern const bld_string bld_path_build;
 extern const bld_string bld_path_target;
 
 typedef struct bld_data {
+    int has_root;
     bld_path root;
     bld_set targets;
 } bld_data;
