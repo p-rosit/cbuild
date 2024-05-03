@@ -58,7 +58,7 @@ int command_build_parse(bld_string* target, bld_args* args, bld_command_build* b
     } else {
         error_msg = string_new();
         string_append_string(&error_msg, "bit: cannot build target '");
-        string_append_string(&error_msg, string_unpack(&build->target));
+        string_append_string(&error_msg, string_unpack(target));
         string_append_string(&error_msg, "', unknown option '");
         string_append_string(&error_msg, string_unpack(&option));
         string_append_string(&error_msg, "'");
