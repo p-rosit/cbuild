@@ -6,6 +6,7 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     bld_string base_command;
     bld_string error_msg;
     bld_command cmd;
+    bld_command_invalid invalid;
 
     if (args_empty(args)) {
         error_msg = string_pack("missing sub command");
@@ -18,21 +19,22 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     base_command = args_advance(args);
     if (string_eq(&base_command, &bld_command_string_init)) {
         cmd.type = BLD_COMMAND_INIT;
-        error = command_init_parse(args, &cmd.as.init, &cmd.as.invalid);
+        error = command_init_parse(args, &cmd.as.init, &invalid);
     } else if (string_eq(&base_command, &bld_command_string_remove)) {
         cmd.type = BLD_COMMAND_REMOVE;
-        error = command_remove_parse(args, &cmd.as.remove, &cmd.as.invalid);
+        error = command_remove_parse(args, &cmd.as.remove, &invalid);
     } else {
         error = 1;
         error_msg = string_pack("bit: '");
         error_msg = string_copy(&error_msg);
         string_append_string(&error_msg, string_unpack(&base_command));
         string_append_string(&error_msg, "' is not a bit command");
-        cmd.as.invalid = command_invalid_new(-1, &error_msg);
+        invalid = command_invalid_new(-1, &error_msg);
     }
 
     if (error) {
         cmd.type = BLD_COMMAND_INVALID;
+        cmd.as.invalid = invalid;
     }
 
     return cmd;
