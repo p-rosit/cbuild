@@ -16,7 +16,7 @@ typedef struct bld_command_build {
     bld_path path;
 } bld_command_build;
 
-int command_build_parse(bld_string*, bld_args*, bld_command_build*, bld_command_invalid*);
+int command_build_parse(bld_string*, bld_args*, bld_data*, bld_command_build*, bld_command_invalid*);
 int command_build(bld_command_build*, bld_data*);
 void command_build_free(bld_command_build*);
 

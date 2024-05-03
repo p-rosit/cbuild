@@ -10,9 +10,10 @@ int command_remove(bld_command_remove* remove, bld_data* data) {
     return -1;
 }
 
-int command_remove_parse(bld_args* args, bld_command_remove* remove, bld_command_invalid* invalid) {
+int command_remove_parse(bld_args* args, bld_data* data, bld_command_remove* remove, bld_command_invalid* invalid) {
     bld_string error_msg;
     bld_string target;
+    (void)(data);
 
     if (args_empty(args)) {
         error_msg = string_pack("missing target");

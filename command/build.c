@@ -38,11 +38,12 @@ int command_build_linker(bld_command_build* build, bld_data* data) {
     return -1;
 }
 
-int command_build_parse(bld_string* target, bld_args* args, bld_command_build* build, bld_command_invalid* invalid) {
+int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_command_build* build, bld_command_invalid* invalid) {
     bld_string option, path;
     bld_string error_msg;
     bld_string compiler_option = string_pack("-c");
     bld_string linker_option = string_pack("-l");
+    (void)(data);
 
     if (args_empty(args)) {
         build->type = BLD_COMMAND_BUILD_TARGET;

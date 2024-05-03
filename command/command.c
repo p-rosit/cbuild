@@ -19,13 +19,13 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     base_command = args_advance(args);
     if (string_eq(&base_command, &bld_command_string_init)) {
         cmd.type = BLD_COMMAND_INIT;
-        error = command_init_parse(args, &cmd.as.init, &invalid);
+        error = command_init_parse(args, data, &cmd.as.init, &invalid);
     } else if (string_eq(&base_command, &bld_command_string_remove)) {
         cmd.type = BLD_COMMAND_REMOVE;
-        error = command_remove_parse(args, &cmd.as.remove, &invalid);
+        error = command_remove_parse(args, data, &cmd.as.remove, &invalid);
     } else if (set_has(&data->targets, string_hash(string_unpack(&base_command)))) {
         cmd.type = BLD_COMMAND_BUILD;
-        error = command_build_parse(&base_command, args, &cmd.as.build, &invalid);
+        error = command_build_parse(&base_command, args, data, &cmd.as.build, &invalid);
     } else {
         error = 1;
         error_msg = string_pack("bld: '");

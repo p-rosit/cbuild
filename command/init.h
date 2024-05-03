@@ -11,7 +11,7 @@ typedef struct bld_command_init {
     bld_string target;
 } bld_command_init;
 
-int command_init_parse(bld_args*, bld_command_init*, bld_command_invalid*);
+int command_init_parse(bld_args*, bld_data*, bld_command_init*, bld_command_invalid*);
 int command_init(bld_command_init*, bld_data*);
 void command_init_free(bld_command_init*);
 

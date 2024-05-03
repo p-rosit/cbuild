@@ -68,7 +68,7 @@ int command_init_target(bld_command_init* init, bld_data* data) {
     return 0;
 }
 
-int command_init_parse(bld_args* args, bld_command_init* init, bld_command_invalid* invalid) {
+int command_init_parse(bld_args* args, bld_data* data, bld_command_init* init, bld_command_invalid* invalid) {
     bld_string target;
     bld_string error_msg;
 
