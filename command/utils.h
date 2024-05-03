@@ -1,5 +1,5 @@
-#ifndef APPLICATION_UTILS_H
-#define APPLICATION_UTILS_H
+#ifndef COMMAND_UTILS_H
+#define COMMAND_UTILS_H
 
 #include "../bit_core/set.h"
 #include "../bit_core/path.h"

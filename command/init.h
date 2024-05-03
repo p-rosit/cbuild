@@ -1,5 +1,5 @@
-#ifndef APPLICATION_INIT_H
-#define APPLICATION_INIT_H
+#ifndef COMMAND_INIT_H
+#define COMMAND_INIT_H
 #include "../bit_core/dstr.h"
 #include "../bit_core/args.h"
 #include "invalid.h"

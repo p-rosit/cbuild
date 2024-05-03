@@ -1,5 +1,5 @@
-#ifndef APPLICATION_REMOVE_H
-#define APPLICATION_REMOVE_H
+#ifndef COMMAND_REMOVE_H
+#define COMMAND_REMOVE_H
 #include "../bit_core/args.h"
 #include "../bit_core/path.h"
 #include "invalid.h"

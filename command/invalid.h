@@ -1,5 +1,5 @@
-#ifndef APPLICATION_INVALID_H
-#define APPLICATION_INVALID_H
+#ifndef COMMAND_INVALID_H
+#define COMMAND_INVALID_H
 #include "../bit_core/dstr.h"
 #include "utils.h"
 
