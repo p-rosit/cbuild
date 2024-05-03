@@ -22,10 +22,9 @@ int command_init_project(bld_command_init* init, bld_data* data) {
     bld_path build_dir;
     log_debug("Initializing project");
     (void)(init);
-    (void)(data);
 
-    if (data->root.str.size != 0) {
-        log_error("Build has already been initialized!");
+    if (data->has_root) {
+        log_fatal("Build has already been initialized!");
         return -1;
     }
 
@@ -45,6 +44,11 @@ int command_init_target(bld_command_init* init, bld_data* data) {
     int error;
     bld_path target_path;
     log_debug("Initializing target: \"%s\"", string_unpack(&init->target));
+
+    if (!data->has_root) {
+        log_fatal("Build has not been initialized!");
+        return -1;
+    }
 
     target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
@@ -73,9 +77,25 @@ int command_init_parse(bld_args* args, bld_data* data, bld_command_init* init, b
     bld_string error_msg;
 
     if (args_empty(args)) {
+        if (data->has_root) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "bld: project has already been initialized");
+            invalid->code = -1;
+            invalid->msg = error_msg;
+            return -1;
+        }
+
         init->init_project = 1;
         return 0;
     } else {
+        if (!data->has_root) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "bld: project has not been initialized");
+            invalid->code = -1;
+            invalid->msg = error_msg;
+            return -1;
+        }
+
         target = args_advance(args);
 
         if (!args_empty(args)) {

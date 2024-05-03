@@ -20,6 +20,12 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     if (string_eq(&base_command, &bld_command_string_init)) {
         cmd.type = BLD_COMMAND_INIT;
         error = command_init_parse(args, data, &cmd.as.init, &invalid);
+    } else if (!data->has_root) {
+        error = 1;
+        error_msg = string_new();
+        string_append_string(&error_msg, "bld: not a bld project");
+        invalid.code = -1;
+        invalid.msg = error_msg;
     } else if (string_eq(&base_command, &bld_command_string_remove)) {
         cmd.type = BLD_COMMAND_REMOVE;
         error = command_remove_parse(args, data, &cmd.as.remove, &invalid);
