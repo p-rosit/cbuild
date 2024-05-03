@@ -4,17 +4,20 @@
 #include "invalid.h"
 #include "init.h"
 #include "remove.h"
+#include "build.h"
 
 typedef enum bld_command_type {
     BLD_COMMAND_INVALID,
     BLD_COMMAND_INIT,
-    BLD_COMMAND_REMOVE
+    BLD_COMMAND_REMOVE,
+    BLD_COMMAND_BUILD
 } bld_command_type;
 
 typedef union bld_union_command {
     bld_command_invalid invalid;
     bld_command_init init;
     bld_command_remove remove;
+    bld_command_build build;
 } bld_union_command;
 
 typedef struct bld_command {

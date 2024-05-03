@@ -23,6 +23,9 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     } else if (string_eq(&base_command, &bld_command_string_remove)) {
         cmd.type = BLD_COMMAND_REMOVE;
         error = command_remove_parse(args, &cmd.as.remove, &invalid);
+    } else if (set_has(&data->targets, string_hash(string_unpack(&base_command)))) {
+        cmd.type = BLD_COMMAND_BUILD;
+        error = command_build_parse(&base_command, args, &cmd.as.build, &invalid);
     } else {
         error = 1;
         error_msg = string_pack("bit: '");
@@ -48,6 +51,8 @@ int command_execute(bld_command* cmd, bld_data* data) {
             return command_init(&cmd->as.init, data);
         case (BLD_COMMAND_REMOVE):
             return command_remove(&cmd->as.remove, data);
+        case (BLD_COMMAND_BUILD):
+            return command_build(&cmd->as.build, data);
         default:
             log_fatal("command_execute: Unreachable error");
             return -1;
@@ -64,6 +69,9 @@ void command_free(bld_command* cmd) {
             return;
         case (BLD_COMMAND_REMOVE):
             command_remove_free(&cmd->as.remove);
+            return;
+        case (BLD_COMMAND_BUILD):
+            command_build_free(&cmd->as.build);
             return;
         default:
             log_fatal("command_free: Unreachable error");
