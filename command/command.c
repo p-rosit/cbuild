@@ -31,7 +31,7 @@ bld_command command_parse(bld_args* args, bld_data* data) {
         error_msg = string_pack("bit: '");
         error_msg = string_copy(&error_msg);
         string_append_string(&error_msg, string_unpack(&base_command));
-        string_append_string(&error_msg, "' is not a bit command");
+        string_append_string(&error_msg, "' is not a bit command or target");
         invalid = command_invalid_new(-1, &error_msg);
     }
 
