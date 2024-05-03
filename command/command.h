@@ -1,6 +1,6 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
-#include "../bit_core/args.h"
+#include "../bld_core/args.h"
 #include "invalid.h"
 #include "init.h"
 #include "remove.h"

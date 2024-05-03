@@ -1,5 +1,5 @@
-#include "../bit_core/os.h"
-#include "../bit_core/logging.h"
+#include "../bld_core/os.h"
+#include "../bld_core/logging.h"
 #include "utils.h"
 #include "init.h"
 

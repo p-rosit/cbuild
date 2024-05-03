@@ -1,9 +1,9 @@
-#include "../bit_core/logging.h"
-#include "../bit_core/os.h"
-#include "../bit_core/iter.h"
+#include "../bld_core/logging.h"
+#include "../bld_core/os.h"
+#include "../bld_core/iter.h"
 #include "utils.h"
 
-const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bit");
+const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 
 bld_path data_find_root(void);

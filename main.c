@@ -1,6 +1,6 @@
-#include "bit_core/args.h"
-#include "bit_core/logging.h"
-#include "bit_core/path.h"
+#include "bld_core/args.h"
+#include "bld_core/logging.h"
+#include "bld_core/path.h"
 #include "command/command.h"
 
 int main(int argc, char** argv) {

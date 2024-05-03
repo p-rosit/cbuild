@@ -1,8 +1,8 @@
 #ifndef COMMAND_UTILS_H
 #define COMMAND_UTILS_H
 
-#include "../bit_core/set.h"
-#include "../bit_core/path.h"
+#include "../bld_core/set.h"
+#include "../bld_core/path.h"
 
 extern const bld_string bld_path_build;
 extern const bld_string bld_path_target;

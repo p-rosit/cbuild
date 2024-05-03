@@ -1,4 +1,4 @@
-#include "../bit_core/logging.h"
+#include "../bld_core/logging.h"
 #include "build.h"
 
 int command_build_target(bld_command_build*, bld_data*);
@@ -57,7 +57,7 @@ int command_build_parse(bld_string* target, bld_args* args, bld_command_build* b
         build->type = BLD_COMMAND_BUILD_LINKER;
     } else {
         error_msg = string_new();
-        string_append_string(&error_msg, "bit: cannot build target '");
+        string_append_string(&error_msg, "bld: cannot build target '");
         string_append_string(&error_msg, string_unpack(target));
         string_append_string(&error_msg, "', unknown option '");
         string_append_string(&error_msg, string_unpack(&option));
@@ -69,7 +69,7 @@ int command_build_parse(bld_string* target, bld_args* args, bld_command_build* b
 
     if (args_empty(args)) {
         error_msg = string_new();
-        string_append_string(&error_msg, "bit: expected path");
+        string_append_string(&error_msg, "bld: expected path");
         invalid->code = -1;
         invalid->msg = error_msg;
         return -1;

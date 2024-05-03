@@ -1,7 +1,7 @@
 #ifndef COMMAND_INIT_H
 #define COMMAND_INIT_H
-#include "../bit_core/dstr.h"
-#include "../bit_core/args.h"
+#include "../bld_core/dstr.h"
+#include "../bld_core/args.h"
 #include "invalid.h"
 
 extern const bld_string bld_command_string_init;

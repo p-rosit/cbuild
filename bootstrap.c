@@ -1,4 +1,4 @@
-#include "bit_core/cbuild.h"
+#include "bld_core/cbuild.h"
 
 int main(int argc, char** argv) {
     int result = 0;
@@ -26,9 +26,9 @@ int main(int argc, char** argv) {
         )
     );
 
-    project_add_path(&fproject, "bit_core");
-    project_ignore_path(&fproject, "bit_core/test");
-    project_add_build(&fproject, "bit_core");
+    project_add_path(&fproject, "bld_core");
+    project_ignore_path(&fproject, "bld_core/test");
+    project_add_build(&fproject, "bld_core");
     rebuild_builder(&fproject, argc, argv);
 
     project_load_cache(&fproject, ".build_cache");
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
     project = project_resolve(&fproject);
 
-    result = incremental_compile_project(&project, "bit");
+    result = incremental_compile_project(&project, "bld");
     if (result > 0) {
         log_warn("Could not compile project");
     } else if (result < 0) {

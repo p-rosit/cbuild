@@ -1,6 +1,6 @@
 #ifndef COMMAND_INVALID_H
 #define COMMAND_INVALID_H
-#include "../bit_core/dstr.h"
+#include "../bld_core/dstr.h"
 #include "utils.h"
 
 typedef struct bld_command_invalid {

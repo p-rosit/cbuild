@@ -1,4 +1,4 @@
-#include "../bit_core/logging.h"
+#include "../bld_core/logging.h"
 #include "invalid.h"
 
 bld_command_invalid command_invalid_new(int code, bld_string* msg) {

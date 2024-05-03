@@ -1,7 +1,7 @@
 #ifndef COMMAND_BUILD_H
 #define COMMAND_BUILD_H
-#include "../bit_core/dstr.h"
-#include "../bit_core/args.h"
+#include "../bld_core/dstr.h"
+#include "../bld_core/args.h"
 #include "invalid.h"
 
 typedef enum bld_command_build_sub_command {

@@ -1,7 +1,7 @@
 #ifndef COMMAND_REMOVE_H
 #define COMMAND_REMOVE_H
-#include "../bit_core/args.h"
-#include "../bit_core/path.h"
+#include "../bld_core/args.h"
+#include "../bld_core/path.h"
 #include "invalid.h"
 
 extern const bld_string bld_command_string_remove;

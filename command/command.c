@@ -1,4 +1,4 @@
-#include "../bit_core/logging.h"
+#include "../bld_core/logging.h"
 #include "command.h"
 
 bld_command command_parse(bld_args* args, bld_data* data) {
@@ -28,10 +28,10 @@ bld_command command_parse(bld_args* args, bld_data* data) {
         error = command_build_parse(&base_command, args, &cmd.as.build, &invalid);
     } else {
         error = 1;
-        error_msg = string_pack("bit: '");
+        error_msg = string_pack("bld: '");
         error_msg = string_copy(&error_msg);
         string_append_string(&error_msg, string_unpack(&base_command));
-        string_append_string(&error_msg, "' is not a bit command or target");
+        string_append_string(&error_msg, "' is not a bld command or target");
         invalid = command_invalid_new(-1, &error_msg);
     }
 
