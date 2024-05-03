@@ -22,7 +22,7 @@ typedef struct bld_command {
     bld_union_command as;
 } bld_command;
 
-bld_command command_parse(bld_args*);
+bld_command command_parse(bld_args*, bld_data*);
 int command_execute(bld_command*, bld_data*);
 void command_free(bld_command*);
 

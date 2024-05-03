@@ -12,9 +12,8 @@ int main(int argc, char** argv) {
     args = args_new(argc, argv);
     args_advance(&args); /* Ignore how program was invoked */
 
-    cmd = command_parse(&args);
     data = data_extract();
-
+    cmd = command_parse(&args, &data);
     result = command_execute(&cmd, &data);
 
     command_free(&cmd);

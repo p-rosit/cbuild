@@ -1,7 +1,7 @@
 #include "../bit_core/logging.h"
 #include "command.h"
 
-bld_command command_parse(bld_args* args) {
+bld_command command_parse(bld_args* args, bld_data* data) {
     int error;
     bld_string base_command;
     bld_string error_msg;
