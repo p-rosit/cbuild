@@ -9,8 +9,6 @@ int command_init_target(bld_command_init*, bld_data*);
 const bld_string bld_command_string_init = STRING_COMPILE_TIME_PACK("init");
 
 int command_init(bld_command_init* init, bld_data* data) {
-    log_debug("Initializing!");
-
     if (init->init_project) {
         return command_init_project(init, data);
     } else {
