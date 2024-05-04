@@ -9,6 +9,7 @@ extern const bld_string bld_command_string_init;
 typedef struct bld_command_init {
     int init_project;
     bld_string target;
+    bld_path path_main;
 } bld_command_init;
 
 int command_init_parse(bld_args*, bld_data*, bld_command_init*, bld_command_invalid*);

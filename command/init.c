@@ -135,8 +135,29 @@ int command_init_parse(bld_args* args, bld_data* data, bld_command_init* init, b
             return -1;
         }
 
+        if (set_has(&data->targets, string_hash(string_unpack(&target)))) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "target '");
+            string_append_string(&error_msg, string_unpack(&target));
+            string_append_string(&error_msg, "' already exists");
+            invalid->code = -1;
+            invalid->msg = error_msg;
+            return -1;
+        }
+
+        if (!os_file_exists(string_unpack(&path_main))) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "specified main file '");
+            string_append_string(&error_msg, string_unpack(&path_main));
+            string_append_string(&error_msg, "' is not a path or file");
+            invalid->code = -1;
+            invalid->msg = error_msg;
+            return -1;
+        }
+
         init->init_project = 0;
         init->target = string_copy(&target);
+        init->path_main = path_from_string(string_unpack(&path_main));
         return 0;
     }
 }
@@ -144,5 +165,6 @@ int command_init_parse(bld_args* args, bld_data* data, bld_command_init* init, b
 void command_init_free(bld_command_init* init) {
     if (!init->init_project) {
         string_free(&init->target);
+        path_free(&init->path_main);
     }
 }
