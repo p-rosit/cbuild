@@ -33,6 +33,9 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     } else if (string_eq(&base_command, &bld_command_string_status)) {
         cmd.type = BLD_COMMAND_STATUS;
         error = command_status_parse(args, data, &cmd.as.status, &invalid);
+    } else if (string_eq(&base_command, &bld_command_string_help)) {
+        cmd.type = BLD_COMMAND_HELP;
+        error = command_help_parse(args, data, &cmd.as.help, &invalid);
     } else if (set_has(&data->targets, string_hash(string_unpack(&base_command)))) {
         bld_path target_config = path_copy(&data->root);
         path_append_string(&target_config, ".bld");
@@ -83,6 +86,8 @@ int command_execute(bld_command* cmd, bld_data* data) {
             return command_build(&cmd->as.build, data);
         case (BLD_COMMAND_STATUS):
             return command_status(&cmd->as.status, data);
+        case (BLD_COMMAND_HELP):
+            return command_help(&cmd->as.help, data);
         default:
             log_fatal("command_execute: Unreachable error");
             return -1;
@@ -105,6 +110,9 @@ void command_free(bld_command* cmd) {
             return;
         case (BLD_COMMAND_STATUS):
             command_status_free(&cmd->as.status);
+            return;
+        case (BLD_COMMAND_HELP):
+            command_help_free(&cmd->as.help);
             return;
         default:
             log_fatal("command_free: Unreachable error");

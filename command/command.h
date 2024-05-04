@@ -6,13 +6,15 @@
 #include "remove.h"
 #include "build.h"
 #include "status.h"
+#include "help.h"
 
 typedef enum bld_command_type {
     BLD_COMMAND_INVALID,
     BLD_COMMAND_INIT,
     BLD_COMMAND_REMOVE,
     BLD_COMMAND_BUILD,
-    BLD_COMMAND_STATUS
+    BLD_COMMAND_STATUS,
+    BLD_COMMAND_HELP
 } bld_command_type;
 
 typedef union bld_union_command {
@@ -21,6 +23,7 @@ typedef union bld_union_command {
     bld_command_remove remove;
     bld_command_build build;
     bld_command_status status;
+    bld_command_help help;
 } bld_union_command;
 
 typedef struct bld_command {
