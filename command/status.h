@@ -7,7 +7,8 @@
 extern const bld_string bld_command_string_status;
 
 typedef struct bld_command_status {
-    int placeholder;
+    int target_status;
+    bld_string target;
 } bld_command_status;
 
 int command_status_parse(bld_args*, bld_data*, bld_command_status*, bld_command_invalid*);
