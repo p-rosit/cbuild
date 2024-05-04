@@ -19,6 +19,18 @@ bld_data data_extract(void) {
         data.targets = set_new(sizeof(bld_string));
     }
 
+    data.config_parsed = 0;
+    data.target_config_parsed = 0;
+
+    if (data.has_root) {
+        bld_path path_config = path_copy(&data.root);
+        path_append_string(&path_config, ".bld");
+        path_append_string(&path_config, "config.json");
+
+        data.config_parsed = !parse_config(&path_config, &data.config);
+        path_free(&path_config);
+    }
+
     return data;
 }
 
@@ -35,6 +47,14 @@ void data_free(bld_data* data) {
         string_free(target);
     }
     set_free(&data->targets);
+
+    if (data->config_parsed) {
+        config_free(&data->config);
+    }
+
+    if (data->target_config_parsed) {
+        config_target_free(&data->target_config);
+    }
 }
 
 bld_set data_find_targets(bld_path* root) {
