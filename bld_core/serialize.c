@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include <inttypes.h>
 #include "logging.h"
 #include "project.h"
+#include "json.h"
 
 void serialize_compiler(FILE*, bld_compiler*, int);
 void serialize_compiler_flags(FILE*, bld_compiler_flags*, int);
@@ -17,8 +17,6 @@ void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_mtime(FILE*, bld_file_identifier);
 void serialize_file_symbols(FILE*, bld_set*, int);
 void serialize_file_includes(FILE*, bld_set*, int);
-
-void serialize_key(FILE*, char*, int);
 
 void project_save_cache(bld_project* project) {
     FILE* cache;
@@ -42,11 +40,11 @@ void project_save_cache(bld_project* project) {
     }
 
     fprintf(cache, "{\n");
-    serialize_key(cache, "linker", depth);
+    json_serialize_key(cache, "linker", depth);
     serialize_linker(cache, &project->base.linker, depth + 1);
 
     fprintf(cache, ",\n");
-    serialize_key(cache, "files", depth);
+    json_serialize_key(cache, "files", depth);
     serialize_files(cache, root, &project->files, depth + 1);
 
     fprintf(cache, "\n}\n");
@@ -58,11 +56,11 @@ void project_save_cache(bld_project* project) {
 void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     fprintf(cache, "{\n");
 
-    serialize_key(cache, "executable", depth);
+    json_serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", string_unpack(&compiler->executable));
     fprintf(cache, ",\n");
 
-    serialize_key(cache, "flags", depth);
+    json_serialize_key(cache, "flags", depth);
     serialize_compiler_flags(cache, &compiler->flags, depth + 1);
 
     fprintf(cache, "\n");
@@ -72,11 +70,11 @@ void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
 void serialize_compiler_flags(FILE* cache, bld_compiler_flags* flags, int depth) {
     fprintf(cache, "{\n");
 
-    serialize_key(cache, "added", depth);
+    json_serialize_key(cache, "added", depth);
     serialize_compiler_flags_added_flags(cache, flags, depth + 1);
     fprintf(cache, ",\n");
 
-    serialize_key(cache, "removed", depth);
+    json_serialize_key(cache, "removed", depth);
     serialize_compiler_flags_removed_flags(cache, flags, depth + 1);
 
     fprintf(cache, "\n");
@@ -138,12 +136,12 @@ void serialize_compiler_flags_removed_flags(FILE* cache, bld_compiler_flags* fla
 void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
     fprintf(cache, "{\n");
 
-    serialize_key(cache, "executable", depth);
+    json_serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", string_unpack(&linker->executable));
 
     if (linker->flags.flags.size > 0) {
         fprintf(cache, ",\n");
-        serialize_key(cache, "flags", depth);
+        json_serialize_key(cache, "flags", depth);
         serialize_linker_flags(cache, &linker->flags, depth + 1);
     }
 
@@ -184,36 +182,36 @@ void serialize_files(FILE* cache, bld_file* root, bld_set* files, int depth) {
 void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
     fprintf(cache, "{\n");
 
-    serialize_key(cache, "type", depth);
+    json_serialize_key(cache, "type", depth);
     serialize_file_type(cache, file->type);
 
     fprintf(cache, ",\n");
-    serialize_key(cache, "id", depth);
+    json_serialize_key(cache, "id", depth);
     serialize_file_id(cache, file->identifier);
 
     if (file->type != BLD_DIR) {
         fprintf(cache, ",\n");
-        serialize_key(cache, "mtime", depth);
+        json_serialize_key(cache, "mtime", depth);
         serialize_file_mtime(cache, file->identifier);
 
         fprintf(cache, ",\n");
-        serialize_key(cache, "hash", depth);
+        json_serialize_key(cache, "hash", depth);
         fprintf(cache, "%" PRIuMAX, file->identifier.hash);
     }
 
     fprintf(cache, ",\n");
-    serialize_key(cache, "name", depth);
+    json_serialize_key(cache, "name", depth);
     fprintf(cache, "\"%s\"", string_unpack(&file->name));
 
     if (file->build_info.compiler_set) {
         fprintf(cache, ",\n");
         switch (file->build_info.compiler.type) {
             case (BLD_COMPILER): {
-                serialize_key(cache, "compiler", depth);
+                json_serialize_key(cache, "compiler", depth);
                 serialize_compiler(cache, &file->build_info.compiler.as.compiler, depth + 1);
             } break;
             case (BLD_COMPILER_FLAGS): {
-                serialize_key(cache, "compiler_flags", depth);
+                json_serialize_key(cache, "compiler_flags", depth);
                 serialize_compiler_flags(cache, &file->build_info.compiler.as.flags, depth + 1);
             } break;
         }
@@ -221,7 +219,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
 
     if (file->build_info.linker_set) {
         fprintf(cache, ",\n");
-        serialize_key(cache, "linker_flags", depth);
+        json_serialize_key(cache, "linker_flags", depth);
         serialize_linker_flags(cache, &file->build_info.linker_flags, depth + 1);
     }
 
@@ -244,7 +242,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         }
 
         fprintf(cache, ",\n");
-        serialize_key(cache, "includes", depth);
+        json_serialize_key(cache, "includes", depth);
         serialize_file_includes(cache, includes, depth + 1);
     }
 
@@ -254,17 +252,17 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         case (BLD_IMPL): {
             fprintf(cache, ",\n");
 
-            serialize_key(cache, "undefined_symbols", depth);
+            json_serialize_key(cache, "undefined_symbols", depth);
             serialize_file_symbols(cache, &file->info.impl.undefined_symbols, depth + 1);
 
             fprintf(cache, ",\n");
-            serialize_key(cache, "defined_symbols", depth);
+            json_serialize_key(cache, "defined_symbols", depth);
             serialize_file_symbols(cache, &file->info.impl.defined_symbols, depth + 1);
 
         } break;
         case (BLD_TEST): {
             fprintf(cache, ",\n");
-            serialize_key(cache, "undefined_symbols", depth);
+            json_serialize_key(cache, "undefined_symbols", depth);
             serialize_file_symbols(cache, &file->info.test.undefined_symbols, depth + 1);
         } break;
         default: log_fatal("serialize_file: unrecognized file type, unreachable error");
@@ -277,7 +275,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         bld_file* child;
 
         fprintf(cache, ",\n");
-        serialize_key(cache, "files", depth);
+        json_serialize_key(cache, "files", depth);
         fprintf(cache, "[\n");
 
         iter = iter_array(&file->info.dir.files);
@@ -382,8 +380,4 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
         fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
     }
     fprintf(cache, "]");
-}
-
-void serialize_key(FILE* cache, char* key, int depth) {
-    fprintf(cache, "%*c\"%s\": ", 2 * depth, ' ', key);
 }
