@@ -1,9 +1,21 @@
 #ifndef CONFIG_TARGET_H
 #define CONFIG_TARGET_H
+#include "../bld_core/array.h"
 #include "../bld_core/path.h"
+#include "../bld_core/file.h"
+
+typedef struct bld_target_build_information {
+    bld_string name;
+    bld_file_build_information info;
+    bld_array files;
+} bld_target_build_information;
 
 typedef struct bld_config_target {
     bld_path path_main;
+    int linker_set;
+    int files_set;
+    bld_linker linker;
+    bld_target_build_information files;
 } bld_config_target;
 
 bld_config_target config_target_new(bld_path*);
