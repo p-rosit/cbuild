@@ -91,6 +91,11 @@ int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_
             invalid->code = -1;
             invalid->msg = string_copy(&error_msg);
             return -1;
+        } else if (!data->target_config.files_set) {
+            error_msg = string_pack("bld: target file config has not been set up");
+            invalid->code = -1;
+            invalid->msg = string_copy(&error_msg);
+            return -1;
         } else if (!data->target_config.files.info.compiler_set) {
             error_msg = string_pack("bld: target has no base compiler");
             invalid->code = -1;
