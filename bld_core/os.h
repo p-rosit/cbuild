@@ -22,4 +22,12 @@ uintmax_t       os_file_id(bld_os_file*);
 uintmax_t       os_info_id(char*);
 uintmax_t       os_info_mtime(char*);
 
+#if defined(__linux__)
+    #define BLD_EXECUTABLE_FILE_ENDING "out"
+#elif defined(_WIN32)
+    #define BLD_EXECUTABLE_FILE_ENDING "exe"
+#else
+    #error "Unknown environment"
+#endif
+
 #endif
