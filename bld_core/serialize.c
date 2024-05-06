@@ -3,10 +3,6 @@
 #include "project.h"
 #include "json.h"
 
-void serialize_compiler(FILE*, bld_compiler*, int);
-void serialize_compiler_flags(FILE*, bld_compiler_flags*, int);
-void serialize_compiler_flags_added_flags(FILE*, bld_compiler_flags*, int);
-void serialize_compiler_flags_removed_flags(FILE*, bld_compiler_flags*, int);
 void serialize_linker(FILE*, bld_linker*, int);
 void serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
@@ -51,86 +47,6 @@ void project_save_cache(bld_project* project) {
 
     fclose(cache);
     path_free(&cache_path);
-}
-
-void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
-    fprintf(cache, "{\n");
-
-    json_serialize_key(cache, "executable", depth);
-    fprintf(cache, "\"%s\"", string_unpack(&compiler->executable));
-    fprintf(cache, ",\n");
-
-    json_serialize_key(cache, "flags", depth);
-    serialize_compiler_flags(cache, &compiler->flags, depth + 1);
-
-    fprintf(cache, "\n");
-    fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
-}
-
-void serialize_compiler_flags(FILE* cache, bld_compiler_flags* flags, int depth) {
-    fprintf(cache, "{\n");
-
-    json_serialize_key(cache, "added", depth);
-    serialize_compiler_flags_added_flags(cache, flags, depth + 1);
-    fprintf(cache, ",\n");
-
-    json_serialize_key(cache, "removed", depth);
-    serialize_compiler_flags_removed_flags(cache, flags, depth + 1);
-
-    fprintf(cache, "\n");
-    fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
-}
-
-void serialize_compiler_flags_added_flags(FILE* cache, bld_compiler_flags* flags, int depth) {
-    int first = 1;
-    bld_iter iter;
-    bld_string* flag;
-
-    fprintf(cache, "[");
-    if (flags->flags.size > 1) {
-        fprintf(cache, "\n");
-    }
-    
-    iter = iter_array(&flags->flags);
-    while (iter_next(&iter, (void**) &flag)) {
-        if (!first) {fprintf(cache, ",\n");}
-        else {first = 0;}
-        if (flags->flags.size > 1) {
-            fprintf(cache, "%*c", 2 * depth, ' ');
-        }
-        fprintf(cache, "\"%s\"", string_unpack(flag));
-    }
-
-    if (flags->flags.size > 1) {
-        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
-    }
-    fprintf(cache, "]");
-}
-
-void serialize_compiler_flags_removed_flags(FILE* cache, bld_compiler_flags* flags, int depth) {
-    int first = 1;
-    bld_iter iter;
-    bld_string* flag;
-
-    fprintf(cache, "[");
-    if (flags->removed.size > 1) {
-        fprintf(cache, "\n");
-    }
-
-    iter = iter_set(&flags->removed);
-    while (iter_next(&iter, (void**) &flag)) {
-        if (!first) {fprintf(cache, ",\n");}
-        else {first = 0;}
-        if (flags->flags.size > 1) {
-            fprintf(cache, "%*c", 2 * (depth + 1), ' ');
-        }
-        fprintf(cache, "\"%s\"", string_unpack(flag));
-    }
-
-    if (flags->removed.size > 1) {
-        fprintf(cache, "\n%*c", 2 * depth, ' ');
-    }
-    fprintf(cache, "]");
 }
 
 void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
