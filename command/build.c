@@ -1,9 +1,12 @@
 #include "../bld_core/logging.h"
+#include "../bld_core/project.h"
+#include "../bld_core/incremental.h"
 #include "build.h"
 
 int command_build_target(bld_command_build*, bld_data*);
 int command_build_compiler(bld_command_build*, bld_data*);
 int command_build_linker(bld_command_build*, bld_data*);
+int command_build_apply_build(bld_command_build*, bld_data*);
 
 int command_build(bld_command_build* build, bld_data* data) {
     switch (build->type) {
@@ -19,9 +22,38 @@ int command_build(bld_command_build* build, bld_data* data) {
 }
 
 int command_build_target(bld_command_build* build, bld_data* data) {
+    int result;
+    bld_forward_project fproject;
+    bld_project project;
+    bld_compiler temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
+    bld_linker temp_l = linker_copy(&data->target_config.linker);
+    bld_path path_cache, path_root;
     log_debug("Build target: \"%s\"", string_unpack(&build->target));
-    (void)(data);
-    return -1;
+
+    path_root = path_copy(&data->root);
+    fproject = project_forward_new(&path_root, &temp_c, &temp_l);
+
+    path_cache = path_from_string(".bld");
+    path_append_string(&path_cache, "target");
+    path_append_string(&path_cache, string_unpack(&build->target));
+    path_append_string(&path_cache, "cache");
+    log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
+    project_load_cache(&fproject, path_to_string(&path_cache));
+
+    log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
+    project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
+
+    project_ignore_path(&fproject, "bld_core/test");
+
+    project = project_resolve(&fproject);
+
+    log_error("APPLY CONFIGURATION");
+
+    result = incremental_compile_project(&project, string_unpack(&build->target));
+
+    path_free(&path_cache);
+    project_free(&project);
+    return result;
 }
 
 int command_build_compiler(bld_command_build* build, bld_data* data) {
