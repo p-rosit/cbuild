@@ -72,4 +72,6 @@ int os_file_exists(char* path) {
     }
 #elif defined(_WIN32)
     #error "No support for windows yet"
+#else
+    #error "Unknown environment"
 #endif
