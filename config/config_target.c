@@ -4,6 +4,8 @@
 
 void config_target_build_info_free(bld_target_build_information*);
 
+void serialize_config_target_file(FILE*, bld_target_build_information*, int);
+
 int parse_config_target_main(FILE*, bld_config_target*);
 int parse_config_target_linker(FILE*, bld_config_target*);
 int parse_config_target_files(FILE*, bld_config_target*);
@@ -59,8 +61,61 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
     json_serialize_key(file, "main", depth);
     fprintf(file, "\"%s\"", path_to_string(&config->path_main));
 
+    if (config->linker_set) {
+        fprintf(file, ",\n");
+        json_serialize_key(file, "linker", depth);
+        serialize_linker(file, &config->linker, depth + 1);
+    }
+
+    if (config->files_set) {
+        fprintf(file, ",\n");
+        json_serialize_key(file, "files", depth);
+        serialize_config_target_file(file, &config->files, depth + 1);
+    }
+
     fprintf(file, "\n}");
     fclose(file);
+}
+
+void serialize_config_target_file(FILE* file, bld_target_build_information* info, int depth) {
+    fprintf(file, "{\n");
+
+    json_serialize_key(file, "name", depth);
+    fprintf(file, "\"%s\"", string_unpack(&info->name));
+
+    if (info->info.compiler_set) {
+
+    }
+
+    if (info->info.linker_set) {
+        fprintf(file, ",\n");
+        json_serialize_key(file, "linker_flags", depth);
+        serialize_linker_flags(file, &info->info.linker_flags, depth + 1);
+    }
+
+    if (info->files.size > 0) {
+        int first = 1;
+        bld_iter iter = iter_array(&info->files);
+        bld_target_build_information* temp;
+
+        fprintf(file, ",\n");
+        json_serialize_key(file, "files", depth);
+        fprintf(file, "[\n");
+        while (iter_next(&iter, (void**) &temp)) {
+            if (!first) {
+                fprintf(file, ",\n");
+            } else {
+                first = 0;
+            }
+            fprintf(file, "%*c", 2 * (depth + 2), ' ');
+            serialize_config_target_file(file, temp, depth + 2);
+        }
+
+        fprintf(file, "\n%*c]", 2 * (depth + 1), ' ');
+    }
+
+    fprintf(file, "\n%*c", 2 * depth, ' ');
+    fprintf(file, "}");
 }
 
 int parse_config_target(bld_path* path, bld_config_target* config) {
