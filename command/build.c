@@ -1,3 +1,4 @@
+#include "../bld_core/os.h"
 #include "../bld_core/logging.h"
 #include "../bld_core/project.h"
 #include "../bld_core/incremental.h"
@@ -28,6 +29,7 @@ int command_build_target(bld_command_build* build, bld_data* data) {
     bld_compiler temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
     bld_linker temp_l = linker_copy(&data->target_config.linker);
     bld_path path_cache, path_root;
+    bld_string name_executable;
     log_debug("Build target: \"%s\"", string_unpack(&build->target));
 
     path_root = path_copy(&data->root);
@@ -43,14 +45,17 @@ int command_build_target(bld_command_build* build, bld_data* data) {
     log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
     project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
 
-    project_ignore_path(&fproject, "bld_core/test");
+    project_ignore_path(&fproject, "bld_core/test");  /* Ignore correctly */
 
     project = project_resolve(&fproject);
 
     log_error("APPLY CONFIGURATION");
 
-    result = incremental_compile_project(&project, string_unpack(&build->target));
+    name_executable = string_copy(&build->target);
+    string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
+    result = incremental_compile_project(&project, string_unpack(&name_executable));
 
+    string_free(&name_executable);
     path_free(&path_cache);
     project_free(&project);
     return result;
