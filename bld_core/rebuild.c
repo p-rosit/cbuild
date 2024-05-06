@@ -23,21 +23,9 @@ int run_new_build(bld_path* root, char* executable) {
     return result;
 }
 
-bld_project_base project_base_new(bld_path, bld_linker);
 bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
-    bld_forward_project fbuild;
-
+    bld_forward_project fbuild = project_forward_new(&root, &compiler, &linker);
     fbuild.rebuilding = 1;
-    fbuild.resolved = 0;
-    fbuild.base = project_base_new(root, linker);
-    fbuild.extra_paths = array_new(sizeof(bld_path));
-    fbuild.ignore_paths = set_new(0);
-    fbuild.compiler = compiler;
-    fbuild.compiler_file_names = array_new(sizeof(bld_string));
-    fbuild.file_compilers = array_new(sizeof(bld_compiler_or_flags));
-    fbuild.linker_flags_file_names = array_new(sizeof(bld_string));
-    fbuild.file_linker_flags = array_new(sizeof(bld_linker_flags));
-
     return fbuild;
 }
 
@@ -87,6 +75,11 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     bld_path build_root, main, executable_path;
     bld_forward_project fbuild;
     bld_project build;
+
+    if (fproject->base.standalone) {
+        log_fatal("rebuild_builder: attempting to rebuild build script but not build path has been set");
+        return;  /* unreachable */
+    }
 
     log_level = set_log_level(BLD_WARN);
 
