@@ -80,6 +80,24 @@ int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_
     if (args_empty(args)) {
         build->type = BLD_COMMAND_BUILD_TARGET;
         build->target = string_copy(target);
+
+        if (!data->target_config_parsed) {
+            error_msg = string_pack("bld: no target config parsed");
+            invalid->code = -1;
+            invalid->msg = string_copy(&error_msg);
+            return -1;
+        } else if (!data->target_config.files.info.compiler_set) {
+            error_msg = string_pack("bld: target has no base compiler");
+            invalid->code = -1;
+            invalid->msg = string_copy(&error_msg);
+            return -1;
+        } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
+            error_msg = string_pack("bld: target has no base compiler, only compiler flags");
+            invalid->code = -1;
+            invalid->msg = string_copy(&error_msg);
+            return -1;
+        }
+
         return 0;
     }
 
