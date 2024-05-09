@@ -5,21 +5,26 @@
 #include "file.h"
 #include "project.h"
 
-bld_project_base    project_base_new(bld_path, bld_linker);
+bld_forward_project project_forward_new(bld_path*, bld_compiler*, bld_linker*);
+
+bld_project_base    project_base_new(bld_path*, bld_linker*);
 void                project_base_free(bld_project_base*);
 
 bld_project_cache   project_cache_new(void);
 void                project_cache_free(bld_project_cache*);
 
-bld_path            extract_build_path(bld_path*);
+bld_string          extract_build_name(bld_path*);
 
 bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker linker) {
     FILE* f;
     bld_path build_file_path;
-    bld_forward_project project;
+    bld_string build_file_name;
+    bld_forward_project fproject;
     
-    build_file_path = extract_build_path(&path);
+    build_file_name = extract_build_name(&path);
     path_remove_last_string(&path);
+    build_file_path = path_copy(&path);
+    path_append_string(&build_file_path, string_unpack(&build_file_name));
 
     f = fopen(path_to_string(&build_file_path), "r");
     if (f == NULL) {
@@ -28,36 +33,41 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
         fclose(f);
     }
 
-    project.rebuilding = 0;
-    project.resolved = 0;
-    project.base = project_base_new(path, linker);
-    project.extra_paths = array_new(sizeof(bld_path));
-    project.ignore_paths = set_new(0);
-    project.main_file_name.chars = NULL;
-    project.compiler = compiler;
-    project.compiler_file_names = array_new(sizeof(bld_string));
-    project.file_compilers = array_new(sizeof(bld_compiler_or_flags));
-    project.linker_flags_file_names = array_new(sizeof(bld_string));
-    project.file_linker_flags = array_new(sizeof(bld_linker_flags));
+    fproject = project_forward_new(&path, &compiler, &linker);
 
-    project_ignore_path(&project, path_to_string(&build_file_path));
+    project_ignore_path(&fproject, path_to_string(&build_file_path));
     path_free(&build_file_path);
+    string_free(&build_file_name);
 
-    return project;
+    return fproject;
+}
+
+bld_forward_project project_forward_new(bld_path* path, bld_compiler* compiler, bld_linker* linker) {
+    bld_forward_project fproject;
+    fproject.rebuilding = 0;
+    fproject.resolved = 0;
+    fproject.base = project_base_new(path, linker);
+    fproject.extra_paths = array_new(sizeof(bld_path));
+    fproject.ignore_paths = set_new(0);
+    fproject.main_file_name.chars = NULL;
+    fproject.compiler = *compiler;
+    fproject.compiler_file_names = array_new(sizeof(bld_string));
+    fproject.file_compilers = array_new(sizeof(bld_compiler_or_flags));
+    fproject.linker_flags_file_names = array_new(sizeof(bld_string));
+    fproject.file_linker_flags = array_new(sizeof(bld_linker_flags));
+    return fproject;
 }
 
 void project_add_build(bld_forward_project* fproject, char* path) {
-    char* current_build = path_to_string(&fproject->base.build);
-
     if (fproject->resolved) {
         log_fatal("Trying to add build path \"\" but forward project has already been resolved, perform all setup of project before resolving", path);
     }
 
-    if (current_build[0] != '\0') {
-        log_fatal("Trying to add build path to project but build path has already been set to \"%s\"", current_build);
+    if (!fproject->base.standalone) {
+        log_fatal("Trying to add build path to project but build path has already been set to \"%s\"", path_to_string(&fproject->base.build));
     }
 
-    path_free(&fproject->base.build);
+    fproject->base.standalone = 0;
     fproject->base.build = path_from_string(path);
     project_ignore_path(fproject, path);
 }
@@ -182,12 +192,12 @@ void project_partial_free(bld_forward_project* fproject) {
     array_free(&fproject->file_linker_flags);
 }
 
-bld_project_base project_base_new(bld_path path, bld_linker linker) {
+bld_project_base project_base_new(bld_path* path, bld_linker* linker) {
     bld_project_base base;
 
-    base.root = path;
-    base.build = path_new();
-    base.linker = linker;
+    base.root = *path;
+    base.standalone = 1;
+    base.linker = *linker;
     base.cache = project_cache_new();
 
     return base;
@@ -195,7 +205,9 @@ bld_project_base project_base_new(bld_path path, bld_linker linker) {
 
 void project_base_free(bld_project_base* base) {
     path_free(&base->root);
-    path_free(&base->build);
+    if (!base->standalone) {
+        path_free(&base->build);
+    }
     linker_free(&base->linker);
     project_cache_free(&base->cache);
 }
@@ -239,23 +251,20 @@ bld_path project_path_extract(int argc, char** argv) {
     return path;
 }
 
-bld_path extract_build_path(bld_path* root) {
-    bld_path build_path;
-    bld_string str = string_new();
+bld_string extract_build_name(bld_path* root) {
+    bld_path path;
+    bld_string build_name;
     char* name;
-    string_append_string(&str, path_get_last_string(root));
 
-    string_unpack(&str);
-    if (strncmp(str.chars, "old_", 4) == 0) {
-        name = str.chars + 4;
-    } else {
-        name = str.chars;
-    }
+    path = path_copy(root);
+    path_remove_file_ending(&path);
+    name = path_get_last_string(&path);
+    name += (4 * strncmp(name, "old_", 4) == 0);
 
-    build_path = path_from_string(name);
-    path_remove_file_ending(&build_path);
-    string_append_string(&build_path.str, ".c");
+    build_name = string_pack(name);
+    build_name = string_copy(&build_name);
+    string_append_string(&build_name, ".c");
 
-    string_free(&str);
-    return build_path;
+    path_free(&path);
+    return build_name;
 }

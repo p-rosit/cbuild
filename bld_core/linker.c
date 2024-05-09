@@ -156,6 +156,48 @@ void linker_flags_append(bld_string* str, bld_linker_flags* flags) {
     array_reverse(&flags->flags);
 }
 
+void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
+    fprintf(cache, "{\n");
+
+    json_serialize_key(cache, "executable", depth);
+    fprintf(cache, "\"%s\"", string_unpack(&linker->executable));
+
+    if (linker->flags.flags.size > 0) {
+        fprintf(cache, ",\n");
+        json_serialize_key(cache, "flags", depth);
+        serialize_linker_flags(cache, &linker->flags, depth + 1);
+    }
+
+    fprintf(cache, "\n");
+    fprintf(cache, "%*c}", 2 * (depth - 1), ' ');
+}
+
+void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
+    bld_string* flag;
+    int first = 1;
+    bld_iter iter;
+
+    fprintf(cache, "[");
+    if (flags->flags.size > 1) {
+        fprintf(cache, "\n");
+    }
+
+    iter = iter_array(&flags->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        if (!first) {fprintf(cache, ",\n");}
+        else {first = 0;}
+        if (flags->flags.size > 1) {
+            fprintf(cache, "%*c", 2 * depth, ' ');
+        }
+        fprintf(cache, "\"%s\"", string_unpack(flag));
+    }
+
+    if (flags->flags.size > 1) {
+        fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
+    }
+    fprintf(cache, "]");
+}
+
 int parse_linker(FILE* file, bld_linker* linker) {
     int amount_parsed;
     int size = 2;

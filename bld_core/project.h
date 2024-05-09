@@ -21,6 +21,7 @@ typedef struct bld_project_cache {
 
 typedef struct bld_project_base {
     bld_path root;
+    int standalone;
     bld_path build;
     bld_linker linker;
     bld_project_cache cache;
@@ -50,6 +51,7 @@ typedef struct bld_project {
 
 bld_path    project_path_extract(int, char**);
 bld_forward_project project_new(bld_path, bld_compiler, bld_linker);
+bld_forward_project project_forward_new(bld_path*, bld_compiler*, bld_linker*);
 
 void        project_add_build(bld_forward_project*, char*);
 void        project_add_path(bld_forward_project*, char*);

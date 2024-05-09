@@ -111,7 +111,7 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
     int exists;
     char* file_ending;
     bld_path file_path;
-    bld_file file, *parent;
+    bld_file file, *parent, *temp;
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
@@ -128,15 +128,18 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
         return;
     }
 
-    parent = set_get(&project->files, parent_id);
-    if (parent == NULL) {log_fatal("incremental_index_possible_file: internal error");}
-    file_dir_add_file(parent, &file);
 
     exists = set_add(&project->files, file.identifier.id, &file);
     if (exists) {
         log_error("encountered \"%s\" multiple times while indexing", string_unpack(&file.name));
         file_free(&file);
     }
+
+    parent = set_get(&project->files, parent_id);
+    if (parent == NULL) {log_fatal("incremental_index_possible_file: internal error");}
+    temp = set_get(&project->files, file.identifier.id);
+    if (temp == NULL) {log_fatal("incremental_index_possible_file: internal temp error");}
+    file_dir_add_file(parent, temp);
 }
 
 void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, char* name) {
@@ -360,6 +363,7 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     bld_path path;
     bld_string* executable;
     bld_array compiler_flags;
+    log_info("Compiling: \"%s\"", string_unpack(&file->name));
 
     file_assemble_compiler(file, &project->files, &executable, &compiler_flags);
 

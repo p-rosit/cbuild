@@ -50,6 +50,11 @@ void                compiler_flags_remove_flag(bld_compiler_flags*, char*);
 
 void                compiler_flags_expand(bld_string*, bld_array*);
 
+void                serialize_compiler(FILE*, bld_compiler*, int);
+void                serialize_compiler_flags(FILE*, bld_compiler_flags*, int);
+void                serialize_compiler_flags_added_flags(FILE*, bld_compiler_flags*, int);
+void                serialize_compiler_flags_removed_flags(FILE*, bld_compiler_flags*, int);
+
 int                 parse_compiler(FILE*, bld_compiler*);
 int                 parse_compiler_executable(FILE*, bld_compiler*);
 int                 parse_compiler_compiler_flags(FILE*, bld_compiler*);

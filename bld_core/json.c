@@ -4,6 +4,10 @@
 #include "dstr.h"
 #include "json.h"
 
+void json_serialize_key(FILE* cache, char* key, int depth) {
+    fprintf(cache, "%*c\"%s\": ", 2 * depth, ' ', key);
+}
+
 int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
     int value_num = 0;
     int result, parse_complete;

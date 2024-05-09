@@ -31,6 +31,9 @@ void                linker_flags_add_flag(bld_linker_flags*, char*);
 void                linker_flags_expand(bld_string*, bld_array*);
 void                linker_flags_append(bld_string*, bld_linker_flags*);
 
+void                serialize_linker(FILE*, bld_linker*, int);
+void                serialize_linker_flags(FILE*, bld_linker_flags*, int);
+
 int                 parse_linker(FILE*, bld_linker*);
 int                 parse_linker_executable(FILE*, bld_linker*);
 int                 parse_linker_linker_flags(FILE*, bld_linker*);

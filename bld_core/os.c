@@ -23,6 +23,14 @@ int os_file_exists(char* path) {
         return getcwd(buffer, length) != NULL;
     }
 
+    int os_dir_exists(char* path) {
+        bld_os_dir* dir = os_dir_open(path);
+        if (dir != NULL) {
+            os_dir_close(dir);
+        }
+        return dir == NULL;
+    }
+
     int os_dir_make(char* path) {
         return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
@@ -64,4 +72,6 @@ int os_file_exists(char* path) {
     }
 #elif defined(_WIN32)
     #error "No support for windows yet"
+#else
+    #error "Unknown environment"
 #endif

@@ -115,24 +115,27 @@ void file_free(bld_file* file) {
 }
 
 void file_free_base(bld_file* file) {
-    if (file->build_info.compiler_set) {
-        switch (file->build_info.compiler.type) {
+    file_build_info_free(&file->build_info);
+    path_free(&file->path);
+    string_free(&file->name);
+}
+
+void file_build_info_free(bld_file_build_information* info) {
+    if (info->compiler_set) {
+        switch (info->compiler.type) {
             case (BLD_COMPILER): {
-                compiler_free(&file->build_info.compiler.as.compiler);
+                compiler_free(&info->compiler.as.compiler);
             } break;
             case (BLD_COMPILER_FLAGS): {
-                compiler_flags_free(&file->build_info.compiler.as.flags);
+                compiler_flags_free(&info->compiler.as.flags);
             } break;
             default: log_fatal("file_free_base: internal error");
         }
     }
 
-    if (file->build_info.linker_set) {
-        linker_flags_free(&file->build_info.linker_flags);
+    if (info->linker_set) {
+        linker_flags_free(&info->linker_flags);
     }
-
-    path_free(&file->path);
-    string_free(&file->name);
 }
 
 void file_free_dir(bld_file_dir* dir) {
