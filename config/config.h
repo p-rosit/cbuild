@@ -5,6 +5,8 @@
 typedef struct bld_config {
     int text_editor_configured;
     bld_string text_editor;
+    int default_target_configured;
+    bld_string target;
 } bld_config;
 
 bld_config config_new(void);
