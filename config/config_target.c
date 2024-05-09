@@ -135,6 +135,8 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         return -1;
     }
 
+    config->linker_set = 0;
+    config->files_set = 0;
     amount_parsed = json_parse_map(file, config, size, parsed, keys, funcs);
     if (!parsed[0] || amount_parsed < 0) {
         log_warn("could not parse target config");

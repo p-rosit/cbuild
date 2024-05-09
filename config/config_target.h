@@ -13,8 +13,8 @@ typedef struct bld_target_build_information {
 typedef struct bld_config_target {
     bld_path path_main;
     int linker_set;
-    int files_set;
     bld_linker linker;
+    int files_set;
     bld_target_build_information files;
 } bld_config_target;
 
