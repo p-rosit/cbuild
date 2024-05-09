@@ -20,20 +20,23 @@ int command_status(bld_command_status* status, bld_data* data) {
     return 0;
 }
 
-int command_status_parse(bld_args* args, bld_data* data, bld_command_status* status, bld_command_invalid* invalid) {
+int command_status_parse(bld_string* target, bld_args* args, bld_data* data, bld_command_status* status, bld_command_invalid* invalid) {
     bld_string error_msg;
-    bld_string target;
+    (void)(data);
 
-    if (args_empty(args)) {
+    if (target == NULL && args_empty(args)) {
         status->target_status = 0;
         return 0;
+    } else if (target == NULL) {
+        error_msg = string_pack("bld: too many input arguments");
+        invalid->code = -1;
+        invalid->msg = string_copy(&error_msg);
     }
 
-    target = args_advance(args);
-    if (!set_has(&data->targets, string_hash(string_unpack(&target)))) {
+    if (!set_has(&data->targets, string_hash(string_unpack(target)))) {
         error_msg = string_new();
         string_append_string(&error_msg, "bld: optional second argument of status, '");
-        string_append_string(&error_msg, string_unpack(&target));
+        string_append_string(&error_msg, string_unpack(target));
         string_append_string(&error_msg, "' is not a target");
         invalid->code = -1;
         invalid->msg = error_msg;
@@ -49,7 +52,7 @@ int command_status_parse(bld_args* args, bld_data* data, bld_command_status* sta
     }
 
     status->target_status = 1;
-    status->target = string_copy(&target);
+    status->target = string_copy(target);
     return 0;
 }
 
