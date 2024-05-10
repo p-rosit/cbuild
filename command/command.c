@@ -79,13 +79,7 @@ int command_implicit_target_parse(bld_string* base_command, bld_args* args, bld_
     }
 
     {
-        bld_path target_config = path_copy(&data->root);
-        path_append_string(&target_config, ".bld");
-        path_append_string(&target_config, "target");
-        path_append_string(&target_config, string_unpack(target));
-        path_append_string(&target_config, "config.json");
-        data->target_config_parsed = !parse_config_target(&target_config, &data->target_config);
-        path_free(&target_config);
+        data->target_config_parsed = !config_target_load(data, target, &data->target_config);
 
         if (!data->target_config_parsed) {
             error_msg = string_new();
