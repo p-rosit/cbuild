@@ -40,7 +40,7 @@ bld_command command_parse(bld_args* args, bld_data* data) {
         error = command_help_parse(args, data, &cmd.as.help, &invalid);
     } else if (string_eq(&base_command, &bld_command_string_status)) {
         cmd.type = BLD_COMMAND_STATUS;
-        error = command_status_parse(NULL, args, data, &cmd.as.status, &invalid);
+        error = command_status_parse(args, data, &cmd.as.status, &invalid);
     } else {
         error = command_implicit_target_parse(&base_command, args, data, &cmd, &invalid);
     }
@@ -124,9 +124,6 @@ int command_implicit_target_parse(bld_string* base_command, bld_args* args, bld_
     } else if (string_eq(&next_command, &bld_command_string_linker)) {
         cmd->type = BLD_COMMAND_LINKER;
         return command_linker_parse(target, args, data, &cmd->as.linker, invalid);
-    } else if (string_eq(&next_command, &bld_command_string_status)) {
-        cmd->type = BLD_COMMAND_STATUS;
-        return command_status_parse(target, args, data, &cmd->as.status, invalid);
     } else {
         error_msg = string_pack("bld: '");
         error_msg = string_copy(&error_msg);
