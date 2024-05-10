@@ -4,6 +4,8 @@
 #include "ignore.h"
 
 const bld_string bld_command_string_ignore = STRING_COMPILE_TIME_PACK("ignore");
+const bld_string bld_command_string_ignore_terse_delete = STRING_COMPILE_TIME_PACK("-d");
+const bld_string bld_command_string_ignore_flag_delete = STRING_COMPILE_TIME_PACK("--delete");
 
 int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_iter iter;
@@ -56,6 +58,22 @@ int command_ignore_parse(bld_string* target, bld_args* args, bld_data* data, bld
     }
 
     path_add = args_advance(args);
+
+    if (args_empty(args)) {
+        cmd->remove_flag = 0;
+    } else {
+        bld_string temp = args_advance(args);
+        cmd->remove_flag = 1;
+
+        if (!string_eq(&path_add, &bld_command_string_ignore_terse_delete) && !string_eq(&path_add, &bld_command_string_ignore_flag_delete)) {
+            error_msg = string_pack("bld: invalid arguments");
+            invalid->code = -1;
+            invalid->msg = string_copy(&error_msg);
+            return -1;
+        }
+
+        path_add = temp;
+    }
 
     if (!args_empty(args)) {
         error_msg = string_pack("bld: too many inputs");
