@@ -84,7 +84,17 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
     fprintf(file, "\"%s\"", string_unpack(&info->name));
 
     if (info->info.compiler_set) {
-
+        fprintf(file, ",\n");
+        switch (info->info.compiler.type) {
+            case (BLD_COMPILER): {
+                json_serialize_key(file, "compiler", depth);
+                serialize_compiler(file, &info->info.compiler.as.compiler, depth + 1);
+            } break;
+            case (BLD_COMPILER_FLAGS): {
+                json_serialize_key(file, "compiler_flags", depth);
+                serialize_compiler_flags(file, &info->info.compiler.as.flags, depth + 1);
+            } break;
+        }
     }
 
     if (info->info.linker_set) {
