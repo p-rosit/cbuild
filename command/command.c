@@ -11,8 +11,30 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     bld_command cmd;
     bld_command_invalid invalid;
 
-    if (args_empty(args)) {
-        error_msg = string_pack("missing sub command");
+    if (args_empty(args) && data->config_parsed && data->config.default_target_configured) {
+        data->target_config_parsed = !config_target_load(data, &data->config.target, &data->target_config);
+
+        if (!data->target_config_parsed) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "bld: could not parse config file of active target '");
+            string_append_string(&error_msg, string_unpack(&data->config.target));
+            string_append_string(&error_msg, "'");
+            error = -1;
+            invalid.code = -1;
+            invalid.msg = error_msg;
+        } else {
+            cmd.type = BLD_COMMAND_BUILD;
+            error = command_build_parse(&data->config.target, args, data, &cmd.as.build, &invalid);
+        }
+
+        if (error) {
+            cmd.type = BLD_COMMAND_INVALID;
+            cmd.as.invalid = invalid;
+        }
+
+        return cmd;
+    } else if (args_empty(args)) {
+        error_msg = string_pack("no default target configured to build");
         error_msg = string_copy(&error_msg);
         cmd.type = BLD_COMMAND_INVALID;
         cmd.as.invalid = command_invalid_new(-1, &error_msg);
