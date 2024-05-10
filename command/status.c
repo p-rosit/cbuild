@@ -45,6 +45,17 @@ int command_status_target(bld_command_status* status, bld_data* data) {
     bld_path* path;
     log_info("Target: %s", string_unpack(&status->target));
 
+    if (!data->target_config_parsed) {
+        log_fatal("Target config has not been parsed");
+    }
+
+    if (config->ignore_paths.size > 0) {
+        log_info("Ignored:");
+        iter = iter_array(&data->target_config.ignore_paths);
+        while (iter_next(&iter, (void**) &path)) {
+            log_info("  %s", path_to_string(path));
+        }
+    }
     return 0;
 }
 
