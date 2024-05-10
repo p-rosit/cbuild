@@ -44,6 +44,8 @@ int command_build(bld_command_build* build, bld_data* data) {
     string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
     result = incremental_compile_project(&project, string_unpack(&name_executable));
 
+    project_save_cache(&project);
+
     string_free(&name_executable);
     path_free(&path_cache);
     project_free(&project);
