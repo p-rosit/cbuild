@@ -49,6 +49,10 @@ int command_build(bld_command_build* build, bld_data* data) {
     string_free(&name_executable);
     path_free(&path_cache);
     project_free(&project);
+
+    if (result < 0) {
+        result = 0;
+    }
     return result;
 }
 
