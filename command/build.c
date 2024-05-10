@@ -3,7 +3,9 @@
 #include "../bld_core/project.h"
 #include "../bld_core/incremental.h"
 #include "build.h"
-int command_build_apply_build(bld_command_build*, bld_data*);
+
+int command_build_verify_config(bld_command_build*, bld_data*);
+void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
 
 int command_build(bld_command_build* build, bld_data* data) {
     int result;
@@ -13,7 +15,13 @@ int command_build(bld_command_build* build, bld_data* data) {
     bld_linker temp_l = linker_copy(&data->target_config.linker);
     bld_path path_cache, path_root;
     bld_string name_executable;
-    log_debug("Build target: \"%s\"", string_unpack(&build->target));
+    log_debug("Building target: \"%s\"", string_unpack(&build->target));
+
+    if (command_build_verify_config(build, data)) {
+        compiler_free(&temp_c);
+        linker_free(&temp_l);
+        return -1;
+    }
 
     path_root = path_copy(&data->root);
     fproject = project_forward_new(&path_root, &temp_c, &temp_l);
@@ -83,4 +91,26 @@ int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_
 
 void command_build_free(bld_command_build* build) {
     string_free(&build->target);
+}
+
+int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
+    int error = 0;
+    bld_iter iter;
+    bld_path* path;
+
+    if (!data->target_config_parsed) {
+        log_error("Config for target '%s' has not been parsed", string_unpack(&cmd->target));
+        return -1;
+    }
+
+    iter = iter_array(&data->target_config.ignore_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        uintmax_t ignore_id = os_info_id(path_to_string(path));
+        if (ignore_id == BLD_INVALID_IDENITIFIER) {
+            error |= -1;
+            log_error("Ignored path '%s' does not exist", path_to_string(path));
+        }
+    }
+
+    return error;
 }
