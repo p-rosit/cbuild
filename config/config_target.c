@@ -160,7 +160,7 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
         fprintf(file, "\n%*c]", 2 * (depth + 1), ' ');
     }
 
-    fprintf(file, "\n%*c", 2 * depth, ' ');
+    fprintf(file, "\n%*c", 2 * (depth - 1), ' ');
     fprintf(file, "}");
 }
 
