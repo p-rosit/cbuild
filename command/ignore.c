@@ -11,7 +11,7 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_iter iter;
     bld_config_target* config = &data->target_config;
     bld_path path, *temp;
-    bld_set ignored_files = set_new(0);
+    bld_set ignored_files = set_new(sizeof(bld_path));
     uintmax_t ignore_id;
     if (!data->target_config_parsed) {
         log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));
@@ -20,26 +20,59 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     iter = iter_array(&config->ignore_paths);
     while (iter_next(&iter, (void**) &temp)) {
         ignore_id = os_info_id(path_to_string(temp));
-        set_add(&ignored_files, ignore_id, NULL);
+        set_add(&ignored_files, ignore_id, temp);
     }
 
     ignore_id = os_info_id(path_to_string(&cmd->path));
 
     if (ignore_id == BLD_INVALID_IDENITIFIER) {
-        log_error("Requested to ignore '%s' which is not a valid path to a file/directory", path_to_string(&cmd->path));
-        return -1;
-    }
-
-    if (set_has(&ignored_files, ignore_id)) {
         set_free(&ignored_files);
-        log_error("Requested to ignore '%s' which is already being ignored by target '%s'", path_to_string(&cmd->path), string_unpack(&cmd->target));
+        log_error("Attempting to ignore '%s' which is not a valid path to a file/directory", path_to_string(&cmd->path));
         return -1;
     }
 
-    log_info("Ignoring: \"%s\" for target \"%s\"", path_to_string(&cmd->path), string_unpack(&cmd->target));
+    if (cmd->remove_flag) {
+        bld_iter iter;
+        bld_string a;
+        bld_path *path, *temp;
+        size_t index;
 
-    path = path_copy(&cmd->path);
-    array_push(&config->ignore_paths, &path);
+        path = set_get(&ignored_files, ignore_id);
+        if (path == NULL) {
+            set_free(&ignored_files);
+            log_error("Attempting to stop ignoring '%s' which is not ignored by target '%s'", path_to_string(&cmd->path), string_unpack(&cmd->target));
+            return -1;
+        }
+
+        index = 0;
+        a = string_pack(path_to_string(path));
+        iter = iter_array(&data->target_config.ignore_paths);
+        while (iter_next(&iter, (void**) &temp)) {
+            bld_string b = string_pack(path_to_string(temp));
+            if (string_eq(&a, &b)) {
+                break;
+            }
+            index += 1;
+        }
+
+        path = array_get(&data->target_config.ignore_paths, index);
+        path_free(path);
+        array_remove(&data->target_config.ignore_paths, index);
+
+        log_info("No longer ignoring: \"%s\" for target \"%s\"", path_to_string(&cmd->path), string_unpack(&cmd->target));
+    } else {
+        if (set_has(&ignored_files, ignore_id)) {
+            set_free(&ignored_files);
+            log_error("Attempting to ignore '%s' which is already being ignored by target '%s'", path_to_string(&cmd->path), string_unpack(&cmd->target));
+            return -1;
+        }
+
+        log_info("Ignoring: \"%s\" for target \"%s\"", path_to_string(&cmd->path), string_unpack(&cmd->target));
+
+        path = path_copy(&cmd->path);
+        array_push(&config->ignore_paths, &path);
+    }
+
     config_target_save(data, &cmd->target, config);
 
     set_free(&ignored_files);
