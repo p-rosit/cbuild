@@ -11,8 +11,30 @@ bld_command command_parse(bld_args* args, bld_data* data) {
     bld_command cmd;
     bld_command_invalid invalid;
 
-    if (args_empty(args)) {
-        error_msg = string_pack("missing sub command");
+    if (args_empty(args) && data->config_parsed && data->config.default_target_configured) {
+        data->target_config_parsed = !config_target_load(data, &data->config.target, &data->target_config);
+
+        if (!data->target_config_parsed) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "bld: could not parse config file of active target '");
+            string_append_string(&error_msg, string_unpack(&data->config.target));
+            string_append_string(&error_msg, "'");
+            error = -1;
+            invalid.code = -1;
+            invalid.msg = error_msg;
+        } else {
+            cmd.type = BLD_COMMAND_BUILD;
+            error = command_build_parse(&data->config.target, args, data, &cmd.as.build, &invalid);
+        }
+
+        if (error) {
+            cmd.type = BLD_COMMAND_INVALID;
+            cmd.as.invalid = invalid;
+        }
+
+        return cmd;
+    } else if (args_empty(args)) {
+        error_msg = string_pack("no default target configured to build");
         error_msg = string_copy(&error_msg);
         cmd.type = BLD_COMMAND_INVALID;
         cmd.as.invalid = command_invalid_new(-1, &error_msg);
@@ -40,7 +62,7 @@ bld_command command_parse(bld_args* args, bld_data* data) {
         error = command_help_parse(args, data, &cmd.as.help, &invalid);
     } else if (string_eq(&base_command, &bld_command_string_status)) {
         cmd.type = BLD_COMMAND_STATUS;
-        error = command_status_parse(NULL, args, data, &cmd.as.status, &invalid);
+        error = command_status_parse(args, data, &cmd.as.status, &invalid);
     } else {
         error = command_implicit_target_parse(&base_command, args, data, &cmd, &invalid);
     }
@@ -79,13 +101,7 @@ int command_implicit_target_parse(bld_string* base_command, bld_args* args, bld_
     }
 
     {
-        bld_path target_config = path_copy(&data->root);
-        path_append_string(&target_config, ".bld");
-        path_append_string(&target_config, "target");
-        path_append_string(&target_config, string_unpack(target));
-        path_append_string(&target_config, "config.json");
-        data->target_config_parsed = !parse_config_target(&target_config, &data->target_config);
-        path_free(&target_config);
+        data->target_config_parsed = !config_target_load(data, target, &data->target_config);
 
         if (!data->target_config_parsed) {
             error_msg = string_new();
@@ -130,9 +146,6 @@ int command_implicit_target_parse(bld_string* base_command, bld_args* args, bld_
     } else if (string_eq(&next_command, &bld_command_string_linker)) {
         cmd->type = BLD_COMMAND_LINKER;
         return command_linker_parse(target, args, data, &cmd->as.linker, invalid);
-    } else if (string_eq(&next_command, &bld_command_string_status)) {
-        cmd->type = BLD_COMMAND_STATUS;
-        return command_status_parse(target, args, data, &cmd->as.status, invalid);
     } else {
         error_msg = string_pack("bld: '");
         error_msg = string_copy(&error_msg);

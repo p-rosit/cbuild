@@ -9,6 +9,31 @@ const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 
+int config_target_load(bld_data* data, bld_string* target, bld_config_target* config) {
+    int error;
+    bld_path target_path = path_copy(&data->root);
+    path_append_string(&target_path, ".bld");
+    path_append_string(&target_path, "target");
+    path_append_string(&target_path, string_unpack(target));
+    path_append_string(&target_path, "config.json");
+
+    error = parse_config_target(&target_path, config);
+
+    path_free(&target_path);
+    return error;;
+}
+
+void config_target_save(bld_data* data, bld_string* target, bld_config_target* config) {
+    bld_path target_path = path_copy(&data->root);
+    path_append_string(&target_path, ".bld");
+    path_append_string(&target_path, "target");
+    path_append_string(&target_path, string_unpack(target));
+    path_append_string(&target_path, "config.json");
+
+    serialize_config_target(&target_path, config);
+    path_free(&target_path);
+}
+
 bld_data data_extract(void) {
     bld_data data;
 

@@ -69,6 +69,17 @@ void* array_pop(bld_array* array) {
     return ((char*) array->values) + --array->size * array->value_size;
 }
 
+void array_remove(bld_array* array, size_t index) {
+    char* ptr;
+    if (array->size <= index) {log_fatal("Trying to remove value at index %lu from array of size %lu", index, array->size);}
+
+    ptr = array->values;
+    ptr += index * array->value_size;
+    memmove(ptr, ptr + array->value_size, (array->size - index - 1) * array->value_size);
+
+    array->size -= 1;
+}
+
 void array_insert(bld_array* array, size_t index, void* value) {
     size_t capacity = array->capacity;
     char* ptr;
@@ -89,7 +100,7 @@ void array_insert(bld_array* array, size_t index, void* value) {
     ptr += index * array->value_size;
 
     if (index < array->size) {
-        memmove(ptr + 1, ptr, array->size - index);
+        memmove(ptr + array->value_size, ptr, (array->size - index - 1) * array->value_size);
     }
 
     memcpy(ptr, value, array->value_size);
