@@ -36,11 +36,9 @@ int command_build(bld_command_build* build, bld_data* data) {
     log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
     project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
 
-    project_ignore_path(&fproject, "bld_core/test");  /* Ignore correctly */
+    command_build_apply_config(&fproject, build, data);
 
     project = project_resolve(&fproject);
-
-    log_error("APPLY CONFIGURATION");
 
     name_executable = string_copy(&build->target);
     string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
@@ -91,6 +89,17 @@ int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_
 
 void command_build_free(bld_command_build* build) {
     string_free(&build->target);
+}
+
+void command_build_apply_config(bld_forward_project* fproject, bld_command_build* cmd, bld_data* data) {
+    bld_iter iter;
+    bld_path* path;
+    (void)(cmd);
+
+    iter = iter_array(&data->target_config.ignore_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        project_ignore_path(fproject, path_to_string(path));
+    }
 }
 
 int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
