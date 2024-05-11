@@ -20,6 +20,7 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     iter = iter_array(&config->ignore_paths);
     while (iter_next(&iter, (void**) &temp)) {
         ignore_id = os_info_id(path_to_string(temp));
+        if (ignore_id == BLD_INVALID_IDENITIFIER) {continue;}
         set_add(&ignored_files, ignore_id, temp);
     }
 

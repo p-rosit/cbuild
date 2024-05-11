@@ -102,6 +102,11 @@ void command_build_apply_config(bld_forward_project* fproject, bld_command_build
     bld_path* path;
     (void)(cmd);
 
+    iter = iter_array(&data->target_config.added_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        project_add_path(fproject, path_to_string(path));
+    }
+
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
         project_ignore_path(fproject, path_to_string(path));
@@ -118,10 +123,19 @@ int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
         return -1;
     }
 
+    iter = iter_array(&data->target_config.added_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        uintmax_t file_id = os_info_id(path_to_string(path));
+        if (file_id == BLD_INVALID_IDENITIFIER) {
+            error |= -1;
+            log_error("Added path '%s' does not exist", path_to_string(path));
+        }
+    }
+
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
-        uintmax_t ignore_id = os_info_id(path_to_string(path));
-        if (ignore_id == BLD_INVALID_IDENITIFIER) {
+        uintmax_t file_id = os_info_id(path_to_string(path));
+        if (file_id == BLD_INVALID_IDENITIFIER) {
             error |= -1;
             log_error("Ignored path '%s' does not exist", path_to_string(path));
         }

@@ -9,6 +9,7 @@ void serialize_config_target_file(FILE*, bld_target_build_information*, int);
 int parse_config_target_main(FILE*, bld_config_target*);
 int parse_config_target_linker(FILE*, bld_config_target*);
 int parse_config_target_files(FILE*, bld_config_target*);
+int parse_config_target_added_paths(FILE*, bld_config_target*);
 int parse_config_target_ignored_paths(FILE*, bld_config_target*);
 int parse_config_target_paths(FILE*, bld_array*);
 int parse_config_target_path(FILE*, bld_array*);
@@ -23,6 +24,7 @@ int parse_target_build_info_file_sub_files(FILE*, bld_target_build_information*)
 bld_config_target config_target_new(bld_path* path) {
     bld_config_target config;
     config.path_main = *path;
+    config.added_paths = array_new(sizeof(bld_path));
     config.ignore_paths = array_new(sizeof(bld_path));
     config.linker_set = 0;
     config.files_set = 0;
@@ -33,6 +35,12 @@ void config_target_free(bld_config_target* config) {
     bld_path* path;
     bld_iter iter;
     path_free(&config->path_main);
+
+    iter = iter_array(&config->added_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        path_free(path);
+    }
+    array_free(&config->added_paths);
 
     iter = iter_array(&config->ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
@@ -73,6 +81,28 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
 
     json_serialize_key(file, "main", depth);
     fprintf(file, "\"%s\"", path_to_string(&config->path_main));
+
+    fprintf(file, ",\n");
+    json_serialize_key(file, "added_paths", depth);
+    {
+        bld_iter iter;
+        bld_path* path;
+        int first = 1;
+        fprintf(file, "[");
+        iter = iter_array(&config->added_paths);
+        while (iter_next(&iter, (void**) &path)) {
+            if (!first) {
+                fprintf(file, ",");
+            }
+            first = 0;
+            fprintf(file, "\n%*c", 2 * (depth + 1), ' ');
+            fprintf(file, "\"%s\"", path_to_string(path));
+        }
+        if (config->ignore_paths.size > 0) {
+            fprintf(file, "\n%*c", 2 * depth, ' ');
+        }
+        fprintf(file, "]");
+    }
 
     fprintf(file, ",\n");
     json_serialize_key(file, "ignore_paths", depth);
@@ -167,11 +197,12 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
 int parse_config_target(bld_path* path, bld_config_target* config) {
     FILE* file = fopen(path_to_string(path), "r");
     int amount_parsed;
-    int size = 4;
-    int parsed[4];
-    char *keys[4] = {"main", "ignore_paths", "linker", "files"};
-    bld_parse_func funcs[4] = {
+    int size = 5;
+    int parsed[5];
+    char *keys[5] = {"main", "added_paths", "ignore_paths", "linker", "files"};
+    bld_parse_func funcs[5] = {
         (bld_parse_func) parse_config_target_main,
+        (bld_parse_func) parse_config_target_added_paths,
         (bld_parse_func) parse_config_target_ignored_paths,
         (bld_parse_func) parse_config_target_linker,
         (bld_parse_func) parse_config_target_files,
@@ -184,6 +215,7 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
 
     config->linker_set = 0;
     config->files_set = 0;
+    config->added_paths = array_new(sizeof(bld_path));
     config->ignore_paths = array_new(sizeof(bld_path));
     amount_parsed = json_parse_map(file, config, size, parsed, keys, funcs);
     if (!parsed[0] || !parsed[1] || amount_parsed < 0) {
@@ -193,7 +225,7 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         }
 
         if (parsed[1]) {
-            bld_iter iter = iter_array(&config->ignore_paths);
+            bld_iter iter = iter_array(&config->added_paths);
             bld_path* path;
             while (iter_next(&iter, (void**) &path)) {
                 path_free(path);
@@ -202,10 +234,19 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         }
 
         if (parsed[2]) {
-            linker_free(&config->linker);
+            bld_iter iter = iter_array(&config->ignore_paths);
+            bld_path* path;
+            while (iter_next(&iter, (void**) &path)) {
+                path_free(path);
+            }
+            array_free(&config->ignore_paths);
         }
 
         if (parsed[3]) {
+            linker_free(&config->linker);
+        }
+
+        if (parsed[4]) {
             config_target_build_info_free(&config->files);
         }
         return -1;
@@ -226,6 +267,10 @@ int parse_config_target_main(FILE* file, bld_config_target* config) {
 
     string_free(&path_main);
     return 0;
+}
+
+int parse_config_target_added_paths(FILE* file, bld_config_target* config) {
+    return parse_config_target_paths(file, &config->added_paths);
 }
 
 int parse_config_target_ignored_paths(FILE* file, bld_config_target* config) {

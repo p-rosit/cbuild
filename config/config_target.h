@@ -12,6 +12,7 @@ typedef struct bld_target_build_information {
 
 typedef struct bld_config_target {
     bld_path path_main;
+    bld_array added_paths;
     bld_array ignore_paths;
     int linker_set;
     bld_linker linker;
