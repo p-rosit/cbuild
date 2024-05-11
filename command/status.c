@@ -51,6 +51,14 @@ int command_status_target(bld_command_status* status, bld_data* data) {
         log_fatal("Target config has not been parsed");
     }
 
+    if (config->added_paths.size > 0) {
+        log_info("Added:");
+        iter = iter_array(&data->target_config.added_paths);
+        while (iter_next(&iter, (void**) &path)) {
+            log_info("  %s", path_to_string(path));
+        }
+    }
+
     if (config->ignore_paths.size > 0) {
         log_info("Ignored:");
         iter = iter_array(&data->target_config.ignore_paths);
