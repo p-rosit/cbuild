@@ -19,6 +19,8 @@ typedef struct bld_data {
     bld_config_target target_config;
 } bld_data;
 
+int         config_load(bld_data*, bld_config*);
+void        config_save(bld_data*, bld_config*);
 int         config_target_load(bld_data*, bld_string*, bld_config_target*);
 void        config_target_save(bld_data*, bld_string*, bld_config_target*);
 bld_data    data_extract(void);

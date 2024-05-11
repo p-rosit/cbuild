@@ -9,6 +9,27 @@ const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 
+int config_load(bld_data* data, bld_config* config) {
+    int error;
+    bld_path target_path = path_copy(&data->root);
+    path_append_string(&target_path, ".bld");
+    path_append_string(&target_path, "config.json");
+
+    error = parse_config(&target_path, config);
+
+    path_free(&target_path);
+    return error;
+}
+
+void config_save(bld_data* data, bld_config* config) {
+    bld_path target_path = path_copy(&data->root);
+    path_append_string(&target_path, ".bld");
+    path_append_string(&target_path, "config.json");
+
+    serialize_config(&target_path, config);
+    path_free(&target_path);
+}
+
 int config_target_load(bld_data* data, bld_string* target, bld_config_target* config) {
     int error;
     bld_path target_path = path_copy(&data->root);
@@ -20,7 +41,7 @@ int config_target_load(bld_data* data, bld_string* target, bld_config_target* co
     error = parse_config_target(&target_path, config);
 
     path_free(&target_path);
-    return error;;
+    return error;
 }
 
 void config_target_save(bld_data* data, bld_string* target, bld_config_target* config) {
