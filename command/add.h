@@ -8,6 +8,7 @@ extern const bld_string bld_command_string_add;
 
 typedef struct bld_command_add {
     bld_string target;
+    int remove_flag;
     bld_path path;
 } bld_command_add;
 
