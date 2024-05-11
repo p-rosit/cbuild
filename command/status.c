@@ -3,6 +3,8 @@
 #include "status.h"
 
 const bld_string bld_command_string_status = STRING_COMPILE_TIME_PACK("status");
+const bld_string bld_command_string_status_terse_active = STRING_COMPILE_TIME_PACK("-a");
+const bld_string bld_command_string_status_flag_active = STRING_COMPILE_TIME_PACK("--active");
 
 int command_status_all(bld_command_status*, bld_data*);
 int command_status_target(bld_command_status*, bld_data*);
@@ -60,26 +62,48 @@ int command_status_target(bld_command_status* status, bld_data* data) {
 }
 
 int command_status_parse(bld_args* args, bld_data* data, bld_command_status* status, bld_command_invalid* invalid) {
-    bld_string error_msg, target_cmd, *target;
-    (void)(data);
+    bld_string error_msg, target;
 
     if (args_empty(args)) {
         status->target_status = 0;
         return 0;
     } else {
-        target_cmd = args_advance(args);
-        target = &target_cmd;
+        target = args_advance(args);
+
+        if (string_eq(&target, &bld_command_string_status_terse_active) || string_eq(&target, &bld_command_string_status_flag_active)) {
+            if (!data->config_parsed) {
+                error_msg = string_pack("bld: config not parsed");
+                invalid->code = -1;
+                invalid->msg = string_copy(&error_msg);
+                return -1;
+            } else if (!data->config.default_target_configured) {
+                error_msg = string_pack("bld: no default target");
+                invalid->code = -1;
+                invalid->msg = string_copy(&error_msg);
+                return -1;
+            }
+
+            target = data->config.target;
+        } else if (!set_has(&data->targets, string_hash(string_unpack(&target)))) {
+            error_msg = string_new();
+            string_append_string(&error_msg, "bld: ");
+            string_append_string(&error_msg, string_unpack(&target));
+            string_append_string(&error_msg, " is not a valid target");
+            invalid->code = -1;
+            invalid->msg = error_msg;
+            return -1;
+        }
 
         if (data->target_config_parsed) {
             log_fatal("command_status_parse: target config already parsed, unreachable error");
         }
 
-        data->target_config_parsed = !config_target_load(data, target, &data->target_config);
+        data->target_config_parsed = !config_target_load(data, &target, &data->target_config);
 
         if (!data->target_config_parsed) {
             error_msg = string_new();
             string_append_string(&error_msg, "bld: could not parse config of target '");
-            string_append_string(&error_msg, string_unpack(target));
+            string_append_string(&error_msg, string_unpack(&target));
             string_append_string(&error_msg, "'");
             invalid->code = -1;
             invalid->msg = error_msg;
@@ -87,10 +111,10 @@ int command_status_parse(bld_args* args, bld_data* data, bld_command_status* sta
         }
     }
 
-    if (!set_has(&data->targets, string_hash(string_unpack(target)))) {
+    if (!set_has(&data->targets, string_hash(string_unpack(&target)))) {
         error_msg = string_new();
         string_append_string(&error_msg, "bld: optional second argument of status, '");
-        string_append_string(&error_msg, string_unpack(target));
+        string_append_string(&error_msg, string_unpack(&target));
         string_append_string(&error_msg, "' is not a target");
         invalid->code = -1;
         invalid->msg = error_msg;
@@ -106,7 +130,7 @@ int command_status_parse(bld_args* args, bld_data* data, bld_command_status* sta
     }
 
     status->target_status = 1;
-    status->target = string_copy(target);
+    status->target = string_copy(&target);
     return 0;
 }
 
