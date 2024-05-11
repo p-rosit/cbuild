@@ -102,6 +102,11 @@ void command_build_apply_config(bld_forward_project* fproject, bld_command_build
     bld_path* path;
     (void)(cmd);
 
+    iter = iter_array(&data->target_config.added_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        project_add_path(fproject, path_to_string(path));
+    }
+
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
         project_ignore_path(fproject, path_to_string(path));
