@@ -83,6 +83,28 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
     fprintf(file, "\"%s\"", path_to_string(&config->path_main));
 
     fprintf(file, ",\n");
+    json_serialize_key(file, "added_paths", depth);
+    {
+        bld_iter iter;
+        bld_path* path;
+        int first = 1;
+        fprintf(file, "[");
+        iter = iter_array(&config->added_paths);
+        while (iter_next(&iter, (void**) &path)) {
+            if (!first) {
+                fprintf(file, ",");
+            }
+            first = 0;
+            fprintf(file, "\n%*c", 2 * (depth + 1), ' ');
+            fprintf(file, "\"%s\"", path_to_string(path));
+        }
+        if (config->ignore_paths.size > 0) {
+            fprintf(file, "\n%*c", 2 * depth, ' ');
+        }
+        fprintf(file, "]");
+    }
+
+    fprintf(file, ",\n");
     json_serialize_key(file, "ignore_paths", depth);
     {
         bld_iter iter;
