@@ -23,6 +23,7 @@ int parse_target_build_info_file_sub_files(FILE*, bld_target_build_information*)
 bld_config_target config_target_new(bld_path* path) {
     bld_config_target config;
     config.path_main = *path;
+    config.added_paths = array_new(sizeof(bld_path));
     config.ignore_paths = array_new(sizeof(bld_path));
     config.linker_set = 0;
     config.files_set = 0;
@@ -33,6 +34,12 @@ void config_target_free(bld_config_target* config) {
     bld_path* path;
     bld_iter iter;
     path_free(&config->path_main);
+
+    iter = iter_array(&config->added_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        path_free(path);
+    }
+    array_free(&config->added_paths);
 
     iter = iter_array(&config->ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
