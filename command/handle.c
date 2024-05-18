@@ -148,8 +148,10 @@ void handle_allow_flags(bld_handle* handle) {
 
     if (pos == NULL) {
         handle->flag_start_index = handle->positional.size;
-    } else {
+    } else if (pos->type != BLD_HANDLE_POSITIONAL_VARGS) {
         handle->flag_start_index = handle->positional.size;
+    } else {
+        log_fatal("handle_allow_flags: attempting to allow flags after variable arguments");
     }
 }
 
