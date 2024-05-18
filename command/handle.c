@@ -125,6 +125,10 @@ void handle_positional_expect(bld_handle* handle, char* value) {
 
 void handle_allow_arbitrary_flags(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
+    if (handle->arbitrary_flags) {
+        log_fatal("handle_allow_arbitrary_flags: attempting to allow arbitrary flags multiple times");
+    }
+
     handle->arbitrary_flags = 1;
     handle->arbitray_flags_description = string_copy(&str);
 }
