@@ -157,6 +157,10 @@ void handle_allow_flags(bld_handle* handle) {
 
 void handle_set_description(bld_handle* handle, char* description) {
     bld_string str;
+    if (handle->description_set) {
+        log_fatal("handle_add_description: Description of handle has already been set");
+    }
+
     str = string_pack(description);
     handle->description_set = 1;
     handle->description = string_copy(&str);
