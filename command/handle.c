@@ -16,6 +16,34 @@ bld_handle handle_new(char* name) {
     return handle;
 }
 
+void handle_free(bld_handle* handle) {
+    bld_iter iter;
+    bld_handle_positional* arg;
+    bld_handle_flag* flag;
+
+    string_free(&handle->name);
+    if (handle->description_set) {
+        string_free(&handle->description);
+    }
+    if (handle->arbitrary_flags) {
+        string_free(&handle->arbitray_flags_description);
+    }
+
+    iter = iter_array(&handle->positional);
+    while (iter_next(&iter, (void**) &arg)) {
+        string_free(&arg->description);
+    }
+    array_free(&handle->positional);
+
+    iter = iter_array(&handle->flag_array);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->option);
+        string_free(&flag->description);
+    }
+    array_free(&handle->flag_array);
+    set_free(&handle->flags);
+}
+
 void handle_positional_required(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
     bld_handle_positional arg;
