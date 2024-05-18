@@ -47,6 +47,10 @@ void handle_free(bld_handle* handle) {
 void handle_positional_required(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
     bld_handle_positional arg;
+    
+    if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
+        log_fatal("handle_positional_required: cannot exceed %d arguments.", BLD_COMMAND_MAX_ARGS);
+    }
 
     arg.type = BLD_HANDLE_POSITIONAL_REQUIRED;
     arg.description = string_copy(&str);
@@ -56,6 +60,10 @@ void handle_positional_required(bld_handle* handle, char* description) {
 void handle_positional_optional(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
     bld_handle_positional arg;
+    
+    if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
+        log_fatal("handle_positional_required: cannot exceed %d arguments.", BLD_COMMAND_MAX_ARGS);
+    }
 
     arg.type = BLD_HANDLE_POSITIONAL_OPTIONAL;
     arg.description = string_copy(&str);
@@ -65,6 +73,10 @@ void handle_positional_optional(bld_handle* handle, char* description) {
 void handle_positional_vargs(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
     bld_handle_positional arg;
+    
+    if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
+        log_fatal("handle_positional_required: cannot exceed %d arguments.", BLD_COMMAND_MAX_ARGS);
+    }
 
     arg.type = BLD_HANDLE_POSITIONAL_VARGS;
     arg.description = string_copy(&str);
@@ -75,6 +87,10 @@ void handle_positional_vargs(bld_handle* handle, char* description) {
 void handle_positional_expect(bld_handle* handle, char* value) {
     bld_string val = string_pack(value);
     bld_handle_positional arg;
+
+    if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
+        log_fatal("handle_positional_required: cannot exceed %d arguments.", BLD_COMMAND_MAX_ARGS);
+    }
 
     arg.type = BLD_HANDLE_POSITIONAL_EXPECTED;
     arg.description = string_copy(&val);
