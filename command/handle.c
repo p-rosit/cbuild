@@ -136,6 +136,10 @@ void handle_allow_arbitrary_flags(bld_handle* handle, char* description) {
 void handle_allow_flags(bld_handle* handle) {
     bld_handle_positional* pos;
 
+    if (handle->flag_start_index > 0) {
+        log_fatal("handle_allow_flags: Flag start index has already been set");
+    }
+
     if (handle->positional.size == 0) {
         pos = NULL;
     } else {
