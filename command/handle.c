@@ -3,6 +3,26 @@
 #include "../bld_core/logging.h"
 #include "handle.h"
 
+typedef struct bld_handle_info {
+    int current_arg;
+    int current_expected;
+    bld_array expected_index;
+    int* positional_parsed;
+} bld_handle_info;
+
+bld_handle_info handle_info_new(bld_handle*);
+void handle_info_free(bld_handle_info*);
+bld_command_error handle_parse_required(bld_string*, bld_handle_info*, bld_handle*, bld_command*, bld_array*);
+bld_command_error handle_parse_optional(bld_string*, bld_handle_info*, bld_handle*, bld_command*, bld_array*);
+bld_command_error handle_parse_expected(bld_string*, bld_handle_info*, bld_handle*, bld_command*, bld_array*);
+bld_command_error handle_parse_vargs(bld_string*, bld_handle_info*, bld_handle*, bld_command*, bld_array*);
+bld_command_error handle_parse_flag(bld_string*, bld_handle_info*, bld_handle*, bld_command*, bld_array*);
+
+bld_command command_new(bld_handle*);
+void command_free_internal(bld_command*, bld_handle_info*);
+bld_string command_error_at(bld_string*);
+void handle_string_append_int(bld_string*, int);
+
 bld_handle handle_new(char* name) {
     bld_handle handle;
     bld_string str = string_pack(name);
