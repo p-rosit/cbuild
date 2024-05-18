@@ -204,3 +204,416 @@ void handle_flag(bld_handle* handle, char swtch, char* option, char* description
 
     set_add(&handle->flags, string_hash(option), &index);
 }
+
+bld_command command_new(bld_handle* handle) {
+    bld_command cmd;
+    bld_iter iter;
+    bld_handle_positional* arg;
+    cmd.positional = array_new(sizeof(bld_command_positional));
+    cmd.flags = set_new(sizeof(bld_command_flag));
+
+    iter = iter_array(&handle->positional);
+    while (iter_next(&iter, (void**) &arg)) {
+        bld_command_positional cmd_arg;
+
+        cmd_arg.type = arg->type;
+        switch (cmd_arg.type) {
+            case (BLD_HANDLE_POSITIONAL_REQUIRED):
+                break;
+            case (BLD_HANDLE_POSITIONAL_EXPECTED):
+                cmd_arg.as.exp.value = string_copy(&arg->description);
+                break;
+            case (BLD_HANDLE_POSITIONAL_OPTIONAL):
+                cmd_arg.as.opt.present = 0;
+                break;
+            case (BLD_HANDLE_POSITIONAL_VARGS):
+                cmd_arg.as.vargs.values = array_new(sizeof(bld_string));
+                break;
+        }
+
+        array_push(&cmd.positional, &cmd_arg);
+    }
+
+    return cmd;
+}
+
+void command_free(bld_command* cmd) {
+    bld_iter iter;
+    bld_command_flag* flag;
+    bld_command_positional* cmd_arg;
+
+    iter = iter_array(&cmd->positional);
+    while (iter_next(&iter, (void**) &cmd_arg)) {
+        bld_iter iter;
+        bld_string* arg;
+
+        switch (cmd_arg->type) {
+            case (BLD_HANDLE_POSITIONAL_REQUIRED):
+                string_free(&cmd_arg->as.req.value);
+                break;
+            case (BLD_HANDLE_POSITIONAL_EXPECTED):
+                string_free(&cmd_arg->as.exp.value);
+                break;
+            case (BLD_HANDLE_POSITIONAL_OPTIONAL):
+                if (cmd_arg->as.opt.present) {
+                    string_free(&cmd_arg->as.opt.value);
+                }
+                break;
+            case (BLD_HANDLE_POSITIONAL_VARGS):
+                iter = iter_array(&cmd_arg->as.vargs.values);
+                while (iter_next(&iter, (void**) &arg)) {
+                    string_free(arg);
+                }
+                array_free(&cmd_arg->as.vargs.values);
+                break;
+        }
+    }
+    array_free(&cmd->positional);
+
+    iter = iter_set(&cmd->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    set_free(&cmd->flags);
+}
+
+void command_free_internal(bld_command* cmd, bld_handle_info* info) {
+    size_t index;
+    bld_iter iter;
+    bld_command_positional* arg;
+    bld_command_flag* flag;
+
+    index = 0;
+    iter = iter_array(&cmd->positional);
+    while (iter_next(&iter, (void**) &arg)) {
+        bld_iter iter;
+        bld_string* str;
+
+        switch (arg->type) {
+            case (BLD_HANDLE_POSITIONAL_REQUIRED):
+                if (info->positional_parsed[index]) {
+                    string_free(&arg->as.req.value);
+                }
+                break;
+            case (BLD_HANDLE_POSITIONAL_OPTIONAL):
+                if (info->positional_parsed[index]) {
+                    string_free(&arg->as.opt.value);
+                }
+                break;
+            case (BLD_HANDLE_POSITIONAL_VARGS):
+                iter = iter_array(&arg->as.vargs.values);
+                while (iter_next(&iter, (void**) &str)) {
+                    string_free(str);
+                }
+                array_free(&arg->as.vargs.values);
+                break;
+            case (BLD_HANDLE_POSITIONAL_EXPECTED):
+                string_free(&arg->as.exp.value);
+                break;
+        }
+
+        index += 1;
+    }
+    array_free(&cmd->positional);
+
+    iter = iter_set(&cmd->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    set_free(&cmd->flags);
+}
+
+bld_string command_error_at(bld_string* arg) {
+    bld_string err = string_new();
+    
+    string_append_string(&err, "Error at \"");
+    string_append_string(&err, string_unpack(arg));
+    string_append_string(&err, "\": ");
+
+    return err;
+}
+
+bld_handle_info handle_info_new(bld_handle* handle) {
+    bld_handle_info info;
+    size_t index;
+    bld_iter iter;
+    bld_handle_positional* pos;
+    info.positional_parsed = malloc(handle->positional.size * sizeof(int));
+    if (info.positional_parsed == NULL) {
+        log_fatal("handle_info_new: could not allocate parsed array of size %lu", handle->positional.size);
+    }
+
+    index = 0;
+    info.expected_index = array_new(sizeof(size_t));
+    iter = iter_array(&handle->positional);
+    while (iter_next(&iter, (void**) &pos)) {
+        if (pos->type == BLD_HANDLE_POSITIONAL_EXPECTED) {
+            array_push(&info.expected_index, &index);
+        }
+        info.positional_parsed[index] = 0;
+        index += 1;
+    }
+
+    info.current_arg = 0;
+    info.current_expected = 0;
+    return info;
+}
+
+void handle_info_free(bld_handle_info* info) {
+    array_free(&info->expected_index);
+    free(info->positional_parsed);
+}
+
+int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array* err) {
+    int error = 0, index;
+    bld_iter iter;
+    bld_handle_info info;
+    bld_handle_positional* pos;
+
+    *cmd = command_new(handle);
+    info = handle_info_new(handle);
+
+    while (!args_empty(&args)) {
+        bld_string arg = args_advance(&args);
+
+        if (arg.chars[0] != '-') {
+            if (((size_t) info.current_arg) < handle->positional.size) {
+                pos = array_get(&handle->positional, info.current_arg);
+            } else {
+                bld_string str = command_error_at(&arg);
+                string_append_string(&str, "too many arguments");
+                array_push(err, &str);
+                error |= BLD_COMMAND_ERROR_ARGS_TOO_MANY;
+                break;
+            }
+
+            switch (pos->type) {
+                case (BLD_HANDLE_POSITIONAL_REQUIRED):
+                    error |= handle_parse_required(&arg, &info, handle, cmd, err);
+                    break;
+                case (BLD_HANDLE_POSITIONAL_EXPECTED):
+                    error |= handle_parse_expected(&arg, &info, handle, cmd, err);
+                    break;
+                case (BLD_HANDLE_POSITIONAL_OPTIONAL):
+                    error |= handle_parse_optional(&arg, &info, handle, cmd, err);
+                    break;
+                case (BLD_HANDLE_POSITIONAL_VARGS):
+                    error |= handle_parse_vargs(&arg, &info, handle, cmd, err);
+                    break;
+                default:
+                    log_fatal("Unreachable");
+            }
+
+        } else if (handle->flag_start_index > info.current_arg) {
+            bld_string str = command_error_at(&arg);
+            string_append_string(&str, "flags can only be specified after argument ");
+            handle_string_append_int(&str, handle->flag_start_index);
+            array_push(err, &str);
+            error |= BLD_COMMAND_ERROR_FLAG_EARLY;
+        } else {
+            error |= handle_parse_flag(&arg, &info, handle, cmd, err);
+        }
+    }
+
+    index = -1;
+    iter = iter_array(&handle->positional);
+    while (iter_next(&iter, (void**) &pos)) {
+        index += 1;
+        if (index < info.current_arg) {continue;}
+        if (info.positional_parsed[index]) {continue;}
+
+        if (pos->type == BLD_HANDLE_POSITIONAL_REQUIRED || pos->type == BLD_HANDLE_POSITIONAL_EXPECTED) {
+            bld_string str;
+            str = string_new();
+            string_append_string(&str, "Expected ");
+            handle_string_append_int(&str, handle->positional.size);
+            string_append_string(&str, " positional arguments to command, got ");
+            handle_string_append_int(&str, info.current_arg);
+            string_append_string(&str, "\n");
+            array_push(err, &str);
+            error |= BLD_COMMAND_ERROR_ARGS_TOO_FEW;
+            break;
+        }
+    }
+
+    if (error) {
+        command_free_internal(cmd, &info);
+    }
+    handle_info_free(&info);
+    
+    return error;
+}
+
+bld_command_error handle_parse_required(bld_string* arg, bld_handle_info* info, bld_handle* handle, bld_command* cmd, bld_array* err) {
+    bld_command_positional* cmd_arg;
+
+    info->positional_parsed[info->current_arg] = 1;
+    cmd_arg = array_get(&cmd->positional, info->current_arg);
+    cmd_arg->as.req.value = string_copy(arg);
+
+    info->current_arg += 1;
+    (void)(handle);
+    (void)(err);
+    return 0;
+}
+
+bld_command_error handle_parse_optional(bld_string* arg, bld_handle_info* info, bld_handle* handle, bld_command* cmd, bld_array* err) {
+    int error = 0;
+    size_t* index;
+    bld_handle_positional* expected;
+    bld_command_positional* cmd_arg;
+
+    if (((size_t) info->current_expected) < info->expected_index.size) {
+        index = array_get(&info->expected_index, info->current_expected);
+        expected = array_get(&handle->positional, *index);
+    } else {
+        expected = NULL;
+    }
+
+    if (expected != NULL) {
+        if (string_eq(arg, &expected->description)) {
+            info->current_arg = *index;
+            error = handle_parse_expected(arg, info, handle, cmd, err);
+        } else {
+            info->positional_parsed[info->current_arg] = 1;
+            cmd_arg = array_get(&cmd->positional, info->current_arg);
+            cmd_arg->as.opt.present = 1;
+            cmd_arg->as.opt.value = string_copy(arg);
+
+            info->current_arg += 1;
+        }
+    } else {
+        info->positional_parsed[info->current_arg] = 1;
+        cmd_arg = array_get(&cmd->positional, info->current_arg);
+        cmd_arg->as.opt.present = 1;
+        cmd_arg->as.opt.value = string_copy(arg);
+        info->current_arg += 1;
+    }
+
+    return error;
+}
+
+bld_command_error handle_parse_expected(bld_string* arg, bld_handle_info* info, bld_handle* handle, bld_command* cmd, bld_array* err) {
+    int match;
+    bld_handle_positional* expected;
+
+    expected = array_get(&handle->positional, info->current_arg);
+    match = string_eq(arg, &expected->description);
+
+    info->positional_parsed[info->current_arg] = match;
+    info->current_arg += 1;
+    info->current_expected += 1;
+
+    if (!match) {
+        bld_string str = command_error_at(arg);
+        string_append_string(&str, "expected \"");
+        string_append_string(&str, string_unpack(&expected->description));
+        string_append_string(&str, "\"");
+        array_push(err, &str);
+    }
+
+    (void)(cmd);
+    return !match * BLD_COMMAND_ERROR_ARGS_NO_MATCH;
+}
+
+bld_command_error handle_parse_vargs(bld_string* arg, bld_handle_info* info, bld_handle* handle, bld_command* cmd, bld_array* err) {
+    int error = 0;
+    size_t* index;
+    bld_string str;
+    bld_handle_positional* expected;
+    bld_command_positional* cmd_arg;
+
+    if (((size_t) info->current_expected) < info->expected_index.size) {
+        index = array_get(&info->expected_index, info->current_expected);
+        expected = array_get(&handle->positional, *index);
+    } else {
+        expected = NULL;
+    }
+
+    if (expected != NULL) {
+        if (string_eq(arg, &expected->description)) {
+            info->current_arg = *index;
+            error = handle_parse_expected(arg, info, handle, cmd, err);
+        } else {
+            info->positional_parsed[info->current_arg] = 1;
+            cmd_arg = array_get(&cmd->positional, info->current_arg);
+            str = string_copy(arg);
+            array_push(&cmd_arg->as.vargs.values, &str);
+        }
+    } else {
+        info->positional_parsed[info->current_arg] = 1;
+        cmd_arg = array_get(&cmd->positional, info->current_arg);
+        str = string_copy(arg);
+        array_push(&cmd_arg->as.vargs.values, &str);
+    }
+
+    return error;
+}
+
+bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_handle* handle, bld_command* cmd, bld_array* err) {
+    int flag_exists, is_switch;
+    uintmax_t flag_hash;
+    bld_string flag_str;
+    bld_command_flag flag;
+    char* temp;
+
+    temp = string_unpack(arg) + 1;
+    is_switch = *temp != '-';
+    temp += *temp == '-';
+    flag_str = string_pack(temp);
+
+    if (*temp == '\0' && is_switch) {
+        bld_string str = command_error_at(arg);
+        string_append_string(&str, "empty switch");
+        array_push(err, &str);
+        return BLD_COMMAND_ERROR_FLAG_EMPTY;
+    } else if (*temp == '\0' && !is_switch) {
+        bld_string str = command_error_at(arg);
+        string_append_string(&str, "empty flag");
+        array_push(err, &str);
+        return BLD_COMMAND_ERROR_FLAG_EMPTY;
+    }    
+
+    if (is_switch) {
+        flag_hash = *temp;
+        flag_exists = set_has(&handle->flags, *temp);
+    } else {
+        flag_hash = string_hash(temp);
+        flag_exists = set_has(&handle->flags, string_hash(temp));
+    }
+
+    if (set_has(&cmd->flags, flag_hash)) {
+        bld_string str = command_error_at(arg);
+        string_append_string(&str, "duplicate flag");
+        array_push(err, &str);
+        return BLD_COMMAND_ERROR_FLAG_DUPLICATE;
+    }
+
+    if (flag_exists) {
+        size_t* flag_index;
+        bld_handle_flag* handle_flag;
+        flag_index = set_get(&handle->flags, flag_hash);
+        handle_flag = array_get(&handle->flag_array, *flag_index);
+
+        flag.is_switch = is_switch;
+        flag.flag = string_copy(&handle_flag->option);
+        set_add(&cmd->flags, flag_hash, &flag);
+    } else if (handle->arbitrary_flags) {
+        flag.is_switch = is_switch;
+        flag.flag = string_copy(&flag_str);
+        set_add(&cmd->flags, string_hash(temp), &flag);
+    } else {
+        bld_string str = command_error_at(arg);
+
+        if (is_switch) {
+            string_append_string(&str, "unknown switch");
+        } else {
+            string_append_string(&str, "unknown option");
+        }
+        array_push(err, &str);
+        return BLD_COMMAND_ERROR_FLAG_UNKNOWN;
+    }
+
+    (void)(info);
+    return 0;
+}
