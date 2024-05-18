@@ -1,0 +1,111 @@
+#include <ctype.h>
+#include "../bld_core/iter.h"
+#include "../bld_core/logging.h"
+#include "handle.h"
+
+bld_handle handle_new(char* name) {
+    bld_handle handle;
+    bld_string str = string_pack(name);
+    handle.name = string_copy(&str);
+    handle.description_set = 0;
+    handle.positional = array_new(sizeof(bld_handle_positional));
+    handle.arbitrary_flags = 0;
+    handle.flag_start_index = -1;
+    handle.flag_array = array_new(sizeof(bld_handle_flag));
+    handle.flags = set_new(sizeof(size_t));
+    return handle;
+}
+
+void handle_positional_required(bld_handle* handle, char* description) {
+    bld_string str = string_pack(description);
+    bld_handle_positional arg;
+
+    arg.type = BLD_HANDLE_POSITIONAL_REQUIRED;
+    arg.description = string_copy(&str);
+    array_push(&handle->positional, &arg);
+}
+
+void handle_positional_optional(bld_handle* handle, char* description) {
+    bld_string str = string_pack(description);
+    bld_handle_positional arg;
+
+    arg.type = BLD_HANDLE_POSITIONAL_OPTIONAL;
+    arg.description = string_copy(&str);
+    array_push(&handle->positional, &arg);
+}
+
+void handle_positional_vargs(bld_handle* handle, char* description) {
+    bld_string str = string_pack(description);
+    bld_handle_positional arg;
+
+    arg.type = BLD_HANDLE_POSITIONAL_VARGS;
+    arg.description = string_copy(&str);
+
+    array_push(&handle->positional, &arg);
+}
+
+void handle_positional_expect(bld_handle* handle, char* value) {
+    bld_string val = string_pack(value);
+    bld_handle_positional arg;
+
+    arg.type = BLD_HANDLE_POSITIONAL_EXPECTED;
+    arg.description = string_copy(&val);
+    array_push(&handle->positional, &arg);
+}
+
+void handle_allow_arbitrary_flags(bld_handle* handle, char* description) {
+    bld_string str = string_pack(description);
+    handle->arbitrary_flags = 1;
+    handle->arbitray_flags_description = string_copy(&str);
+}
+
+void handle_allow_flags(bld_handle* handle) {
+    bld_handle_positional* pos;
+
+    if (handle->positional.size == 0) {
+        pos = NULL;
+    } else {
+        pos = array_get(&handle->positional, handle->positional.size - 1);
+    }
+
+    if (pos == NULL) {
+        handle->flag_start_index = handle->positional.size;
+    } else {
+        handle->flag_start_index = handle->positional.size;
+    }
+}
+
+void handle_set_description(bld_handle* handle, char* description) {
+    bld_string str;
+    str = string_pack(description);
+    handle->description_set = 1;
+    handle->description = string_copy(&str);
+}
+
+void handle_flag(bld_handle* handle, char swtch, char* option, char* description) {
+    size_t index = handle->flag_array.size;
+    bld_string opt, desc;
+    bld_handle_flag flag;
+    opt = string_pack(option);
+    desc = string_pack(description);
+
+    flag.description = string_copy(&desc);
+    flag.swtch = swtch;
+    flag.option = string_copy(&opt);
+
+    array_push(&handle->flag_array, &flag);
+
+    if (set_has(&handle->flags, swtch)) {
+        log_fatal("handle_add_flag: switch '%c' added multiple times", swtch);
+    } else if (set_has(&handle->flags, string_hash(option))) {
+        log_fatal("handle_add_flag: option \"%s\" added multiple times", option);
+    }
+
+    if (isalpha(swtch)) {
+        set_add(&handle->flags, swtch, &index);
+    } else if (swtch != ' ') {
+        log_fatal("handle_add_flag: invalid switch '%c', valid are [A-Za-z] and ' ' is ignored", swtch);
+    }
+
+    set_add(&handle->flags, string_hash(option), &index);
+}
