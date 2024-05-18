@@ -637,3 +637,118 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
     (void)(info);
     return 0;
 }
+
+bld_string handle_make_description(bld_handle* handle) {
+    int index, npos;
+    bld_iter iter;
+    bld_string description = string_new();
+    bld_handle_positional* pos;
+    bld_handle_flag* flag;
+
+    string_append_string(&description, "usage: ");
+    string_append_string(&description, string_unpack(&handle->name));
+
+    npos = 0;
+    index = 0;
+    iter = iter_array(&handle->positional);
+    while (iter_next(&iter, (void**) &pos)) {
+        if (handle->flag_start_index >= 0 && handle->flag_start_index == index) {
+            string_append_string(&description, " /");
+        }
+        string_append_space(&description);
+
+        switch (pos->type) {
+            case (BLD_HANDLE_POSITIONAL_REQUIRED):
+                string_append_char(&description, '(');
+                handle_string_append_int(&description, npos);
+                string_append_char(&description, ')');
+                break;
+            case (BLD_HANDLE_POSITIONAL_VARGS):
+                string_append_string(&description, "(...)");
+                break;
+            case (BLD_HANDLE_POSITIONAL_OPTIONAL):
+                string_append_char(&description, '(');
+                handle_string_append_int(&description, npos);
+                string_append_char(&description, ')');
+                break;
+            case (BLD_HANDLE_POSITIONAL_EXPECTED):
+                string_append_string(&description, string_unpack(&pos->description));
+                break;
+        }
+
+        index += 1;
+        npos += pos->type != BLD_HANDLE_POSITIONAL_EXPECTED && pos->type != BLD_HANDLE_POSITIONAL_VARGS;
+    }
+
+    if (handle->flag_start_index < 0 || handle->flag_start_index == index) {
+        string_append_string(&description, " /");
+    }
+
+    iter = iter_array(&handle->flag_array);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_append_space(&description);
+        string_append_string(&description, "[-");
+        if (flag->swtch != ' ') {
+            string_append_char(&description, flag->swtch);
+            string_append_string(&description, ", -");
+        }
+        string_append_char(&description, '-');
+        string_append_string(&description, string_unpack(&flag->option));
+        string_append_char(&description, ']');
+    }
+
+    if (handle->arbitrary_flags) {
+        string_append_string(&description, " [arbitrary flags]");
+    }
+
+    string_append_string(&description, "\n\n");
+    string_append_string(&description, string_unpack(&handle->description));
+    string_append_string(&description, "\n\n");
+    string_append_string(&description, "Positional Arguments:");
+    npos = 0;
+    iter = iter_array(&handle->positional);
+    while (iter_next(&iter, (void**) &pos)) {
+        if (pos->type != BLD_HANDLE_POSITIONAL_EXPECTED) {
+
+            string_append_string(&description, "\n  ");
+            if (pos->type != BLD_HANDLE_POSITIONAL_VARGS) {
+                handle_string_append_int(&description, npos);
+            } else {
+                string_append_string(&description, "...");
+            }
+            string_append_string(&description, ": ");
+            if (pos->type == BLD_HANDLE_POSITIONAL_OPTIONAL) {
+                string_append_string(&description, "[Optional] ");
+            }
+            string_append_string(&description, string_unpack(&pos->description));
+
+            npos += pos->type != BLD_HANDLE_POSITIONAL_VARGS;
+        }
+    }
+
+    string_append_string(&description, "\n\n");
+    
+    string_append_string(&description, "Flags:");
+
+    iter = iter_array(&handle->flag_array);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_append_char(&description, '\n');
+        string_append_string(&description, "  -");
+        if (flag->swtch != ' ') {
+            string_append_char(&description, flag->swtch);
+            string_append_string(&description, ", -");
+        }
+        string_append_char(&description, '-');
+        string_append_string(&description, string_unpack(&flag->option));
+        string_append_string(&description, " ");
+        string_append_string(&description, string_unpack(&flag->description));
+    }
+
+    if (handle->arbitrary_flags) {
+        string_append_string(&description, "\n  ");
+        string_append_string(&description, string_unpack(&handle->arbitray_flags_description));
+    }
+
+    return description;
+}
+
