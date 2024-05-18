@@ -68,11 +68,19 @@ void handle_positional_required(bld_handle* handle, char* description) {
 
 void handle_positional_optional(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
-    bld_handle_positional arg;
+    bld_handle_positional arg, *prev;
     
     if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
         log_fatal("handle_positional_required: cannot exceed %d arguments.", BLD_COMMAND_MAX_ARGS);
     }
+
+    if (handle->positional.size > 0) {
+        prev = array_get(&handle->positional, handle->positional.size - 1);
+        if (prev->type == BLD_HANDLE_POSITIONAL_VARGS) {
+            log_fatal("handle_positional_optional: attempting to add optional argument after vargs");
+        }
+    }
+
 
     arg.type = BLD_HANDLE_POSITIONAL_OPTIONAL;
     arg.description = string_copy(&str);
