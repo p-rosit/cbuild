@@ -38,9 +38,60 @@ typedef struct bld_handle {
     bld_set flags;
 } bld_handle;
 
+typedef struct bld_command_positional_required {
+    bld_string value;
+} bld_command_positional_required;
+
+typedef struct bld_command_positional_optional {
+    int present;
+    bld_string value;
+} bld_command_positional_optional;
+
+typedef struct bld_command_positional_vargs {
+    bld_array values;
+} bld_command_positional_vargs;
+
+typedef struct bld_command_positional_expected {
+    bld_string value;
+} bld_command_positional_expected;
+
+typedef union bld_command_positional_union {
+    bld_command_positional_required req;
+    bld_command_positional_optional opt;
+    bld_command_positional_vargs vargs;
+    bld_command_positional_expected exp;
+} bld_command_positional_union;
+
+typedef struct bld_command_positional {
+    bld_handle_positional_type type;
+    bld_command_positional_union as;
+} bld_command_positional;
+
+typedef struct bld_command_flag {
+    int is_switch;
+    bld_string flag;
+} bld_command_flag;
+
+typedef enum bld_command_error {
+    BLD_COMMAND_ERROR_ARGS_TOO_FEW = (1 << 0),
+    BLD_COMMAND_ERROR_ARGS_TOO_MANY = (1 << 1),
+    BLD_COMMAND_ERROR_ARGS_NO_MATCH = (1 << 2),
+    BLD_COMMAND_ERROR_FLAG_UNKNOWN = (1 << 3),
+    BLD_COMMAND_ERROR_FLAG_EMPTY = (1 << 4),
+    BLD_COMMAND_ERROR_FLAG_DUPLICATE = (1 << 5),
+    BLD_COMMAND_ERROR_FLAG_EARLY = (1 << 6)
+} bld_command_error;
+
+typedef struct bld_command {
+    bld_array positional;
+    bld_set flags;
+} bld_command;
+
 bld_handle  handle_new(char*);
 void        handle_free(bld_handle*);
 bld_string  handle_make_description(bld_handle*);
+int         handle_parse(bld_args, bld_handle*, bld_command*, bld_array*);
+void        command_free(bld_command*);
 
 void handle_positional_required(bld_handle*, char*);
 void handle_positional_vargs(bld_handle*, char*);

@@ -44,6 +44,17 @@ void handle_free(bld_handle* handle) {
     set_free(&handle->flags);
 }
 
+void handle_string_append_int(bld_string* str, int number) {
+    char num[BLD_COMMAND_MAX_ARGS_LEN];
+
+    if (number < 0 || number > BLD_COMMAND_MAX_ARGS) {
+        log_fatal("handle_string_append_int: number not in range [0, %d]", BLD_COMMAND_MAX_ARGS, number);
+    }
+
+    sprintf(num, "%d", number);
+    string_append_string(str, num);
+}
+
 void handle_positional_required(bld_handle* handle, char* description) {
     bld_string str = string_pack(description);
     bld_handle_positional arg, *prev;
