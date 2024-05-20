@@ -1,4 +1,5 @@
 #include "../bld_core/logging.h"
+#include "../bld_core/iter.h"
 #include "../config/config_target.h"
 #include "command.h"
 #include "handle.h"
@@ -32,5 +33,15 @@ bld_set application_available_set(char* name) {
     set_add(&cmds, BLD_COMMAND_INVALID, &handle);
 
     return cmds;
+}
+
+void application_available_free(bld_set* cmds) {
+    bld_iter iter = iter_set(cmds);
+    bld_handle_named* handle;
+    while (iter_next(&iter, (void**) &handle)) {
+        if (handle->type == BLD_COMMAND_INVALID) {continue;}
+        handle_free(&handle->handle);
+    }
+    set_free(cmds);
 }
 
