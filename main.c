@@ -14,15 +14,12 @@ int main(int argc, char** argv) {
     if (args_empty(&args)) {log_fatal("main: unreachable error");}
     args_advance(&args); /* Ignore how program was invoked */
 
-    cmds = application_available_set("bld");
     if (cmds.size <= 0) {log_fatal("No commands registered!");}
+    data = data_extract("bld");
+    cmd = application_command_parse(&args, &data);
+    result = application_command_execute(&cmd, &data);
 
-    data = data_extract();
-    cmd = application_command_parse(&args, &data, &cmds);
-    result = application_command_execute(&cmd, &data, &cmds);
-
-    application_command_free(&cmd, &cmds);
+    application_command_free(&cmd, &data);
     data_free(&data);
-    application_available_free(&cmds);
     return result;
 }
