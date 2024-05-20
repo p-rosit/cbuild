@@ -108,3 +108,8 @@ int application_command_execute(bld_application_command* cmd, bld_data* data, bl
     return handle->execute(&cmd->as, data);
 }
 
+void application_command_free(bld_application_command* cmd, bld_set* commands) {
+    bld_handle_named* handle = set_get(commands, cmd->type);
+    if (handle == NULL) {log_fatal("application_command_free: no handle");}
+    handle->free(&cmd->as);
+}
