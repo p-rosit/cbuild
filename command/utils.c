@@ -2,6 +2,9 @@
 #include "../bld_core/os.h"
 #include "../bld_core/iter.h"
 #include "utils.h"
+#include "add.h"
+#include "help.h"
+#include "invalid.h"
 
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
@@ -55,8 +58,9 @@ void config_target_save(bld_data* data, bld_string* target, bld_config_target* c
     path_free(&target_path);
 }
 
-bld_data data_extract(void) {
+bld_data data_extract(char* name) {
     bld_data data;
+    bld_handle_annotated handle;
 
     data.has_root = data_find_root(&data.root);
     if (data.has_root) {
@@ -77,12 +81,21 @@ bld_data data_extract(void) {
         path_free(&path_config);
     }
 
+    data.handles = set_new(sizeof(bld_handle_annotated));
+    handle = command_handle_add(name);
+    set_add(&data.handles, handle.type, &handle);
+    handle = command_handle_help(name);
+    set_add(&data.handles, handle.type, &handle);
+    handle = command_handle_invalid(name);
+    set_add(&data.handles, handle.type, &handle);
+
     return data;
 }
 
 void data_free(bld_data* data) {
-    bld_string* target;
     bld_iter iter;
+    bld_string* target;
+    bld_handle_annotated* handle;
 
     if (data->has_root) {
         path_free(&data->root);
@@ -101,6 +114,13 @@ void data_free(bld_data* data) {
     if (data->target_config_parsed) {
         config_target_free(&data->target_config);
     }
+
+    iter = iter_set(&data->handles);
+    while (iter_next(&iter, (void**) &handle)) {
+        if (handle->type == BLD_COMMAND_INVALID) {continue;}
+        handle_free(&handle->handle);
+    }
+    set_free(&data->handles);
 }
 
 bld_set data_find_targets(bld_path* root) {
