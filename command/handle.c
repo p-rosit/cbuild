@@ -618,7 +618,7 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
 
         flag.is_switch = is_switch;
         flag.flag = string_copy(&handle_flag->option);
-        set_add(&cmd->flags, flag_hash, &flag);
+        set_add(&cmd->flags, string_hash(string_unpack(&handle_flag->option)), &flag);
     } else if (handle->arbitrary_flags) {
         flag.is_switch = is_switch;
         flag.flag = string_copy(&flag_str);
