@@ -161,7 +161,15 @@ bld_handle command_handle_add(char* name) {
     return handle;
 }
 
-void command_add_free(bld_command_add* add) {
-    string_free(&add->target);
-    path_free(&add->path);
+void command_add_free(bld_command_add* cmd) {
+    bld_iter iter;
+    bld_path* path;
+
+    string_free(&cmd->target);
+
+    iter = iter_array(&cmd->paths);
+    while (iter_next(&iter, (void**) &path)) {
+        path_free(path);
+    }
+    array_free(&cmd->paths);
 }
