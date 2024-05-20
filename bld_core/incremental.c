@@ -128,7 +128,6 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
         return;
     }
 
-
     exists = set_add(&project->files, file.identifier.id, &file);
     if (exists) {
         log_error("encountered \"%s\" multiple times while indexing", string_unpack(&file.name));
