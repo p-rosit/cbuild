@@ -46,13 +46,15 @@ typedef union bld_union_command {
     bld_command_status status;
 } bld_union_command;
 
-typedef struct bld_command {
+typedef struct bld_application_command {
     bld_command_type type;
     bld_union_command as;
-} bld_command;
+} bld_application_command;
 
-bld_command command_parse(bld_args*, bld_data*);
-int command_execute(bld_command*, bld_data*);
-void command_free(bld_command*);
+bld_set application_available_set(char*);
+void application_available_free(bld_set*);
+bld_application_command application_command_parse(bld_args*, bld_data*, bld_set*);
+int application_command_execute(bld_application_command*, bld_data*, bld_set*);
+void application_command_free(bld_application_command*, bld_set*);
 
 #endif
