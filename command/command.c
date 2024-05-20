@@ -4,11 +4,11 @@
 #include "command.h"
 #include "handle.h"
 
-bld_application_command application_command_parse(bld_args* args, bld_data* data, bld_set* handles) {
+bld_application_command application_command_parse(bld_args* args, bld_data* data) {
     int error;
     bld_array errs;
-    bld_iter iter = iter_set(handles);
-    bld_handle_named* handle;
+    bld_iter iter = iter_set(&data->handles);
+    bld_handle_annotated* handle;
     bld_command cmd;
     bld_application_command app_command;
     bld_command_invalid invalid;
@@ -61,14 +61,14 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
     return app_command;
 }
 
-int application_command_execute(bld_application_command* cmd, bld_data* data, bld_set* commands) {
-    bld_handle_named* handle = set_get(commands, cmd->type);
+int application_command_execute(bld_application_command* cmd, bld_data* data) {
+    bld_handle_annotated* handle = set_get(&data->handles, cmd->type);
     if (handle == NULL) {log_fatal("application_command_execute: no handle");}
     return handle->execute(&cmd->as, data);
 }
 
-void application_command_free(bld_application_command* cmd, bld_set* commands) {
-    bld_handle_named* handle = set_get(commands, cmd->type);
+void application_command_free(bld_application_command* cmd, bld_data* data) {
+    bld_handle_annotated* handle = set_get(&data->handles, cmd->type);
     if (handle == NULL) {log_fatal("application_command_free: no handle");}
     handle->free(&cmd->as);
 }
