@@ -12,9 +12,12 @@ int command_add(bld_command_add* cmd, bld_data* data) {
     bld_path path, *temp;
     bld_set added_files = set_new(sizeof(bld_path));
     uintmax_t added_id;
+
+    data->target_config_parsed = !config_target_load(data, &cmd->target, &data->target_config);
     if (!data->target_config_parsed) {
         log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));
     }
+    log_info("Chosen target: \"%s\"", string_unpack(&cmd->target));
 
     iter = iter_array(&config->added_paths);
     while (iter_next(&iter, (void**) &temp)) {
@@ -23,57 +26,57 @@ int command_add(bld_command_add* cmd, bld_data* data) {
         set_add(&added_files, added_id, temp);
     }
 
-    added_id = os_info_id(path_to_string(&cmd->path));
+    iter = iter_array(&cmd->paths);
+    while (iter_next(&iter, (void**) &temp)) {
+        added_id = os_info_id(path_to_string(temp));
 
-    if (added_id == BLD_INVALID_IDENITIFIER) {
-        set_free(&added_files);
-        log_error("Attempting to add '%s' which is not a valid path to a file/directory", path_to_string(&cmd->path));
-        return -1;
-    }
-
-    if (cmd->remove_flag) {
-        bld_iter iter;
-        bld_string a;
-        bld_path *path, *temp;
-        size_t index;
-
-        path = set_get(&added_files, added_id);
-        if (path == NULL) {
+        if (added_id == BLD_INVALID_IDENITIFIER) {
             set_free(&added_files);
-            log_error("Attempting to remove '%s' which has not been added to target '%s'", path_to_string(&cmd->path), string_unpack(&cmd->target));
+            log_error("Attempting to add '%s' which is not a valid path to a file/directory", path_to_string(temp));
             return -1;
         }
 
-        index = 0;
-        a = string_pack(path_to_string(path));
-        iter = iter_array(&data->target_config.added_paths);
-        while (iter_next(&iter, (void**) &temp)) {
-            bld_string b = string_pack(path_to_string(temp));
-            if (string_eq(&a, &b)) {
-                break;
+        if (!cmd->remove_flag) {
+            if (set_has(&added_files, added_id)) {
+                set_free(&added_files);
+                log_error("Attempting to add '%s' which has already been added to '%s'", path_to_string(temp), string_unpack(&cmd->target));
+                return -1;
             }
-            index += 1;
+
+            log_info("Adding: \"%s\"", path_to_string(temp));
+            path = path_copy(temp);
+            array_push(&data->target_config.added_paths, &path);
+        } else {
+            bld_iter iter;
+            bld_string a;
+            bld_path *path, *p;
+            size_t index;
+
+            path = set_get(&added_files, added_id);
+            if (path == NULL) {
+                set_free(&added_files);
+                log_error("Attempting to remove '%s' which has not been added to target '%s'", path_to_string(temp), string_unpack(&cmd->target));
+                return -1;
+            }
+
+            index = 0;
+            a = string_pack(path_to_string(path));
+            iter = iter_array(&data->target_config.added_paths);
+            while (iter_next(&iter, (void**) &p)) {
+                bld_string b = string_pack(path_to_string(p));
+                if (string_eq(&a, &b)) {break;}
+                index += 1;
+            }
+
+            path = array_get(&data->target_config.added_paths, index);
+            path_free(path);
+            array_remove(&data->target_config.added_paths, index);
+
+            log_info("Removed: \"%s\"", path_to_string(temp));
         }
-
-        path = array_get(&data->target_config.added_paths, index);
-        path_free(path);
-        array_remove(&data->target_config.added_paths, index);
-
-        log_info("Removed: \"%s\" for target \"%s\"", path_to_string(&cmd->path), string_unpack(&cmd->target));
-    } else {
-        if (set_has(&added_files, added_id)) {
-            set_free(&added_files);
-            log_error("Attempting to add '%s' which has already been added by to '%s'", path_to_string(&cmd->path), string_unpack(&cmd->target));
-            return -1;
-        }
-
-        log_info("Adding: \"%s\" for target \"%s\"", path_to_string(&cmd->path), string_unpack(&cmd->target));
-        path = path_copy(&cmd->path);
-        array_push(&data->target_config.added_paths, &path);
     }
 
     config_target_save(data, &cmd->target, config);
-
     set_free(&added_files);
     return 0;
 }
