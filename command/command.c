@@ -45,3 +45,60 @@ void application_available_free(bld_set* cmds) {
     set_free(cmds);
 }
 
+bld_application_command application_command_parse(bld_args* args, bld_data* data, bld_set* handles) {
+    int error;
+    bld_array errs;
+    bld_iter iter = iter_set(handles);
+    bld_handle_named* handle;
+    bld_command cmd;
+    bld_application_command app_command;
+    bld_command_invalid invalid;
+    (void)(data);
+
+    while (iter_next(&iter, (void**) &handle)) {
+        bld_iter iter;
+        bld_string* err;
+        if (handle->type == BLD_COMMAND_INVALID) {continue;}
+
+        error = handle_parse(*args, &handle->handle, &cmd, &errs);
+        if (!(error & BLD_COMMAND_ERROR_ARGS_NO_MATCH)) {
+            break;
+        }
+
+        iter = iter_array(&errs);
+        while (iter_next(&iter, (void**) &err)) {
+            string_free(err);
+        }
+        array_free(&errs);
+    }
+
+    if (error) {
+        bld_string* str;
+        bld_string err = string_new();
+
+        if (errs.size <= 0) {log_fatal("application_command_parse: error but no error");}
+
+        iter = iter_array(&errs);
+        while (iter_next(&iter, (void**) &str)) {
+            string_append_string(&err, string_unpack(str));
+            string_append_char(&err, '\n');
+            string_free(str);
+        }
+        array_free(&errs);
+        
+        app_command.type = BLD_COMMAND_INVALID;
+        app_command.as.invalid = command_invalid_new(-1, &err);
+    } else {
+        app_command.type = handle->type;
+        error = handle->convert(&cmd, data, &app_command.as, &invalid);
+        command_free(&cmd);
+
+        if (error) {
+            app_command.type = BLD_COMMAND_INVALID;
+            app_command.as.invalid = invalid;
+        }
+    }
+
+    return app_command;
+}
+
