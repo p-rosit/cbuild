@@ -390,6 +390,7 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
     bld_handle_info info;
     bld_handle_positional* pos;
 
+    *err = array_new(sizeof(bld_string));
     *cmd = command_new(handle);
     info = handle_info_new(handle);
 
