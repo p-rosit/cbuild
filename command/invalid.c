@@ -10,7 +10,7 @@ bld_command_invalid command_invalid_new(int code, bld_string* msg) {
 
 int command_invalid(bld_command_invalid* invalid, bld_data* data) {
     (void)(data);
-    log_error("Error: %s", string_unpack(&invalid->msg));
+    printf("%s", string_unpack(&invalid->msg));
     return invalid->code;
 }
 
