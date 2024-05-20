@@ -102,3 +102,9 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
     return app_command;
 }
 
+int application_command_execute(bld_application_command* cmd, bld_data* data, bld_set* commands) {
+    bld_handle_named* handle = set_get(commands, cmd->type);
+    if (handle == NULL) {log_fatal("application_command_execute: no handle");}
+    return handle->execute(&cmd->as, data);
+}
+
