@@ -13,7 +13,7 @@ typedef struct bld_command_add {
     bld_array paths;
 } bld_command_add;
 
-bld_handle command_handle_add(char*);
+bld_handle_annotated command_handle_add(char*);
 int command_add_convert(bld_command*, bld_data*, bld_command_add*, bld_command_invalid*);
 int command_add(bld_command_add*, bld_data*);
 void command_add_free(bld_command_add*);
