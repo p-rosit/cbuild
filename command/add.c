@@ -78,45 +78,76 @@ int command_add(bld_command_add* cmd, bld_data* data) {
     return 0;
 }
 
-int command_add_parse(bld_string* target, bld_args* args, bld_data* data, bld_command_add* cmd, bld_command_invalid* invalid) {
-    bld_string path_add, error_msg;
-    (void)(data);
+int command_add_convert(bld_command* pre_cmd, bld_data* data, bld_command_add* cmd, bld_command_invalid* invalid) {
+    int error;
+    bld_iter iter;
+    bld_string err;
+    bld_string *str_path;
+    bld_path path;
+    bld_command_positional* arg;
+    bld_command_positional_optional* opt;
+    bld_command_positional_vargs* varg;
 
-    if (args_empty(args)) {
-        error_msg = string_pack("bld: missing path");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
-    }
+    arg = array_get(&pre_cmd->positional, 0);
+    if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_add_convert: missing first optional");}
+    opt = &arg->as.opt;
 
-    path_add = args_advance(args);
-
-    if (args_empty(args)) {
-        cmd->remove_flag = 0;
-    } else {
-        bld_string temp = args_advance(args);
-        cmd->remove_flag = 1;
-
-        if (!string_eq(&path_add, &bld_command_string_add_terse_delete) && !string_eq(&path_add, &bld_command_string_add_flag_delete)) {
-            error_msg = string_pack("bld: invalid arguments");
-            invalid->code = -1;
-            invalid->msg = string_copy(&error_msg);
-            return -1;
+    error = -1;
+    if (opt->present) {
+        if (!set_has(&data->targets, string_hash(string_unpack(&opt->value)))) {
+            err = string_new();
+            string_append_string(&err, string_unpack(&opt->value));
+            string_append_string(&err, " is not a known target\n");
+            goto parse_failed;
         }
-
-        path_add = temp;
+        cmd->target = string_copy(&opt->value);
+    } else if (data->config_parsed) {
+        if (data->config.default_target_configured) {
+            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.target)))) {
+                err = string_new();
+                string_append_string(&err, "config has default target ");
+                string_append_string(&err, string_unpack(&data->config.target));
+                string_append_string(&err, " which is not a known target\n");
+                goto parse_failed;
+            }
+            cmd->target = string_copy(&data->config.target);
+        } else {
+            err = string_pack("no target specified and no default target set up\n");
+            err = string_copy(&err);
+            goto parse_failed;
+        }
+    } else {
+        err = string_pack("no target specified and no config has been parsed\n");
+        err = string_copy(&err);
+        goto parse_failed;
     }
 
-    if (!args_empty(args)) {
-        error_msg = string_pack("bld: too many inputs");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+    arg = array_get(&pre_cmd->positional, 2);
+    if (arg->type != BLD_HANDLE_POSITIONAL_VARGS) {log_fatal("command_add_convert: no varg");}
+    varg = &arg->as.vargs;
+
+    if (varg->values.size <= 0) {
+        err = string_pack("expected paths to add\n");
+        err = string_copy(&err);
+        *invalid = command_invalid_new(-1, &err);
+        goto free_target;
     }
 
-    cmd->target = string_copy(target);
-    cmd->path = path_from_string(string_unpack(&path_add));
+    cmd->paths = array_new(sizeof(bld_path));
+    iter = iter_array(&varg->values);
+    while (iter_next(&iter, (void**) &str_path)) {
+        path = path_from_string(string_unpack(str_path));
+        array_push(&cmd->paths, &path);
+    }
+
+    cmd->remove_flag = set_has(&pre_cmd->flags, string_hash(string_unpack(&bld_command_string_add_flag_delete)));
+
     return 0;
+    free_target:
+    string_free(&cmd->target);
+    parse_failed:
+    *invalid = command_invalid_new(error, &err);
+    return -1;
 }
 
 bld_handle command_handle_add(char* name) {
