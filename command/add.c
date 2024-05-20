@@ -4,8 +4,7 @@
 #include "add.h"
 
 const bld_string bld_command_string_add = STRING_COMPILE_TIME_PACK("add");
-const bld_string bld_command_string_add_terse_delete = STRING_COMPILE_TIME_PACK("-d");
-const bld_string bld_command_string_add_flag_delete = STRING_COMPILE_TIME_PACK("--delete");
+const bld_string bld_command_string_add_flag_delete = STRING_COMPILE_TIME_PACK("delete");
 
 int command_add(bld_command_add* cmd, bld_data* data) {
     bld_iter iter;
@@ -118,6 +117,17 @@ int command_add_parse(bld_string* target, bld_args* args, bld_data* data, bld_co
     cmd->target = string_copy(target);
     cmd->path = path_from_string(string_unpack(&path_add));
     return 0;
+}
+
+bld_handle command_handle_add(char* name) {
+    bld_handle handle = handle_new(name);
+    handle_positional_optional(&handle, "The target to modify.");
+    handle_positional_expect(&handle, string_unpack(&bld_command_string_add));
+    handle_allow_flags(&handle);
+    handle_positional_vargs(&handle, "The paths to add to the chosen target");
+    handle_flag(&handle, *bld_command_string_add_flag_delete.chars, string_unpack(&bld_command_string_add_flag_delete), "Remove the specified paths from paths added to target");
+    handle_set_description(&handle, "Adds the specified paths to the specified target. If no target is supplied\nthe paths will be added to the currently active target.");
+    return handle;
 }
 
 void command_add_free(bld_command_add* add) {
