@@ -217,7 +217,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
         }
 
         symbol_type = c;
-        if (symbol_type != 'T' && symbol_type != 'B' && symbol_type != 'U') {goto next_line;}
+        if (symbol_type != 'T' && symbol_type != 'B' && symbol_type != 'R' && symbol_type != 'D' && symbol_type != 'S' && symbol_type != 'U') {goto next_line;}
 
         c = fgetc(f);
         if (c != ' ') {
@@ -232,7 +232,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
             c = fgetc(f);
         }
 
-        if (symbol_type == 'T' || symbol_type == 'B') {
+        if (symbol_type == 'T' || symbol_type == 'B' || symbol_type == 'R' || symbol_type == 'D' || symbol_type == 'S') {
             switch (file->type) {
                 case (BLD_IMPL): {
                     add_symbol(&file->info.impl.defined_symbols, &func);
