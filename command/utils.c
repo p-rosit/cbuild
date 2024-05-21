@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "add.h"
 #include "help.h"
+#include "build.h"
 #include "invalid.h"
 
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
@@ -85,6 +86,9 @@ bld_data data_extract(char* name) {
     handle = command_handle_add(name);
     set_add(&data.handles, handle.type, &handle);
     handle = command_handle_help(name);
+    set_add(&data.handles, handle.type, &handle);
+
+    handle = command_handle_build(name);
     set_add(&data.handles, handle.type, &handle);
     handle = command_handle_invalid(name);
     set_add(&data.handles, handle.type, &handle);
