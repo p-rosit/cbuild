@@ -57,40 +57,57 @@ int command_build(bld_command_build* build, bld_data* data) {
 }
 
 
-int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_command_build* build, bld_command_invalid* invalid) {
-    bld_string error_msg;
+int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_build* cmd, bld_command_invalid* invalid) {
+    int error;
+    bld_string err;
+    bld_command_positional* arg;
+    bld_command_positional_optional* opt;
 
-    if (!args_empty(args)) {
-        error_msg = string_pack("bld: too many input arguments");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+    arg = array_get(&pre_cmd->positional, 0);
+    if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_build_convert: missing first optional");}
+    opt = &arg->as.opt;
+
+    if (opt->present) {
+        cmd->target = string_copy(&opt->value);
+    } else {
+        if (!data->config.default_target_configured) {
+            error = -1;
+            err = string_pack("bld: building active target but no active target set.\n");
+            goto parse_failed;
+        }
+        cmd->target = string_copy(&data->config.target);
     }
+
+    data->target_config_parsed = !config_target_load(data, &cmd->target, &data->target_config);
 
     if (!data->target_config_parsed) {
-        error_msg = string_pack("bld: no target config parsed");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+        error = -1;
+        err = string_pack("bld: no target config parsed\n");
+        err = string_copy(&err);
+        goto free_target;
     } else if (!data->target_config.files_set) {
-        error_msg = string_pack("bld: target file config has not been set up");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+        error = -1;
+        err = string_pack("bld: target file config has not been set up\n");
+        err = string_copy(&err);
+        goto free_target;
     } else if (!data->target_config.files.info.compiler_set) {
-        error_msg = string_pack("bld: target has no base compiler");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+        error = -1;
+        err = string_pack("bld: target has no base compiler\n");
+        err = string_copy(&err);
+        goto free_target;
     } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
-        error_msg = string_pack("bld: target has no base compiler, only compiler flags");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+        error = -1;
+        err = string_pack("bld: target has no base compiler, only compiler flags\n");
+        err = string_copy(&err);
+        goto free_target;
     }
 
-    build->target = string_copy(target);
     return 0;
+    free_target:
+    string_free(&cmd->target);
+    parse_failed:
+    *invalid = command_invalid_new(error, &err);
+    return -1;
 }
 
 bld_handle_annotated command_handle_build(char* name) {
