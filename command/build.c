@@ -93,6 +93,20 @@ int command_build_parse(bld_string* target, bld_args* args, bld_data* data, bld_
     return 0;
 }
 
+bld_handle_annotated command_handle_build(char* name) {
+    bld_handle_annotated handle;
+    handle.handle = handle_new(name);
+    handle_positional_optional(&handle.handle, "The target to build");
+    handle_set_description(&handle.handle, "Build a target");
+
+    handle.type = BLD_COMMAND_BUILD;
+    handle.convert = (bld_command_convert*) command_build_convert;
+    handle.execute = (bld_command_execute*) command_build;
+    handle.free = (bld_command_free*) command_build_free;
+
+    return handle;
+}
+
 void command_build_free(bld_command_build* build) {
     string_free(&build->target);
 }
