@@ -49,6 +49,7 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
 
         if (errs.size <= 0) {log_fatal("application_command_parse: error but no error");}
 
+        log_error("Error with: %d", handle->type);
         iter = iter_array(&errs);
         while (iter_next(&iter, (void**) &str)) {
             string_append_string(&err, string_unpack(str));
