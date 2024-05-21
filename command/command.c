@@ -5,7 +5,7 @@
 #include "handle.h"
 
 bld_application_command application_command_parse(bld_args* args, bld_data* data) {
-    int error;
+    int error, matched;
     bld_array errs;
     bld_iter iter = iter_set(&data->handles);
     bld_handle_annotated* handle;
@@ -14,13 +14,21 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
     bld_command_invalid invalid;
     (void)(data);
 
+    matched = 0;
     while (iter_next(&iter, (void**) &handle)) {
         bld_iter iter;
         bld_string* err;
         if (handle->type == BLD_COMMAND_INVALID) {continue;}
 
         error = handle_parse(*args, &handle->handle, &cmd, &errs);
-        if (!(error & BLD_COMMAND_ERROR_ARGS_NO_MATCH)) {
+
+        if (handle->type == BLD_COMMAND_BUILD) {
+            if (!(error & (BLD_COMMAND_ERROR_ARGS_TOO_FEW | BLD_COMMAND_ERROR_ARGS_TOO_MANY))) {
+                matched = 1;
+                break;
+            }
+        } else if (!(error & BLD_COMMAND_ERROR_ARGS_NO_MATCH)) {
+            matched = 1;
             break;
         }
 
@@ -29,6 +37,10 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
             string_free(err);
         }
         array_free(&errs);
+    }
+
+    if (!matched) {
+        log_fatal("No subcommand could be matched");
     }
 
     if (error) {
