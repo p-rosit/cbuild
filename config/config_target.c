@@ -98,7 +98,7 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
             fprintf(file, "\n%*c", 2 * (depth + 1), ' ');
             fprintf(file, "\"%s\"", path_to_string(path));
         }
-        if (config->ignore_paths.size > 0) {
+        if (config->added_paths.size > 0) {
             fprintf(file, "\n%*c", 2 * depth, ' ');
         }
         fprintf(file, "]");
