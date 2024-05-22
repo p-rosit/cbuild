@@ -8,6 +8,7 @@ typedef struct bld_command_invalid {
     bld_string msg;
 } bld_command_invalid;
 
+bld_handle_annotated command_handle_invalid(char*);
 bld_command_invalid command_invalid_new(int, bld_string*);
 int                 command_invalid(bld_command_invalid*, bld_data*);
 void                command_invalid_free(bld_command_invalid*);

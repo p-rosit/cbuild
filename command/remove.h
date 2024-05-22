@@ -10,7 +10,8 @@ typedef struct bld_command_remove {
     bld_string target;
 } bld_command_remove;
 
-int command_remove_parse(bld_args*, bld_data*, bld_command_remove*, bld_command_invalid*);
+bld_handle_annotated command_handle_remove(char*);
+int command_remove_convert(bld_command*, bld_data*, bld_command_remove*, bld_command_invalid*);
 int command_remove(bld_command_remove*, bld_data*);
 void command_remove_free(bld_command_remove*);
 

@@ -2,12 +2,23 @@
 #include "../bld_core/os.h"
 #include "../bld_core/iter.h"
 #include "utils.h"
+#include "add.h"
+#include "ignore.h"
+#include "init.h"
+#include "help.h"
+#include "switch.h"
+#include "invalidate.h"
+#include "remove.h"
+#include "status.h"
+#include "build.h"
+#include "invalid.h"
 
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
+void data_add_handle(bld_data*, bld_handle_annotated);
 
 int config_load(bld_data* data, bld_config* config) {
     int error;
@@ -55,7 +66,7 @@ void config_target_save(bld_data* data, bld_string* target, bld_config_target* c
     path_free(&target_path);
 }
 
-bld_data data_extract(void) {
+bld_data data_extract(char* name) {
     bld_data data;
 
     data.has_root = data_find_root(&data.root);
@@ -77,12 +88,26 @@ bld_data data_extract(void) {
         path_free(&path_config);
     }
 
+    data.handles = set_new(sizeof(bld_handle_annotated));
+    data.handle_order = array_new(sizeof(bld_command_type));
+    data_add_handle(&data, command_handle_help(name));
+    data_add_handle(&data, command_handle_add(name));
+    data_add_handle(&data, command_handle_ignore(name));
+    data_add_handle(&data, command_handle_switch(name));
+    data_add_handle(&data, command_handle_remove(name));
+    data_add_handle(&data, command_handle_invalidate(name));
+    data_add_handle(&data, command_handle_status(name));
+    data_add_handle(&data, command_handle_init(name));
+    data_add_handle(&data, command_handle_build(name));
+    data_add_handle(&data, command_handle_invalid(name));
+
     return data;
 }
 
 void data_free(bld_data* data) {
-    bld_string* target;
     bld_iter iter;
+    bld_string* target;
+    bld_handle_annotated* handle;
 
     if (data->has_root) {
         path_free(&data->root);
@@ -101,6 +126,14 @@ void data_free(bld_data* data) {
     if (data->target_config_parsed) {
         config_target_free(&data->target_config);
     }
+
+    iter = iter_set(&data->handles);
+    while (iter_next(&iter, (void**) &handle)) {
+        if (handle->type == BLD_COMMAND_INVALID) {continue;}
+        handle_free(&handle->handle);
+    }
+    set_free(&data->handles);
+    array_free(&data->handle_order);
 }
 
 bld_set data_find_targets(bld_path* root) {
@@ -170,4 +203,9 @@ int data_find_root(bld_path* root) {
         path_free(&test_root);
         return 0;
     }
+}
+
+void data_add_handle(bld_data* data, bld_handle_annotated handle) {
+    set_add(&data->handles, handle.type, &handle);
+    array_push(&data->handle_order, &handle.type);
 }

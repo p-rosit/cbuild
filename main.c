@@ -7,16 +7,19 @@ int main(int argc, char** argv) {
     int result;
     bld_args args;
     bld_data data;
-    bld_command cmd;
+    bld_application_command cmd;
+    bld_set cmds;
 
     args = args_new(argc, argv);
+    if (args_empty(&args)) {log_fatal("main: unreachable error");}
     args_advance(&args); /* Ignore how program was invoked */
 
-    data = data_extract();
-    cmd = command_parse(&args, &data);
-    result = command_execute(&cmd, &data);
+    if (cmds.size <= 0) {log_fatal("No commands registered!");}
+    data = data_extract("bld");
+    cmd = application_command_parse(&args, &data);
+    result = application_command_execute(&cmd, &data);
 
-    command_free(&cmd);
+    application_command_free(&cmd, &data);
     data_free(&data);
     return result;
 }

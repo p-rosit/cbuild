@@ -5,34 +5,48 @@
 const bld_string bld_command_string_remove = STRING_COMPILE_TIME_PACK("remove");
 
 int command_remove(bld_command_remove* remove, bld_data* data) {
+    if (data->config_parsed) {
+        if (!data->config.default_target_configured) {
+            if (string_eq(&remove->target, &data->config.target)) {
+                log_error("Cannot remove currently active target");
+                return -1;
+            }
+        }
+    }
+
     log_debug("Removing target: \"%s\"", string_unpack(&remove->target));
     (void)(data);
-    return -1;
+    return 0;
 }
 
-int command_remove_parse(bld_args* args, bld_data* data, bld_command_remove* remove, bld_command_invalid* invalid) {
-    bld_string error_msg;
-    bld_string target;
+int command_remove_convert(bld_command* pre_cmd, bld_data* data, bld_command_remove* cmd, bld_command_invalid* invalid) {
+    bld_command_positional* arg;
+    bld_command_positional_required* target;
     (void)(data);
+    (void)(invalid);
 
-    if (args_empty(args)) {
-        error_msg = string_pack("missing target");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
-    }
+    arg = array_get(&pre_cmd->positional, 1);
+    if (arg->type != BLD_HANDLE_POSITIONAL_REQUIRED) {log_fatal("command_switch_convert: missing first convert");}
+    target = &arg->as.req;
 
-    target = args_advance(args);
-
-    if (!args_empty(args)) {
-        error_msg = string_pack("too many args");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
-    }
-
-    remove->target = string_copy(&target);
+    cmd->target = string_copy(&target->value);
     return 0;
+}
+
+bld_handle_annotated command_handle_remove(char* name) {
+    bld_handle_annotated handle;
+
+    handle.type = BLD_COMMAND_REMOVE;
+    handle.handle = handle_new(name);
+    handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_remove));
+    handle_positional_required(&handle.handle, "The target to remove");
+    handle_set_description(&handle.handle, "Remove a target");
+
+    handle.convert = (bld_command_convert*) command_remove_convert;
+    handle.execute = (bld_command_execute*) command_remove;
+    handle.free = (bld_command_free*) command_remove_free;
+
+    return handle;
 }
 
 void command_remove_free(bld_command_remove* remove) {

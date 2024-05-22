@@ -385,11 +385,12 @@ void handle_info_free(bld_handle_info* info) {
 }
 
 int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array* err) {
-    int error = 0, index;
+    int error = 0, index, too_few;
     bld_iter iter;
     bld_handle_info info;
     bld_handle_positional* pos;
 
+    *err = array_new(sizeof(bld_string));
     *cmd = command_new(handle);
     info = handle_info_new(handle);
 
@@ -435,14 +436,16 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
         }
     }
 
+
     index = -1;
+    too_few = 0;
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &pos)) {
         index += 1;
         if (index < info.current_arg) {continue;}
         if (info.positional_parsed[index]) {continue;}
 
-        if (pos->type == BLD_HANDLE_POSITIONAL_REQUIRED || pos->type == BLD_HANDLE_POSITIONAL_EXPECTED) {
+        if (!too_few && (pos->type == BLD_HANDLE_POSITIONAL_REQUIRED || pos->type == BLD_HANDLE_POSITIONAL_EXPECTED)) {
             bld_string str;
             str = string_new();
             string_append_string(&str, "Expected ");
@@ -452,8 +455,11 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
             string_append_string(&str, "\n");
             array_push(err, &str);
             error |= BLD_COMMAND_ERROR_ARGS_TOO_FEW;
-            break;
+
+            too_few = 1;
         }
+
+        error |= BLD_COMMAND_ERROR_ARGS_NO_MATCH * (pos->type == BLD_HANDLE_POSITIONAL_EXPECTED);
     }
 
     if (error) {
@@ -617,7 +623,7 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
 
         flag.is_switch = is_switch;
         flag.flag = string_copy(&handle_flag->option);
-        set_add(&cmd->flags, flag_hash, &flag);
+        set_add(&cmd->flags, string_hash(string_unpack(&handle_flag->option)), &flag);
     } else if (handle->arbitrary_flags) {
         flag.is_switch = is_switch;
         flag.flag = string_copy(&flag_str);

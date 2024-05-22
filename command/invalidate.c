@@ -1,40 +1,117 @@
+#include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
 #include "invalidate.h"
 
 const bld_string bld_command_string_invalidate = STRING_COMPILE_TIME_PACK("invalidate");
 
 int command_invalidate(bld_command_invalidate* cmd, bld_data* data) {
-    log_warn("Ignoring: \"%s\" for target \"%s\"", path_to_string(&cmd->path), string_unpack(&cmd->target));
+    bld_iter iter;
+    bld_path* path;
     (void)(data);
-    return -1;
-}
-
-int command_invalidate_parse(bld_string* target, bld_args* args, bld_data* data, bld_command_invalidate* cmd, bld_command_invalid* invalid) {
-    bld_string path_add, error_msg;
-    (void)(data);
-
-    if (args_empty(args)) {
-        error_msg = string_pack("bld: missing path");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
+    
+    log_info("Invalidating target \"%s\"", string_unpack(&cmd->target));
+    iter = iter_array(&cmd->paths);
+    while (iter_next(&iter, (void**) &path)) {
+        log_info("%s", path_to_string(path));
     }
 
-    path_add = args_advance(args);
-
-    if (!args_empty(args)) {
-        error_msg = string_pack("bld: too many inputs");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
-    }
-
-    cmd->target = string_copy(target);
-    cmd->path = path_from_string(string_unpack(&path_add));
     return 0;
 }
 
-void command_invalidate_free(bld_command_invalidate* cmd) {
+int command_invalidate_convert(bld_command* pre_cmd, bld_data* data, bld_command_invalidate* cmd, bld_command_invalid* invalid) {
+    int error;
+    bld_iter iter;
+    bld_string err;
+    bld_string* str_path;
+    bld_command_positional* arg;
+    bld_command_positional_optional* target;
+    bld_command_positional_vargs* paths;
+
+    arg = array_get(&pre_cmd->positional, 0);
+    if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_invalidate_convert: missing first optional");}
+    target = &arg->as.opt;
+
+    error = -1;
+    if (target->present) {
+        if (!set_has(&data->targets, string_hash(string_unpack(&target->value)))) {
+            err = string_new();
+            string_append_string(&err, string_unpack(&target->value));
+            string_append_string(&err, " is not a know target\n");
+            goto parse_failed;
+        }
+        cmd->target = string_copy(&target->value);
+    } else if (data->config_parsed) {
+        if (data->config.default_target_configured) {
+            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.target)))) {
+                err = string_new();
+                string_append_string(&err, "config has default target ");
+                string_append_string(&err, string_unpack(&data->config.target));
+                string_append_string(&err, " which is not a known target\n");
+                goto parse_failed;
+            }
+            cmd->target = string_copy(&data->config.target);
+        } else {
+            err = string_pack("no target specified and no default target set up\n");
+            err = string_copy(&err);
+            goto parse_failed;
+        }
+    } else {
+        err = string_pack("no target specified and no config has been parsed\n");
+        err = string_copy(&err);
+        goto parse_failed;
+    }
+
+    arg = array_get(&pre_cmd->positional, 2);
+    if (arg->type != BLD_HANDLE_POSITIONAL_VARGS) {log_fatal("command_invalidate_convert: no varg");}
+    paths = &arg->as.vargs;
+
+    if (paths->values.size <= 0) {
+        err = string_pack("expected paths to add\n");
+        err = string_copy(&err);
+        goto free_target;
+    }
+
+    cmd->paths = array_new(sizeof(bld_path));
+    iter = iter_array(&paths->values);
+    while (iter_next(&iter, (void**) &str_path)) {
+        bld_path path = path_from_string(string_unpack(str_path));
+        array_push(&cmd->paths, &path);
+    }
+
+    return 0;
+    free_target:
     string_free(&cmd->target);
-    path_free(&cmd->path);
+    parse_failed:
+    *invalid = command_invalid_new(error, &err);
+    return -1;
+}
+
+bld_handle_annotated command_handle_invalidate(char* name) {
+    bld_handle_annotated handle;
+
+    handle.type = BLD_COMMAND_INVALIDATE;
+    handle.handle = handle_new(name);
+    handle_positional_optional(&handle.handle, "Target");
+    handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_invalidate));
+    handle_positional_vargs(&handle.handle, "Path to invalidate");
+    handle_set_description(&handle.handle, "Invalidate paths");
+
+    handle.convert = (bld_command_convert*) command_invalidate_convert;
+    handle.execute = (bld_command_execute*) command_invalidate;
+    handle.free = (bld_command_free*) command_invalidate_free;
+
+    return handle;
+}
+
+void command_invalidate_free(bld_command_invalidate* cmd) {
+    bld_iter iter;
+    bld_path* path;
+
+    string_free(&cmd->target);
+
+    iter = iter_array(&cmd->paths);
+    while (iter_next(&iter, (void**) &path)) {
+        path_free(path);
+    }
+    array_free(&cmd->paths);
 }
