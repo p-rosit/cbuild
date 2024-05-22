@@ -7,17 +7,21 @@
 bld_application_command application_command_parse(bld_args* args, bld_data* data) {
     int error, matched;
     bld_array errs;
-    bld_iter iter = iter_set(&data->handles);
+    bld_iter iter;
     bld_handle_annotated* handle;
+    bld_command_type* handle_id;
     bld_command cmd;
     bld_application_command app_command;
     bld_command_invalid invalid;
     (void)(data);
 
     matched = 0;
-    while (iter_next(&iter, (void**) &handle)) {
+    iter = iter_array(&data->handle_order);
+    while (iter_next(&iter, (void**) &handle_id)) {
         bld_iter iter;
         bld_string* err;
+        handle = set_get(&data->handles, *handle_id);
+        if (handle == NULL) {log_fatal("Could not extract handle %d", handle_id);}
         if (handle->type == BLD_COMMAND_INVALID) {continue;}
 
         error = handle_parse(*args, &handle->handle, &cmd, &errs);
