@@ -28,6 +28,8 @@ int command_help(bld_command_help* help, bld_data* data) {
             type = BLD_COMMAND_IGNORE;
         } else if (string_eq(&help->command, &bld_command_string_init)) {
             type = BLD_COMMAND_INIT;
+        } else if (string_eq(&help->command, &bld_command_string_remove)) {
+            type = BLD_COMMAND_REMOVE;
         } else if (string_eq(&help->command, &bld_command_string_switch)) {
             type = BLD_COMMAND_SWITCH;
         } else if (string_eq(&help->command, &bld_command_string_help)) {
