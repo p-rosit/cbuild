@@ -5,6 +5,7 @@
 #include "add.h"
 #include "ignore.h"
 #include "help.h"
+#include "status.h"
 #include "build.h"
 #include "invalid.h"
 
@@ -88,6 +89,7 @@ bld_data data_extract(char* name) {
     data_add_handle(&data, command_handle_help(name));
     data_add_handle(&data, command_handle_add(name));
     data_add_handle(&data, command_handle_ignore(name));
+    data_add_handle(&data, command_handle_status(name));
     data_add_handle(&data, command_handle_build(name));
     data_add_handle(&data, command_handle_invalid(name));
 
