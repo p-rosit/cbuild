@@ -46,6 +46,7 @@ int command_status_target(bld_command_status* status, bld_data* data) {
     bld_iter iter;
     bld_path* path;
     log_info("Target: %s", string_unpack(&status->target));
+    data->target_config_parsed = !config_target_load(data, &status->target, &data->target_config);
 
     if (!data->target_config_parsed) {
         log_fatal("Target config has not been parsed");
@@ -69,77 +70,38 @@ int command_status_target(bld_command_status* status, bld_data* data) {
     return 0;
 }
 
-int command_status_parse(bld_args* args, bld_data* data, bld_command_status* status, bld_command_invalid* invalid) {
-    bld_string error_msg, target;
+int command_status_convert(bld_command* pre_cmd, bld_data* data, bld_command_status* cmd, bld_command_invalid* invalid) {
+    bld_command_positional* arg;
+    bld_command_positional_optional* target;
+    (void)(data);
+    (void)(invalid);
 
-    if (args_empty(args)) {
-        status->target_status = 0;
-        return 0;
-    } else {
-        target = args_advance(args);
+    arg = array_get(&pre_cmd->positional, 1);
+    if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_status_convert: missing first optional");}
+    target = &arg->as.opt;
 
-        if (string_eq(&target, &bld_command_string_status_terse_active) || string_eq(&target, &bld_command_string_status_flag_active)) {
-            if (!data->config_parsed) {
-                error_msg = string_pack("bld: config not parsed");
-                invalid->code = -1;
-                invalid->msg = string_copy(&error_msg);
-                return -1;
-            } else if (!data->config.default_target_configured) {
-                error_msg = string_pack("bld: no default target");
-                invalid->code = -1;
-                invalid->msg = string_copy(&error_msg);
-                return -1;
-            }
-
-            target = data->config.target;
-        } else if (!set_has(&data->targets, string_hash(string_unpack(&target)))) {
-            error_msg = string_new();
-            string_append_string(&error_msg, "bld: ");
-            string_append_string(&error_msg, string_unpack(&target));
-            string_append_string(&error_msg, " is not a valid target");
-            invalid->code = -1;
-            invalid->msg = error_msg;
-            return -1;
-        }
-
-        if (data->target_config_parsed) {
-            log_fatal("command_status_parse: target config already parsed, unreachable error");
-        }
-
-        data->target_config_parsed = !config_target_load(data, &target, &data->target_config);
-
-        if (!data->target_config_parsed) {
-            error_msg = string_new();
-            string_append_string(&error_msg, "bld: could not parse config of target '");
-            string_append_string(&error_msg, string_unpack(&target));
-            string_append_string(&error_msg, "'");
-            invalid->code = -1;
-            invalid->msg = error_msg;
-            return -1;
-        }
+    cmd->target_status = target->present;
+    if (target->present) {
+        cmd->target = string_copy(&target->value);
     }
 
-    if (!set_has(&data->targets, string_hash(string_unpack(&target)))) {
-        error_msg = string_new();
-        string_append_string(&error_msg, "bld: optional second argument of status, '");
-        string_append_string(&error_msg, string_unpack(&target));
-        string_append_string(&error_msg, "' is not a target");
-        invalid->code = -1;
-        invalid->msg = error_msg;
-        return -1;
-    }
-
-    if (!args_empty(args)) {
-        bld_string error_msg = string_new();
-        string_append_string(&error_msg, "bld: status takes no arguments other than an optional target");
-        invalid->code = -1;
-        invalid->msg = error_msg;
-        return -1;
-    }
-
-    status->target_status = 1;
-    status->target = string_copy(&target);
     return 0;
+}
+
+bld_handle_annotated command_handle_status(char* name) {
+    bld_handle_annotated handle;
+
+    handle.type = BLD_COMMAND_STATUS;
+    handle.handle = handle_new(name);
+    handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_status));
+    handle_positional_optional(&handle.handle, "The target to show the status of");
+    handle_set_description(&handle.handle, "Status of target");
+
+    handle.convert = (bld_command_convert*) command_status_convert;
+    handle.execute = (bld_command_execute*) command_status;
+    handle.free = (bld_command_free*) command_status_free;
+
+    return handle;
 }
 
 void command_status_free(bld_command_status* status) {
