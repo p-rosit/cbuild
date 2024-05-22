@@ -132,7 +132,6 @@ int command_add_convert(bld_command* pre_cmd, bld_data* data, bld_command_add* c
     if (varg->values.size <= 0) {
         err = string_pack("expected paths to add\n");
         err = string_copy(&err);
-        *invalid = command_invalid_new(-1, &err);
         goto free_target;
     }
 
