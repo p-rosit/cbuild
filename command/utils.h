@@ -19,6 +19,7 @@ typedef struct bld_data {
     int target_config_parsed;
     bld_config_target target_config;
     bld_set handles;
+    bld_array handle_order;
 } bld_data;
 
 typedef int (bld_command_convert)(bld_command*, bld_data*, void*, void*);

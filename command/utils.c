@@ -3,6 +3,7 @@
 #include "../bld_core/iter.h"
 #include "utils.h"
 #include "add.h"
+#include "ignore.h"
 #include "help.h"
 #include "build.h"
 #include "invalid.h"
@@ -12,6 +13,7 @@ const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
+void data_add_handle(bld_data*, bld_handle_annotated);
 
 int config_load(bld_data* data, bld_config* config) {
     int error;
@@ -61,7 +63,6 @@ void config_target_save(bld_data* data, bld_string* target, bld_config_target* c
 
 bld_data data_extract(char* name) {
     bld_data data;
-    bld_handle_annotated handle;
 
     data.has_root = data_find_root(&data.root);
     if (data.has_root) {
@@ -83,15 +84,12 @@ bld_data data_extract(char* name) {
     }
 
     data.handles = set_new(sizeof(bld_handle_annotated));
-    handle = command_handle_add(name);
-    set_add(&data.handles, handle.type, &handle);
-    handle = command_handle_help(name);
-    set_add(&data.handles, handle.type, &handle);
-
-    handle = command_handle_build(name);
-    set_add(&data.handles, handle.type, &handle);
-    handle = command_handle_invalid(name);
-    set_add(&data.handles, handle.type, &handle);
+    data.handle_order = array_new(sizeof(bld_command_type));
+    data_add_handle(&data, command_handle_help(name));
+    data_add_handle(&data, command_handle_add(name));
+    data_add_handle(&data, command_handle_ignore(name));
+    data_add_handle(&data, command_handle_build(name));
+    data_add_handle(&data, command_handle_invalid(name));
 
     return data;
 }
@@ -125,6 +123,7 @@ void data_free(bld_data* data) {
         handle_free(&handle->handle);
     }
     set_free(&data->handles);
+    array_free(&data->handle_order);
 }
 
 bld_set data_find_targets(bld_path* root) {
@@ -194,4 +193,9 @@ int data_find_root(bld_path* root) {
         path_free(&test_root);
         return 0;
     }
+}
+
+void data_add_handle(bld_data* data, bld_handle_annotated handle) {
+    set_add(&data->handles, handle.type, &handle);
+    array_push(&data->handle_order, &handle.type);
 }
