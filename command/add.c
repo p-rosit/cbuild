@@ -158,7 +158,7 @@ bld_handle_annotated command_handle_add(char* name) {
 
     handle.type = BLD_COMMAND_ADD;
     handle.handle = handle_new(name);
-    handle_positional_optional(&handle.handle, "The target to modify.");
+    handle_positional_optional(&handle.handle, "The target to modify");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_add));
     handle_allow_flags(&handle.handle);
     handle_positional_vargs(&handle.handle, "The paths to add to the chosen target");
