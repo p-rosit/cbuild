@@ -91,80 +91,97 @@ int command_init_target(bld_command_init* init, bld_data* data) {
     return 0;
 }
 
-int command_init_parse(bld_args* args, bld_data* data, bld_command_init* init, bld_command_invalid* invalid) {
+int command_init_convert(bld_command* pre_cmd, bld_data* data, bld_command_init* cmd, bld_command_invalid* invalid) {
     bld_string error_msg;
+    bld_command_positional* arg;
+    bld_command_positional_optional* target;
 
-    if (args_empty(args)) {
+    arg = array_get(&pre_cmd->positional, 1);
+    if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_init_convert: missing first optional");}
+    target = &arg->as.opt;
+
+    if (!target->present) {
         if (data->has_root) {
             error_msg = string_new();
-            string_append_string(&error_msg, "bld: project has already been initialized");
+            string_append_string(&error_msg, "bld: project has already been initialized\n");
             invalid->code = -1;
             invalid->msg = error_msg;
             return -1;
         }
 
-        init->init_project = 1;
+        cmd->init_project = 1;
         return 0;
     } else {
-        bld_string target;
-        bld_string path_main;
+        bld_command_positional_optional* path;
 
         if (!data->has_root) {
             error_msg = string_new();
-            string_append_string(&error_msg, "bld: project has not been initialized");
+            string_append_string(&error_msg, "bld: project has not been initialized\n");
             invalid->code = -1;
             invalid->msg = error_msg;
             return -1;
         }
 
-        target = args_advance(args);
+        arg = array_get(&pre_cmd->positional, 2);
+        if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_init_convert: missing path optional");}
+        path = &arg->as.opt;
 
-        if (args_empty(args)) {
-            error_msg = string_pack("missing path");
-            invalid->code = -1;
-            invalid->msg = string_copy(&error_msg);
-            return -1;
-        }
-
-        path_main = args_advance(args);
-
-        if (!args_empty(args)) {
-            error_msg = string_pack("invalid nargs");
-            invalid->code = -1;
-            invalid->msg = string_copy(&error_msg);
-            return -1;
-        }
-
-        if (set_has(&data->targets, string_hash(string_unpack(&target)))) {
+        if (set_has(&data->targets, string_hash(string_unpack(&target->value)))) {
             error_msg = string_new();
             string_append_string(&error_msg, "target '");
-            string_append_string(&error_msg, string_unpack(&target));
-            string_append_string(&error_msg, "' already exists");
+            string_append_string(&error_msg, string_unpack(&target->value));
+            string_append_string(&error_msg, "' already exists\n");
             invalid->code = -1;
             invalid->msg = error_msg;
             return -1;
         }
 
-        if (!os_file_exists(string_unpack(&path_main))) {
+        if (!path->present) {
+            error_msg = string_pack("missing path to main file\n");
+            invalid->code = -1;
+            invalid->msg = string_copy(&error_msg);
+            return -1;
+        }
+
+        if (!os_file_exists(string_unpack(&path->value))) {
             error_msg = string_new();
             string_append_string(&error_msg, "specified main file '");
-            string_append_string(&error_msg, string_unpack(&path_main));
-            string_append_string(&error_msg, "' is not a path or file");
+            string_append_string(&error_msg, string_unpack(&path->value));
+            string_append_string(&error_msg, "' is not a path or file\n");
             invalid->code = -1;
             invalid->msg = error_msg;
             return -1;
         }
 
-        init->init_project = 0;
-        init->target = string_copy(&target);
-        init->path_main = path_from_string(string_unpack(&path_main));
+        cmd->init_project = 0;
+        cmd->target = string_copy(&target->value);
+        cmd->path_main = path_from_string(string_unpack(&path->value));
+        log_info("TARGET: %s", string_unpack(&cmd->target));
+        log_info("PATH:   %s", path_to_string(&cmd->path_main));
         return 0;
     }
 }
 
-void command_init_free(bld_command_init* init) {
-    if (!init->init_project) {
-        string_free(&init->target);
-        path_free(&init->path_main);
+bld_handle_annotated command_handle_init(char* name) {
+    bld_handle_annotated handle;
+
+    handle.type = BLD_COMMAND_INIT;
+    handle.handle = handle_new(name);
+    handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_init));
+    handle_positional_optional(&handle.handle, "New target to initialize");
+    handle_positional_optional(&handle.handle, "Path to the main file of the target");
+    handle_set_description(&handle.handle, "Initialize project or target");
+
+    handle.convert = (bld_command_convert*) command_init_convert;
+    handle.execute = (bld_command_execute*) command_init;
+    handle.free = (bld_command_free*) command_init_free;
+
+    return handle;
+}
+
+void command_init_free(bld_command_init* cmd) {
+    if (!cmd->init_project) {
+        string_free(&cmd->target);
+        path_free(&cmd->path_main);
     }
 }
