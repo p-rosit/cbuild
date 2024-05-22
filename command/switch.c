@@ -28,28 +28,34 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
     return 0;
 }
 
-int command_switch_parse(bld_args* args, bld_data* data, bld_command_switch* cmd, bld_command_invalid* invalid) {
-    bld_string target, error_msg;
+int command_switch_convert(bld_command* pre_cmd, bld_data* data, bld_command_switch* cmd, bld_command_invalid* invalid) {
+    bld_command_positional* arg;
+    bld_command_positional_required* target;
     (void)(data);
+    (void)(invalid);
 
-    if (args_empty(args)) {
-        error_msg = string_pack("bld: missing target");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
-    }
+    arg = array_get(&pre_cmd->positional, 1);
+    if (arg->type != BLD_HANDLE_POSITIONAL_REQUIRED) {log_fatal("command_switch_convert: missing first convert");}
+    target = &arg->as.req;
 
-    target = args_advance(args);
-
-    if (!args_empty(args)) {
-        error_msg = string_pack("bld: too many inputs");
-        invalid->code = -1;
-        invalid->msg = string_copy(&error_msg);
-        return -1;
-    }
-
-    cmd->target = string_copy(&target);
+    cmd->target = string_copy(&target->value);
     return 0;
+}
+
+bld_handle_annotated command_handle_switch(char* name) {
+    bld_handle_annotated handle;
+
+    handle.type = BLD_COMMAND_SWITCH;
+    handle.handle = handle_new(name);
+    handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_switch));
+    handle_positional_required(&handle.handle, "The target to switch to");
+    handle_set_description(&handle.handle, "Switch to a new active target");
+
+    handle.convert = (bld_command_convert*) command_switch_convert;
+    handle.execute = (bld_command_execute*) command_switch;
+    handle.free = (bld_command_free*) command_switch_free;
+
+    return handle;
 }
 
 void command_switch_free(bld_command_switch* cmd) {
