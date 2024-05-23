@@ -78,7 +78,7 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
         cmd->target = string_copy(&data->config.active_target);
     }
 
-    data->target_config_parsed = !config_target_load(data, &cmd->target, &data->target_config);
+    config_target_load(data, &cmd->target);
 
     if (!data->target_config_parsed) {
         error = -1;

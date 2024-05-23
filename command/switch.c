@@ -23,7 +23,7 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
     log_info("Switched to %s", string_unpack(&cmd->target));
     string_free(&data->config.active_target);
     data->config.active_target = string_copy(&cmd->target);
-    config_save(data, &data->config);
+    config_save(data);
 
     return 0;
 }
