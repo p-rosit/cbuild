@@ -7,7 +7,7 @@
 int command_build_verify_config(bld_command_build*, bld_data*);
 void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
 
-int command_build(bld_command_build* build, bld_data* data) {
+int command_build(bld_command_build* cmd, bld_data* data) {
     int result;
     bld_forward_project fproject;
     bld_project project;
@@ -15,9 +15,10 @@ int command_build(bld_command_build* build, bld_data* data) {
     bld_linker temp_l = linker_copy(&data->target_config.linker);
     bld_path path_cache, path_root;
     bld_string name_executable;
-    log_debug("Building target: \"%s\"", string_unpack(&build->target));
+    log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
 
-    if (command_build_verify_config(build, data)) {
+    config_target_load(data, &cmd->target);
+    if (command_build_verify_config(cmd, data)) {
         compiler_free(&temp_c);
         linker_free(&temp_l);
         return -1;
@@ -28,7 +29,7 @@ int command_build(bld_command_build* build, bld_data* data) {
 
     path_cache = path_from_string(".bld");
     path_append_string(&path_cache, "target");
-    path_append_string(&path_cache, string_unpack(&build->target));
+    path_append_string(&path_cache, string_unpack(&cmd->target));
     path_append_string(&path_cache, "cache");
     log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
     project_load_cache(&fproject, path_to_string(&path_cache));
@@ -36,11 +37,11 @@ int command_build(bld_command_build* build, bld_data* data) {
     log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
     project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
 
-    command_build_apply_config(&fproject, build, data);
+    command_build_apply_config(&fproject, cmd, data);
 
     project = project_resolve(&fproject);
 
-    name_executable = string_copy(&build->target);
+    name_executable = string_copy(&cmd->target);
     string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
     result = incremental_compile_project(&project, string_unpack(&name_executable));
 
@@ -50,9 +51,7 @@ int command_build(bld_command_build* build, bld_data* data) {
     path_free(&path_cache);
     project_free(&project);
 
-    if (result < 0) {
-        result = 0;
-    }
+    if (result < 0) {result = 0;}
     return result;
 }
 

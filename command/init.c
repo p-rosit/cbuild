@@ -9,20 +9,20 @@ int command_init_target(bld_command_init*, bld_data*);
 
 const bld_string bld_command_string_init = STRING_COMPILE_TIME_PACK("init");
 
-int command_init(bld_command_init* init, bld_data* data) {
-    if (init->init_project) {
-        return command_init_project(init, data);
+int command_init(bld_command_init* cmd, bld_data* data) {
+    if (cmd->init_project) {
+        return command_init_project(cmd, data);
     } else {
-        return command_init_target(init, data);
+        return command_init_target(cmd, data);
     }
 }
 
-int command_init_project(bld_command_init* init, bld_data* data) {
+int command_init_project(bld_command_init* cmd, bld_data* data) {
     char cwd[FILENAME_MAX];
     bld_path new_root;
     bld_path build_dir;
     log_debug("Initializing project");
-    (void)(init);
+    (void)(cmd);
 
     if (data->has_root) {
         log_fatal("Build has already been initialized!");
@@ -50,11 +50,11 @@ int command_init_project(bld_command_init* init, bld_data* data) {
     return 0;
 }
 
-int command_init_target(bld_command_init* init, bld_data* data) {
+int command_init_target(bld_command_init* cmd, bld_data* data) {
     int error;
     bld_path target_path;
     bld_path path_main;
-    log_debug("Initializing target: \"%s\"", string_unpack(&init->target));
+    log_debug("Initializing target: \"%s\"", string_unpack(&cmd->target));
 
     if (!data->has_root) {
         log_fatal("Build has not been initialized!");
@@ -75,14 +75,14 @@ int command_init_target(bld_command_init* init, bld_data* data) {
     path_append_string(&target_path, string_unpack(&bld_path_target));
     os_dir_make(path_to_string(&target_path));
 
-    path_append_string(&target_path, string_unpack(&init->target));
+    path_append_string(&target_path, string_unpack(&cmd->target));
     error = os_dir_make(path_to_string(&target_path));
     if (error) {
         log_fatal("command_init_target: mkdir returned error");
     }
 
     path_append_string(&target_path, "config.json");
-    path_main = path_copy(&init->path_main);
+    path_main = path_copy(&cmd->path_main);
     data->target_config_parsed = 1;
     data->target_config = config_target_new(&path_main);
     serialize_config_target(&target_path, &data->target_config);

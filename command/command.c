@@ -13,7 +13,6 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
     bld_command cmd;
     bld_application_command app_command;
     bld_command_invalid invalid;
-    (void)(data);
 
     matched = 0;
     iter = iter_array(&data->handle_order);

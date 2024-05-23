@@ -14,9 +14,7 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     uintmax_t added_id;
 
     config_target_load(data, &cmd->target);
-    if (!data->target_config_parsed) {
-        log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));
-    }
+    if (!data->target_config_parsed) {log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));}
     log_info("Chosen target: \"%s\"", string_unpack(&cmd->target));
 
     iter = iter_array(&config->ignore_paths);
