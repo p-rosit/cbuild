@@ -211,3 +211,26 @@ void data_add_handle(bld_data* data, bld_handle_annotated handle) {
     set_add(&data->handles, handle.type, &handle);
     array_push(&data->handle_order, &handle.type);
 }
+
+int utils_get_target(bld_string* target, bld_string* err, bld_command_positional_optional* arg, bld_data* data) {
+    if (arg->present) {
+        *target = string_copy(&arg->value);
+    } else if (data->config_parsed) {
+        if (data->config.active_target_configured) {
+            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.active_target)))) {
+                *err = string_new();
+                string_append_string(err, "config has active target ");
+                string_append_string(err, string_unpack(&data->config.active_target));
+                string_append_string(err, " which is not a known target\n");
+                return 0;
+            }
+            *target = string_copy(&data->config.active_target);
+        } else {
+            *err = string_pack("no target specified and no default target set up\n");
+            *err = string_copy(err);
+            return 0;
+        }
+    }
+
+    return 1;
+}

@@ -55,5 +55,6 @@ void        config_target_load(bld_data*, bld_string*);
 void        config_target_save(bld_data*, bld_string*);
 bld_data    data_extract(char*);
 void        data_free(bld_data*);
+int         utils_get_target(bld_string*, bld_string*, bld_command_positional_optional*, bld_data*);
 
 #endif
