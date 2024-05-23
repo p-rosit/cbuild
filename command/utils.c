@@ -26,6 +26,7 @@ void config_load(bld_data* data) {
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "config.json");
 
+    if (data->config_parsed) {log_fatal("config_load: config already parsed");}
     error = parse_config(&target_path, &data->config);
     data->config_parsed = !error;
 
@@ -49,6 +50,7 @@ void config_target_load(bld_data* data, bld_string* target) {
     path_append_string(&target_path, string_unpack(target));
     path_append_string(&target_path, "config.json");
 
+    if (data->target_config_parsed) {log_fatal("config_target_load: config already parsed");}
     error = parse_config_target(&target_path, &data->target_config);
     data->target_config_parsed = !error;
 
