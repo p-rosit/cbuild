@@ -60,9 +60,13 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
         log_fatal("Build has not been initialized!");
         return -1;
     }
-    if (data->target_config_parsed) {
-        log_fatal("Target already exists");
-        return -1;
+
+    if (set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
+        log_fatal("Target '%s' already exists", string_unpack(&cmd->target));
+    }
+
+    if (!os_file_exists(path_to_string(&cmd->path_main))) {
+        log_fatal("Specified main file '%s' is not a path to a file/directory", path_to_string(&cmd->path_main));
     }
 
     target_path = path_copy(&data->root);
@@ -95,46 +99,21 @@ int command_init_convert(bld_command* pre_cmd, bld_data* data, bld_command_init*
     bld_string error_msg;
     bld_command_positional* arg;
     bld_command_positional_optional* target;
+    (void)(data);
 
     arg = array_get(&pre_cmd->positional, 1);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_init_convert: missing first optional");}
     target = &arg->as.opt;
 
     if (!target->present) {
-        if (data->has_root) {
-            error_msg = string_new();
-            string_append_string(&error_msg, "bld: project has already been initialized\n");
-            invalid->code = -1;
-            invalid->msg = error_msg;
-            return -1;
-        }
-
         cmd->init_project = 1;
         return 0;
     } else {
         bld_command_positional_optional* path;
 
-        if (!data->has_root) {
-            error_msg = string_new();
-            string_append_string(&error_msg, "bld: project has not been initialized\n");
-            invalid->code = -1;
-            invalid->msg = error_msg;
-            return -1;
-        }
-
         arg = array_get(&pre_cmd->positional, 2);
         if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_init_convert: missing path optional");}
         path = &arg->as.opt;
-
-        if (set_has(&data->targets, string_hash(string_unpack(&target->value)))) {
-            error_msg = string_new();
-            string_append_string(&error_msg, "target '");
-            string_append_string(&error_msg, string_unpack(&target->value));
-            string_append_string(&error_msg, "' already exists\n");
-            invalid->code = -1;
-            invalid->msg = error_msg;
-            return -1;
-        }
 
         if (!path->present) {
             error_msg = string_pack("missing path to main file\n");
@@ -143,21 +122,9 @@ int command_init_convert(bld_command* pre_cmd, bld_data* data, bld_command_init*
             return -1;
         }
 
-        if (!os_file_exists(string_unpack(&path->value))) {
-            error_msg = string_new();
-            string_append_string(&error_msg, "specified main file '");
-            string_append_string(&error_msg, string_unpack(&path->value));
-            string_append_string(&error_msg, "' is not a path or file\n");
-            invalid->code = -1;
-            invalid->msg = error_msg;
-            return -1;
-        }
-
         cmd->init_project = 0;
         cmd->target = string_copy(&target->value);
         cmd->path_main = path_from_string(string_unpack(&path->value));
-        log_info("TARGET: %s", string_unpack(&cmd->target));
-        log_info("PATH:   %s", path_to_string(&cmd->path_main));
         return 0;
     }
 }
