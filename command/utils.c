@@ -20,28 +20,28 @@ int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 void data_add_handle(bld_data*, bld_handle_annotated);
 
-int config_load(bld_data* data, bld_config* config) {
+void config_load(bld_data* data) {
     int error;
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "config.json");
 
-    error = parse_config(&target_path, config);
+    error = parse_config(&target_path, &data->config);
+    data->config_parsed = !error;
 
     path_free(&target_path);
-    return error;
 }
 
-void config_save(bld_data* data, bld_config* config) {
+void config_save(bld_data* data) {
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "config.json");
 
-    serialize_config(&target_path, config);
+    serialize_config(&target_path, &data->config);
     path_free(&target_path);
 }
 
-int config_target_load(bld_data* data, bld_string* target, bld_config_target* config) {
+void config_target_load(bld_data* data, bld_string* target) {
     int error;
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
@@ -49,20 +49,20 @@ int config_target_load(bld_data* data, bld_string* target, bld_config_target* co
     path_append_string(&target_path, string_unpack(target));
     path_append_string(&target_path, "config.json");
 
-    error = parse_config_target(&target_path, config);
+    error = parse_config_target(&target_path, &data->target_config);
+    data->target_config_parsed = !error;
 
     path_free(&target_path);
-    return error;
 }
 
-void config_target_save(bld_data* data, bld_string* target, bld_config_target* config) {
+void config_target_save(bld_data* data, bld_string* target) {
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "target");
     path_append_string(&target_path, string_unpack(target));
     path_append_string(&target_path, "config.json");
 
-    serialize_config_target(&target_path, config);
+    serialize_config_target(&target_path, &data->target_config);
     path_free(&target_path);
 }
 
