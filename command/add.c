@@ -105,15 +105,15 @@ int command_add_convert(bld_command* pre_cmd, bld_data* data, bld_command_add* c
         }
         cmd->target = string_copy(&opt->value);
     } else if (data->config_parsed) {
-        if (data->config.default_target_configured) {
-            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.target)))) {
+        if (data->config.active_target_configured) {
+            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.active_target)))) {
                 err = string_new();
                 string_append_string(&err, "config has default target ");
-                string_append_string(&err, string_unpack(&data->config.target));
+                string_append_string(&err, string_unpack(&data->config.active_target));
                 string_append_string(&err, " which is not a known target\n");
                 goto parse_failed;
             }
-            cmd->target = string_copy(&data->config.target);
+            cmd->target = string_copy(&data->config.active_target);
         } else {
             err = string_pack("no target specified and no default target set up\n");
             err = string_copy(&err);

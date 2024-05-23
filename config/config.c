@@ -8,7 +8,7 @@ int parse_config_default_target(FILE*, bld_config*);
 bld_config config_new(void) {
     bld_config config;
     config.text_editor_configured = 0;
-    config.default_target_configured = 0;
+    config.active_target_configured = 0;
     return config;
 }
 
@@ -16,8 +16,8 @@ void config_free(bld_config* config) {
     if (config->text_editor_configured) {
         string_free(&config->text_editor);
     }
-    if (config->default_target_configured) {
-        string_free(&config->target);
+    if (config->active_target_configured) {
+        string_free(&config->active_target);
     }
 }
 
@@ -41,11 +41,11 @@ void serialize_config(bld_path* path, bld_config* config) {
         first = 0;
     }
 
-    if (config->default_target_configured) {
+    if (config->active_target_configured) {
         if (!first) {fprintf(file, ",\n");}
 
         json_serialize_key(file, "default_target", depth);
-        fprintf(file, "\"%s\"", string_unpack(&config->target));
+        fprintf(file, "\"%s\"", string_unpack(&config->active_target));
 
         first = 0;
     }
@@ -71,7 +71,7 @@ int parse_config(bld_path* path, bld_config* config) {
     }
 
     config->text_editor_configured = 0;
-    config->default_target_configured = 0;
+    config->active_target_configured = 0;
     amount_parsed = json_parse_map(file, config, size, parsed, keys, funcs);
     if (amount_parsed < 0) {
         log_warn("Could not parse project config");
@@ -101,7 +101,7 @@ int parse_config_default_target(FILE* file, bld_config* config) {
         log_warn("Could not parse default target");
         return -1;
     }
-    config->default_target_configured= 1;
-    config->target= target;
+    config->active_target_configured = 1;
+    config->active_target = target;
     return 0;
 }

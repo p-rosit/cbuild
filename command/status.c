@@ -26,8 +26,8 @@ int command_status_all(bld_command_status* status, bld_data* data) {
     iter = iter_set(&data->targets);
     while (iter_next(&iter, (void**) &target)) {
         int is_default = 0;
-        if (data->config.default_target_configured) {
-            if (string_eq(target, &data->config.target)) {
+        if (data->config.active_target_configured) {
+            if (string_eq(target, &data->config.active_target)) {
                 is_default = 1;
             }
         }

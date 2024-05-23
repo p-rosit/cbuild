@@ -70,12 +70,12 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
     if (opt->present) {
         cmd->target = string_copy(&opt->value);
     } else {
-        if (!data->config.default_target_configured) {
+        if (!data->config.active_target_configured) {
             error = -1;
             err = string_pack("bld: building active target but no active target set.\n");
             goto parse_failed;
         }
-        cmd->target = string_copy(&data->config.target);
+        cmd->target = string_copy(&data->config.active_target);
     }
 
     data->target_config_parsed = !config_target_load(data, &cmd->target, &data->target_config);
