@@ -121,6 +121,17 @@ int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
         return -1;
     }
 
+    if (!data->target_config.files_set) {
+        log_error("target file config has not been set up");
+        return -1;
+    } else if (!data->target_config.files.info.compiler_set) {
+        log_error("target has no base compiler");
+        return -1;
+    } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
+        log_error("target has no base compiler, only compiler flags");
+        return -1;
+    }
+
     iter = iter_array(&data->target_config.added_paths);
     while (iter_next(&iter, (void**) &path)) {
         uintmax_t file_id = os_info_id(path_to_string(path));
