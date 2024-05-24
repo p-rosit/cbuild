@@ -709,8 +709,10 @@ bld_string handle_make_description(bld_handle* handle) {
 
     string_append_string(&description, "\n\n");
     string_append_string(&description, string_unpack(&handle->description));
-    string_append_string(&description, "\n\n");
-    string_append_string(&description, "Positional Arguments:");
+    if (handle->positional.size > 0) {
+        string_append_string(&description, "\n\n");
+        string_append_string(&description, "Positional Arguments:");
+    }
     npos = 0;
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &pos)) {
@@ -732,9 +734,10 @@ bld_string handle_make_description(bld_handle* handle) {
         }
     }
 
-    string_append_string(&description, "\n\n");
-    
-    string_append_string(&description, "Flags:");
+    if (handle->flag_array.size > 0) {
+        string_append_string(&description, "\n\n");
+        string_append_string(&description, "Flags:");
+    }
 
     iter = iter_array(&handle->flag_array);
     while (iter_next(&iter, (void**) &flag)) {
