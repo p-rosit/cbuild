@@ -34,6 +34,8 @@ int command_help(bld_command_help* help, bld_data* data) {
             type = BLD_COMMAND_INVALIDATE;
         } else if (string_eq(&help->command, &bld_command_string_remove)) {
             type = BLD_COMMAND_REMOVE;
+        } else if (string_eq(&help->command, &bld_command_string_status)) {
+            type = BLD_COMMAND_STATUS;
         } else if (string_eq(&help->command, &bld_command_string_switch)) {
             type = BLD_COMMAND_SWITCH;
         } else {
