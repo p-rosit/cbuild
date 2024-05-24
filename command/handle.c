@@ -758,6 +758,7 @@ bld_string handle_make_description(bld_handle* handle) {
         string_append_string(&description, string_unpack(&handle->arbitray_flags_description));
     }
 
+    string_append_char(&description, '\n');
     return description;
 }
 
