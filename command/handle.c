@@ -747,7 +747,7 @@ bld_string handle_make_description(bld_handle* handle) {
         }
     }
 
-    if (handle->flag_array.size > 0) {
+    if (handle->flag_array.size > 0 || handle->arbitrary_flags) {
         string_append_string(&description, "\n\n");
         string_append_string(&description, "Flags:");
     }
