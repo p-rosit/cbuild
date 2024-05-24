@@ -5,9 +5,19 @@
 const bld_string bld_command_string_compiler = STRING_COMPILE_TIME_PACK("compiler");
 
 int command_compiler(bld_command_compiler* cmd, bld_data* data) {
+    bld_iter iter;
+    bld_command_flag* flag;
     (void)(data);
+
     log_info("Configure compiler of \"%s\"", string_unpack(&cmd->target));
-    return -1;
+    log_info("");
+    log_info("Flags:");
+    iter = iter_array(&cmd->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        log_info("  %s%s", flag->is_switch ? "-" : "--", string_unpack(&flag->flag));
+    }
+
+    return 0;
 }
 
 int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_compiler* cmd, bld_command_invalid* invalid) {
