@@ -231,6 +231,7 @@ bld_command command_new(bld_handle* handle) {
     bld_handle_positional* arg;
     cmd.positional = array_new(sizeof(bld_command_positional));
     cmd.flags = set_new(sizeof(bld_command_flag));
+    cmd.extra_flags = array_new(sizeof(bld_command_flag));
 
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &arg)) {
@@ -295,6 +296,12 @@ void command_free(bld_command* cmd) {
         string_free(&flag->flag);
     }
     set_free(&cmd->flags);
+
+    iter = iter_array(&cmd->extra_flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    array_free(&cmd->extra_flags);
 }
 
 void command_free_internal(bld_command* cmd, bld_handle_info* info) {
@@ -341,6 +348,12 @@ void command_free_internal(bld_command* cmd, bld_handle_info* info) {
         string_free(&flag->flag);
     }
     set_free(&cmd->flags);
+
+    iter = iter_array(&cmd->extra_flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    array_free(&cmd->extra_flags);
 }
 
 bld_string command_error_at(bld_string* arg) {
@@ -627,7 +640,7 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
     } else if (handle->arbitrary_flags) {
         flag.is_switch = is_switch;
         flag.flag = string_copy(&flag_str);
-        set_add(&cmd->flags, string_hash(temp), &flag);
+        array_push(&cmd->extra_flags, &flag);
     } else {
         bld_string str = command_error_at(arg);
 
