@@ -5,9 +5,11 @@
 const bld_string bld_command_string_remove = STRING_COMPILE_TIME_PACK("remove");
 
 int command_remove(bld_command_remove* remove, bld_data* data) {
+    (void)(data);
+
     if (data->config_parsed) {
-        if (!data->config.default_target_configured) {
-            if (string_eq(&remove->target, &data->config.target)) {
+        if (!data->config.active_target_configured) {
+            if (string_eq(&remove->target, &data->config.active_target)) {
                 log_error("Cannot remove currently active target");
                 return -1;
             }
@@ -15,7 +17,6 @@ int command_remove(bld_command_remove* remove, bld_data* data) {
     }
 
     log_debug("Removing target: \"%s\"", string_unpack(&remove->target));
-    (void)(data);
     return 0;
 }
 

@@ -49,11 +49,12 @@ typedef struct bld_handle_annotated {
     bld_command_free* free;
 } bld_handle_annotated;
 
-int         config_load(bld_data*, bld_config*);
-void        config_save(bld_data*, bld_config*);
-int         config_target_load(bld_data*, bld_string*, bld_config_target*);
-void        config_target_save(bld_data*, bld_string*, bld_config_target*);
+void        config_load(bld_data*);
+void        config_save(bld_data*);
+void        config_target_load(bld_data*, bld_string*);
+void        config_target_save(bld_data*, bld_string*);
 bld_data    data_extract(char*);
 void        data_free(bld_data*);
+int         utils_get_target(bld_string*, bld_string*, bld_command_positional_optional*, bld_data*);
 
 #endif

@@ -20,28 +20,29 @@ int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 void data_add_handle(bld_data*, bld_handle_annotated);
 
-int config_load(bld_data* data, bld_config* config) {
+void config_load(bld_data* data) {
     int error;
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "config.json");
 
-    error = parse_config(&target_path, config);
+    if (data->config_parsed) {log_fatal("config_load: config already parsed");}
+    error = parse_config(&target_path, &data->config);
+    data->config_parsed = !error;
 
     path_free(&target_path);
-    return error;
 }
 
-void config_save(bld_data* data, bld_config* config) {
+void config_save(bld_data* data) {
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "config.json");
 
-    serialize_config(&target_path, config);
+    serialize_config(&target_path, &data->config);
     path_free(&target_path);
 }
 
-int config_target_load(bld_data* data, bld_string* target, bld_config_target* config) {
+void config_target_load(bld_data* data, bld_string* target) {
     int error;
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
@@ -49,20 +50,21 @@ int config_target_load(bld_data* data, bld_string* target, bld_config_target* co
     path_append_string(&target_path, string_unpack(target));
     path_append_string(&target_path, "config.json");
 
-    error = parse_config_target(&target_path, config);
+    if (data->target_config_parsed) {log_fatal("config_target_load: config already parsed");}
+    error = parse_config_target(&target_path, &data->target_config);
+    data->target_config_parsed = !error;
 
     path_free(&target_path);
-    return error;
 }
 
-void config_target_save(bld_data* data, bld_string* target, bld_config_target* config) {
+void config_target_save(bld_data* data, bld_string* target) {
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, ".bld");
     path_append_string(&target_path, "target");
     path_append_string(&target_path, string_unpack(target));
     path_append_string(&target_path, "config.json");
 
-    serialize_config_target(&target_path, config);
+    serialize_config_target(&target_path, &data->target_config);
     path_free(&target_path);
 }
 
@@ -208,4 +210,27 @@ int data_find_root(bld_path* root) {
 void data_add_handle(bld_data* data, bld_handle_annotated handle) {
     set_add(&data->handles, handle.type, &handle);
     array_push(&data->handle_order, &handle.type);
+}
+
+int utils_get_target(bld_string* target, bld_string* err, bld_command_positional_optional* arg, bld_data* data) {
+    if (arg->present) {
+        *target = string_copy(&arg->value);
+    } else if (data->config_parsed) {
+        if (data->config.active_target_configured) {
+            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.active_target)))) {
+                *err = string_new();
+                string_append_string(err, "config has active target ");
+                string_append_string(err, string_unpack(&data->config.active_target));
+                string_append_string(err, " which is not a known target\n");
+                return 0;
+            }
+            *target = string_copy(&data->config.active_target);
+        } else {
+            *err = string_pack("no target specified and no default target set up\n");
+            *err = string_copy(err);
+            return 0;
+        }
+    }
+
+    return 1;
 }

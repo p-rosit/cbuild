@@ -13,10 +13,8 @@ int command_add(bld_command_add* cmd, bld_data* data) {
     bld_set added_files = set_new(sizeof(bld_path));
     uintmax_t added_id;
 
-    data->target_config_parsed = !config_target_load(data, &cmd->target, &data->target_config);
-    if (!data->target_config_parsed) {
-        log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));
-    }
+    config_target_load(data, &cmd->target);
+    if (!data->target_config_parsed) {log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));}
     log_info("Chosen target: \"%s\"", string_unpack(&cmd->target));
 
     iter = iter_array(&config->added_paths);
@@ -76,7 +74,7 @@ int command_add(bld_command_add* cmd, bld_data* data) {
         }
     }
 
-    config_target_save(data, &cmd->target, config);
+    config_target_save(data, &cmd->target);
     set_free(&added_files);
     return 0;
 }
@@ -95,33 +93,8 @@ int command_add_convert(bld_command* pre_cmd, bld_data* data, bld_command_add* c
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_add_convert: missing first optional");}
     opt = &arg->as.opt;
 
-    error = -1;
-    if (opt->present) {
-        if (!set_has(&data->targets, string_hash(string_unpack(&opt->value)))) {
-            err = string_new();
-            string_append_string(&err, string_unpack(&opt->value));
-            string_append_string(&err, " is not a known target\n");
-            goto parse_failed;
-        }
-        cmd->target = string_copy(&opt->value);
-    } else if (data->config_parsed) {
-        if (data->config.default_target_configured) {
-            if (!set_has(&data->targets, string_hash(string_unpack(&data->config.target)))) {
-                err = string_new();
-                string_append_string(&err, "config has default target ");
-                string_append_string(&err, string_unpack(&data->config.target));
-                string_append_string(&err, " which is not a known target\n");
-                goto parse_failed;
-            }
-            cmd->target = string_copy(&data->config.target);
-        } else {
-            err = string_pack("no target specified and no default target set up\n");
-            err = string_copy(&err);
-            goto parse_failed;
-        }
-    } else {
-        err = string_pack("no target specified and no config has been parsed\n");
-        err = string_copy(&err);
+    if (!utils_get_target(&cmd->target, &err, opt, data)) {
+        error = -1;
         goto parse_failed;
     }
 
@@ -130,6 +103,7 @@ int command_add_convert(bld_command* pre_cmd, bld_data* data, bld_command_add* c
     varg = &arg->as.vargs;
 
     if (varg->values.size <= 0) {
+        error = -1;
         err = string_pack("expected paths to add\n");
         err = string_copy(&err);
         goto free_target;

@@ -7,7 +7,7 @@
 int command_build_verify_config(bld_command_build*, bld_data*);
 void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
 
-int command_build(bld_command_build* build, bld_data* data) {
+int command_build(bld_command_build* cmd, bld_data* data) {
     int result;
     bld_forward_project fproject;
     bld_project project;
@@ -15,9 +15,10 @@ int command_build(bld_command_build* build, bld_data* data) {
     bld_linker temp_l = linker_copy(&data->target_config.linker);
     bld_path path_cache, path_root;
     bld_string name_executable;
-    log_debug("Building target: \"%s\"", string_unpack(&build->target));
+    log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
 
-    if (command_build_verify_config(build, data)) {
+    config_target_load(data, &cmd->target);
+    if (command_build_verify_config(cmd, data)) {
         compiler_free(&temp_c);
         linker_free(&temp_l);
         return -1;
@@ -28,7 +29,7 @@ int command_build(bld_command_build* build, bld_data* data) {
 
     path_cache = path_from_string(".bld");
     path_append_string(&path_cache, "target");
-    path_append_string(&path_cache, string_unpack(&build->target));
+    path_append_string(&path_cache, string_unpack(&cmd->target));
     path_append_string(&path_cache, "cache");
     log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
     project_load_cache(&fproject, path_to_string(&path_cache));
@@ -36,11 +37,11 @@ int command_build(bld_command_build* build, bld_data* data) {
     log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
     project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
 
-    command_build_apply_config(&fproject, build, data);
+    command_build_apply_config(&fproject, cmd, data);
 
     project = project_resolve(&fproject);
 
-    name_executable = string_copy(&build->target);
+    name_executable = string_copy(&cmd->target);
     string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
     result = incremental_compile_project(&project, string_unpack(&name_executable));
 
@@ -50,9 +51,7 @@ int command_build(bld_command_build* build, bld_data* data) {
     path_free(&path_cache);
     project_free(&project);
 
-    if (result < 0) {
-        result = 0;
-    }
+    if (result < 0) {result = 0;}
     return result;
 }
 
@@ -67,44 +66,12 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_build_convert: missing first optional");}
     opt = &arg->as.opt;
 
-    if (opt->present) {
-        cmd->target = string_copy(&opt->value);
-    } else {
-        if (!data->config.default_target_configured) {
-            error = -1;
-            err = string_pack("bld: building active target but no active target set.\n");
-            goto parse_failed;
-        }
-        cmd->target = string_copy(&data->config.target);
-    }
-
-    data->target_config_parsed = !config_target_load(data, &cmd->target, &data->target_config);
-
-    if (!data->target_config_parsed) {
+    if (!utils_get_target(&cmd->target, &err, opt, data)) {
         error = -1;
-        err = string_pack("bld: no target config parsed\n");
-        err = string_copy(&err);
-        goto free_target;
-    } else if (!data->target_config.files_set) {
-        error = -1;
-        err = string_pack("bld: target file config has not been set up\n");
-        err = string_copy(&err);
-        goto free_target;
-    } else if (!data->target_config.files.info.compiler_set) {
-        error = -1;
-        err = string_pack("bld: target has no base compiler\n");
-        err = string_copy(&err);
-        goto free_target;
-    } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
-        error = -1;
-        err = string_pack("bld: target has no base compiler, only compiler flags\n");
-        err = string_copy(&err);
-        goto free_target;
+        goto parse_failed;
     }
 
     return 0;
-    free_target:
-    string_free(&cmd->target);
     parse_failed:
     *invalid = command_invalid_new(error, &err);
     return -1;
@@ -151,6 +118,17 @@ int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
 
     if (!data->target_config_parsed) {
         log_error("Config for target '%s' has not been parsed", string_unpack(&cmd->target));
+        return -1;
+    }
+
+    if (!data->target_config.files_set) {
+        log_error("target file config has not been set up");
+        return -1;
+    } else if (!data->target_config.files.info.compiler_set) {
+        log_error("target has no base compiler");
+        return -1;
+    } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
+        log_error("target has no base compiler, only compiler flags");
         return -1;
     }
 

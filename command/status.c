@@ -26,8 +26,8 @@ int command_status_all(bld_command_status* status, bld_data* data) {
     iter = iter_set(&data->targets);
     while (iter_next(&iter, (void**) &target)) {
         int is_default = 0;
-        if (data->config.default_target_configured) {
-            if (string_eq(target, &data->config.target)) {
+        if (data->config.active_target_configured) {
+            if (string_eq(target, &data->config.active_target)) {
                 is_default = 1;
             }
         }
@@ -46,7 +46,7 @@ int command_status_target(bld_command_status* status, bld_data* data) {
     bld_iter iter;
     bld_path* path;
     log_info("Target: %s", string_unpack(&status->target));
-    data->target_config_parsed = !config_target_load(data, &status->target, &data->target_config);
+    config_target_load(data, &status->target);
 
     if (!data->target_config_parsed) {
         log_fatal("Target config has not been parsed");

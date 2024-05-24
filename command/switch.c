@@ -8,8 +8,8 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
         log_fatal("command_switch: config not parsed");
     }
 
-    if (data->config.default_target_configured) {
-        if (string_eq(&cmd->target, &data->config.target)) {
+    if (data->config.active_target_configured) {
+        if (string_eq(&cmd->target, &data->config.active_target)) {
             log_info("Target %s already active", string_unpack(&cmd->target));
             return 0;
         }
@@ -21,9 +21,9 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
     }
 
     log_info("Switched to %s", string_unpack(&cmd->target));
-    string_free(&data->config.target);
-    data->config.target = string_copy(&cmd->target);
-    config_save(data, &data->config);
+    string_free(&data->config.active_target);
+    data->config.active_target = string_copy(&cmd->target);
+    config_save(data);
 
     return 0;
 }
