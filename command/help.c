@@ -24,6 +24,8 @@ int command_help(bld_command_help* help, bld_data* data) {
             return command_help_target(&help->command, data);
         } else if (string_eq(&help->command, &bld_command_string_add)) {
             type = BLD_COMMAND_ADD;
+        } else if (string_eq(&help->command, &bld_command_string_compiler)) {
+            type = BLD_COMMAND_COMPILER;
         } else if (string_eq(&help->command, &bld_command_string_help)) {
             type = BLD_COMMAND_HELP;
         } else if (string_eq(&help->command, &bld_command_string_ignore)) {
