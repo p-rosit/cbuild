@@ -1,3 +1,4 @@
+#include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
 #include "compiler.h"
 
@@ -29,6 +30,8 @@ int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_c
     path = &arg->as.req;
 
     cmd->path = path_from_string(string_unpack(&path->value));
+    cmd->flags = pre_cmd->extra_flags;
+    pre_cmd->extra_flags = array_new(sizeof(bld_command_flag));
 
     return 0;
     parse_failed:
@@ -55,6 +58,15 @@ bld_handle_annotated command_handle_compiler(char* name) {
 }
 
 void command_compiler_free(bld_command_compiler* cmd) {
+    bld_iter iter;
+    bld_command_flag* flag;
+
     string_free(&cmd->target);
     path_free(&cmd->path);
+
+    iter = iter_array(&cmd->flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    array_free(&cmd->flags);
 }
