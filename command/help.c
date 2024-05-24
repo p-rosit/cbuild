@@ -24,18 +24,18 @@ int command_help(bld_command_help* help, bld_data* data) {
             return command_help_target(&help->command, data);
         } else if (string_eq(&help->command, &bld_command_string_add)) {
             type = BLD_COMMAND_ADD;
+        } else if (string_eq(&help->command, &bld_command_string_help)) {
+            type = BLD_COMMAND_HELP;
         } else if (string_eq(&help->command, &bld_command_string_ignore)) {
             type = BLD_COMMAND_IGNORE;
         } else if (string_eq(&help->command, &bld_command_string_init)) {
             type = BLD_COMMAND_INIT;
-        } else if (string_eq(&help->command, &bld_command_string_remove)) {
-            type = BLD_COMMAND_REMOVE;
         } else if (string_eq(&help->command, &bld_command_string_invalidate)) {
             type = BLD_COMMAND_INVALIDATE;
+        } else if (string_eq(&help->command, &bld_command_string_remove)) {
+            type = BLD_COMMAND_REMOVE;
         } else if (string_eq(&help->command, &bld_command_string_switch)) {
             type = BLD_COMMAND_SWITCH;
-        } else if (string_eq(&help->command, &bld_command_string_help)) {
-            type = BLD_COMMAND_HELP;
         } else {
             printf("'%s' is not a command or target\n", string_unpack(&help->command));
             return -1;
