@@ -11,6 +11,14 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
 
     log_info("Configure compiler of \"%s\"", string_unpack(&cmd->target));
     log_info("");
+
+    if (cmd->add_flags) {
+        log_info("Adding to: %s", path_to_string(&cmd->path));
+    } else {
+        log_info("Removing from: %s", path_to_string(&cmd->path));
+    }
+    log_info("");
+
     log_info("Flags:");
     iter = iter_array(&cmd->flags);
     while (iter_next(&iter, (void**) &flag)) {
