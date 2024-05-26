@@ -10,6 +10,7 @@ extern const bld_string bld_command_string_compiler;
 typedef struct bld_command_compiler {
     bld_string target;
     bld_path path;
+    int add_flags;
     bld_array flags;
 } bld_command_compiler;
 

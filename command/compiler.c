@@ -57,6 +57,8 @@ bld_handle_annotated command_handle_compiler(char* name) {
     handle_positional_optional(&handle.handle, "Target to set compiler flags for");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_compiler));
     handle_positional_required(&handle.handle, "Directory/File to set flags for");
+    handle_positional_required(&handle.handle, "Add/Remove flags with ++ or --");
+    handle_allow_flags(&handle.handle);
     handle_allow_arbitrary_flags(&handle.handle, "Passthrough compiler flags");
     handle_set_description(&handle.handle, "Set compiler flags");
 
