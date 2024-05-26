@@ -674,7 +674,7 @@ bld_string handle_make_description(bld_handle* handle) {
     index = 0;
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &pos)) {
-        if (handle->flag_start_index >= 0 && handle->flag_start_index == index && handle->flag_array.size > 0) {
+        if (handle->flag_start_index >= 0 && handle->flag_start_index == index && (handle->flag_array.size > 0 || handle->arbitrary_flags)) {
             string_append_string(&description, " /");
         }
         string_append_space(&description);
@@ -702,7 +702,7 @@ bld_string handle_make_description(bld_handle* handle) {
         npos += pos->type != BLD_HANDLE_POSITIONAL_EXPECTED && pos->type != BLD_HANDLE_POSITIONAL_VARGS;
     }
 
-    if ((handle->flag_start_index < 0 || handle->flag_start_index == index) && handle->flag_array.size > 0) {
+    if ((handle->flag_start_index < 0 || handle->flag_start_index == index) && (handle->flag_array.size > 0 || handle->arbitrary_flags)) {
         string_append_string(&description, " /");
     }
 
