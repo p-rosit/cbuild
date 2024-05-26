@@ -399,6 +399,7 @@ void handle_info_free(bld_handle_info* info) {
 
 int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array* err) {
     int error = 0, index, too_few;
+    bld_string empty_switch, empty_option;
     bld_iter iter;
     bld_handle_info info;
     bld_handle_positional* pos;
@@ -407,10 +408,12 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
     *cmd = command_new(handle);
     info = handle_info_new(handle);
 
+    empty_switch = string_pack("-");
+    empty_option = string_pack("--");
     while (!args_empty(&args)) {
         bld_string arg = args_advance(&args);
 
-        if (arg.chars[0] != '-') {
+        if (*arg.chars != '-' || string_eq(&arg, &empty_switch) || string_eq(&arg, &empty_option)) {
             if (((size_t) info.current_arg) < handle->positional.size) {
                 pos = array_get(&handle->positional, info.current_arg);
             } else {
