@@ -21,10 +21,11 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
 }
 
 int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_compiler* cmd, bld_command_invalid* invalid) {
-    bld_string err;
+    bld_string err, add, remove;
     bld_command_positional* arg;
     bld_command_positional_required* path;
     bld_command_positional_optional* target;
+    bld_command_positional_required* option;
     (void)(data);
 
     arg = array_get(&pre_cmd->positional, 0);
@@ -39,8 +40,24 @@ int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_c
     if (arg->type != BLD_HANDLE_POSITIONAL_REQUIRED) {log_fatal("command_compiler_convert: missing required");}
     path = &arg->as.req;
 
+    arg = array_get(&pre_cmd->positional, 3);
+    if (arg->type != BLD_HANDLE_POSITIONAL_REQUIRED) {log_fatal("command_compiler_convert: missing option");}
+    option = &arg->as.req;
+
+    add = string_pack("++");
+    remove = string_pack("--");
+    if (!(string_eq(&option->value, &add) || string_eq(&option->value, &remove))) {
+        string_free(&cmd->target);
+        err = string_new();
+        string_append_string(&err, "Expected option to add or remove with ++/--, got ");
+        string_append_string(&err, string_unpack(&option->value));
+        string_append_char(&err, '\n');
+        goto parse_failed;
+    }
+
     cmd->path = path_from_string(string_unpack(&path->value));
     cmd->flags = pre_cmd->extra_flags;
+    cmd->add_flags = string_eq(&option->value, &add);
     pre_cmd->extra_flags = array_new(sizeof(bld_command_flag));
 
     return 0;
