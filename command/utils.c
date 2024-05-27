@@ -16,6 +16,7 @@
 
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
+const bld_string bld_path_config = STRING_COMPILE_TIME_PACK("config.json");
 
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
@@ -25,7 +26,7 @@ void config_load(bld_data* data) {
     int error;
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
-    path_append_string(&target_path, "config.json");
+    path_append_string(&target_path, string_unpack(&bld_path_config));
 
     if (data->config_parsed) {log_fatal("config_load: config already parsed");}
     error = parse_config(&target_path, &data->config);
@@ -37,7 +38,7 @@ void config_load(bld_data* data) {
 void config_save(bld_data* data) {
     bld_path target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
-    path_append_string(&target_path, "config.json");
+    path_append_string(&target_path, string_unpack(&bld_path_config));
 
     serialize_config(&target_path, &data->config);
     path_free(&target_path);
@@ -49,7 +50,7 @@ void config_target_load(bld_data* data, bld_string* target) {
     path_append_string(&target_path, string_unpack(&bld_path_build));
     path_append_string(&target_path, string_unpack(&bld_path_target));
     path_append_string(&target_path, string_unpack(target));
-    path_append_string(&target_path, "config.json");
+    path_append_string(&target_path, string_unpack(&bld_path_config));
 
     if (data->target_config_parsed) {log_fatal("config_target_load: config already parsed");}
     error = parse_config_target(&target_path, &data->target_config);
@@ -63,7 +64,7 @@ void config_target_save(bld_data* data, bld_string* target) {
     path_append_string(&target_path, string_unpack(&bld_path_build));
     path_append_string(&target_path, string_unpack(&bld_path_target));
     path_append_string(&target_path, string_unpack(target));
-    path_append_string(&target_path, "config.json");
+    path_append_string(&target_path, string_unpack(&bld_path_config));
 
     serialize_config_target(&target_path, &data->target_config);
     path_free(&target_path);
@@ -85,7 +86,7 @@ bld_data data_extract(char* name) {
     if (data.has_root) {
         bld_path path_config = path_copy(&data.root);
         path_append_string(&path_config, string_unpack(&bld_path_build));
-        path_append_string(&path_config, "config.json");
+        path_append_string(&path_config, string_unpack(&bld_path_config));
 
         data.config_parsed = !parse_config(&path_config, &data.config);
         path_free(&path_config);
