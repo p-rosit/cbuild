@@ -1,6 +1,7 @@
 #include "../bld_core/os.h"
 #include "../bld_core/logging.h"
 #include "../config/config.h"
+#include "../config/config_target.h"
 #include "utils.h"
 #include "init.h"
 
@@ -89,6 +90,13 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     path_main = path_copy(&cmd->path_main);
     data->target_config_parsed = 1;
     data->target_config = config_target_new(&path_main);
+
+    {
+        bld_target_build_information flags = utils_index_project(data);
+        data->target_config.files_set = 1;
+        data->target_config.files = flags;
+    }
+
     serialize_config_target(&target_path, &data->target_config);
 
     path_free(&target_path);
