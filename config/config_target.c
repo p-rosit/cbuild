@@ -2,8 +2,6 @@
 #include "../bld_core/json.h"
 #include "config_target.h"
 
-void config_target_build_info_free(bld_target_build_information*);
-
 void serialize_config_target_file(FILE*, bld_target_build_information*, int);
 
 int parse_config_target_main(FILE*, bld_config_target*);
