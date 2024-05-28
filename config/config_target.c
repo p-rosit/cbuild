@@ -183,11 +183,11 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
             } else {
                 first = 0;
             }
-            fprintf(file, "%*c", 2 * (depth + 2), ' ');
+            fprintf(file, "%*c", 2 * (depth + 1), ' ');
             serialize_config_target_file(file, temp, depth + 2);
         }
 
-        fprintf(file, "\n%*c]", 2 * (depth + 1), ' ');
+        fprintf(file, "\n%*c]", 2 * depth, ' ');
     }
 
     fprintf(file, "\n%*c", 2 * (depth - 1), ' ');
