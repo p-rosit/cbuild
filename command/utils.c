@@ -1,3 +1,4 @@
+#include <string.h>
 #include "../bld_core/logging.h"
 #include "../bld_core/os.h"
 #include "../bld_core/iter.h"
@@ -236,4 +237,93 @@ int utils_get_target(bld_string* target, bld_string* err, bld_command_positional
     }
 
     return 1;
+}
+
+bld_target_build_information utils_index_project_recursive_file(bld_path*, bld_config_target*);
+bld_target_build_information utils_index_project_recursive(bld_path*, bld_config_target*);
+
+bld_target_build_information utils_index_project(bld_data* data) {
+    bld_iter iter;
+    bld_path* path;
+    bld_target_build_information info;
+    bld_string name;
+
+    if (!data->target_config_parsed) {
+        log_fatal("utils_index_project: target config has not been parsed");
+    }
+
+    info = utils_index_project_recursive(&data->root, &data->target_config);
+    name = string_pack(path_to_string(&data->root));
+    info.name = string_copy(&name);
+
+    iter = iter_array(&data->target_config.added_paths);
+    while (iter_next(&iter, (void**) &path)) {
+        bld_target_build_information added;
+        added = utils_index_project_recursive(path, &data->target_config);
+        name = string_pack(path_to_string(path));
+        added.name = string_copy(&name);
+        array_push(&info.files, &added);
+    }
+
+    return info;
+}
+
+bld_target_build_information utils_index_project_recursive(bld_path* path, bld_config_target* config) {
+    bld_path root;
+    bld_iter iter;
+    bld_os_dir* dir;
+    bld_string name;
+    bld_target_build_information info;
+    (void)(config);
+
+    dir = os_dir_open(path_to_string(path));
+    if (dir == NULL) {
+        return utils_index_project_recursive_file(path, config);
+    }
+    log_warn("utils_index_project_recursive: also ignore ignored paths");
+
+    info.info.compiler_set = 0;
+    info.info.linker_set = 0;
+    info.files = array_new(sizeof(bld_target_build_information));
+
+    root = path_copy(path);
+    iter = iter_directory(dir);
+    while (iter_next(&iter, (void**) &name)) {
+        bld_path entry_path;
+        bld_target_build_information entry_info;
+        if (*name.chars == '.') {continue;}
+        entry_path = path_copy(&root);
+        path_append_string(&entry_path, string_unpack(&name));
+
+        {
+            char* file_ending = strrchr(string_unpack(&name), '.');
+            if (file_ending == NULL) {
+            } else if (strcmp(file_ending, ".c") == 0) {
+            } else if (strcmp(file_ending, ".h") == 0) {
+            } else {
+                path_free(&entry_path);
+                continue;
+            }
+        }
+
+        entry_info = utils_index_project_recursive(&entry_path, config);
+        entry_info.name = string_copy(&name);
+        array_push(&info.files, &entry_info);
+
+        path_free(&entry_path);
+    }
+
+    path_free(&root);
+    os_dir_close(dir);
+    return info;
+}
+
+bld_target_build_information utils_index_project_recursive_file(bld_path* path, bld_config_target* data) {
+    bld_target_build_information info;
+    info.info.compiler_set = 0;
+    info.info.linker_set = 0;
+    info.files = array_new(sizeof(bld_target_build_information));
+    (void)(path);
+    (void)(data);
+    return info;
 }
