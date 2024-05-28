@@ -66,6 +66,7 @@ void config_target_build_info_free(bld_target_build_information* info) {
     while (iter_next(&iter, (void**) &temp)) {
         config_target_build_info_free(temp);
     }
+    array_free(&info->files);
 }
 
 void serialize_config_target(bld_path* path, bld_config_target* config) {
