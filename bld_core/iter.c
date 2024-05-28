@@ -119,6 +119,27 @@ int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
     return 1;
 }
 
+bld_iter iter_directory(bld_os_dir* dir) {
+    bld_iter iter;
+    if (dir == NULL) {log_fatal("iter_directory: directory to traverse is null");}
+
+    iter.type = BLD_DIRECTORY;
+    iter.as.directory_iter.dir = dir;
+    return iter;
+}
+
+int directory_next(bld_iter_directory* iter, bld_string* name_ptr) {
+    bld_os_file* file;
+    file = os_dir_read(iter->dir);
+
+    if (file != NULL) {
+        *name_ptr = string_pack(os_file_name(file));
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 int iter_next(bld_iter* iter, void** value_ptr_ptr) {
     switch (iter->type) {
         case (BLD_ARRAY): {
@@ -129,6 +150,9 @@ int iter_next(bld_iter* iter, void** value_ptr_ptr) {
         } break;
         case (BLD_GRAPH): {
             return graph_next(&iter->as.graph_iter, (uintmax_t*) value_ptr_ptr);
+        } break;
+        case (BLD_DIRECTORY): {
+            return directory_next(&iter->as.directory_iter, (bld_string*) value_ptr_ptr);
         } break;
     }
     log_fatal("iter_next: unreachable error???");
