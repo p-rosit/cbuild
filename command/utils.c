@@ -240,35 +240,36 @@ int utils_get_target(bld_string* target, bld_string* err, bld_command_positional
 }
 
 bld_target_build_information utils_index_project_recursive_file(bld_path*, bld_config_target*);
-bld_target_build_information utils_index_project_recursive(bld_path*, bld_config_target*);
+bld_target_build_information utils_index_project_recursive(bld_path*, bld_config_target*, bld_set*);
 
 bld_target_build_information utils_index_project(bld_data* data) {
     bld_iter iter;
-    bld_path* path;
+    bld_path* ignored;
     bld_target_build_information info;
     bld_string name;
+    bld_set ignored_ids;
 
     if (!data->target_config_parsed) {
         log_fatal("utils_index_project: target config has not been parsed");
     }
 
-    info = utils_index_project_recursive(&data->root, &data->target_config);
-    name = string_pack(path_to_string(&data->root));
-    info.name = string_copy(&name);
-
-    iter = iter_array(&data->target_config.added_paths);
-    while (iter_next(&iter, (void**) &path)) {
-        bld_target_build_information added;
-        added = utils_index_project_recursive(path, &data->target_config);
-        name = string_pack(path_to_string(path));
-        added.name = string_copy(&name);
-        array_push(&info.files, &added);
+    ignored_ids = set_new(0);
+    iter = iter_array(&data->target_config.ignore_paths);
+    while (iter_next(&iter, (void**) &ignored)) {
+        bld_path temp = path_copy(&data->root);
+        path_append_path(&data->root, ignored);
+        set_add(&ignored_ids, os_info_id(path_to_string(&temp)), NULL);
     }
 
+    info = utils_index_project_recursive(&data->root, &data->target_config, &ignored_ids);
+    name = string_pack(".");
+    info.name = string_copy(&name);
+
+    set_free(&ignored_ids);
     return info;
 }
 
-bld_target_build_information utils_index_project_recursive(bld_path* path, bld_config_target* config) {
+bld_target_build_information utils_index_project_recursive(bld_path* path, bld_config_target* config, bld_set* ignored_ids) {
     bld_path root;
     bld_iter iter;
     bld_os_dir* dir;
@@ -295,9 +296,18 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
         entry_path = path_copy(&root);
         path_append_string(&entry_path, string_unpack(&name));
 
+        if (set_has(ignored_ids, os_info_id(path_to_string(&entry_path)))) {
+            path_free(&entry_path);
+            continue;
+        }
+
         {
             char* file_ending = strrchr(string_unpack(&name), '.');
             if (file_ending == NULL) {
+                if (!os_dir_exists(path_to_string(&entry_path))) {
+                    path_free(&entry_path);
+                    continue;
+                }
             } else if (strcmp(file_ending, ".c") == 0) {
             } else if (strcmp(file_ending, ".h") == 0) {
             } else {
@@ -306,7 +316,7 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
             }
         }
 
-        entry_info = utils_index_project_recursive(&entry_path, config);
+        entry_info = utils_index_project_recursive(&entry_path, config, ignored_ids);
         entry_info.name = string_copy(&name);
         array_push(&info.files, &entry_info);
 
