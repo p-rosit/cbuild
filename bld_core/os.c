@@ -25,7 +25,7 @@ int os_file_exists(char* path) {
         if (dir != NULL) {
             os_dir_close(dir);
         }
-        return dir == NULL;
+        return dir != NULL;
     }
 
     int os_dir_make(char* path) {
