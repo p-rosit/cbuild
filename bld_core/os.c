@@ -4,13 +4,10 @@
 
 int os_file_exists(char* path) {
     FILE* file = fopen(path, "r");
-
-    if (file == NULL) {
-        return 0;
-    } else {
+    if (file != NULL) {
         fclose(file);
-        return 1;
     }
+    return file != NULL;
 }
 
 #if defined(__linux__)
