@@ -16,6 +16,11 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     bld_path path_cache, path_root;
     bld_string name_executable;
 
+    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
+        log_fatal("'%s' is not a target", string_unpack(&cmd->target));
+        return -1; /* Unreachable */
+    }
+
     config_target_load(data, &cmd->target);
     if (command_build_verify_config(cmd, data)) {
         return -1;
