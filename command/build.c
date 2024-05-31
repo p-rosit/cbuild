@@ -11,18 +11,19 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     int result;
     bld_forward_project fproject;
     bld_project project;
-    bld_compiler temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
-    bld_linker temp_l = linker_copy(&data->target_config.linker);
+    bld_compiler temp_c;
+    bld_linker temp_l;
     bld_path path_cache, path_root;
     bld_string name_executable;
-    log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
 
     config_target_load(data, &cmd->target);
     if (command_build_verify_config(cmd, data)) {
-        compiler_free(&temp_c);
-        linker_free(&temp_l);
         return -1;
     }
+
+    log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
+    temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
+    temp_l = linker_copy(&data->target_config.linker);
 
     path_root = path_copy(&data->root);
     fproject = project_forward_new(&path_root, &temp_c, &temp_l);
