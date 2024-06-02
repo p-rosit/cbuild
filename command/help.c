@@ -6,6 +6,7 @@
 #include "compiler.h"
 #include "ignore.h"
 #include "init.h"
+#include "linker.h"
 #include "invalidate.h"
 #include "linker.h"
 #include "remove.h"
@@ -26,6 +27,8 @@ int command_help(bld_command_help* help, bld_data* data) {
             type = BLD_COMMAND_ADD;
         } else if (string_eq(&help->command, &bld_command_string_compiler)) {
             type = BLD_COMMAND_COMPILER;
+        } else if (string_eq(&help->command, &bld_command_string_linker)) {
+            type = BLD_COMMAND_LINKER;
         } else if (string_eq(&help->command, &bld_command_string_help)) {
             type = BLD_COMMAND_HELP;
         } else if (string_eq(&help->command, &bld_command_string_ignore)) {
