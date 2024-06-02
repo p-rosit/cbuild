@@ -418,7 +418,7 @@ int parse_target_build_info_file_compiler_flags(FILE* file, bld_target_build_inf
     int result;
 
     if (info->info.compiler_set) {
-        log_warn("compiler bas already been parsed");
+        log_warn("compiler has already been parsed");
         return -1;
     }
 
