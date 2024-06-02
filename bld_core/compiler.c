@@ -310,7 +310,7 @@ void serialize_compiler_flags_removed_flags(FILE* cache, bld_compiler_flags* fla
     while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
-        if (flags->flags.size > 1) {
+        if (flags->removed.size > 1) {
             fprintf(cache, "%*c", 2 * (depth + 1), ' ');
         }
         fprintf(cache, "\"%s\"", string_unpack(flag));
