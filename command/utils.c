@@ -258,8 +258,9 @@ bld_target_build_information utils_index_project(bld_data* data) {
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &ignored)) {
         bld_path temp = path_copy(&data->root);
-        path_append_path(&data->root, ignored);
+        path_append_path(&temp, ignored);
         set_add(&ignored_ids, os_info_id(path_to_string(&temp)), NULL);
+        path_free(&temp);
     }
 
     info = utils_index_project_recursive(&data->root, &data->target_config, &ignored_ids);
