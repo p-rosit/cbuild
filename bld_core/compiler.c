@@ -464,7 +464,7 @@ int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
 int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
     int values;
 
-    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_removed_flags);
+    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_removed_flag);
     if (values < 0) {
         log_warn("Could not parse compiler flags");
         return -1;
