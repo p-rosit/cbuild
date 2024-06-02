@@ -7,10 +7,15 @@
 
 extern const bld_string bld_command_string_compiler;
 
+typedef enum bld_command_compiler_type {
+    BLD_COMMAND_COMPILER_ADD_FLAGS,
+    BLD_COMMAND_COMPILER_REMOVE_FLAGS
+} bld_command_compiler_type;
+
 typedef struct bld_command_compiler {
     bld_string target;
+    bld_command_compiler_type type;
     bld_path path;
-    int add_flags;
     bld_array flags;
 } bld_command_compiler;
 

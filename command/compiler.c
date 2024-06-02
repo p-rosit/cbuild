@@ -4,6 +4,8 @@
 
 const bld_string bld_command_string_compiler = STRING_COMPILE_TIME_PACK("compiler");
 
+bld_target_build_information command_compiler_initial_setup(bld_command_compiler*, bld_data*);
+
 int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     bld_iter iter;
     bld_command_flag* flag;
@@ -26,6 +28,22 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     }
 
     return 0;
+}
+
+bld_target_build_information command_compiler_initial_setup(bld_command_compiler* cmd, bld_data* data) {
+    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
+        log_fatal("'%s' is not a target", string_unpack(&cmd->target));
+    }
+
+    config_target_load(data, &cmd->target);
+    if (!data->target_config_parsed) {
+        log_fatal("Config for target '%s' could not be parsed", string_unpack(&cmd->target));
+    }
+    if (!os_file_exists(path_to_string(&cmd->path))) {
+        log_fatal("Requested file '%s' does not exist", path_to_string(&cmd->path));
+    }
+
+    return utils_index_project(data); /* Unify existing with current */
 }
 
 int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_compiler* cmd, bld_command_invalid* invalid) {
