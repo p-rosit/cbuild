@@ -18,6 +18,7 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     }
 
     if (cmd->type == BLD_COMMAND_COMPILER_PRINT) {
+        printf("Target:   %s\n", string_unpack(&cmd->target));
         printf("File:     %s\n", path_to_string(&cmd->path));
 
         if (file->info.compiler_set) {
