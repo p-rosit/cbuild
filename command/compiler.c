@@ -69,7 +69,7 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
             }
 
             if (file->info.compiler.type != BLD_COMPILER && flags->flags.size == 0 && flags->removed.size == 0) {
-                log_info("No compiler info set");
+                printf("No compiler info set\n");
             }
         } else {
             printf("No compiler info set\n");
