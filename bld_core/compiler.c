@@ -493,7 +493,7 @@ int parse_compiler_flags_removed_flag(FILE* file, bld_compiler_flags* flags) {
         goto parse_failed;
     }
 
-    set_add(&flags->flag_hash, hash, &flag);
+    set_add(&flags->removed, hash, &flag);
 
     return 0;
     parse_failed:
