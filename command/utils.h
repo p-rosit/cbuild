@@ -57,4 +57,8 @@ bld_data    data_extract(char*);
 void        data_free(bld_data*);
 int         utils_get_target(bld_string*, bld_string*, bld_command_positional_optional*, bld_data*);
 
+bld_target_build_information* utils_get_build_info_for(bld_data*, bld_path*);
+
+bld_target_build_information utils_index_project(bld_data*);
+
 #endif

@@ -22,6 +22,7 @@ const bld_string bld_path_config = STRING_COMPILE_TIME_PACK("config.json");
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 void data_add_handle(bld_data*, bld_handle_annotated);
+bld_target_build_information* utils_get_build_info_recursive(bld_path*, bld_target_build_information*, uintmax_t);
 
 void config_load(bld_data* data) {
     int error;
@@ -281,7 +282,6 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
     if (dir == NULL) {
         return utils_index_project_recursive_file(path, config);
     }
-    log_warn("utils_index_project_recursive: also ignore ignored paths");
 
     info.info.compiler_set = 0;
     info.info.linker_set = 0;
@@ -336,4 +336,43 @@ bld_target_build_information utils_index_project_recursive_file(bld_path* path, 
     (void)(path);
     (void)(data);
     return info;
+}
+
+bld_target_build_information* utils_get_build_info_for(bld_data* data, bld_path* path) {
+    uintmax_t requested_id = os_info_id(path_to_string(path));
+
+    if (!data->has_root) {log_fatal("No root, no init?");}
+    if (!data->target_config_parsed) {log_fatal("No target config parsed");}
+    if (requested_id == BLD_INVALID_IDENITIFIER) {return NULL;}
+
+    return utils_get_build_info_recursive(&data->root, &data->target_config.files, requested_id);
+}
+
+bld_target_build_information* utils_get_build_info_recursive(bld_path* path, bld_target_build_information* root, uintmax_t requested_id) {
+    bld_iter iter;
+    bld_target_build_information* file;
+    bld_path current_path;
+    uintmax_t current_id;
+
+    current_path = path_copy(path);
+    path_append_string(&current_path, string_unpack(&root->name));
+    current_id = os_info_id(path_to_string(&current_path));
+
+    if (current_id == requested_id) {
+        path_free(&current_path);
+        return root;
+    }
+
+    iter = iter_array(&root->files);
+    while (iter_next(&iter, (void**) &file)) {
+        bld_target_build_information* result;
+        result = utils_get_build_info_recursive(&current_path, file, requested_id);
+        if (result != NULL) {
+            path_free(&current_path);
+            return result;
+        }
+    }
+
+    path_free(&current_path);
+    return NULL;
 }
