@@ -8,6 +8,7 @@
 #include "init.h"
 #include "help.h"
 #include "compiler.h"
+#include "linker.h"
 #include "switch.h"
 #include "invalidate.h"
 #include "remove.h"
@@ -101,6 +102,7 @@ bld_data data_extract(char* name) {
     data_add_handle(&data, command_handle_ignore(name));
     data_add_handle(&data, command_handle_switch(name));
     data_add_handle(&data, command_handle_compiler(name));
+    data_add_handle(&data, command_handle_linker(name));
     data_add_handle(&data, command_handle_remove(name));
     data_add_handle(&data, command_handle_invalidate(name));
     data_add_handle(&data, command_handle_status(name));
