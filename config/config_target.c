@@ -435,7 +435,7 @@ int parse_target_build_info_file_compiler_flags(FILE* file, bld_target_build_inf
 
 int parse_target_build_info_file_linker_flags(FILE* file, bld_target_build_information* info) {
     bld_linker_flags flags;
-    int result = parse_linker_flag(file, &flags);
+    int result = parse_linker_flags(file, &flags);
     if (result) {
         log_warn("could not parse linker flags");
         return -1;
