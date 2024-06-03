@@ -11,6 +11,7 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     bld_target_build_information* file;
 
     flags = command_compiler_initial_setup(cmd, data);
+    utils_apply_build_information(data, &flags);
 
     file = utils_get_build_info_for(data, &cmd->path);
     if (file == NULL) {
@@ -75,7 +76,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
             printf("No compiler info set\n");
         }
 
-        config_target_build_info_free(&flags);
         return 0;
     } else if (cmd->type == BLD_COMMAND_COMPILER_CLEAR) {
         if (file->info.compiler_set) {
@@ -256,7 +256,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
         log_fatal("command_compiler: unknown command type");
     }
 
-    config_target_build_info_free(&flags);
     return 0;
 }
 
