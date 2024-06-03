@@ -24,6 +24,7 @@ int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);
 void data_add_handle(bld_data*, bld_handle_annotated);
 bld_target_build_information* utils_get_build_info_recursive(bld_path*, bld_target_build_information*, uintmax_t);
+void utils_apply_build_information_recursive(bld_target_build_information*, bld_target_build_information*);
 
 void config_load(bld_data* data) {
     int error;
@@ -378,4 +379,45 @@ bld_target_build_information* utils_get_build_info_recursive(bld_path* path, bld
 
     path_free(&current_path);
     return NULL;
+}
+
+void utils_apply_build_information(bld_data* data, bld_target_build_information* info) {
+    if (!data->target_config_parsed) {
+        log_fatal("utils_apply_build_information: target config not parsed");
+    }
+
+    utils_apply_build_information_recursive(info, &data->target_config.files);
+    string_free(&data->target_config.files.name);
+    data->target_config.files = *info;
+}
+
+void utils_apply_build_information_recursive(bld_target_build_information* project, bld_target_build_information* info) {
+    bld_iter iter;
+    bld_target_build_information* child;
+    project->info = info->info;
+
+    iter = iter_array(&info->files);
+    while (iter_next(&iter, (void**) &child)) {
+        int exists = 0;
+        bld_iter iter;
+        bld_target_build_information* corresponding;
+
+        iter = iter_array(&project->files);
+        while (iter_next(&iter, (void**) &corresponding)) {
+            if (string_eq(&child->name, &corresponding->name)) {
+                exists = 1;
+                break;
+            }
+        }
+
+        if (!exists) {continue;}
+
+        utils_apply_build_information_recursive(corresponding, child);
+    }
+
+    iter = iter_array(&info->files);
+    while (iter_next(&iter, (void**) &child)) {
+        string_free(&child->name);
+    }
+    array_free(&info->files);
 }
