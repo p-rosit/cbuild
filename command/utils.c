@@ -410,14 +410,14 @@ void utils_apply_build_information_recursive(bld_target_build_information* proje
             }
         }
 
-        if (!exists) {continue;}
+        if (!exists) {
+            config_target_build_info_free(child);
+            continue;
+        }
 
         utils_apply_build_information_recursive(corresponding, child);
-    }
-
-    iter = iter_array(&info->files);
-    while (iter_next(&iter, (void**) &child)) {
         string_free(&child->name);
     }
+
     array_free(&info->files);
 }
