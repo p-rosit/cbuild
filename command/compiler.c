@@ -75,8 +75,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
         } else {
             printf("No compiler info set\n");
         }
-
-        return 0;
     } else if (cmd->type == BLD_COMMAND_COMPILER_CLEAR) {
         if (file->info.compiler_set) {
             bld_iter iter;
@@ -104,7 +102,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
         }
 
         file->info.compiler_set = 0;
-        config_target_save(data, &cmd->target);
     } else if (cmd->type == BLD_COMMAND_COMPILER_SET_COMPILER) {
         if (file->info.compiler_set) {
             bld_iter iter;
@@ -159,8 +156,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
                 string_free(&temp);
             }
         }
-
-        config_target_save(data, &cmd->target);
     } else if (cmd->type == BLD_COMMAND_COMPILER_ADD_FLAGS) {
         bld_iter iter;
         bld_compiler_flags* flags;
@@ -205,8 +200,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
             compiler_flags_add_flag(flags, string_unpack(&temp));
             string_free(&temp);
         }
-
-        config_target_save(data, &cmd->target);
     } else if (cmd->type == BLD_COMMAND_COMPILER_REMOVE_FLAGS) {
         bld_iter iter;
         bld_compiler_flags* flags;
@@ -250,12 +243,11 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
             compiler_flags_remove_flag(flags, string_unpack(&temp));
             string_free(&temp);
         }
-
-        config_target_save(data, &cmd->target);
     } else {
         log_fatal("command_compiler: unknown command type");
     }
 
+    config_target_save(data, &cmd->target);
     return 0;
 }
 
