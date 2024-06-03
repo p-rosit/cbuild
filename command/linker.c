@@ -6,7 +6,9 @@ const bld_string bld_command_string_linker = STRING_COMPILE_TIME_PACK("linker");
 
 bld_target_build_information command_linker_initial_setup(bld_command_linker*, bld_data*);
 
+
 int command_linker(bld_command_linker* cmd, bld_data* data) {
+    int is_root;
     bld_target_build_information flags;
     bld_target_build_information* file;
 
@@ -16,10 +18,15 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
     if (file == NULL) {
         log_fatal("Requested file '%s' does not exist in the project", path_to_string(&cmd->path));
     }
+    is_root = file == &data->target_config.files;
 
     if (cmd->type == BLD_COMMAND_LINKER_PRINT) {
         printf("Target:   %s\n", string_unpack(&cmd->target));
         printf("File:     %s\n", path_to_string(&cmd->path));
+
+        if (is_root && data->target_config.linker_set) {
+            printf("Linker:   %s\n", string_unpack(&data->target_config.linker.executable));
+        }
 
         if (file->info.linker_set) {
             bld_linker_flags* flags;
@@ -50,8 +57,73 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
 
         config_target_build_info_free(&flags);
         return 0;
+    } else if (cmd->type == BLD_COMMAND_LINKER_SET_LINKER) {
+        bld_iter iter;
+        bld_command_flag* flag;
+        bld_linker* linker;
+
+        if (!is_root) {
+            log_fatal("Can only modify linker flags of non-root '%s', cannot change linker", path_to_string(&cmd->path));
+        }
+
+        linker = &data->target_config.linker;
+
+        if (data->target_config.linker_set) {
+            linker_free(linker);
+        }
+        if (file->info.linker_set) {
+            linker_flags_free(&file->info.linker_flags);
+        }
+
+        data->target_config.linker_set = 1;
+        *linker = linker_new(string_unpack(&cmd->linker));
+        file->info.linker_set = 1;
+        file->info.linker_flags = linker_flags_new();
+
+        iter = iter_array(&cmd->flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            bld_string temp = string_new();
+            if (flag->is_switch) {
+                string_append_string(&temp, "-");
+            } else {
+                string_append_string(&temp, "--");
+            }
+            string_append_string(&temp, string_unpack(&flag->flag));
+
+            linker_flags_add_flag(&file->info.linker_flags, string_unpack(&temp));
+            string_free(&temp);
+        }
+    } else if (cmd->type == BLD_COMMAND_LINKER_ADD_FLAGS) {
+        bld_iter iter;
+        bld_command_flag* flag;
+
+        if (file->info.linker_set) {
+            linker_flags_free(&file->info.linker_flags);
+        }
+        file->info.linker_set = 1;
+        file->info.linker_flags = linker_flags_new();
+
+        iter = iter_array(&cmd->flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            bld_string temp = string_new();
+            if (flag->is_switch) {
+                string_append_string(&temp, "-");
+            } else {
+                string_append_string(&temp, "--");
+            }
+            string_append_string(&temp, string_unpack(&flag->flag));
+
+            linker_flags_add_flag(&file->info.linker_flags, string_unpack(&temp));
+            string_free(&temp);
+        }
+    } else if (cmd->type == BLD_COMMAND_LINKER_CLEAR) {
+        if (file->info.linker_set) {
+            linker_flags_free(&file->info.linker_flags);
+        }
+        file->info.linker_set = 0;
     }
 
+    config_target_save(data, &cmd->target);
     config_target_build_info_free(&flags);
     return 0;
 }
