@@ -13,6 +13,7 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
     bld_target_build_information* file;
 
     flags = command_linker_initial_setup(cmd, data);
+    utils_apply_build_information(data, &flags);
 
     file = utils_get_build_info_for(data, &cmd->path);
     if (file == NULL) {
@@ -54,9 +55,6 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
         } else {
             printf("No linker info set\n");
         }
-
-        config_target_build_info_free(&flags);
-        return 0;
     } else if (cmd->type == BLD_COMMAND_LINKER_SET_LINKER) {
         bld_iter iter;
         bld_command_flag* flag;
@@ -124,7 +122,6 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
     }
 
     config_target_save(data, &cmd->target);
-    config_target_build_info_free(&flags);
     return 0;
 }
 
