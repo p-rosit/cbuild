@@ -231,6 +231,7 @@ bld_command command_new(bld_handle* handle) {
     bld_handle_positional* arg;
     cmd.positional = array_new(sizeof(bld_command_positional));
     cmd.flags = set_new(sizeof(bld_command_flag));
+    cmd.extra_flags = array_new(sizeof(bld_command_flag));
 
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &arg)) {
@@ -295,6 +296,12 @@ void command_free(bld_command* cmd) {
         string_free(&flag->flag);
     }
     set_free(&cmd->flags);
+
+    iter = iter_array(&cmd->extra_flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    array_free(&cmd->extra_flags);
 }
 
 void command_free_internal(bld_command* cmd, bld_handle_info* info) {
@@ -341,6 +348,12 @@ void command_free_internal(bld_command* cmd, bld_handle_info* info) {
         string_free(&flag->flag);
     }
     set_free(&cmd->flags);
+
+    iter = iter_array(&cmd->extra_flags);
+    while (iter_next(&iter, (void**) &flag)) {
+        string_free(&flag->flag);
+    }
+    array_free(&cmd->extra_flags);
 }
 
 bld_string command_error_at(bld_string* arg) {
@@ -386,6 +399,7 @@ void handle_info_free(bld_handle_info* info) {
 
 int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array* err) {
     int error = 0, index, too_few;
+    bld_string empty_switch, empty_option;
     bld_iter iter;
     bld_handle_info info;
     bld_handle_positional* pos;
@@ -394,10 +408,12 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
     *cmd = command_new(handle);
     info = handle_info_new(handle);
 
+    empty_switch = string_pack("-");
+    empty_option = string_pack("--");
     while (!args_empty(&args)) {
         bld_string arg = args_advance(&args);
 
-        if (arg.chars[0] != '-') {
+        if (*arg.chars != '-' || string_eq(&arg, &empty_switch) || string_eq(&arg, &empty_option)) {
             if (((size_t) info.current_arg) < handle->positional.size) {
                 pos = array_get(&handle->positional, info.current_arg);
             } else {
@@ -627,7 +643,7 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
     } else if (handle->arbitrary_flags) {
         flag.is_switch = is_switch;
         flag.flag = string_copy(&flag_str);
-        set_add(&cmd->flags, string_hash(temp), &flag);
+        array_push(&cmd->extra_flags, &flag);
     } else {
         bld_string str = command_error_at(arg);
 
@@ -658,7 +674,7 @@ bld_string handle_make_description(bld_handle* handle) {
     index = 0;
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &pos)) {
-        if (handle->flag_start_index >= 0 && handle->flag_start_index == index && handle->flag_array.size > 0) {
+        if (handle->flag_start_index >= 0 && handle->flag_start_index == index && (handle->flag_array.size > 0 || handle->arbitrary_flags)) {
             string_append_string(&description, " /");
         }
         string_append_space(&description);
@@ -686,7 +702,7 @@ bld_string handle_make_description(bld_handle* handle) {
         npos += pos->type != BLD_HANDLE_POSITIONAL_EXPECTED && pos->type != BLD_HANDLE_POSITIONAL_VARGS;
     }
 
-    if ((handle->flag_start_index < 0 || handle->flag_start_index == index) && handle->flag_array.size > 0) {
+    if ((handle->flag_start_index < 0 || handle->flag_start_index == index) && (handle->flag_array.size > 0 || handle->arbitrary_flags)) {
         string_append_string(&description, " /");
     }
 
@@ -734,7 +750,7 @@ bld_string handle_make_description(bld_handle* handle) {
         }
     }
 
-    if (handle->flag_array.size > 0) {
+    if (handle->flag_array.size > 0 || handle->arbitrary_flags) {
         string_append_string(&description, "\n\n");
         string_append_string(&description, "Flags:");
     }

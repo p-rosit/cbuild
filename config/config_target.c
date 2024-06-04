@@ -2,8 +2,6 @@
 #include "../bld_core/json.h"
 #include "config_target.h"
 
-void config_target_build_info_free(bld_target_build_information*);
-
 void serialize_config_target_file(FILE*, bld_target_build_information*, int);
 
 int parse_config_target_main(FILE*, bld_config_target*);
@@ -20,6 +18,7 @@ int parse_target_build_info_file_compiler(FILE*, bld_target_build_information*);
 int parse_target_build_info_file_compiler_flags(FILE*, bld_target_build_information*);
 int parse_target_build_info_file_linker_flags(FILE*, bld_target_build_information*);
 int parse_target_build_info_file_sub_files(FILE*, bld_target_build_information*);
+int parse_target_build_info_file_sub_file(FILE*, bld_array*);
 
 bld_config_target config_target_new(bld_path* path) {
     bld_config_target config;
@@ -67,6 +66,7 @@ void config_target_build_info_free(bld_target_build_information* info) {
     while (iter_next(&iter, (void**) &temp)) {
         config_target_build_info_free(temp);
     }
+    array_free(&info->files);
 }
 
 void serialize_config_target(bld_path* path, bld_config_target* config) {
@@ -157,16 +157,20 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
                 serialize_compiler(file, &info->info.compiler.as.compiler, depth + 1);
             } break;
             case (BLD_COMPILER_FLAGS): {
-                json_serialize_key(file, "compiler_flags", depth);
-                serialize_compiler_flags(file, &info->info.compiler.as.flags, depth + 1);
+                if (info->info.compiler.as.flags.flags.size > 0 || info->info.compiler.as.flags.removed.size > 0) {
+                    json_serialize_key(file, "compiler_flags", depth);
+                    serialize_compiler_flags(file, &info->info.compiler.as.flags, depth + 1);
+                }
             } break;
         }
     }
 
     if (info->info.linker_set) {
-        fprintf(file, ",\n");
-        json_serialize_key(file, "linker_flags", depth);
-        serialize_linker_flags(file, &info->info.linker_flags, depth + 1);
+        if (info->info.linker_flags.flags.size > 0) {
+            fprintf(file, ",\n");
+            json_serialize_key(file, "linker_flags", depth);
+            serialize_linker_flags(file, &info->info.linker_flags, depth + 1);
+        }
     }
 
     if (info->files.size > 0) {
@@ -183,11 +187,11 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
             } else {
                 first = 0;
             }
-            fprintf(file, "%*c", 2 * (depth + 2), ' ');
+            fprintf(file, "%*c", 2 * (depth + 1), ' ');
             serialize_config_target_file(file, temp, depth + 2);
         }
 
-        fprintf(file, "\n%*c]", 2 * (depth + 1), ' ');
+        fprintf(file, "\n%*c]", 2 * depth, ' ');
     }
 
     fprintf(file, "\n%*c", 2 * (depth - 1), ' ');
@@ -418,7 +422,7 @@ int parse_target_build_info_file_compiler_flags(FILE* file, bld_target_build_inf
     int result;
 
     if (info->info.compiler_set) {
-        log_warn("compiler bas already been parsed");
+        log_warn("compiler has already been parsed");
         return -1;
     }
 
@@ -435,7 +439,7 @@ int parse_target_build_info_file_compiler_flags(FILE* file, bld_target_build_inf
 
 int parse_target_build_info_file_linker_flags(FILE* file, bld_target_build_information* info) {
     bld_linker_flags flags;
-    int result = parse_linker_flag(file, &flags);
+    int result = parse_linker_flags(file, &flags);
     if (result) {
         log_warn("could not parse linker flags");
         return -1;
@@ -447,13 +451,34 @@ int parse_target_build_info_file_linker_flags(FILE* file, bld_target_build_infor
 }
 
 int parse_target_build_info_file_sub_files(FILE* file, bld_target_build_information* info) {
-    bld_target_build_information sub_info;
-    int result = parse_target_build_info(file, &sub_info);
-    if (result) {
-        log_warn("could not parse files under ");
+    bld_array sub_files;
+    int amount_parsed;
+
+    sub_files = array_new(sizeof(bld_target_build_information));
+    amount_parsed = json_parse_array(file, &sub_files, (bld_parse_func) parse_target_build_info_file_sub_file);
+
+    if (amount_parsed < 0) {
+        log_warn("could not parse files under \"%s\"", string_unpack(&info->name));
+        log_fatal("Free correctly!");
         return -1;
     }
 
-    array_push(&info->files, &sub_info);
+    array_free(&info->files);
+    info->files = sub_files;
+
+    return 0;
+}
+
+int parse_target_build_info_file_sub_file(FILE* file, bld_array* files) {
+    bld_target_build_information info;
+    int result;
+
+    result = parse_target_build_info(file, &info);
+    if (result) {
+        log_warn("could not parse file");
+        return -1;
+    }
+
+    array_push(files, &info);
     return 0;
 }

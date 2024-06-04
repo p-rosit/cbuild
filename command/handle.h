@@ -85,6 +85,7 @@ typedef enum bld_command_error {
 typedef struct bld_command {
     bld_array positional;
     bld_set flags;
+    bld_array extra_flags;
 } bld_command;
 
 bld_handle  handle_new(char*);

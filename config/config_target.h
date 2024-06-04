@@ -24,5 +24,6 @@ bld_config_target config_target_new(bld_path*);
 void config_target_free(bld_config_target*);
 void serialize_config_target(bld_path*, bld_config_target*);
 int parse_config_target(bld_path*, bld_config_target*);
+void config_target_build_info_free(bld_target_build_information*);
 
 #endif

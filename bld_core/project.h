@@ -59,6 +59,7 @@ void        project_ignore_path(bld_forward_project*, char*);
 void        project_load_cache(bld_forward_project*, char*);
 void        project_set_main_file(bld_forward_project*, char*);
 void        project_set_compiler(bld_forward_project*, char*, bld_compiler);
+void        project_set_compiler_flags(bld_forward_project*, char*, bld_compiler_flags);
 void        project_set_linker_flags(bld_forward_project*, char*, bld_linker_flags);
 
 void        project_save_cache(bld_project*);

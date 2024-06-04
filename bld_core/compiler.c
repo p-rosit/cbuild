@@ -310,7 +310,7 @@ void serialize_compiler_flags_removed_flags(FILE* cache, bld_compiler_flags* fla
     while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
         else {first = 0;}
-        if (flags->flags.size > 1) {
+        if (flags->removed.size > 1) {
             fprintf(cache, "%*c", 2 * (depth + 1), ' ');
         }
         fprintf(cache, "\"%s\"", string_unpack(flag));
@@ -464,7 +464,7 @@ int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
 int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
     int values;
 
-    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_removed_flags);
+    values = json_parse_array(file, flags, (bld_parse_func) parse_compiler_flags_removed_flag);
     if (values < 0) {
         log_warn("Could not parse compiler flags");
         return -1;
@@ -493,7 +493,7 @@ int parse_compiler_flags_removed_flag(FILE* file, bld_compiler_flags* flags) {
         goto parse_failed;
     }
 
-    set_add(&flags->flag_hash, hash, &flag);
+    set_add(&flags->removed, hash, &flag);
 
     return 0;
     parse_failed:
