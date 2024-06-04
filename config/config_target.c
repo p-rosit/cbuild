@@ -157,16 +157,20 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
                 serialize_compiler(file, &info->info.compiler.as.compiler, depth + 1);
             } break;
             case (BLD_COMPILER_FLAGS): {
-                json_serialize_key(file, "compiler_flags", depth);
-                serialize_compiler_flags(file, &info->info.compiler.as.flags, depth + 1);
+                if (info->info.compiler.as.flags.flags.size > 0 || info->info.compiler.as.flags.removed.size > 0) {
+                    json_serialize_key(file, "compiler_flags", depth);
+                    serialize_compiler_flags(file, &info->info.compiler.as.flags, depth + 1);
+                }
             } break;
         }
     }
 
     if (info->info.linker_set) {
-        fprintf(file, ",\n");
-        json_serialize_key(file, "linker_flags", depth);
-        serialize_linker_flags(file, &info->info.linker_flags, depth + 1);
+        if (info->info.linker_flags.flags.size > 0) {
+            fprintf(file, ",\n");
+            json_serialize_key(file, "linker_flags", depth);
+            serialize_linker_flags(file, &info->info.linker_flags, depth + 1);
+        }
     }
 
     if (info->files.size > 0) {
