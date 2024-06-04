@@ -30,6 +30,13 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
     temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
     temp_l = linker_copy(&data->target_config.linker);
+    if (data->target_config.files.info.linker_set) {
+        if (temp_l.flags.flags.size > 0) {
+            log_fatal("Internal error... default linker should have no flags");
+        }
+        linker_flags_free(&temp_l.flags);
+        temp_l.flags = linker_flags_copy(&data->target_config.files.info.linker_flags);
+    }
 
     path_root = path_copy(&data->root);
     fproject = project_forward_new(&path_root, &temp_c, &temp_l);
