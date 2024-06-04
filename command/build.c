@@ -6,6 +6,7 @@
 
 int command_build_verify_config(bld_command_build*, bld_data*);
 void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
+void command_build_apply_build_info(bld_forward_project*, bld_path*, bld_target_build_information*);
 
 int command_build(bld_command_build* cmd, bld_data* data) {
     int result;
@@ -103,18 +104,59 @@ void command_build_free(bld_command_build* build) {
 
 void command_build_apply_config(bld_forward_project* fproject, bld_command_build* cmd, bld_data* data) {
     bld_iter iter;
-    bld_path* path;
+    bld_path* path, temp;
+    bld_target_build_information* child;
     (void)(cmd);
 
     iter = iter_array(&data->target_config.added_paths);
     while (iter_next(&iter, (void**) &path)) {
+        log_warn("Adding: %s", path_to_string(path));
         project_add_path(fproject, path_to_string(path));
     }
 
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
+        log_warn("Ignoring: %s", path_to_string(path));
         project_ignore_path(fproject, path_to_string(path));
     }
+
+    temp = path_from_string(".");
+    iter = iter_array(&data->target_config.files.files);
+    while (iter_next(&iter, (void**) &child)) {
+        command_build_apply_build_info(fproject, &temp, child);
+    }
+
+    path_free(&temp);
+}
+
+void command_build_apply_build_info(bld_forward_project* fproject, bld_path* path, bld_target_build_information* info) {
+    bld_iter iter;
+    bld_target_build_information* child;
+    bld_path sub_path;
+
+    sub_path = path_copy(path);
+    path_append_string(&sub_path, string_unpack(&info->name));
+
+    if (info->info.compiler_set) {
+        log_error("Set compiler: %s", path_to_string(&sub_path));
+        if (info->info.compiler.type == BLD_COMPILER) {
+            project_set_compiler(fproject, path_to_string(&sub_path), info->info.compiler.as.compiler);
+        } else {
+            project_set_compiler_flags(fproject, path_to_string(&sub_path), info->info.compiler.as.flags);
+        }
+    }
+
+    if (info->info.linker_set) {
+        log_error("Set linker: %s", path_to_string(&sub_path));
+        project_set_linker_flags(fproject, path_to_string(&sub_path), info->info.linker_flags);
+    }
+
+    iter = iter_array(&info->files);
+    while (iter_next(&iter, (void**) &child)) {
+        command_build_apply_build_info(fproject, &sub_path, child);
+    }
+
+    path_free(&sub_path);
 }
 
 int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
