@@ -134,6 +134,24 @@ void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_co
     array_push(&fproject->file_compilers, &temp);
 }
 
+void project_set_compiler_flags(bld_forward_project* fproject, char* file_name, bld_compiler_flags flags) {
+    bld_string str;
+    bld_compiler_or_flags temp;
+
+    if (fproject->resolved) {
+        log_fatal("Trying to set compiler flags of \"%s\" but forward project has already been resolved, perform all setup of project before resolving", file_name);
+    }
+
+    str = string_pack(file_name);
+    str = string_copy(&str);
+
+    temp.type = BLD_COMPILER_FLAGS;
+    temp.as.flags = flags;
+
+    array_push(&fproject->compiler_file_names, &str);
+    array_push(&fproject->file_compilers, &temp);
+}
+
 void project_set_linker_flags(bld_forward_project* fproject, char* file_name, bld_linker_flags flags) {
     bld_string str;
 
