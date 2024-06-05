@@ -20,10 +20,14 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
         return -1;
     }
 
-    log_info("Switched to %s", string_unpack(&cmd->target));
-    string_free(&data->config.active_target);
+    if (data->config.active_target_configured) {
+        string_free(&data->config.active_target);
+    }
+
+    data->config.active_target_configured = 1;
     data->config.active_target = string_copy(&cmd->target);
     config_save(data);
+    log_info("Switched to %s", string_unpack(&cmd->target));
 
     return 0;
 }
