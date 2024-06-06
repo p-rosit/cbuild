@@ -17,6 +17,11 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     bld_path path_cache, path_root;
     bld_string name_executable;
 
+    if (!data->config_parsed) {
+        log_fatal("Config has not been parsed");
+        return -1; /* Unreachable */
+    }
+
     if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
         log_fatal("'%s' is not a target", string_unpack(&cmd->target));
         return -1; /* Unreachable */
