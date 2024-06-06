@@ -23,6 +23,7 @@ typedef struct bld_project_base {
     bld_path root;
     int standalone;
     bld_path build;
+    bld_set compiler_handles;
     bld_linker linker;
     bld_project_cache cache;
 } bld_project_base;

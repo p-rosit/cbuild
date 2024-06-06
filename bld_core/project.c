@@ -55,6 +55,8 @@ bld_forward_project project_forward_new(bld_path* path, bld_compiler* compiler, 
     fproject.file_compilers = array_new(sizeof(bld_compiler_or_flags));
     fproject.linker_flags_file_names = array_new(sizeof(bld_string));
     fproject.file_linker_flags = array_new(sizeof(bld_linker_flags));
+
+    set_add(&fproject.base.compiler_handles, compiler->type, &compiler->type);
     return fproject;
 }
 
@@ -132,6 +134,10 @@ void project_set_compiler(bld_forward_project* fproject, char* file_name, bld_co
 
     array_push(&fproject->compiler_file_names, &str);
     array_push(&fproject->file_compilers, &temp);
+
+    if (!set_has(&fproject->base.compiler_handles, compiler.type)) {
+        set_add(&fproject->base.compiler_handles, compiler.type, &compiler.type);
+    }
 }
 
 void project_set_compiler_flags(bld_forward_project* fproject, char* file_name, bld_compiler_flags flags) {
@@ -215,6 +221,7 @@ bld_project_base project_base_new(bld_path* path, bld_linker* linker) {
 
     base.root = *path;
     base.standalone = 1;
+    base.compiler_handles = set_new(sizeof(bld_compiler_type));
     base.linker = *linker;
     base.cache = project_cache_new();
 
@@ -226,6 +233,7 @@ void project_base_free(bld_project_base* base) {
     if (!base->standalone) {
         path_free(&base->build);
     }
+    set_free(&base->compiler_handles);
     linker_free(&base->linker);
     project_cache_free(&base->cache);
 }
