@@ -8,6 +8,7 @@ int main(int argc, char** argv) {
     forward_project = project_new(
         project_path_extract(argc, argv),
         compiler_with_flags(
+            BLD_COMPILER_GCC,
             "gcc",
             "-std=c99",
             "-Wall",
@@ -27,7 +28,7 @@ int main(int argc, char** argv) {
     /* Optional, add specific compiler to any files in project */
     project_set_compiler(
         &forward_project, "file.c",
-        compiler_with_flags("/usr/bin/clang", "-Weverything", NULL)
+        compiler_with_flags(BLD_COMPILER_CLANG, "/usr/bin/clang", "-Weverything", NULL)
     );
     project_set_linker_flags(
         &forward_project, "dist.c",

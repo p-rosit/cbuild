@@ -99,6 +99,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     fbuild = new_rebuild(
         build_root,
         compiler_with_flags(
+            BLD_COMPILER_GCC,
             "gcc", /* TODO: don't hardcode compiler */
             "-std=c89",
             "-fsanitize=address",
