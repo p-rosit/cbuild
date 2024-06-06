@@ -58,6 +58,7 @@ void                serialize_compiler_flags_added_flags(FILE*, bld_compiler_fla
 void                serialize_compiler_flags_removed_flags(FILE*, bld_compiler_flags*, int);
 
 int                 parse_compiler(FILE*, bld_compiler*);
+int                 parse_compiler_type(FILE*, bld_compiler*);
 int                 parse_compiler_executable(FILE*, bld_compiler*);
 int                 parse_compiler_compiler_flags(FILE*, bld_compiler*);
 

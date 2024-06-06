@@ -247,6 +247,10 @@ void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
 void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     fprintf(cache, "{\n");
 
+    json_serialize_key(cache, "type", depth);
+    fprintf(cache, "\"%s\"", string_unpack(compiler_get_string(compiler->type)));
+    fprintf(cache, ",\n");
+
     json_serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", string_unpack(&compiler->executable));
     fprintf(cache, ",\n");
@@ -326,10 +330,11 @@ void serialize_compiler_flags_removed_flags(FILE* cache, bld_compiler_flags* fla
 
 int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"executable", "flags"};
-    bld_parse_func funcs[2] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"type", "executable", "flags"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_compiler_type,
         (bld_parse_func) parse_compiler_executable,
         (bld_parse_func) parse_compiler_compiler_flags,
     };
@@ -352,6 +357,19 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     }
 
     return -1;
+}
+
+int parse_compiler_type(FILE* file, bld_compiler* compiler) {
+    bld_string str;
+    int result = string_parse(file, &str);
+    if (result) {
+        log_warn("Could not parse compiler executable");
+        return -1;
+    }
+
+    compiler->type = compiler_get_mapping(&str);
+    string_free(&str);
+    return compiler->type == BLD_COMPILER_AMOUNT;
 }
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
