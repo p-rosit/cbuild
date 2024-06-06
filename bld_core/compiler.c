@@ -4,23 +4,24 @@
 #include "json.h"
 #include "compiler.h"
 
-bld_compiler compiler_new(char* executable) {
+bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     bld_compiler compiler;
     bld_string str;
 
     str = string_pack(executable);
+    compiler.type = type;
     compiler.executable = string_copy(&str);
     compiler.flags = compiler_flags_new();
 
     return compiler;
 }
 
-bld_compiler compiler_with_flags(char* executable, ...) {
+bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
     bld_compiler compiler;
     va_list args;
     char* flag;
 
-    compiler = compiler_new(executable);
+    compiler = compiler_new(type, executable);
 
     va_start(args, executable);
     while (1) {
@@ -43,6 +44,7 @@ void compiler_free(bld_compiler* compiler) {
 bld_compiler compiler_copy(bld_compiler* compiler) {
     bld_compiler cpy;
 
+    cpy.type = compiler->type;
     cpy.executable = string_copy(&compiler->executable);
     cpy.flags = compiler_flags_copy(&compiler->flags);
 
