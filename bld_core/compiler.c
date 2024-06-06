@@ -4,23 +4,24 @@
 #include "json.h"
 #include "compiler.h"
 
-bld_compiler compiler_new(char* executable) {
+bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     bld_compiler compiler;
     bld_string str;
 
     str = string_pack(executable);
+    compiler.type = type;
     compiler.executable = string_copy(&str);
     compiler.flags = compiler_flags_new();
 
     return compiler;
 }
 
-bld_compiler compiler_with_flags(char* executable, ...) {
+bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
     bld_compiler compiler;
     va_list args;
     char* flag;
 
-    compiler = compiler_new(executable);
+    compiler = compiler_new(type, executable);
 
     va_start(args, executable);
     while (1) {
@@ -43,6 +44,7 @@ void compiler_free(bld_compiler* compiler) {
 bld_compiler compiler_copy(bld_compiler* compiler) {
     bld_compiler cpy;
 
+    cpy.type = compiler->type;
     cpy.executable = string_copy(&compiler->executable);
     cpy.flags = compiler_flags_copy(&compiler->flags);
 
@@ -245,6 +247,10 @@ void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
 void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {
     fprintf(cache, "{\n");
 
+    json_serialize_key(cache, "type", depth);
+    fprintf(cache, "\"%s\"", string_unpack(compiler_get_string(compiler->type)));
+    fprintf(cache, ",\n");
+
     json_serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", string_unpack(&compiler->executable));
     fprintf(cache, ",\n");
@@ -324,10 +330,11 @@ void serialize_compiler_flags_removed_flags(FILE* cache, bld_compiler_flags* fla
 
 int parse_compiler(FILE* file, bld_compiler* compiler) {
     int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"executable", "flags"};
-    bld_parse_func funcs[2] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"type", "executable", "flags"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_compiler_type,
         (bld_parse_func) parse_compiler_executable,
         (bld_parse_func) parse_compiler_compiler_flags,
     };
@@ -350,6 +357,19 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
     }
 
     return -1;
+}
+
+int parse_compiler_type(FILE* file, bld_compiler* compiler) {
+    bld_string str;
+    int result = string_parse(file, &str);
+    if (result) {
+        log_warn("Could not parse compiler executable");
+        return -1;
+    }
+
+    compiler->type = compiler_get_mapping(&str);
+    string_free(&str);
+    return compiler->type == BLD_COMPILER_AMOUNT;
 }
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {

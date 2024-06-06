@@ -112,16 +112,20 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
     char* file_ending;
     bld_path file_path;
     bld_file file, *parent, *temp;
+    bld_string packed_name;
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
 
+    packed_name = string_pack(name);
     file_path = path_copy(path);
-    if (strncmp(name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-        file = file_test_new(&file_path, name);
-    } else if (strcmp(file_ending, ".c") == 0) {
-        file = file_impl_new(&file_path, name);
-    } else if (strcmp(file_ending, ".h") == 0) {
+    if (compiler_file_is_implementation(&project->base.compiler_handles, &packed_name)) {
+        if (strncmp(name, "test", 4) == 0) {
+            file = file_test_new(&file_path, name);
+        } else {
+            file = file_impl_new(&file_path, name);
+        }
+    } else if (compiler_file_is_header(&project->base.compiler_handles, &packed_name)) {
         file = file_header_new(&file_path, name);
     } else {
         path_free(&file_path);
@@ -358,36 +362,34 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX];
-    bld_string cmd = string_new();
+    bld_string cmd, object_name;
+    bld_compiler* compiler;
     bld_path path;
-    bld_string* executable;
     bld_array compiler_flags;
     log_info("Compiling: \"%s\"", string_unpack(&file->name));
 
-    file_assemble_compiler(file, &project->files, &executable, &compiler_flags);
+    file_assemble_compiler(file, &project->files, &compiler, &compiler_flags);
 
-    string_append_string(&cmd, string_unpack(executable));
+    cmd = string_new();
+    string_append_string(&cmd, string_unpack(&compiler->executable));
+    compiler_flags_expand(&cmd, &compiler_flags);
     string_append_space(&cmd);
-
-    string_append_string(&cmd, "-c ");
     string_append_string(&cmd, path_to_string(&file->path));
-
-    string_append_string(&cmd, " -o ");
 
     path = path_copy(&project->base.root);
     if (project->base.cache.loaded) {
         path_append_path(&path, &project->base.cache.root);
     }
+
     serialize_identifier(name, file);
-    path_append_string(&path, name);
-    string_append_string(&cmd, path_to_string(&path));
+    object_name = string_pack(name);
+    object_name = string_copy(&object_name);
+    string_append_string(&object_name, ".o");
 
-    string_append_string(&cmd, ".o");
+    result = compile_to_object(compiler->type, &cmd, &path, &object_name);
+
     path_free(&path);
-
-    compiler_flags_expand(&cmd, &compiler_flags);
-
-    result = system(string_unpack(&cmd));
+    string_free(&object_name);
     string_free(&cmd);
     array_free(&compiler_flags);
     return result;

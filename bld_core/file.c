@@ -254,9 +254,9 @@ void file_dir_add_file(bld_file* dir, bld_file* file) {
     array_push(&dir->info.dir.files, &file->identifier.id);
 }
 
-void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executable, bld_array* flags) {
+void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compiler, bld_array* flags) {
     uintmax_t parent_id = file->identifier.id;
-    *executable = NULL;
+    *compiler = NULL;
     *flags = array_new(sizeof(bld_compiler_flags));
 
     while (parent_id != BLD_INVALID_IDENITIFIER) {
@@ -267,7 +267,7 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executa
         if (!parent->build_info.compiler_set) {continue;}
 
         if (parent->build_info.compiler.type == BLD_COMPILER) {
-            *executable = &parent->build_info.compiler.as.compiler.executable;
+            *compiler = &parent->build_info.compiler.as.compiler;
             array_push(flags, &parent->build_info.compiler.as.compiler.flags);
             break;
         } else if (parent->build_info.compiler.type == BLD_COMPILER_FLAGS) {
@@ -279,7 +279,7 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_string** executa
 
     array_reverse(flags);
 
-    if (*executable == NULL) {
+    if (*compiler == NULL) {
         log_fatal("file_assemble_compiler: no compiler was encountered while assembling compiler associated with file, only compiler flags. Root has no associated compiler");
     }
 }

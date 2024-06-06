@@ -130,10 +130,11 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
 
         file->info.compiler_set = 1;
         file->info.compiler.type = BLD_COMPILER;
-        file->info.compiler.as.compiler.executable = string_copy(&cmd->compiler);
-        file->info.compiler.as.compiler.flags.flags = array_new(sizeof(bld_string));
-        file->info.compiler.as.compiler.flags.flag_hash = set_new(0);
-        file->info.compiler.as.compiler.flags.removed = set_new(sizeof(bld_string));
+        file->info.compiler.as.compiler = compiler_new(compiler_get_mapping(&cmd->compiler), string_unpack(&cmd->compiler));
+
+        if (file->info.compiler.as.compiler.type == BLD_COMPILER_AMOUNT) {
+            log_fatal("command_compiler: allow custom compiler");
+        }
 
         {
             bld_iter iter;

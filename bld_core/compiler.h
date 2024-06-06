@@ -5,6 +5,7 @@
 #include "dstr.h"
 #include "array.h"
 #include "set.h"
+#include "compiler/compiler.h"
 
 typedef struct bld_compiler_flags {
     bld_array flags;
@@ -13,6 +14,7 @@ typedef struct bld_compiler_flags {
 } bld_compiler_flags;
 
 typedef struct bld_compiler {
+    bld_compiler_type type;
     bld_string executable;
     bld_compiler_flags flags;
 } bld_compiler;
@@ -32,8 +34,8 @@ typedef struct bld_compiler_or_flags {
     union bld_compiler_and_flags as;
 } bld_compiler_or_flags;
 
-bld_compiler        compiler_new(char*);
-bld_compiler        compiler_with_flags(char*, ...);
+bld_compiler        compiler_new(bld_compiler_type, char*);
+bld_compiler        compiler_with_flags(bld_compiler_type, char*, ...);
 bld_compiler        compiler_copy(bld_compiler*);
 void                compiler_free(bld_compiler*);
 uintmax_t           compiler_hash(bld_compiler*);
@@ -56,6 +58,7 @@ void                serialize_compiler_flags_added_flags(FILE*, bld_compiler_fla
 void                serialize_compiler_flags_removed_flags(FILE*, bld_compiler_flags*, int);
 
 int                 parse_compiler(FILE*, bld_compiler*);
+int                 parse_compiler_type(FILE*, bld_compiler*);
 int                 parse_compiler_executable(FILE*, bld_compiler*);
 int                 parse_compiler_compiler_flags(FILE*, bld_compiler*);
 

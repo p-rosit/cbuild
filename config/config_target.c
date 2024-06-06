@@ -20,12 +20,15 @@ int parse_target_build_info_file_linker_flags(FILE*, bld_target_build_informatio
 int parse_target_build_info_file_sub_files(FILE*, bld_target_build_information*);
 int parse_target_build_info_file_sub_file(FILE*, bld_array*);
 
+void config_target_extract_compiler_types(bld_config_target*, bld_target_build_information*);
+
 bld_config_target config_target_new(bld_path* path) {
     bld_config_target config;
     config.path_main = *path;
     config.added_paths = array_new(sizeof(bld_path));
     config.ignore_paths = array_new(sizeof(bld_path));
     config.linker_set = 0;
+    config.compiler_types = set_new(sizeof(bld_compiler_type));
     config.files_set = 0;
     return config;
 }
@@ -50,6 +53,7 @@ void config_target_free(bld_config_target* config) {
     if (config->linker_set) {
         linker_free(&config->linker);
     }
+    set_free(&config->compiler_types);
     if (config->files_set) {
         config_target_build_info_free(&config->files);
     }
@@ -218,12 +222,14 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
     }
 
     config->linker_set = 0;
+    config->compiler_types = set_new(sizeof(bld_compiler_type));
     config->files_set = 0;
     config->added_paths = array_new(sizeof(bld_path));
     config->ignore_paths = array_new(sizeof(bld_path));
     amount_parsed = json_parse_map(file, config, size, parsed, keys, funcs);
     if (!parsed[0] || !parsed[1] || amount_parsed < 0) {
         log_warn("could not parse target config");
+
         if (parsed[0]) {
             path_free(&config->path_main);
         }
@@ -256,7 +262,33 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         return -1;
     }
 
+    config_target_extract_compiler_types(config, &config->files);
+
     return 0;
+}
+
+void config_target_extract_compiler_types(bld_config_target* config, bld_target_build_information* info) {
+    bld_iter iter;
+    bld_target_build_information* child;
+
+    if (!info->info.compiler_set) {
+        goto not_adding_handle;
+    }
+    if (info->info.compiler.type != BLD_COMPILER) {
+        goto not_adding_handle;
+    }
+    if (set_has(&config->compiler_types, info->info.compiler.as.compiler.type)) {
+        goto not_adding_handle;
+    }
+
+    set_add(&config->compiler_types, info->info.compiler.as.compiler.type, &info->info.compiler.as.compiler.type);
+
+    not_adding_handle:
+
+    iter = iter_array(&info->files);
+    while (iter_next(&iter, (void**) &child)) {
+        config_target_extract_compiler_types(config, child);
+    }
 }
 
 int parse_config_target_main(FILE* file, bld_config_target* config) {

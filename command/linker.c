@@ -49,10 +49,10 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
                     printf("%s", string_unpack(flag));
                 }
                 printf("]\n");
-            } else {
+            } else if (!is_root || !data->target_config.linker_set) {
                 printf("No linker info set\n");
             }
-        } else {
+        } else if (!is_root || !data->target_config.linker_set) {
             printf("No linker info set\n");
         }
     } else if (cmd->type == BLD_COMMAND_LINKER_SET_LINKER) {

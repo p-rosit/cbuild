@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
 
     fproject = project_new(
         project_path_extract(argc, argv),
-        compiler_new("gcc"),
+        compiler_new(BLD_COMPILER_GCC, "gcc"),
         linker_with_flags("gcc", "-lstdc++", NULL)
     );
 

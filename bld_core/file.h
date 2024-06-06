@@ -80,7 +80,7 @@ void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 void        file_dir_add_file(bld_file*, bld_file*);
 
-void        file_assemble_compiler(bld_file*, bld_set*, bld_string**, bld_array*);
+void        file_assemble_compiler(bld_file*, bld_set*, bld_compiler**, bld_array*);
 void        file_assemble_linker_flags(bld_file*, bld_set*, bld_array*);
 
 #endif

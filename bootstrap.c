@@ -8,6 +8,7 @@ int main(int argc, char** argv) {
     fproject = project_new(
         project_path_extract(argc, argv),
         compiler_with_flags(
+            BLD_COMPILER_CLANG,
             "clang",
             "-std=c89",
             "-fsanitize=address",
