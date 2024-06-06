@@ -312,8 +312,8 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
                     path_free(&entry_path);
                     continue;
                 }
-            } else if (compiler_file_is_implementation(&config->compiler_handles, &name)) {
-            } else if (compiler_file_is_header(&config->compiler_handles, &name)) {
+            } else if (compiler_file_is_implementation(&config->compiler_types, &name)) {
+            } else if (compiler_file_is_header(&config->compiler_types, &name)) {
             } else {
                 path_free(&entry_path);
                 continue;
