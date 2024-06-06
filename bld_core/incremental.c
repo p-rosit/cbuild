@@ -112,16 +112,20 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
     char* file_ending;
     bld_path file_path;
     bld_file file, *parent, *temp;
+    bld_string packed_name;
 
     file_ending = strrchr(name, '.');
     if (file_ending == NULL) {return;}
 
+    packed_name = string_pack(name);
     file_path = path_copy(path);
-    if (strncmp(name, "test", 4) == 0 && strcmp(file_ending, ".c") == 0) {
-        file = file_test_new(&file_path, name);
-    } else if (strcmp(file_ending, ".c") == 0) {
-        file = file_impl_new(&file_path, name);
-    } else if (strcmp(file_ending, ".h") == 0) {
+    if (compiler_file_is_implementation(&project->base.compiler_handles, &packed_name)) {
+        if (strncmp(name, "test", 4) == 0) {
+            file = file_test_new(&file_path, name);
+        } else {
+            file = file_impl_new(&file_path, name);
+        }
+    } else if (compiler_file_is_header(&project->base.compiler_handles, &packed_name)) {
         file = file_header_new(&file_path, name);
     } else {
         path_free(&file_path);
