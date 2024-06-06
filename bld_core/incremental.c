@@ -358,36 +358,34 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     char name[FILENAME_MAX];
-    bld_string cmd = string_new();
+    bld_string cmd, object_name;
+    bld_compiler* compiler;
     bld_path path;
-    bld_string* executable;
     bld_array compiler_flags;
     log_info("Compiling: \"%s\"", string_unpack(&file->name));
 
-    file_assemble_compiler(file, &project->files, &executable, &compiler_flags);
+    file_assemble_compiler(file, &project->files, &compiler, &compiler_flags);
 
-    string_append_string(&cmd, string_unpack(executable));
+    cmd = string_new();
+    string_append_string(&cmd, string_unpack(&compiler->executable));
+    compiler_flags_expand(&cmd, &compiler_flags);
     string_append_space(&cmd);
-
-    string_append_string(&cmd, "-c ");
     string_append_string(&cmd, path_to_string(&file->path));
-
-    string_append_string(&cmd, " -o ");
 
     path = path_copy(&project->base.root);
     if (project->base.cache.loaded) {
         path_append_path(&path, &project->base.cache.root);
     }
+
     serialize_identifier(name, file);
-    path_append_string(&path, name);
-    string_append_string(&cmd, path_to_string(&path));
+    object_name = string_pack(name);
+    object_name = string_copy(&object_name);
+    string_append_string(&object_name, ".o");
 
-    string_append_string(&cmd, ".o");
+    result = compile_to_object(compiler->type, &cmd, &path, &object_name);
+
     path_free(&path);
-
-    compiler_flags_expand(&cmd, &compiler_flags);
-
-    result = system(string_unpack(&cmd));
+    string_free(&object_name);
     string_free(&cmd);
     array_free(&compiler_flags);
     return result;
