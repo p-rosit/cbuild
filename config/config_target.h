@@ -16,6 +16,7 @@ typedef struct bld_config_target {
     bld_array ignore_paths;
     int linker_set;
     bld_linker linker;
+    bld_set compiler_types;
     int files_set;
     bld_target_build_information files;
 } bld_config_target;
