@@ -312,8 +312,8 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
                     path_free(&entry_path);
                     continue;
                 }
-            } else if (strcmp(file_ending, ".c") == 0) {
-            } else if (strcmp(file_ending, ".h") == 0) {
+            } else if (compiler_file_is_implementation(&config->compiler_handles, &name)) {
+            } else if (compiler_file_is_header(&config->compiler_handles, &name)) {
             } else {
                 path_free(&entry_path);
                 continue;
