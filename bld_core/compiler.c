@@ -170,12 +170,12 @@ void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
     temp = string_copy(&temp);
 
     if (set_has(&flags->removed, hash)) {
-        log_fatal("compiler_flags_add_flag: trying to add flag \"%s\" which has already been removed by this set of flags", flag);
+        log_fatal(LOG_FATAL_PREFIX "trying to add flag \"%s\" which has already been removed by this set of flags", flag);
     }
 
     array_push(&flags->flags, &temp);
     if (set_add(&flags->flag_hash, hash, NULL)) {
-        log_fatal("compiler_flags_add_flag: tried to add flag \"%s\" twice", flag);
+        log_fatal(LOG_FATAL_PREFIX "tried to add flag \"%s\" twice", flag);
     }
 }
 
@@ -187,12 +187,12 @@ void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
     hash = string_hash(flag);
 
     if (set_has(&flags->flag_hash, hash)) {
-        log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" which has already been added by this set of flags", flag);
+        log_fatal(LOG_FATAL_PREFIX "trying to remove flag \"%s\" which has already been added by this set of flags", flag);
     }
 
     temp = string_copy(&temp);
     if (set_add(&flags->removed, string_hash(flag), &temp)) {
-        log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" twice", flag);
+        log_fatal(LOG_FATAL_PREFIX "trying to remove flag \"%s\" twice", flag);
     }
 }
 
