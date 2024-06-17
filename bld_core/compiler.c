@@ -373,8 +373,10 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_type(FILE* file, bld_compiler* compiler) {
     bld_string str;
-    int result = string_parse(file, &str);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &str);
+    if (error) {
         log_warn("Could not parse compiler executable");
         return -1;
     }
@@ -386,25 +388,28 @@ int parse_compiler_type(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     bld_string str;
-    int result = string_parse(file, &str);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &str);
+    if (error) {
         log_warn("Could not parse compiler executable");
         return -1;
     }
 
     compiler->executable = str;
-    return result;
+    return error;
 }
 
 int parse_compiler_compiler_flags(FILE* file, bld_compiler* compiler) {
-    int result;
-    result = parse_compiler_flags(file, &compiler->flags);
-    if (result) {
+    int error;
+
+    error = parse_compiler_flags(file, &compiler->flags);
+    if (error) {
         log_warn("parse_compiler_compiler_flags: could not parse flags");
-        return result;
+        return error;
     }
 
-    return result;
+    return error;
 }
 
 int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
@@ -467,8 +472,10 @@ int parse_compiler_flags_added_flags(FILE* file, bld_compiler_flags* flags) {
 int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
     bld_string flag;
     uintmax_t hash;
-    int result = string_parse(file, &flag);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &flag);
+    if (error) {
         log_warn("Could not parse added flag");
         return -1;
     }
@@ -508,8 +515,10 @@ int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
 int parse_compiler_flags_removed_flag(FILE* file, bld_compiler_flags* flags) {
     bld_string flag;
     uintmax_t hash;
-    int result = string_parse(file, &flag);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &flag);
+    if (error) {
         log_warn("Could not parse removed flag");
         return -1;
     }
