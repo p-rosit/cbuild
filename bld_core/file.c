@@ -17,8 +17,9 @@ void file_free_header(bld_file_header*);
 void file_free_test(bld_file_test*);
 
 uintmax_t file_get_id(bld_path* path) {
-    uintmax_t id = os_info_id(path_to_string(path));
+    uintmax_t id;
 
+    id = os_info_id(path_to_string(path));
     if (id == BLD_INVALID_IDENITIFIER) {
         log_fatal(LOG_FATAL_PREFIX "could not extract information about \"%s\"", path_to_string(path));
     }
@@ -54,7 +55,9 @@ void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
 
 bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     bld_file file;
-    bld_string str = string_pack(name);
+    bld_string str;
+
+    str = string_pack(name);
 
     file.type = type;
     file.parent_id = BLD_INVALID_IDENITIFIER;
@@ -68,19 +71,22 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
 }
 
 bld_file file_dir_new(bld_path* path, char* name) {
-    bld_file dir = make_file(BLD_DIR, path, name);
+    bld_file dir;
+    dir = make_file(BLD_DIR, path, name);
     dir.info.dir.files = array_new(sizeof(uintmax_t));
     return dir;
 }
 
 bld_file file_header_new(bld_path* path, char* name) {
-    bld_file header = make_file(BLD_HEADER, path, name);
+    bld_file header;
+    header = make_file(BLD_HEADER, path, name);
     header.info.header.includes = set_new(0);
     return header;
 }
 
 bld_file file_impl_new(bld_path* path, char* name) {
-    bld_file impl = make_file(BLD_IMPL, path, name);
+    bld_file impl;
+    impl = make_file(BLD_IMPL, path, name);
     impl.info.impl.includes = set_new(0);
     impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
     impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
@@ -88,7 +94,8 @@ bld_file file_impl_new(bld_path* path, char* name) {
 }
 
 bld_file file_test_new(bld_path* path, char* name) {
-    bld_file test = make_file(BLD_TEST, path, name);
+    bld_file test;
+    test = make_file(BLD_TEST, path, name);
     test.info.test.includes = set_new(0);
     test.info.test.undefined_symbols = set_new(sizeof(bld_string));
     return test;
@@ -187,7 +194,9 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
 
     parent_id = file->identifier.id;
     while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent = set_get(files, parent_id);
+        bld_file* parent;
+
+        parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error, hashing compiler");}
         parent_id = parent->parent_id;
         if (!parent->build_info.compiler_set) {continue;}
@@ -205,7 +214,9 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
 
     parent_id = file->identifier.id;
     while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent = set_get(files, parent_id);
+        bld_file* parent;
+
+        parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error, hashing linker_flags");}
         parent_id = parent->parent_id;
         if (!parent->build_info.linker_set) {continue;}
@@ -255,12 +266,15 @@ void file_dir_add_file(bld_file* dir, bld_file* file) {
 }
 
 void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compiler, bld_array* flags) {
-    uintmax_t parent_id = file->identifier.id;
+    uintmax_t parent_id;
+
+    parent_id = file->identifier.id;
     *compiler = NULL;
     *flags = array_new(sizeof(bld_compiler_flags));
 
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent;
+
         parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
         parent_id = parent->parent_id;
@@ -285,11 +299,15 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compi
 }
 
 void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
-    uintmax_t parent_id = file->identifier.id;
+    uintmax_t parent_id;
+
+    parent_id = file->identifier.id;
     *flags = array_new(sizeof(bld_linker_flags));
 
     while (parent_id != BLD_INVALID_IDENITIFIER) {
-        bld_file* parent = set_get(files, parent_id);
+        bld_file* parent;
+
+        parent = set_get(files, parent_id);
         if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
 
         parent_id = parent->parent_id;
