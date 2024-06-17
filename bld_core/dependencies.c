@@ -53,7 +53,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
@@ -71,16 +71,16 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
             bld_set* includes;
-            if (to_file->type == BLD_DIR) {continue;}
+            if (to_file->type == BLD_FILE_DIRECTORY) {continue;}
 
             switch (to_file->type) {
-                case (BLD_IMPL): {
+                case (BLD_FILE_IMPLEMENTATION): {
                     includes = &to_file->info.impl.includes;
                 } break;
-                case (BLD_TEST): {
+                case (BLD_FILE_TEST): {
                     includes = &to_file->info.test.includes;
                 } break;
-                case (BLD_HEADER): {
+                case (BLD_FILE_INTERFACE): {
                     includes = &to_file->info.header.includes;
                 } break;
                 default: {
@@ -110,8 +110,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
+        if (file->type == BLD_FILE_INTERFACE) {continue;}
 
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
             continue;
@@ -133,11 +133,11 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
         bld_file* to_file;
         bld_set* undefined;
 
-        if (file->type != BLD_IMPL && file->type != BLD_TEST) {continue;}
+        if (file->type != BLD_FILE_IMPLEMENTATION && file->type != BLD_FILE_TEST) {continue;}
 
         switch (file->type) {
-            case (BLD_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
-            case (BLD_TEST): {undefined = &file->info.test.undefined_symbols;} break;
+            case (BLD_FILE_IMPLEMENTATION): {undefined = &file->info.impl.undefined_symbols;} break;
+            case (BLD_FILE_TEST): {undefined = &file->info.test.undefined_symbols;} break;
             default: {
                 log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");
                 return; /* Unreachable */
@@ -148,7 +148,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
         while (iter_next(&iter, (void**) &to_file)) {
             bld_set* defined;
 
-            if (to_file->type != BLD_IMPL) {continue;}
+            if (to_file->type != BLD_FILE_IMPLEMENTATION) {continue;}
             defined = &to_file->info.impl.defined_symbols;
 
             if (set_empty_intersection(undefined, defined)) {
@@ -234,20 +234,20 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
 
         if (symbol_type == 'T' || symbol_type == 'B' || symbol_type == 'R' || symbol_type == 'D' || symbol_type == 'S') {
             switch (file->type) {
-                case (BLD_IMPL): {
+                case (BLD_FILE_IMPLEMENTATION): {
                     add_symbol(&file->info.impl.defined_symbols, &func);
                 } break;
-                case (BLD_TEST): {
+                case (BLD_FILE_TEST): {
                     string_free(&func);
                 } break;
                 default: {log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");}
             }
         } else if (symbol_type == 'U') {
             switch (file->type) {
-                case (BLD_IMPL): {
+                case (BLD_FILE_IMPLEMENTATION): {
                     add_symbol(&file->info.impl.undefined_symbols, &func);
                 } break;
-                case (BLD_TEST): {
+                case (BLD_FILE_TEST): {
                     add_symbol(&file->info.test.undefined_symbols, &func);
                 } break;
                 default: {log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");}
@@ -313,18 +313,18 @@ void parse_included_files(bld_file* file) {
     bld_set* includes;
     int c;
 
-    if (file->type == BLD_DIR) {
+    if (file->type == BLD_FILE_DIRECTORY) {
         log_fatal(LOG_FATAL_PREFIX "cannot parse includes for directory \"%s\"", string_unpack(&file->name));
     }
 
     switch (file->type) {
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             includes = &file->info.impl.includes;
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             includes = &file->info.test.includes;
         } break;
-        case (BLD_HEADER): {
+        case (BLD_FILE_INTERFACE): {
             includes = &file->info.header.includes;
         } break;
         default: {

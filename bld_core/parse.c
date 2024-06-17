@@ -218,7 +218,7 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         (bld_parse_func) parse_file_sub_files,
     };
 
-    f->file.type = BLD_INVALID_FILE;
+    f->file.type = BLD_FILE_INVALID;
     f->file.path = path_new();
     f->file.build_info.compiler_set = 0;
     f->file.build_info.linker_set = 0;
@@ -229,7 +229,7 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     if (!parsed[BLD_PARSE_TYPE]) {goto parse_failed;} /* Fail if file type was not parsed */
 
     switch (f->file.type) {
-        case (BLD_DIR): {
+        case (BLD_FILE_DIRECTORY): {
             if (
                 !parsed[BLD_PARSE_ID]
                 || !parsed[BLD_PARSE_NAME]
@@ -249,7 +249,7 @@ int parse_file(FILE* file, bld_parsing_file* f) {
                 goto parse_failed;
             }
         } break;
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             if (
                 !parsed[BLD_PARSE_ID]
                 || !parsed[BLD_PARSE_MTIME]
@@ -269,7 +269,7 @@ int parse_file(FILE* file, bld_parsing_file* f) {
                 goto parse_failed;
             }
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             if (
                 !parsed[BLD_PARSE_ID]
                 || !parsed[BLD_PARSE_MTIME]
@@ -289,7 +289,7 @@ int parse_file(FILE* file, bld_parsing_file* f) {
                 goto parse_failed;
             }
         } break;
-        case (BLD_HEADER): {
+        case (BLD_FILE_INTERFACE): {
             if (
                 !parsed[BLD_PARSE_ID]
                 || !parsed[BLD_PARSE_MTIME]
@@ -341,16 +341,16 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         bld_set* includes;
 
         switch (f->file.type) {
-            case (BLD_DIR): {
+            case (BLD_FILE_DIRECTORY): {
                 goto includes_freed;
             } break;
-            case (BLD_IMPL): {
+            case (BLD_FILE_IMPLEMENTATION): {
                 includes = &f->file.info.impl.includes;
             } break;
-            case (BLD_TEST): {
+            case (BLD_FILE_TEST): {
                 includes = &f->file.info.test.includes;
             } break;
-            case (BLD_HEADER): {
+            case (BLD_FILE_INTERFACE): {
                 includes = &f->file.info.header.includes;
             } break;
             default: {
@@ -383,10 +383,10 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         bld_string* str;
 
         switch (f->file.type) {
-            case (BLD_IMPL): {
+            case (BLD_FILE_IMPLEMENTATION): {
                 undefined = &f->file.info.impl.undefined_symbols;
             } break;
-            case (BLD_TEST): {
+            case (BLD_FILE_TEST): {
                 undefined = &f->file.info.test.undefined_symbols;
             } break;
             default: goto undefined_freed;
@@ -415,15 +415,15 @@ int parse_file_type(FILE* file, bld_parsing_file* f) {
     
     temp = string_unpack(&str);
     if (strcmp(temp, "directory") == 0) {
-        f->file.type = BLD_DIR;
+        f->file.type = BLD_FILE_DIRECTORY;
     } else if (strcmp(temp, "implementation") == 0) {
-        f->file.type = BLD_IMPL;
+        f->file.type = BLD_FILE_IMPLEMENTATION;
         f->file.info.impl.undefined_symbols = set_new(sizeof(bld_string));
         f->file.info.impl.defined_symbols = set_new(sizeof(bld_string));
     } else if (strcmp(temp, "header") == 0) {
-        f->file.type = BLD_HEADER;
+        f->file.type = BLD_FILE_INTERFACE;
     } else if (strcmp(temp, "test") == 0) {
-        f->file.type = BLD_TEST;
+        f->file.type = BLD_FILE_TEST;
         f->file.info.test.undefined_symbols = set_new(sizeof(bld_string));
     } else {
         log_warn("Not a valid file type: \"%s\"", temp);
@@ -544,17 +544,17 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
     }
 
     switch (f->file.type) {
-        case (BLD_DIR): {
+        case (BLD_FILE_DIRECTORY): {
             set_free(&includes);
             return -1;
         } break;
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             f->file.info.impl.includes = includes;
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             f->file.info.test.includes = includes;
         } break;
-        case (BLD_HEADER): {
+        case (BLD_FILE_INTERFACE): {
             f->file.info.header.includes = includes;
         } break;
         default: log_fatal("parse_file_includes: internal error");
@@ -578,7 +578,7 @@ int parse_file_defined_symbols(FILE* file, bld_parsing_file* f) {
     bld_set* defined;
     int amount_parsed;
 
-    if (f->file.type != BLD_IMPL) {
+    if (f->file.type != BLD_FILE_IMPLEMENTATION) {
         log_warn("Could not parse defined symbols, file type cannot defined contain symbols");
         return -1;
     }
@@ -605,16 +605,16 @@ int parse_file_undefined_symbols(FILE* file, bld_parsing_file* f) {
     bld_set* undefined;
     int amount_parsed;
 
-    if (f->file.type != BLD_IMPL && f->file.type != BLD_TEST) {
+    if (f->file.type != BLD_FILE_IMPLEMENTATION && f->file.type != BLD_FILE_TEST) {
         log_fatal("Could not parse undefined symbols, file type cannot contain undefined symbols");
         return -1;
     }
 
     switch (f->file.type) {
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             undefined = &f->file.info.impl.undefined_symbols;
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             undefined = &f->file.info.test.undefined_symbols;
         } break;
         default: {
@@ -654,7 +654,7 @@ int parse_file_function(FILE* file, bld_set* set) {
 int parse_file_sub_files(FILE* file, bld_parsing_file* f) {
     int amount_parsed;
 
-    if (f->file.type != BLD_DIR) {
+    if (f->file.type != BLD_FILE_DIRECTORY) {
         log_warn("parse_file_sub_files: attempting to parse sub files to file which is not a directory");
         return -1;
     }

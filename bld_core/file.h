@@ -9,11 +9,11 @@
 #include "linker.h"
 
 typedef enum bld_file_type {
-    BLD_INVALID_FILE,
-    BLD_DIR,
-    BLD_IMPL,
-    BLD_HEADER,
-    BLD_TEST
+    BLD_FILE_INVALID,
+    BLD_FILE_DIRECTORY,
+    BLD_FILE_IMPLEMENTATION,
+    BLD_FILE_INTERFACE,
+    BLD_FILE_TEST
 } bld_file_type;
 
 typedef struct bld_file_build_information {

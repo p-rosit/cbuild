@@ -72,21 +72,21 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
 
 bld_file file_dir_new(bld_path* path, char* name) {
     bld_file dir;
-    dir = make_file(BLD_DIR, path, name);
+    dir = make_file(BLD_FILE_DIRECTORY, path, name);
     dir.info.dir.files = array_new(sizeof(uintmax_t));
     return dir;
 }
 
 bld_file file_header_new(bld_path* path, char* name) {
     bld_file header;
-    header = make_file(BLD_HEADER, path, name);
+    header = make_file(BLD_FILE_INTERFACE, path, name);
     header.info.header.includes = set_new(0);
     return header;
 }
 
 bld_file file_impl_new(bld_path* path, char* name) {
     bld_file impl;
-    impl = make_file(BLD_IMPL, path, name);
+    impl = make_file(BLD_FILE_IMPLEMENTATION, path, name);
     impl.info.impl.includes = set_new(0);
     impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
     impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
@@ -95,7 +95,7 @@ bld_file file_impl_new(bld_path* path, char* name) {
 
 bld_file file_test_new(bld_path* path, char* name) {
     bld_file test;
-    test = make_file(BLD_TEST, path, name);
+    test = make_file(BLD_FILE_TEST, path, name);
     test.info.test.includes = set_new(0);
     test.info.test.undefined_symbols = set_new(sizeof(bld_string));
     return test;
@@ -105,16 +105,16 @@ void file_free(bld_file* file) {
     file_free_base(file);
 
     switch (file->type) {
-        case (BLD_DIR): {
+        case (BLD_FILE_DIRECTORY): {
             file_free_dir(&file->info.dir);
         } break;
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             file_free_impl(&file->info.impl);
         } break;
-        case (BLD_HEADER): {
+        case (BLD_FILE_INTERFACE): {
             file_free_header(&file->info.header);
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             file_free_test(&file->info.test);
         } break;
         default: {log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");}
@@ -232,11 +232,11 @@ void file_symbols_copy(bld_file* file, const bld_file* from) {
     }
 
     switch (file->type) {
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             file->info.impl.undefined_symbols = file_copy_symbol_set(&from->info.impl.undefined_symbols);
             file->info.impl.defined_symbols = file_copy_symbol_set(&from->info.impl.defined_symbols);
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             file->info.test.undefined_symbols = file_copy_symbol_set(&from->info.test.undefined_symbols);
         } break;
         default: log_fatal(LOG_FATAL_PREFIX "file does not have any symbols to copy");
@@ -259,7 +259,7 @@ bld_set file_copy_symbol_set(const bld_set* set) {
 }
 
 void file_dir_add_file(bld_file* dir, bld_file* file) {
-    if (dir->type != BLD_DIR) {log_fatal(LOG_FATAL_PREFIX "trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
+    if (dir->type != BLD_FILE_DIRECTORY) {log_fatal(LOG_FATAL_PREFIX "trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
 
     file->parent_id = dir->identifier.id;
     array_push(&dir->info.dir.files, &file->identifier.id);

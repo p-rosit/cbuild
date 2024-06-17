@@ -72,7 +72,7 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
@@ -80,15 +80,15 @@ void incremental_apply_cache(bld_project* project) {
         if (file->identifier.hash != cached->identifier.hash) {continue;}
 
         switch (file->type) {
-            case (BLD_IMPL): {
+            case (BLD_FILE_IMPLEMENTATION): {
                 log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->info.impl.includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
                 file->info.impl.includes = set_copy(&cached->info.impl.includes);
             } break;
-            case (BLD_HEADER): {
+            case (BLD_FILE_INTERFACE): {
                 log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->info.header.includes.size);
                 file->info.header.includes = set_copy(&cached->info.header.includes);
             } break;
-            case (BLD_TEST): {
+            case (BLD_FILE_TEST): {
                 log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->info.test.includes.size, cached->info.test.undefined_symbols.size);
                 file->info.test.includes = set_copy(&cached->info.test.includes);
             } break;
@@ -97,7 +97,7 @@ void incremental_apply_cache(bld_project* project) {
 
         graph_add_node(&project->graph.include_graph, file->identifier.id);
 
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BLD_FILE_INTERFACE) {continue;}
 
         file_symbols_copy(file, cached);
         graph_add_node(&project->graph.symbol_graph, file->identifier.id);
@@ -459,7 +459,7 @@ void incremental_mark_changed_files(bld_project* project, bld_set* changed_files
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
-        if (file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
         if (!project->base.cache.set) {
@@ -567,7 +567,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
 
         iter = iter_set(&project->files);
         while (iter_next(&iter, (void**) &file)) {
-            if (file->type == BLD_HEADER) {continue;}
+            if (file->type == BLD_FILE_INTERFACE) {continue;}
 
             obj_path = path_copy(&project->base.root);
             serialize_identifier(obj_name, file);
@@ -599,7 +599,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     result = 0;
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_HEADER || file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_INTERFACE || file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("incremental_compile_with_absolute_path: internal error");}
