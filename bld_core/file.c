@@ -11,9 +11,9 @@ bld_file_identifier get_identifier(bld_path*);
 bld_file make_file(bld_file_type, bld_path*, char*);
 bld_set file_copy_symbol_set(const bld_set*);
 void file_free_base(bld_file*);
-void file_free_dir(bld_file_dir*);
-void file_free_impl(bld_file_impl*);
-void file_free_header(bld_file_header*);
+void file_free_directory(bld_file_directory*);
+void file_free_implementation(bld_file_implementation*);
+void file_free_interface(bld_file_interface*);
 void file_free_test(bld_file_test*);
 
 uintmax_t file_get_id(bld_path* path) {
@@ -70,21 +70,21 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     return file;
 }
 
-bld_file file_dir_new(bld_path* path, char* name) {
+bld_file file_directory_new(bld_path* path, char* name) {
     bld_file dir;
     dir = make_file(BLD_FILE_DIRECTORY, path, name);
     dir.info.dir.files = array_new(sizeof(uintmax_t));
     return dir;
 }
 
-bld_file file_header_new(bld_path* path, char* name) {
+bld_file file_interface_new(bld_path* path, char* name) {
     bld_file header;
     header = make_file(BLD_FILE_INTERFACE, path, name);
     header.info.header.includes = set_new(0);
     return header;
 }
 
-bld_file file_impl_new(bld_path* path, char* name) {
+bld_file file_implementation_new(bld_path* path, char* name) {
     bld_file impl;
     impl = make_file(BLD_FILE_IMPLEMENTATION, path, name);
     impl.info.impl.includes = set_new(0);
@@ -106,13 +106,13 @@ void file_free(bld_file* file) {
 
     switch (file->type) {
         case (BLD_FILE_DIRECTORY): {
-            file_free_dir(&file->info.dir);
+            file_free_directory(&file->info.dir);
         } break;
         case (BLD_FILE_IMPLEMENTATION): {
-            file_free_impl(&file->info.impl);
+            file_free_implementation(&file->info.impl);
         } break;
         case (BLD_FILE_INTERFACE): {
-            file_free_header(&file->info.header);
+            file_free_interface(&file->info.header);
         } break;
         case (BLD_FILE_TEST): {
             file_free_test(&file->info.test);
@@ -145,11 +145,11 @@ void file_build_info_free(bld_file_build_information* info) {
     }
 }
 
-void file_free_dir(bld_file_dir* dir) {
+void file_free_directory(bld_file_directory* dir) {
     array_free(&dir->files);
 }
 
-void file_free_impl(bld_file_impl* impl) {
+void file_free_implementation(bld_file_implementation* impl) {
     bld_iter iter;
     bld_string* symbol;
 
@@ -168,7 +168,7 @@ void file_free_impl(bld_file_impl* impl) {
     set_free(&impl->defined_symbols);
 }
 
-void file_free_header(bld_file_header* header) {
+void file_free_interface(bld_file_interface* header) {
     set_free(&header->includes);
 }
 

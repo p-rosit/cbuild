@@ -123,10 +123,10 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
         if (strncmp(name, "test", 4) == 0) {
             file = file_test_new(&file_path, name);
         } else {
-            file = file_impl_new(&file_path, name);
+            file = file_implementation_new(&file_path, name);
         }
     } else if (compiler_file_is_header(&project->base.compiler_handles, &packed_name)) {
-        file = file_header_new(&file_path, name);
+        file = file_interface_new(&file_path, name);
     } else {
         path_free(&file_path);
         return;
@@ -172,7 +172,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         bld_file* temp;
 
         dir_path = path_copy(path);
-        directory = file_dir_new(&dir_path, name);
+        directory = file_directory_new(&dir_path, name);
         exists = set_add(&project->files, directory.identifier.id, &directory);
         if (exists) {
             log_error("encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
@@ -241,7 +241,7 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
 void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
     bld_path path = path_copy(&project->base.root);
-    bld_file root = file_dir_new(&path, ".");
+    bld_file root = file_directory_new(&path, ".");
     root.build_info.compiler_set = 1;
     root.build_info.compiler.type = BLD_COMPILER;
     root.build_info.compiler.as.compiler = fproject->compiler;
