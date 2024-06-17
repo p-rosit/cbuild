@@ -4,28 +4,23 @@ int main(int argc, char** argv) {
     int result = 0;
     bld_forward_project fproject;
     bld_project project;
+    bld_compiler compiler;
+    bld_linker linker;
 
-    fproject = project_new(
-        project_path_extract(argc, argv),
-        compiler_with_flags(
-            BLD_COMPILER_CLANG,
-            "clang",
-            "-std=c89",
-            "-fsanitize=address",
-            "-g",
-            "-Wall",
-            "-Wextra",
-            "-Werror",
-            "-pedantic",
-            "-Wmissing-prototypes",
-            NULL
-        ),
-        linker_with_flags(
-            "clang",
-            "-fsanitize=address",
-            NULL
-        )
-    );
+    compiler = compiler_new(BLD_COMPILER_CLANG, "clang");
+    compiler_add_flag(&compiler, "-std=c89");
+    compiler_add_flag(&compiler, "-fsanitize=address");
+    compiler_add_flag(&compiler, "-g");
+    compiler_add_flag(&compiler, "-Wall");
+    compiler_add_flag(&compiler, "-Wextra");
+    compiler_add_flag(&compiler, "-Werror");
+    compiler_add_flag(&compiler, "-pedantic");
+    compiler_add_flag(&compiler, "-Wmissing-prototypes");
+
+    linker = linker_new("clang");
+    linker_add_flag(&linker, "-fsanitize=address");
+
+    fproject = project_new(project_path_extract(argc, argv), compiler, linker);
 
     project_add_path(&fproject, "bld_core");
     project_ignore_path(&fproject, "bld_core/test");

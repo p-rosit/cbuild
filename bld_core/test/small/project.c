@@ -4,20 +4,15 @@ int main(int argc, char** argv) {
     int result = 0;
     bld_forward_project forward_project;
     bld_project project;
+    bld_compiler compiler;
 
-    forward_project = project_new(
-        project_path_extract(argc, argv),
-        compiler_with_flags(
-            BLD_COMPILER_GCC,
-            "gcc",
-            "-std=c99",
-            "-Wall",
-            "-Wextra",
-            "-pedantic",
-            NULL
-        ),
-        linker_new("gcc")
-    );
+    compiler = compiler_new(BLD_COMPILER_GCC, "gcc");
+    compiler_add_flag(&compiler, "-std=c99");
+    compiler_add_flag(&compiler, "-Wall");
+    compiler_add_flag(&compiler, "-Wextra");
+    compiler_add_flag(&compiler, "-pedantic");
+
+    forward_project = project_new(project_path_extract(argc, argv), compiler, linker_new("gcc"));
 
     project_add_build(&forward_project, "../..");
     rebuild_builder(&forward_project, argc, argv);
@@ -26,14 +21,20 @@ int main(int argc, char** argv) {
     project_load_cache(&forward_project, ".build_cache");
 
     /* Optional, add specific compiler to any files in project */
-    project_set_compiler(
-        &forward_project, "file.c",
-        compiler_with_flags(BLD_COMPILER_CLANG, "/usr/bin/clang", "-Weverything", NULL)
-    );
-    project_set_linker_flags(
-        &forward_project, "dist.c",
-        linker_flags_with_flags("-lm", NULL)
-    );
+    {
+        bld_compiler compiler;
+        compiler = compiler_new(BLD_COMPILER_CLANG, "clang");
+        compiler_add_flag(&compiler, "-Weverything");
+
+        project_set_compiler(&forward_project, "file.c", compiler);
+    }
+    {
+        bld_linker_flags linker_flags;
+        linker_flags = linker_flags_new();
+        linker_flags_add_flag(&linker_flags, "-lm");
+
+        project_set_linker_flags(&forward_project, "dist.c", linker_flags);
+    }
 
     /* Mandatory */
     project_set_main_file(&forward_project, "main.c");
