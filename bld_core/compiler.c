@@ -52,8 +52,9 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
 }
 
 uintmax_t compiler_hash(bld_compiler* compiler) {
-    uintmax_t seed = 2349;
+    uintmax_t seed;
 
+    seed = 2349;
     seed = (seed << 5) + string_hash(string_unpack(&compiler->executable));
     seed = (seed << 5) + compiler_flags_hash(&compiler->flags);
 
@@ -142,10 +143,11 @@ bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
 }
 
 uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
-    uintmax_t seed = 2346;
+    uintmax_t seed;
     bld_iter iter;
     bld_string* flag;
 
+    seed = 2346;
     iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         seed = (seed << 5) + string_hash(string_unpack(flag));
@@ -160,8 +162,11 @@ uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
 }
 
 void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
-    bld_string temp = string_pack(flag);
-    uintmax_t hash = string_hash(flag);
+    bld_string temp;
+    uintmax_t hash;
+
+    hash = string_hash(flag);
+    temp = string_pack(flag);
     temp = string_copy(&temp);
 
     if (set_has(&flags->removed, hash)) {
@@ -175,8 +180,11 @@ void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
 }
 
 void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
-    bld_string temp = string_pack(flag);
-    uintmax_t hash = string_hash(flag);
+    bld_string temp;
+    uintmax_t hash;
+
+    temp = string_pack(flag);
+    hash = string_hash(flag);
 
     if (set_has(&flags->flag_hash, hash)) {
         log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" which has already been added by this set of flags", flag);
@@ -189,13 +197,17 @@ void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
 }
 
 void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
-    bld_array flags_added = array_new(sizeof(bld_string));
-    bld_set flags_removed = set_new(sizeof(int));
-    bld_iter iter = iter_array(flags);
+    bld_array flags_added;
+    bld_set flags_removed;
+    bld_iter iter;
     bld_compiler_flags* f;
     bld_string* str;
 
+    flags_added = array_new(sizeof(bld_string));
+    flags_removed = set_new(sizeof(int));
+
     array_reverse(flags);
+    iter = iter_array(flags);
     while (iter_next(&iter, (void**) &f)) {
         bld_iter iter;
         uintmax_t hash;
