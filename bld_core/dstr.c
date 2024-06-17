@@ -28,7 +28,7 @@ bld_string string_pack(char* char_ptr) {
     return str;
 }
 
-bld_string string_copy(bld_string* str) {
+bld_string string_copy(const bld_string* str) {
     char* chars;
     bld_string cpy;
 
