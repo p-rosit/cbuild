@@ -20,7 +20,7 @@ uintmax_t file_get_id(bld_path* path) {
     uintmax_t id = os_info_id(path_to_string(path));
 
     if (id == BLD_INVALID_IDENITIFIER) {
-        log_fatal("Could not extract information about \"%s\"", path_to_string(path));
+        log_fatal(LOG_FATAL_PREFIX "could not extract information about \"%s\"", path_to_string(path));
     }
 
     return id;
@@ -34,7 +34,7 @@ bld_file_identifier get_identifier(bld_path* path) {
     mtime = os_info_mtime(path_to_string(path));
 
     if (id == BLD_INVALID_IDENITIFIER) {
-        log_fatal("Could not extract information about \"%s\"", path_to_string(path));
+        log_fatal(LOG_FATAL_PREFIX "could not extract information about \"%s\"", path_to_string(path));
     }
 
     identifier.id = id;
@@ -110,7 +110,7 @@ void file_free(bld_file* file) {
         case (BLD_TEST): {
             file_free_test(&file->info.test);
         } break;
-        default: {log_fatal("file_free: unrecognized file type, unreachable error");}
+        default: {log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");}
     }
 }
 
@@ -129,7 +129,7 @@ void file_build_info_free(bld_file_build_information* info) {
             case (BLD_COMPILER_FLAGS): {
                 compiler_flags_free(&info->compiler.as.flags);
             } break;
-            default: log_fatal("file_free_base: internal error");
+            default: log_fatal(LOG_FATAL_PREFIX "internal error");
         }
     }
 
@@ -188,7 +188,7 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
     parent_id = file->identifier.id;
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent = set_get(files, parent_id);
-        if (parent == NULL) {log_fatal("file_hash: internal error, hashing compiler");}
+        if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error, hashing compiler");}
         parent_id = parent->parent_id;
         if (!parent->build_info.compiler_set) {continue;}
 
@@ -206,7 +206,7 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
     parent_id = file->identifier.id;
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent = set_get(files, parent_id);
-        if (parent == NULL) {log_fatal("file_hash: internal error, hashing linker_flags");}
+        if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error, hashing linker_flags");}
         parent_id = parent->parent_id;
         if (!parent->build_info.linker_set) {continue;}
 
@@ -217,7 +217,7 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
 
 void file_symbols_copy(bld_file* file, const bld_file* from) {
     if (file->type != from->type) {
-        log_fatal("file_symbols_copy: files do not have same type");
+        log_fatal(LOG_FATAL_PREFIX "files do not have same type");
     }
 
     switch (file->type) {
@@ -228,7 +228,7 @@ void file_symbols_copy(bld_file* file, const bld_file* from) {
         case (BLD_TEST): {
             file->info.test.undefined_symbols = file_copy_symbol_set(&from->info.test.undefined_symbols);
         } break;
-        default: log_fatal("file_symbols_copy: file does not have any symbols to copy");
+        default: log_fatal(LOG_FATAL_PREFIX "file does not have any symbols to copy");
     }
 }
 
@@ -248,7 +248,7 @@ bld_set file_copy_symbol_set(const bld_set* set) {
 }
 
 void file_dir_add_file(bld_file* dir, bld_file* file) {
-    if (dir->type != BLD_DIR) {log_fatal("file_dir_add_file: trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
+    if (dir->type != BLD_DIR) {log_fatal(LOG_FATAL_PREFIX "trying to add file, \"%s\", to non-directory, \"%s\"", string_unpack(&file->name), string_unpack(&dir->name));}
 
     file->parent_id = dir->identifier.id;
     array_push(&dir->info.dir.files, &file->identifier.id);
@@ -262,7 +262,7 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compi
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent;
         parent = set_get(files, parent_id);
-        if (parent == NULL) {log_fatal("file_assemble_compiler: internal error");}
+        if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
         parent_id = parent->parent_id;
         if (!parent->build_info.compiler_set) {continue;}
 
@@ -273,14 +273,14 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compi
         } else if (parent->build_info.compiler.type == BLD_COMPILER_FLAGS) {
             array_push(flags, &parent->build_info.compiler.as.flags);
         } else {
-            log_fatal("file_assemble_compiler: internal error, compiler");
+            log_fatal(LOG_FATAL_PREFIX "internal error");
         }
     }
 
     array_reverse(flags);
 
     if (*compiler == NULL) {
-        log_fatal("file_assemble_compiler: no compiler was encountered while assembling compiler associated with file, only compiler flags. Root has no associated compiler");
+        log_fatal(LOG_FATAL_PREFIX "no compiler was encountered while assembling compiler associated with file, only compiler flags. Root has no associated compiler");
     }
 }
 
@@ -290,7 +290,8 @@ void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags
 
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent = set_get(files, parent_id);
-        if (parent == NULL) {log_fatal("file_assemble_linker_flags: internal error");}
+        if (parent == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
+
         parent_id = parent->parent_id;
         if (!parent->build_info.linker_set) {continue;}
 
