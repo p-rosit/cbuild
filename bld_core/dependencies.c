@@ -41,7 +41,7 @@ int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** 
     if (!has_next) {return has_next;}
 
     *file = set_get(files, file_id);
-    if (*file == NULL) {log_fatal("File id in graph did not exist in file set.");}
+    if (*file == NULL) {log_fatal(LOG_FATAL_PREFIX "file id in graph did not exist in file set.");}
 
     return has_next;
 }
@@ -84,7 +84,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
                     includes = &to_file->info.header.includes;
                 } break;
                 default: {
-                    log_fatal("dependency_graph_extract_includes: internal error");
+                    log_fatal(LOG_FATAL_PREFIX "internal error");
                     return; /* Unreachable */
                 }
             }
@@ -139,7 +139,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
             case (BLD_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
             case (BLD_TEST): {undefined = &file->info.test.undefined_symbols;} break;
             default: {
-                log_fatal("dependency_graph_extract_symbols: unrecognized file type, unreachable error");
+                log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");
                 return; /* Unreachable */
             }
         }
@@ -184,7 +184,7 @@ void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol
 
     result = system(string_unpack(&cmd));
     if (result) {
-        log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
+        log_fatal(LOG_FATAL_PREFIX "unable to extract symbols from \"%s\"", path_to_string(&file->path));
     }
 
     string_free(&cmd);
@@ -196,7 +196,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
     bld_string func;
 
     f = fopen(path_to_string(symbol_path), "r");
-    if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
+    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "symbol file could not be opened");}
 
     while (1) {
         c = fgetc(f);
@@ -240,7 +240,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
                 case (BLD_TEST): {
                     string_free(&func);
                 } break;
-                default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
+                default: {log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");}
             }
         } else if (symbol_type == 'U') {
             switch (file->type) {
@@ -250,10 +250,10 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
                 case (BLD_TEST): {
                     add_symbol(&file->info.test.undefined_symbols, &func);
                 } break;
-                default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
+                default: {log_fatal(LOG_FATAL_PREFIX "unrecognized file type, unreachable error");}
             }
         } else {
-            log_fatal("parse_symbols: unreachable error");
+            log_fatal(LOG_FATAL_PREFIX "unreachable error");
         }
 
         next_line:
@@ -314,7 +314,7 @@ void parse_included_files(bld_file* file) {
     int c;
 
     if (file->type == BLD_DIR) {
-        log_fatal("parse_included_files: cannot parse includes for directory \"%s\"", string_unpack(&file->name));
+        log_fatal(LOG_FATAL_PREFIX "cannot parse includes for directory \"%s\"", string_unpack(&file->name));
     }
 
     switch (file->type) {
@@ -328,13 +328,13 @@ void parse_included_files(bld_file* file) {
             includes = &file->info.header.includes;
         } break;
         default: {
-            log_fatal("parse_included_files: internal error");
+            log_fatal(LOG_FATAL_PREFIX "internal error");
             return; /* Unreachable */
         }
     }
 
     f = fopen(path_to_string(&file->path), "r");
-    if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", string_unpack(&file->name));}
+    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "could not open file for reading: \"%s\"", string_unpack(&file->name));}
 
     parent_path = path_copy(&file->path);
     path_remove_last_string(&parent_path);
