@@ -16,24 +16,6 @@ bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     return compiler;
 }
 
-bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
-    bld_compiler compiler;
-    va_list args;
-    char* flag;
-
-    compiler = compiler_new(type, executable);
-
-    va_start(args, executable);
-    while (1) {
-        flag = va_arg(args, char*);
-        if (flag == NULL) {break;}
-
-        compiler_add_flag(&compiler, flag);
-    }
-
-    return compiler;
-}
-
 void compiler_free(bld_compiler* compiler) {
     if (compiler == NULL) {return;}
     
@@ -93,29 +75,6 @@ void compiler_flags_free(bld_compiler_flags* flags) {
         string_free(flag);
     }
     set_free(&flags->removed);
-}
-
-bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
-    bld_compiler_flags flags;
-    va_list args;
-    char* flag;
-
-    flags = compiler_flags_new();
-
-    if (first_flag == NULL) {
-        return flags;
-    }
-    compiler_flags_add_flag(&flags, first_flag);
-
-    va_start(args, first_flag);
-    while (1) {
-        flag = va_arg(args, char*);
-        if (flag == NULL) {break;}
-
-        compiler_flags_add_flag(&flags, flag);
-    }
-
-    return flags;
 }
 
 bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
