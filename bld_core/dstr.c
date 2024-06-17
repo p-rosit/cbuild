@@ -52,9 +52,10 @@ void string_free(bld_string* str) {
 }
 
 uintmax_t string_hash(char* str) {
-    uintmax_t seed = 5029;
+    uintmax_t seed;
     char c;
 
+    seed = 5029;
     while ((c = *str++) != '\0') {
         seed = (seed << 5) + seed + c;
     }
@@ -62,9 +63,10 @@ uintmax_t string_hash(char* str) {
 }
 
 int push_character(bld_string* str, char c) {
-    size_t capacity = str->capacity;
+    size_t capacity;
     char* chars;
     
+    capacity = str->capacity;
     if (str->capacity == 0 || str->size >= str->capacity - 1) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
         chars = realloc(str->chars, capacity);
@@ -100,8 +102,9 @@ void string_append_char(bld_string* str, char c) {
 }
 
 void string_append_string(bld_string* str, char* s) {
-    char *temp = s, c;
+    char *temp, c;
 
+    temp = s;
     while ((c = *temp++) != '\0') {
         if (!push_character(str, c)) {
             log_fatal(LOG_FATAL_PREFIX "could not append \"%s\" to string.", s);
