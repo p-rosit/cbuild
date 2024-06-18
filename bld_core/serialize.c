@@ -94,50 +94,40 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         serialize_linker_flags(cache, &file->build_info.linker_flags, depth + 1);
     }
 
-    if (file->type != BLD_FILE_DIRECTORY) {
+    {
         bld_set* includes;
-        switch (file->type) {
-            case (BLD_FILE_INTERFACE): {
-                includes = &file->info.header.includes;
-            } break;
-            case (BLD_FILE_IMPLEMENTATION): {
-                includes = &file->info.impl.includes;
-            } break;
-            case (BLD_FILE_TEST): {
-                includes = &file->info.test.includes;
-            } break;
-            default: {
-                log_fatal("serialize_file: unrecognized file type, unreachable error");
-                return; /* Unreachable */
-            }
-        }
+        includes = file_includes_get(file);
+        if (includes == NULL) {goto no_serialize_includes;}
+
 
         fprintf(cache, ",\n");
         json_serialize_key(cache, "includes", depth);
         serialize_file_includes(cache, includes, depth + 1);
     }
+    no_serialize_includes:
 
-    switch (file->type) {
-        case (BLD_FILE_DIRECTORY): break;
-        case (BLD_FILE_INTERFACE): break;
-        case (BLD_FILE_IMPLEMENTATION): {
-            fprintf(cache, ",\n");
+    {
+        bld_set* undefined;
+        undefined = file_undefined_get(file);
+        if (undefined == NULL) {goto no_serialize_undefined;}
 
-            json_serialize_key(cache, "undefined_symbols", depth);
-            serialize_file_symbols(cache, &file->info.impl.undefined_symbols, depth + 1);
+        fprintf(cache, ",\n");
 
-            fprintf(cache, ",\n");
-            json_serialize_key(cache, "defined_symbols", depth);
-            serialize_file_symbols(cache, &file->info.impl.defined_symbols, depth + 1);
-
-        } break;
-        case (BLD_FILE_TEST): {
-            fprintf(cache, ",\n");
-            json_serialize_key(cache, "undefined_symbols", depth);
-            serialize_file_symbols(cache, &file->info.test.undefined_symbols, depth + 1);
-        } break;
-        default: log_fatal("serialize_file: unrecognized file type, unreachable error");
+        json_serialize_key(cache, "undefined_symbols", depth);
+        serialize_file_symbols(cache, undefined, depth + 1);
     }
+    no_serialize_undefined:
+
+    {
+        bld_set* defined;
+        defined = file_defined_get(file);
+        if (defined == NULL) {goto no_serialize_defined;}
+
+        fprintf(cache, ",\n");
+        json_serialize_key(cache, "defined_symbols", depth);
+        serialize_file_symbols(cache, defined, depth + 1);
+    }
+    no_serialize_defined:
 
     if (file->type == BLD_FILE_DIRECTORY) {
         int first = 1;

@@ -340,24 +340,8 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     if (parsed[BLD_PARSE_INCLUDES]) {
         bld_set* includes;
 
-        switch (f->file.type) {
-            case (BLD_FILE_DIRECTORY): {
-                goto includes_freed;
-            } break;
-            case (BLD_FILE_IMPLEMENTATION): {
-                includes = &f->file.info.impl.includes;
-            } break;
-            case (BLD_FILE_TEST): {
-                includes = &f->file.info.test.includes;
-            } break;
-            case (BLD_FILE_INTERFACE): {
-                includes = &f->file.info.header.includes;
-            } break;
-            default: {
-                log_fatal("freeing includes: unrecognized file type");
-                goto includes_freed; /* Unreachable */
-            }
-        }
+        includes = file_includes_get(&f->file);
+        if (includes == NULL) {goto includes_freed;}
 
         set_free(includes);
     }
@@ -368,7 +352,10 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         bld_iter iter;
         bld_string* str;
 
-        defined = &f->file.info.impl.defined_symbols;
+        defined = file_defined_get(&f->file);
+        if (defined == NULL) {
+            goto defined_freed;
+        }
 
         iter = iter_set(defined);
         while (iter_next(&iter, (void**) &str)) {
@@ -376,20 +363,16 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         }
         set_free(defined);
     }
+    defined_freed:
 
     if (parsed[BLD_PARSE_UNDEFINED]) {
         bld_set* undefined;
         bld_iter iter;
         bld_string* str;
 
-        switch (f->file.type) {
-            case (BLD_FILE_IMPLEMENTATION): {
-                undefined = &f->file.info.impl.undefined_symbols;
-            } break;
-            case (BLD_FILE_TEST): {
-                undefined = &f->file.info.test.undefined_symbols;
-            } break;
-            default: goto undefined_freed;
+        undefined = file_undefined_get(&f->file);
+        if (undefined == NULL) {
+            goto undefined_freed;
         }
 
         iter = iter_set(undefined);
@@ -533,7 +516,7 @@ int parse_file_linker_flags(FILE* file, bld_parsing_file* f) {
 
 int parse_file_includes(FILE* file, bld_parsing_file* f) {
     int amount_parsed;
-    bld_set includes;
+    bld_set *file_includes, includes;
 
     includes = set_new(0);
     amount_parsed = json_parse_array(file, &includes, (bld_parse_func) parse_file_include);
@@ -543,22 +526,12 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
         return -1;
     }
 
-    switch (f->file.type) {
-        case (BLD_FILE_DIRECTORY): {
-            set_free(&includes);
-            return -1;
-        } break;
-        case (BLD_FILE_IMPLEMENTATION): {
-            f->file.info.impl.includes = includes;
-        } break;
-        case (BLD_FILE_TEST): {
-            f->file.info.test.includes = includes;
-        } break;
-        case (BLD_FILE_INTERFACE): {
-            f->file.info.header.includes = includes;
-        } break;
-        default: log_fatal("parse_file_includes: internal error");
+    file_includes = file_includes_get(&f->file);
+    if (file_includes == NULL) {
+        log_fatal(LOG_FATAL_PREFIX "attempting to set includes of file which does not have includes");
     }
+
+    *file_includes = includes;
 
     return 0;
 }
@@ -583,7 +556,11 @@ int parse_file_defined_symbols(FILE* file, bld_parsing_file* f) {
         return -1;
     }
 
-    defined = &f->file.info.impl.defined_symbols;
+    defined = file_defined_get(&f->file);
+    if (defined == NULL) {
+        log_fatal(LOG_FATAL_PREFIX "file has incorrect type");
+    }
+
     amount_parsed = json_parse_array(file, defined, (bld_parse_func) parse_file_function);
     if (amount_parsed < 0) {
         bld_iter iter = iter_set(defined);
@@ -610,17 +587,9 @@ int parse_file_undefined_symbols(FILE* file, bld_parsing_file* f) {
         return -1;
     }
 
-    switch (f->file.type) {
-        case (BLD_FILE_IMPLEMENTATION): {
-            undefined = &f->file.info.impl.undefined_symbols;
-        } break;
-        case (BLD_FILE_TEST): {
-            undefined = &f->file.info.test.undefined_symbols;
-        } break;
-        default: {
-            log_fatal("parse_file_undefined_symbols: unreachable error");
-            return -1; /* Unreachable */
-        }
+    undefined = file_undefined_get(&f->file);
+    if (undefined == NULL) {
+        log_fatal("parse_file_undefined_symbols: unreachable error");
     }
 
     amount_parsed = json_parse_array(file, undefined, (bld_parse_func) parse_file_function);

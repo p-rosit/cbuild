@@ -72,6 +72,7 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        bld_set *includes, *cached_includes;
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         cached = set_get(&project->base.cache.files, file->identifier.id);
@@ -79,18 +80,25 @@ void incremental_apply_cache(bld_project* project) {
 
         if (file->identifier.hash != cached->identifier.hash) {continue;}
 
+        includes = file_includes_get(file);
+        if (includes == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
+        }
+        cached_includes = file_includes_get(cached);
+        if (cached_includes == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
+        }
+        *includes = set_copy(cached_includes);
+
         switch (file->type) {
             case (BLD_FILE_IMPLEMENTATION): {
                 log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->info.impl.includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
-                file->info.impl.includes = set_copy(&cached->info.impl.includes);
             } break;
             case (BLD_FILE_INTERFACE): {
                 log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->info.header.includes.size);
-                file->info.header.includes = set_copy(&cached->info.header.includes);
             } break;
             case (BLD_FILE_TEST): {
                 log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->info.test.includes.size, cached->info.test.undefined_symbols.size);
-                file->info.test.includes = set_copy(&cached->info.test.includes);
             } break;
             default: {log_fatal("incremental_apply_cache: unrecognized file type, unreachable error");}
         }
