@@ -280,21 +280,42 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
     return seed;
 }
 
-void file_symbols_copy(bld_file* file, const bld_file* from) {
+void file_symbols_copy(bld_file* file, bld_file* from) {
     if (file->type != from->type) {
         log_fatal(LOG_FATAL_PREFIX "files do not have same type");
     }
 
-    switch (file->type) {
-        case (BLD_FILE_IMPLEMENTATION): {
-            file->info.impl.undefined_symbols = file_copy_symbol_set(&from->info.impl.undefined_symbols);
-            file->info.impl.defined_symbols = file_copy_symbol_set(&from->info.impl.defined_symbols);
-        } break;
-        case (BLD_FILE_TEST): {
-            file->info.test.undefined_symbols = file_copy_symbol_set(&from->info.test.undefined_symbols);
-        } break;
-        default: log_fatal(LOG_FATAL_PREFIX "file does not have any symbols to copy");
+    {
+        bld_set *undefined, *from_undefined;
+        undefined = file_undefined_get(file);
+        from_undefined = file_undefined_get(from);
+
+        if ((undefined == NULL) != (from_undefined == NULL)) {
+            log_fatal(LOG_FATAL_PREFIX "unreachable error");
+        }
+        if (undefined == NULL) {
+            goto no_copy_undefined;
+        }
+
+        *undefined = file_copy_symbol_set(from_undefined);
     }
+    no_copy_undefined:
+
+    {
+        bld_set *defined, *from_defined;
+        defined = file_defined_get(file);
+        from_defined = file_defined_get(from);
+
+        if ((defined == NULL) != (from_defined == NULL)) {
+            log_fatal(LOG_FATAL_PREFIX "unreachable error");
+        }
+        if (defined == NULL) {
+            goto no_copy_defined;
+        }
+
+        *defined = file_copy_symbol_set(from_defined);
+    }
+    no_copy_defined:;
 }
 
 bld_set file_copy_symbol_set(const bld_set* set) {

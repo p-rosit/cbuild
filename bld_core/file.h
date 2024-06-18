@@ -78,7 +78,7 @@ bld_set*    file_undefined_get(bld_file*);
 uintmax_t   file_hash(bld_file*, bld_set*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
-void        file_symbols_copy(bld_file*, const bld_file*);
+void        file_symbols_copy(bld_file*, bld_file*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 void        file_dir_add_file(bld_file*, bld_file*);
