@@ -101,6 +101,60 @@ bld_file file_test_new(bld_path* path, char* name) {
     return test;
 }
 
+bld_set* file_includes_get(bld_file* file) {
+    switch (file->type) {
+        case (BLD_FILE_DIRECTORY):
+            return NULL;
+        case (BLD_FILE_IMPLEMENTATION):
+            return &file->info.impl.includes;
+        case (BLD_FILE_TEST):
+            return &file->info.test.includes;
+        case (BLD_FILE_INTERFACE):
+            return &file->info.header.includes;
+        case (BLD_FILE_INVALID):
+            break;
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "unrecognized file type %d", file->type);
+    return NULL; /* unreachable */
+}
+
+bld_set* file_defined_get(bld_file* file) {
+    switch (file->type) {
+        case (BLD_FILE_DIRECTORY):
+            return NULL;
+        case (BLD_FILE_IMPLEMENTATION):
+            return &file->info.impl.defined_symbols;
+        case (BLD_FILE_TEST):
+            return NULL;
+        case (BLD_FILE_INTERFACE):
+            return NULL;
+        case (BLD_FILE_INVALID):
+            break;
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "unrecognized file type %d", file->type);
+    return NULL; /* unreachable */
+}
+
+bld_set* file_undefined_get(bld_file* file) {
+    switch (file->type) {
+        case (BLD_FILE_DIRECTORY):
+            return NULL;
+        case (BLD_FILE_IMPLEMENTATION):
+            return &file->info.impl.undefined_symbols;
+        case (BLD_FILE_TEST):
+            return &file->info.test.undefined_symbols;
+        case (BLD_FILE_INTERFACE):
+            return NULL;
+        case (BLD_FILE_INVALID):
+            break;
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "unrecognized file type %d", file->type);
+    return NULL; /* unreachable */
+}
+
 void file_free(bld_file* file) {
     file_free_base(file);
 

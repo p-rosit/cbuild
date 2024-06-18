@@ -72,6 +72,9 @@ bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
 void        file_build_info_free(bld_file_build_information*);
 
+bld_set*    file_includes_get(bld_file*);
+bld_set*    file_defined_get(bld_file*);
+bld_set*    file_undefined_get(bld_file*);
 uintmax_t   file_hash(bld_file*, bld_set*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
