@@ -1,7 +1,7 @@
 #include "bld_core/cbuild.h"
 
 int main(int argc, char** argv) {
-    int result = 0;
+    int result;
     bld_forward_project fproject;
     bld_project project;
     bld_compiler compiler;
