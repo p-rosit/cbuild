@@ -18,7 +18,6 @@ int command_help_command(bld_command_type, bld_data*);
 int command_help_target(bld_string*, bld_data*);
 
 int command_help(bld_command_help* help, bld_data* data) {
-    (void)(data);
     if (help->has_command) {
         bld_command_type type;
         if (set_has(&data->targets, string_hash(string_unpack(&help->command)))) {
