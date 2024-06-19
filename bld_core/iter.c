@@ -12,10 +12,13 @@ bld_iter iter_array(const bld_array* array) {
 }
 
 int array_next(bld_iter_array* iter, void** value_ptr_ptr) {
-    size_t value_size = iter->array->value_size;
-    const bld_array* array = iter->array;
-    char* values = array->values;
+    const bld_array* array;
+    size_t value_size;
+    char* values;
 
+    array = iter->array;
+    values = array->values;
+    value_size = array->value_size;
     if (iter->index >= array->size) {
         return 0;
     }
@@ -35,12 +38,18 @@ bld_iter iter_set(const bld_set* set) {
 }
 
 int set_next(bld_iter_set* iter, void** value_ptr_ptr) {
-    int has_next = 0;
-    size_t i = iter->index;
-    size_t value_size = iter->set->value_size;
-    const bld_set* set = iter->set;
-    char* values = set->values;
+    int has_next;
+    size_t i;
+    size_t value_size;
+    const bld_set* set;
+    char* values;
     
+    has_next = 0;
+    set = iter->set;
+    values = set->values;
+    value_size = set->value_size;
+
+    i = iter->index;
     while (i < set->capacity + set->max_offset) {
         if (set->offset[i] < set->max_offset) {
             has_next = 1;
@@ -70,8 +79,9 @@ bld_iter iter_graph(const bld_graph* graph, uintmax_t root) {
 }
 
 bld_iter iter_graph_children(const bld_graph* graph, uintmax_t parent) {
-    bld_array* children = set_get(&graph->edges, parent);
+    bld_array* children;
 
+    children = set_get(&graph->edges, parent);
     if (children == NULL) {
         log_fatal("Requested node %lu does not exist in graph", parent);
     }
@@ -80,7 +90,7 @@ bld_iter iter_graph_children(const bld_graph* graph, uintmax_t parent) {
 }
 
 int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
-    int node_visited = 1;
+    int node_visited;
     uintmax_t *ptr_id, id;
     bld_array* edge_array;
 
@@ -88,6 +98,7 @@ int graph_next(bld_iter_graph* iter, uintmax_t* node_id) {
         return 0;
     }
 
+    node_visited = 1;
     while (node_visited) {
         bld_iter edges;
 
