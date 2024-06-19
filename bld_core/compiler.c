@@ -16,24 +16,6 @@ bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     return compiler;
 }
 
-bld_compiler compiler_with_flags(bld_compiler_type type, char* executable, ...) {
-    bld_compiler compiler;
-    va_list args;
-    char* flag;
-
-    compiler = compiler_new(type, executable);
-
-    va_start(args, executable);
-    while (1) {
-        flag = va_arg(args, char*);
-        if (flag == NULL) {break;}
-
-        compiler_add_flag(&compiler, flag);
-    }
-
-    return compiler;
-}
-
 void compiler_free(bld_compiler* compiler) {
     if (compiler == NULL) {return;}
     
@@ -52,8 +34,9 @@ bld_compiler compiler_copy(bld_compiler* compiler) {
 }
 
 uintmax_t compiler_hash(bld_compiler* compiler) {
-    uintmax_t seed = 2349;
+    uintmax_t seed;
 
+    seed = 2349;
     seed = (seed << 5) + string_hash(string_unpack(&compiler->executable));
     seed = (seed << 5) + compiler_flags_hash(&compiler->flags);
 
@@ -94,29 +77,6 @@ void compiler_flags_free(bld_compiler_flags* flags) {
     set_free(&flags->removed);
 }
 
-bld_compiler_flags compiler_flags_with_flags(char* first_flag, ...) {
-    bld_compiler_flags flags;
-    va_list args;
-    char* flag;
-
-    flags = compiler_flags_new();
-
-    if (first_flag == NULL) {
-        return flags;
-    }
-    compiler_flags_add_flag(&flags, first_flag);
-
-    va_start(args, first_flag);
-    while (1) {
-        flag = va_arg(args, char*);
-        if (flag == NULL) {break;}
-
-        compiler_flags_add_flag(&flags, flag);
-    }
-
-    return flags;
-}
-
 bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
     bld_compiler_flags cpy;
     bld_iter iter;
@@ -142,10 +102,11 @@ bld_compiler_flags compiler_flags_copy(bld_compiler_flags* flags) {
 }
 
 uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
-    uintmax_t seed = 2346;
+    uintmax_t seed;
     bld_iter iter;
     bld_string* flag;
 
+    seed = 2346;
     iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         seed = (seed << 5) + string_hash(string_unpack(flag));
@@ -160,42 +121,52 @@ uintmax_t compiler_flags_hash(bld_compiler_flags* flags) {
 }
 
 void compiler_flags_add_flag(bld_compiler_flags* flags, char* flag) {
-    bld_string temp = string_pack(flag);
-    uintmax_t hash = string_hash(flag);
+    bld_string temp;
+    uintmax_t hash;
+
+    hash = string_hash(flag);
+    temp = string_pack(flag);
     temp = string_copy(&temp);
 
     if (set_has(&flags->removed, hash)) {
-        log_fatal("compiler_flags_add_flag: trying to add flag \"%s\" which has already been removed by this set of flags", flag);
+        log_fatal(LOG_FATAL_PREFIX "trying to add flag \"%s\" which has already been removed by this set of flags", flag);
     }
 
     array_push(&flags->flags, &temp);
     if (set_add(&flags->flag_hash, hash, NULL)) {
-        log_fatal("compiler_flags_add_flag: tried to add flag \"%s\" twice", flag);
+        log_fatal(LOG_FATAL_PREFIX "tried to add flag \"%s\" twice", flag);
     }
 }
 
 void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
-    bld_string temp = string_pack(flag);
-    uintmax_t hash = string_hash(flag);
+    bld_string temp;
+    uintmax_t hash;
+
+    temp = string_pack(flag);
+    hash = string_hash(flag);
 
     if (set_has(&flags->flag_hash, hash)) {
-        log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" which has already been added by this set of flags", flag);
+        log_fatal(LOG_FATAL_PREFIX "trying to remove flag \"%s\" which has already been added by this set of flags", flag);
     }
 
     temp = string_copy(&temp);
     if (set_add(&flags->removed, string_hash(flag), &temp)) {
-        log_fatal("compiler_flags_remove_flag: trying to remove flag \"%s\" twice", flag);
+        log_fatal(LOG_FATAL_PREFIX "trying to remove flag \"%s\" twice", flag);
     }
 }
 
 void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
-    bld_array flags_added = array_new(sizeof(bld_string));
-    bld_set flags_removed = set_new(sizeof(int));
-    bld_iter iter = iter_array(flags);
+    bld_array flags_added;
+    bld_set flags_removed;
+    bld_iter iter;
     bld_compiler_flags* f;
     bld_string* str;
 
+    flags_added = array_new(sizeof(bld_string));
+    flags_removed = set_new(sizeof(int));
+
     array_reverse(flags);
+    iter = iter_array(flags);
     while (iter_next(&iter, (void**) &f)) {
         bld_iter iter;
         uintmax_t hash;
@@ -361,8 +332,10 @@ int parse_compiler(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_type(FILE* file, bld_compiler* compiler) {
     bld_string str;
-    int result = string_parse(file, &str);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &str);
+    if (error) {
         log_warn("Could not parse compiler executable");
         return -1;
     }
@@ -374,25 +347,28 @@ int parse_compiler_type(FILE* file, bld_compiler* compiler) {
 
 int parse_compiler_executable(FILE* file, bld_compiler* compiler) {
     bld_string str;
-    int result = string_parse(file, &str);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &str);
+    if (error) {
         log_warn("Could not parse compiler executable");
         return -1;
     }
 
     compiler->executable = str;
-    return result;
+    return error;
 }
 
 int parse_compiler_compiler_flags(FILE* file, bld_compiler* compiler) {
-    int result;
-    result = parse_compiler_flags(file, &compiler->flags);
-    if (result) {
+    int error;
+
+    error = parse_compiler_flags(file, &compiler->flags);
+    if (error) {
         log_warn("parse_compiler_compiler_flags: could not parse flags");
-        return result;
+        return error;
     }
 
-    return result;
+    return error;
 }
 
 int parse_compiler_flags(FILE* file, bld_compiler_flags* flags) {
@@ -455,8 +431,10 @@ int parse_compiler_flags_added_flags(FILE* file, bld_compiler_flags* flags) {
 int parse_compiler_flags_added_flag(FILE* file, bld_compiler_flags* flags) {
     bld_string flag;
     uintmax_t hash;
-    int result = string_parse(file, &flag);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &flag);
+    if (error) {
         log_warn("Could not parse added flag");
         return -1;
     }
@@ -496,8 +474,10 @@ int parse_compiler_flags_removed_flags(FILE* file, bld_compiler_flags* flags) {
 int parse_compiler_flags_removed_flag(FILE* file, bld_compiler_flags* flags) {
     bld_string flag;
     uintmax_t hash;
-    int result = string_parse(file, &flag);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &flag);
+    if (error) {
         log_warn("Could not parse removed flag");
         return -1;
     }

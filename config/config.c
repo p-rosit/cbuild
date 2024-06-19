@@ -22,13 +22,18 @@ void config_free(bld_config* config) {
 }
 
 void serialize_config(bld_path* path, bld_config* config) {
-    FILE* file = fopen(path_to_string(path), "w");
-    int depth = 1;
-    int first = 1;
+    FILE* file;
+    int depth;
+    int first;
+
+    file = fopen(path_to_string(path), "w");
     if (file == NULL) {
         log_fatal("Could not open config file \"%s\"", path_to_string(path));
         return;
     }
+
+    depth = 1;
+    first = 1;
 
     fprintf(file, "{\n");
 
@@ -55,7 +60,7 @@ void serialize_config(bld_path* path, bld_config* config) {
 }
 
 int parse_config(bld_path* path, bld_config* config) {
-    FILE* file = fopen(path_to_string(path), "r");
+    FILE* file;
     int amount_parsed;
     int size = 2;
     int parsed[2];
@@ -65,8 +70,9 @@ int parse_config(bld_path* path, bld_config* config) {
         (bld_parse_func) parse_config_default_target,
     };
 
+    file = fopen(path_to_string(path), "r");
     if (file == NULL) {
-        log_warn("Cannot write to config file with path: \"%s\"", path_to_string(path));
+        log_warn("Cannot read config file with path: \"%s\"", path_to_string(path));
         return -1;
     }
 
@@ -84,11 +90,14 @@ int parse_config(bld_path* path, bld_config* config) {
 
 int parse_config_text_editor(FILE* file, bld_config* config) {
     bld_string editor;
-    int result = string_parse(file, &editor);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &editor);
+    if (error) {
         log_warn("Could not parse text editor");
         return -1;
     }
+
     config->text_editor_configured = 1;
     config->text_editor = editor;
     return 0;
@@ -96,8 +105,10 @@ int parse_config_text_editor(FILE* file, bld_config* config) {
 
 int parse_config_default_target(FILE* file, bld_config* config) {
     bld_string target;
-    int result = string_parse(file, &target);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &target);
+    if (error) {
         log_warn("Could not parse default target");
         return -1;
     }

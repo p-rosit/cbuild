@@ -170,7 +170,7 @@ void command_build_apply_build_info(bld_forward_project* fproject, bld_path* pat
 }
 
 int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
-    int error = 0;
+    int error;
     bld_iter iter;
     bld_path* path;
 
@@ -188,11 +188,17 @@ int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
     } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
         log_error("target has no base compiler, only compiler flags");
         return -1;
+    } else if (!data->target_config.linker_set) {
+        log_error("target has no base linker");
+        return -1;
     }
 
+    error = 0;
     iter = iter_array(&data->target_config.added_paths);
     while (iter_next(&iter, (void**) &path)) {
-        uintmax_t file_id = os_info_id(path_to_string(path));
+        uintmax_t file_id;
+
+        file_id = os_info_id(path_to_string(path));
         if (file_id == BLD_INVALID_IDENITIFIER) {
             error |= -1;
             log_error("Added path '%s' does not exist", path_to_string(path));
@@ -201,7 +207,9 @@ int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
 
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
-        uintmax_t file_id = os_info_id(path_to_string(path));
+        uintmax_t file_id;
+
+        file_id = os_info_id(path_to_string(path));
         if (file_id == BLD_INVALID_IDENITIFIER) {
             error |= -1;
             log_error("Ignored path '%s' does not exist", path_to_string(path));

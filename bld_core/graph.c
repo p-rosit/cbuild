@@ -10,9 +10,10 @@ bld_graph graph_new(void) {
 }
 
 void graph_free(bld_graph* graph) {
-    bld_iter iter = iter_set(&graph->edges);
+    bld_iter iter;
     bld_array* edges;
 
+    iter = iter_set(&graph->edges);
     while (iter_next(&iter, (void**) &edges)) {
         array_free(edges);
     }
@@ -20,7 +21,8 @@ void graph_free(bld_graph* graph) {
 }
 
 void graph_add_node(bld_graph* graph, uintmax_t node_id) {
-    bld_array edges = array_new(sizeof(bld_hash));
+    bld_array edges;
+    edges = array_new(sizeof(bld_hash));
     set_add(&graph->edges, node_id, &edges);
 }
 

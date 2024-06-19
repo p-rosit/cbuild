@@ -10,7 +10,7 @@ bld_string string_new(void) {
     bld_string str;
 
     chars = calloc(1, 1);
-    if (chars == NULL) {log_fatal("Could not allocate minimal string.");}
+    if (chars == NULL) {log_fatal(LOG_FATAL_PREFIX "could not allocate minimal string.");}
 
     str.capacity = 1;
     str.size = 0;
@@ -28,13 +28,13 @@ bld_string string_pack(char* char_ptr) {
     return str;
 }
 
-bld_string string_copy(bld_string* str) {
+bld_string string_copy(const bld_string* str) {
     char* chars;
     bld_string cpy;
 
     chars = malloc(str->size + 1);
     if (chars == NULL) {
-        log_fatal("Could not allocate copy of \"%s\".", str->chars);
+        log_fatal(LOG_FATAL_PREFIX "could not allocate copy of \"%s\".", str->chars);
     }
 
     memcpy(chars, str->chars, str->size);
@@ -52,9 +52,10 @@ void string_free(bld_string* str) {
 }
 
 uintmax_t string_hash(char* str) {
-    uintmax_t seed = 5029;
+    uintmax_t seed;
     char c;
 
+    seed = 5029;
     while ((c = *str++) != '\0') {
         seed = (seed << 5) + seed + c;
     }
@@ -62,9 +63,10 @@ uintmax_t string_hash(char* str) {
 }
 
 int push_character(bld_string* str, char c) {
-    size_t capacity = str->capacity;
+    size_t capacity;
     char* chars;
     
+    capacity = str->capacity;
     if (str->capacity == 0 || str->size >= str->capacity - 1) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
         chars = realloc(str->chars, capacity);
@@ -89,22 +91,23 @@ int string_eq(const bld_string* str1, const bld_string* str2) {
 
 void string_append_space(bld_string* str) {
     if (!push_character(str, ' ')) {
-        log_fatal("Could not append space to string.");
+        log_fatal(LOG_FATAL_PREFIX "could not append space to string.");
     }
 }
 
 void string_append_char(bld_string* str, char c) {
     if (!push_character(str, c)) {
-        log_fatal("Could not append \'%c\' to string.", c);
+        log_fatal(LOG_FATAL_PREFIX "could not append \'%c\' to string.", c);
     }
 }
 
 void string_append_string(bld_string* str, char* s) {
-    char *temp = s, c;
+    char *temp, c;
 
+    temp = s;
     while ((c = *temp++) != '\0') {
         if (!push_character(str, c)) {
-            log_fatal("Could not append \"%s\" to string.", s);
+            log_fatal(LOG_FATAL_PREFIX "could not append \"%s\" to string.", s);
         }
     }
 }

@@ -49,9 +49,10 @@ int array_increase_capacity(bld_array* array, size_t capacity) {
 }
 
 void array_push(bld_array* array, void* value) {
-    size_t capacity = array->capacity;
+    size_t capacity;
     char* ptr;
 
+    capacity = array->capacity;
     if (array->size >= array->capacity) {
         capacity += (capacity / 2) + 2 * (capacity < 2);
 

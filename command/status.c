@@ -42,12 +42,13 @@ int command_status_all(bld_command_status* status, bld_data* data) {
 }
 
 int command_status_target(bld_command_status* status, bld_data* data) {
-    bld_config_target* config = &data->target_config;
+    bld_config_target* config;
     bld_iter iter;
     bld_path* path;
     log_info("Target: %s", string_unpack(&status->target));
-    config_target_load(data, &status->target);
 
+    config = &data->target_config;
+    config_target_load(data, &status->target);
     if (!data->target_config_parsed) {
         log_fatal("Target config has not been parsed");
     }

@@ -1,6 +1,10 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
+#define LOG_PANIC_EVAL(x) LOG_PANIC_EVAL_(x)
+#define LOG_PANIC_EVAL_(x) #x
+#define LOG_FATAL_PREFIX __FILE__ ":" LOG_PANIC_EVAL(__LINE__) ", "
+
 typedef enum bld_log_level {
     BLD_DEBUG,
     BLD_INFO,

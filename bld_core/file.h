@@ -9,11 +9,11 @@
 #include "linker.h"
 
 typedef enum bld_file_type {
-    BLD_INVALID_FILE,
-    BLD_DIR,
-    BLD_IMPL,
-    BLD_HEADER,
-    BLD_TEST
+    BLD_FILE_INVALID,
+    BLD_FILE_DIRECTORY,
+    BLD_FILE_IMPLEMENTATION,
+    BLD_FILE_INTERFACE,
+    BLD_FILE_TEST
 } bld_file_type;
 
 typedef struct bld_file_build_information {
@@ -29,19 +29,19 @@ typedef struct bld_file_identifier {
     uintmax_t time;
 } bld_file_identifier;
 
-typedef struct bld_file_dir {
+typedef struct bld_file_directory {
     bld_array files;
-} bld_file_dir;
+} bld_file_directory;
 
-typedef struct bld_file_impl {
+typedef struct bld_file_implementation {
     bld_set includes;
     bld_set undefined_symbols;
     bld_set defined_symbols;
-} bld_file_impl;
+} bld_file_implementation;
 
-typedef struct bld_file_header {
+typedef struct bld_file_interface {
     bld_set includes;
-} bld_file_header;
+} bld_file_interface;
 
 typedef struct bld_file_test {
     bld_set includes;
@@ -49,9 +49,9 @@ typedef struct bld_file_test {
 } bld_file_test;
 
 typedef union bld_file_info {
-    bld_file_dir dir;
-    bld_file_impl impl;
-    bld_file_header header;
+    bld_file_directory dir;
+    bld_file_implementation impl;
+    bld_file_interface header;
     bld_file_test test;
 } bld_file_info;
 
@@ -65,17 +65,20 @@ typedef struct bld_file {
     bld_file_build_information build_info;
 } bld_file;
 
-bld_file    file_dir_new(bld_path*, char*);
-bld_file    file_header_new(bld_path*, char*);
-bld_file    file_impl_new(bld_path*, char*);
+bld_file    file_directory_new(bld_path*, char*);
+bld_file    file_interface_new(bld_path*, char*);
+bld_file    file_implementation_new(bld_path*, char*);
 bld_file    file_test_new(bld_path*, char*);
 void        file_free(bld_file*);
 void        file_build_info_free(bld_file_build_information*);
 
+bld_set*    file_includes_get(bld_file*);
+bld_set*    file_defined_get(bld_file*);
+bld_set*    file_undefined_get(bld_file*);
 uintmax_t   file_hash(bld_file*, bld_set*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
-void        file_symbols_copy(bld_file*, const bld_file*);
+void        file_symbols_copy(bld_file*, bld_file*);
 void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 void        file_dir_add_file(bld_file*, bld_file*);

@@ -72,32 +72,40 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
+        bld_set *includes, *cached_includes;
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
         if (file->identifier.hash != cached->identifier.hash) {continue;}
 
+        includes = file_includes_get(file);
+        if (includes == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
+        }
+        cached_includes = file_includes_get(cached);
+        if (cached_includes == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
+        }
+        *includes = set_copy(cached_includes);
+
         switch (file->type) {
-            case (BLD_IMPL): {
+            case (BLD_FILE_IMPLEMENTATION): {
                 log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined, %lu defined", string_unpack(&file->name), cached->info.impl.includes.size, cached->info.impl.undefined_symbols.size, cached->info.impl.defined_symbols.size);
-                file->info.impl.includes = set_copy(&cached->info.impl.includes);
             } break;
-            case (BLD_HEADER): {
+            case (BLD_FILE_INTERFACE): {
                 log_debug("Found \"%s\" in cache: %lu include(s)", string_unpack(&file->name), cached->info.header.includes.size);
-                file->info.header.includes = set_copy(&cached->info.header.includes);
             } break;
-            case (BLD_TEST): {
+            case (BLD_FILE_TEST): {
                 log_debug("Found \"%s\" in cache: %lu include(s), %lu undefined", string_unpack(&file->name), cached->info.test.includes.size, cached->info.test.undefined_symbols.size);
-                file->info.test.includes = set_copy(&cached->info.test.includes);
             } break;
             default: {log_fatal("incremental_apply_cache: unrecognized file type, unreachable error");}
         }
 
         graph_add_node(&project->graph.include_graph, file->identifier.id);
 
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BLD_FILE_INTERFACE) {continue;}
 
         file_symbols_copy(file, cached);
         graph_add_node(&project->graph.symbol_graph, file->identifier.id);
@@ -123,10 +131,10 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
         if (strncmp(name, "test", 4) == 0) {
             file = file_test_new(&file_path, name);
         } else {
-            file = file_impl_new(&file_path, name);
+            file = file_implementation_new(&file_path, name);
         }
     } else if (compiler_file_is_header(&project->base.compiler_handles, &packed_name)) {
-        file = file_header_new(&file_path, name);
+        file = file_interface_new(&file_path, name);
     } else {
         path_free(&file_path);
         return;
@@ -172,7 +180,7 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         bld_file* temp;
 
         dir_path = path_copy(path);
-        directory = file_dir_new(&dir_path, name);
+        directory = file_directory_new(&dir_path, name);
         exists = set_add(&project->files, directory.identifier.id, &directory);
         if (exists) {
             log_error("encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
@@ -240,8 +248,12 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
 
 void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
-    bld_path path = path_copy(&project->base.root);
-    bld_file root = file_dir_new(&path, ".");
+    bld_path path;
+    bld_file root;
+
+    path = path_copy(&project->base.root);
+    root = file_directory_new(&path, ".");
+
     root.build_info.compiler_set = 1;
     root.build_info.compiler.type = BLD_COMPILER;
     root.build_info.compiler.as.compiler = fproject->compiler;
@@ -253,11 +265,12 @@ void incremental_make_root(bld_project* project, bld_forward_project* fproject) 
 }
 
 void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {
-    int match_found = 0;
+    int match_found;
     bld_iter iter;
     bld_path path;
     bld_file* file;
 
+    match_found = 0;
     path.str = fproject->main_file_name;
 
     if (fproject->rebuilding) {
@@ -459,7 +472,7 @@ void incremental_mark_changed_files(bld_project* project, bld_set* changed_files
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
-        if (file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
         if (!project->base.cache.set) {
@@ -516,7 +529,7 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
 
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     bld_iter iter;
-    int result = 0, any_compiled = 0, temp;
+    int result, any_compiled, temp;
     bld_path path;
     bld_file *file;
     bld_set changed_files;
@@ -531,6 +544,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     dependency_graph_extract_includes(&project->graph, &project->files);
     incremental_mark_changed_files(project, &changed_files);
 
+    any_compiled = 0;
     result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
     set_free(&changed_files);
     if (result) {
@@ -567,7 +581,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
 
         iter = iter_set(&project->files);
         while (iter_next(&iter, (void**) &file)) {
-            if (file->type == BLD_HEADER) {continue;}
+            if (file->type == BLD_FILE_INTERFACE) {continue;}
 
             obj_path = path_copy(&project->base.root);
             serialize_identifier(obj_name, file);
@@ -599,7 +613,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     result = 0;
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_HEADER || file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_INTERFACE || file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
         if (has_changed == NULL) {log_fatal("incremental_compile_with_absolute_path: internal error");}
@@ -644,11 +658,4 @@ int incremental_compile_project(bld_project* project, char* name) {
     result = incremental_compile_with_absolute_path(project, path_to_string(&executable_path));
     path_free(&executable_path);
     return result;
-}
-
-int incremental_test_project(bld_project* project, char* path) {
-    log_fatal("incremental_test_project: not implemented.");
-    (void)(project); /* Suppress unused parameter warning */
-    (void)(path);
-    return -1;
 }

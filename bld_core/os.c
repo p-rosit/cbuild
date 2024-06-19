@@ -3,10 +3,13 @@
 #include "os.h"
 
 int os_file_exists(char* path) {
-    FILE* file = fopen(path, "r");
+    FILE* file;
+
+    file = fopen(path, "r");
     if (file != NULL) {
         fclose(file);
     }
+
     return file != NULL;
 }
 
@@ -21,10 +24,13 @@ int os_file_exists(char* path) {
     }
 
     int os_dir_exists(char* path) {
-        bld_os_dir* dir = os_dir_open(path);
+        bld_os_dir* dir;
+
+        dir = os_dir_open(path);
         if (dir != NULL) {
             os_dir_close(dir);
         }
+
         return dir != NULL;
     }
 

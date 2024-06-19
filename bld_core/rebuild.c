@@ -12,7 +12,9 @@ void                set_main_rebuild(bld_forward_project*, bld_path*);
 
 int run_new_build(bld_path* root, char* executable) {
     int result;
-    bld_path cmd = path_copy(root);
+    bld_path cmd;
+
+    cmd = path_copy(root);
     path_append_string(&cmd, executable);
 
     log_info("Running new build script");
@@ -24,16 +26,18 @@ int run_new_build(bld_path* root, char* executable) {
 }
 
 bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
-    bld_forward_project fbuild = project_forward_new(&root, &compiler, &linker);
+    bld_forward_project fbuild;
+    fbuild = project_forward_new(&root, &compiler, &linker);
     fbuild.rebuilding = 1;
     return fbuild;
 }
 
 void extract_names(int argc, char** argv, char** file, char** old_file) {
-    bld_path path = project_path_extract(argc, argv);
+    bld_path path;
     bld_string str;
     char* name;
     
+    path = project_path_extract(argc, argv);
     name = path_remove_last_string(&path);
     if (strncmp(name, "old_", 4) == 0) {
         name += 4;
@@ -62,7 +66,8 @@ char* infer_build_name(char* name) {
 }
 
 void set_main_rebuild(bld_forward_project* build, bld_path* path) {
-    bld_string str = string_new();
+    bld_string str;
+    str = string_new();
     string_append_string(&str, path_to_string(path));
     build->main_file_name = str;
 }
@@ -75,6 +80,8 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     bld_path build_root, main, executable_path;
     bld_forward_project fbuild;
     bld_project build;
+    bld_compiler compiler;
+    bld_linker linker;
 
     if (fproject->base.standalone) {
         log_fatal("rebuild_builder: attempting to rebuild build script but not build path has been set");
@@ -95,28 +102,20 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     path_append_path(&build_root, &fproject->base.build);
     log_debug("Root: \"%s\"", path_to_string(&build_root));
 
+    compiler = compiler_new(BLD_COMPILER_GCC, "gcc");
+    compiler_add_flag(&compiler, "-std=c89");
+    compiler_add_flag(&compiler, "-fsanitize=address");
+    compiler_add_flag(&compiler, "-g");
+    compiler_add_flag(&compiler, "-Wall");
+    compiler_add_flag(&compiler, "-Wextra");
+    compiler_add_flag(&compiler, "-Werror");
+    compiler_add_flag(&compiler, "-pedantic");
+    compiler_add_flag(&compiler, "-Wmissing-prototypes");
 
-    fbuild = new_rebuild(
-        build_root,
-        compiler_with_flags(
-            BLD_COMPILER_GCC,
-            "gcc", /* TODO: don't hardcode compiler */
-            "-std=c89",
-            "-fsanitize=address",
-            "-g",
-            "-Wall",
-            "-Wextra",
-            "-Werror",
-            "-pedantic",
-            "-Wmissing-prototypes",
-            NULL
-        ),
-        linker_with_flags(
-            "gcc",
-            "-fsanitize=address",
-            NULL
-        )
-    );
+    linker = linker_new("gcc");
+    linker_add_flag(&linker, "-fsanitize=address");
+
+    fbuild = new_rebuild(build_root, compiler, linker);
     project_ignore_path(&fbuild, "./test");
 
     main = path_copy(&fproject->base.root);

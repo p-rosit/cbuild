@@ -28,7 +28,9 @@ void utils_apply_build_information_recursive(bld_target_build_information*, bld_
 
 void config_load(bld_data* data) {
     int error;
-    bld_path target_path = path_copy(&data->root);
+    bld_path target_path;
+
+    target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     path_append_string(&target_path, string_unpack(&bld_path_config));
 
@@ -40,7 +42,9 @@ void config_load(bld_data* data) {
 }
 
 void config_save(bld_data* data) {
-    bld_path target_path = path_copy(&data->root);
+    bld_path target_path;
+
+    target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     path_append_string(&target_path, string_unpack(&bld_path_config));
 
@@ -50,7 +54,9 @@ void config_save(bld_data* data) {
 
 void config_target_load(bld_data* data, bld_string* target) {
     int error;
-    bld_path target_path = path_copy(&data->root);
+    bld_path target_path;
+
+    target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     path_append_string(&target_path, string_unpack(&bld_path_target));
     path_append_string(&target_path, string_unpack(target));
@@ -64,7 +70,9 @@ void config_target_load(bld_data* data, bld_string* target) {
 }
 
 void config_target_save(bld_data* data, bld_string* target) {
-    bld_path target_path = path_copy(&data->root);
+    bld_path target_path;
+
+    target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     path_append_string(&target_path, string_unpack(&bld_path_target));
     path_append_string(&target_path, string_unpack(target));
@@ -88,7 +96,9 @@ bld_data data_extract(char* name) {
     data.target_config_parsed = 0;
 
     if (data.has_root) {
-        bld_path path_config = path_copy(&data.root);
+        bld_path path_config;
+
+        path_config = path_copy(&data.root);
         path_append_string(&path_config, string_unpack(&bld_path_build));
         path_append_string(&path_config, string_unpack(&bld_path_config));
 
@@ -191,7 +201,9 @@ int data_find_root(bld_path* root) {
 
     do {
         bld_os_dir* dir;
-        bld_path temp = path_copy(&test_root);
+        bld_path temp;
+
+        temp = path_copy(&test_root);
         path_append_string(&temp, string_unpack(&bld_path_build));
 
         dir = os_dir_open(path_to_string(&temp));
@@ -260,7 +272,9 @@ bld_target_build_information utils_index_project(bld_data* data) {
     ignored_ids = set_new(0);
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &ignored)) {
-        bld_path temp = path_copy(&data->root);
+        bld_path temp;
+
+        temp = path_copy(&data->root);
         path_append_path(&temp, ignored);
         set_add(&ignored_ids, os_info_id(path_to_string(&temp)), NULL);
         path_free(&temp);
@@ -296,6 +310,7 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
     while (iter_next(&iter, (void**) &name)) {
         bld_path entry_path;
         bld_target_build_information entry_info;
+
         if (*name.chars == '.') {continue;}
         entry_path = path_copy(&root);
         path_append_string(&entry_path, string_unpack(&name));
@@ -306,7 +321,9 @@ bld_target_build_information utils_index_project_recursive(bld_path* path, bld_c
         }
 
         {
-            char* file_ending = strrchr(string_unpack(&name), '.');
+            char* file_ending;
+
+            file_ending = strrchr(string_unpack(&name), '.');
             if (file_ending == NULL) {
                 if (!os_dir_exists(path_to_string(&entry_path))) {
                     path_free(&entry_path);
@@ -343,7 +360,9 @@ bld_target_build_information utils_index_project_recursive_file(bld_path* path, 
 }
 
 bld_target_build_information* utils_get_build_info_for(bld_data* data, bld_path* path) {
-    uintmax_t requested_id = os_info_id(path_to_string(path));
+    uintmax_t requested_id;
+
+    requested_id = os_info_id(path_to_string(path));
 
     if (!data->has_root) {log_fatal("No root, no init?");}
     if (!data->target_config_parsed) {log_fatal("No target config parsed");}
@@ -398,10 +417,11 @@ void utils_apply_build_information_recursive(bld_target_build_information* proje
 
     iter = iter_array(&info->files);
     while (iter_next(&iter, (void**) &child)) {
-        int exists = 0;
+        int exists;
         bld_iter iter;
         bld_target_build_information* corresponding;
 
+        exists = 0;
         iter = iter_array(&project->files);
         while (iter_next(&iter, (void**) &corresponding)) {
             if (string_eq(&child->name, &corresponding->name)) {

@@ -19,7 +19,8 @@ void path_free(bld_path* path) {
 }
 
 bld_path path_from_string(char* str) {
-    bld_path path = path_new();
+    bld_path path;
+    path = path_new();
     string_append_string(&path.str, str);
     return path;
 }
@@ -54,7 +55,8 @@ char* path_get_last_string(bld_path* path) {
 }
 
 char* path_remove_last_string(bld_path* path) {
-    char* name = path_get_last_string(path);
+    char* name;
+    name = path_get_last_string(path);
     path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
     path->str.chars[path->str.size] = '\0';
     return name;

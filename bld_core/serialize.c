@@ -60,7 +60,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
     json_serialize_key(cache, "id", depth);
     serialize_file_id(cache, file->identifier);
 
-    if (file->type != BLD_DIR) {
+    if (file->type != BLD_FILE_DIRECTORY) {
         fprintf(cache, ",\n");
         json_serialize_key(cache, "mtime", depth);
         serialize_file_mtime(cache, file->identifier);
@@ -94,52 +94,42 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         serialize_linker_flags(cache, &file->build_info.linker_flags, depth + 1);
     }
 
-    if (file->type != BLD_DIR) {
+    {
         bld_set* includes;
-        switch (file->type) {
-            case (BLD_HEADER): {
-                includes = &file->info.header.includes;
-            } break;
-            case (BLD_IMPL): {
-                includes = &file->info.impl.includes;
-            } break;
-            case (BLD_TEST): {
-                includes = &file->info.test.includes;
-            } break;
-            default: {
-                log_fatal("serialize_file: unrecognized file type, unreachable error");
-                return; /* Unreachable */
-            }
-        }
+        includes = file_includes_get(file);
+        if (includes == NULL) {goto no_serialize_includes;}
+
 
         fprintf(cache, ",\n");
         json_serialize_key(cache, "includes", depth);
         serialize_file_includes(cache, includes, depth + 1);
     }
+    no_serialize_includes:
 
-    switch (file->type) {
-        case (BLD_DIR): break;
-        case (BLD_HEADER): break;
-        case (BLD_IMPL): {
-            fprintf(cache, ",\n");
+    {
+        bld_set* undefined;
+        undefined = file_undefined_get(file);
+        if (undefined == NULL) {goto no_serialize_undefined;}
 
-            json_serialize_key(cache, "undefined_symbols", depth);
-            serialize_file_symbols(cache, &file->info.impl.undefined_symbols, depth + 1);
+        fprintf(cache, ",\n");
 
-            fprintf(cache, ",\n");
-            json_serialize_key(cache, "defined_symbols", depth);
-            serialize_file_symbols(cache, &file->info.impl.defined_symbols, depth + 1);
-
-        } break;
-        case (BLD_TEST): {
-            fprintf(cache, ",\n");
-            json_serialize_key(cache, "undefined_symbols", depth);
-            serialize_file_symbols(cache, &file->info.test.undefined_symbols, depth + 1);
-        } break;
-        default: log_fatal("serialize_file: unrecognized file type, unreachable error");
+        json_serialize_key(cache, "undefined_symbols", depth);
+        serialize_file_symbols(cache, undefined, depth + 1);
     }
+    no_serialize_undefined:
 
-    if (file->type == BLD_DIR) {
+    {
+        bld_set* defined;
+        defined = file_defined_get(file);
+        if (defined == NULL) {goto no_serialize_defined;}
+
+        fprintf(cache, ",\n");
+        json_serialize_key(cache, "defined_symbols", depth);
+        serialize_file_symbols(cache, defined, depth + 1);
+    }
+    no_serialize_defined:
+
+    if (file->type == BLD_FILE_DIRECTORY) {
         int first = 1;
         bld_iter iter;
         uintmax_t* child_id;
@@ -173,16 +163,16 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
 
 void serialize_file_type(FILE* cache, bld_file_type type) {
     switch (type) {
-        case (BLD_DIR): {
+        case (BLD_FILE_DIRECTORY): {
             fprintf(cache, "\"directory\"");
         } break;
-        case (BLD_IMPL): {
+        case (BLD_FILE_IMPLEMENTATION): {
             fprintf(cache, "\"implementation\"");
         } break;
-        case (BLD_HEADER): {
+        case (BLD_FILE_INTERFACE): {
             fprintf(cache, "\"header\"");
         } break;
-        case (BLD_TEST): {
+        case (BLD_FILE_TEST): {
             fprintf(cache, "\"test\"");
         } break;
         default: log_fatal("serialize_file_type: unreachable error???");
@@ -198,15 +188,17 @@ void serialize_file_mtime(FILE* cache, bld_file_identifier id) {
 }
 
 void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
-    int first = 1;
+    int first;
     bld_string* symbol;
-    bld_iter iter = iter_set(symbols);
+    bld_iter iter;
 
     fprintf(cache, "[");
     if (symbols->size > 1) {
         fprintf(cache, "\n");
     }
 
+    first = 1;
+    iter = iter_set(symbols);
     while (iter_next(&iter, (void**) &symbol)) {
         if (!first) {
             fprintf(cache, ",\n");
@@ -226,7 +218,7 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
 }
 
 void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
-    int first = 1;
+    int first;
     size_t i;
 
     fprintf(cache, "[");
@@ -234,6 +226,7 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
         fprintf(cache, "\n");
     }
 
+    first = 1;
     for (i = 0; i < includes->capacity + includes->max_offset; i++) {
         if (includes->offset[i] >= includes->max_offset) {continue;}
         if (!first) {

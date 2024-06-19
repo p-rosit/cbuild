@@ -80,6 +80,7 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
             bld_iter iter;
             bld_string* flag;
             bld_compiler_flags* flags;
+
             if (file->info.compiler.type == BLD_COMPILER) {
                 string_free(&file->info.compiler.as.compiler.executable);
                 flags = &file->info.compiler.as.compiler.flags;
@@ -107,6 +108,7 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
             bld_iter iter;
             bld_string* flag;
             bld_compiler_flags* flags;
+
             if (file->info.compiler.type == BLD_COMPILER) {
                 string_free(&file->info.compiler.as.compiler.executable);
                 flags = &file->info.compiler.as.compiler.flags;
@@ -145,7 +147,9 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
 
             iter = iter_array(&cmd->flags);
             while (iter_next(&iter, (void**) &flag)) {
-                bld_string temp = string_new();
+                bld_string temp;
+
+                temp = string_new();
                 if (flag->is_switch) {
                     string_append_string(&temp, "-");
                 } else {
@@ -190,7 +194,9 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
         flags->flag_hash = set_new(0);
         iter = iter_array(&cmd->flags);
         while (iter_next(&iter, (void**) &flag)) {
-            bld_string temp = string_new();
+            bld_string temp;
+
+            temp = string_new();
             if (flag->is_switch) {
                 string_append_string(&temp, "-");
             } else {
@@ -233,7 +239,9 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
         flags->removed = set_new(sizeof(bld_string));
         iter = iter_array(&cmd->flags);
         while (iter_next(&iter, (void**) &flag)) {
-            bld_string temp = string_new();
+            bld_string temp;
+
+            temp = string_new();
             if (flag->is_switch) {
                 string_append_string(&temp, "-");
             } else {

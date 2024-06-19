@@ -41,7 +41,7 @@ int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** 
     if (!has_next) {return has_next;}
 
     *file = set_get(files, file_id);
-    if (*file == NULL) {log_fatal("File id in graph did not exist in file set.");}
+    if (*file == NULL) {log_fatal(LOG_FATAL_PREFIX "file id in graph did not exist in file set.");}
 
     return has_next;
 }
@@ -53,7 +53,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
@@ -71,23 +71,9 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
             bld_set* includes;
-            if (to_file->type == BLD_DIR) {continue;}
+            if (to_file->type == BLD_FILE_DIRECTORY) {continue;}
 
-            switch (to_file->type) {
-                case (BLD_IMPL): {
-                    includes = &to_file->info.impl.includes;
-                } break;
-                case (BLD_TEST): {
-                    includes = &to_file->info.test.includes;
-                } break;
-                case (BLD_HEADER): {
-                    includes = &to_file->info.header.includes;
-                } break;
-                default: {
-                    log_fatal("dependency_graph_extract_includes: internal error");
-                    return; /* Unreachable */
-                }
-            }
+            includes = file_includes_get(to_file);
 
             if (!set_has(includes, file->identifier.id)) {
                 continue;
@@ -110,8 +96,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
-        if (file->type == BLD_DIR) {continue;}
-        if (file->type == BLD_HEADER) {continue;}
+        if (file->type == BLD_FILE_DIRECTORY) {continue;}
+        if (file->type == BLD_FILE_INTERFACE) {continue;}
 
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
             continue;
@@ -133,23 +119,15 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
         bld_file* to_file;
         bld_set* undefined;
 
-        if (file->type != BLD_IMPL && file->type != BLD_TEST) {continue;}
-
-        switch (file->type) {
-            case (BLD_IMPL): {undefined = &file->info.impl.undefined_symbols;} break;
-            case (BLD_TEST): {undefined = &file->info.test.undefined_symbols;} break;
-            default: {
-                log_fatal("dependency_graph_extract_symbols: unrecognized file type, unreachable error");
-                return; /* Unreachable */
-            }
-        }
+        undefined = file_undefined_get(file);
+        if (undefined == NULL) {continue;}
 
         iter = iter_set(files);
         while (iter_next(&iter, (void**) &to_file)) {
             bld_set* defined;
 
-            if (to_file->type != BLD_IMPL) {continue;}
-            defined = &to_file->info.impl.defined_symbols;
+            defined = file_defined_get(to_file);
+            if (defined == NULL) {continue;}
 
             if (set_empty_intersection(undefined, defined)) {
                 continue;
@@ -184,7 +162,7 @@ void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol
 
     result = system(string_unpack(&cmd));
     if (result) {
-        log_fatal("Unable to extract symbols from \"%s\"", path_to_string(&file->path));
+        log_fatal(LOG_FATAL_PREFIX "unable to extract symbols from \"%s\"", path_to_string(&file->path));
     }
 
     string_free(&cmd);
@@ -196,7 +174,7 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
     bld_string func;
 
     f = fopen(path_to_string(symbol_path), "r");
-    if (f == NULL) {log_fatal("parse_symbols: symbol file could not be opened");}
+    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "symbol file could not be opened");}
 
     while (1) {
         c = fgetc(f);
@@ -233,27 +211,23 @@ void parse_symbols(bld_file* file, bld_path* symbol_path) {
         }
 
         if (symbol_type == 'T' || symbol_type == 'B' || symbol_type == 'R' || symbol_type == 'D' || symbol_type == 'S') {
-            switch (file->type) {
-                case (BLD_IMPL): {
-                    add_symbol(&file->info.impl.defined_symbols, &func);
-                } break;
-                case (BLD_TEST): {
-                    string_free(&func);
-                } break;
-                default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
+            bld_set* defined;
+            defined = file_defined_get(file);
+            if (defined != NULL) {
+                add_symbol(&file->info.impl.defined_symbols, &func);
+            } else {
+                string_free(&func);
             }
         } else if (symbol_type == 'U') {
-            switch (file->type) {
-                case (BLD_IMPL): {
-                    add_symbol(&file->info.impl.undefined_symbols, &func);
-                } break;
-                case (BLD_TEST): {
-                    add_symbol(&file->info.test.undefined_symbols, &func);
-                } break;
-                default: {log_fatal("parse_symbols: unrecognized file type, unreachable error");}
+            bld_set* undefined;
+            undefined = file_undefined_get(file);
+            if (undefined == NULL) {
+                log_fatal(LOG_FATAL_PREFIX "parsing symbols for file type %d which has no undefined symbols", file->type);
             }
+
+            add_symbol(undefined, &func);
         } else {
-            log_fatal("parse_symbols: unreachable error");
+            log_fatal(LOG_FATAL_PREFIX "unreachable error");
         }
 
         next_line:
@@ -275,19 +249,25 @@ int expect_char(FILE*, char);
 int expect_string(FILE*, char*);
 
 int get_next(FILE* file) { /* Same as next_character... */
-    int c = getc(file);
+    int c;
+
+    c = getc(file);
     while (c != EOF && isspace(c)) {c = getc(file);}
     return c;
 }
 
 int skip_line(FILE* file) {
-    int c = getc(file);
+    int c;
+
+    c = getc(file);
     while (c != EOF && c != '\n') {c = getc(file);}
     return c == '\n';
 }
 
 int expect_char(FILE* file, char c) {
-    int file_char = get_next(file);
+    int file_char;
+
+    file_char = get_next(file);
     return c == file_char;
 }
 
@@ -313,28 +293,17 @@ void parse_included_files(bld_file* file) {
     bld_set* includes;
     int c;
 
-    if (file->type == BLD_DIR) {
-        log_fatal("parse_included_files: cannot parse includes for directory \"%s\"", string_unpack(&file->name));
+    if (file->type == BLD_FILE_DIRECTORY) {
+        log_fatal(LOG_FATAL_PREFIX "cannot parse includes for directory \"%s\"", string_unpack(&file->name));
     }
 
-    switch (file->type) {
-        case (BLD_IMPL): {
-            includes = &file->info.impl.includes;
-        } break;
-        case (BLD_TEST): {
-            includes = &file->info.test.includes;
-        } break;
-        case (BLD_HEADER): {
-            includes = &file->info.header.includes;
-        } break;
-        default: {
-            log_fatal("parse_included_files: internal error");
-            return; /* Unreachable */
-        }
+    includes = file_includes_get(file);
+    if (includes == NULL) {
+        log_fatal(LOG_FATAL_PREFIX "attempting to parse includes of file which does not have includes: %d", file->type);
     }
 
     f = fopen(path_to_string(&file->path), "r");
-    if (f == NULL) {log_fatal("Could not open file for reading: \"%s\"", string_unpack(&file->name));}
+    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "could not open file for reading: \"%s\"", string_unpack(&file->name));}
 
     parent_path = path_copy(&file->path);
     path_remove_last_string(&parent_path);
