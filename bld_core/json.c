@@ -9,10 +9,9 @@ void json_serialize_key(FILE* cache, char* key, int depth) {
 }
 
 int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
-    int value_num = 0;
-    int result, parse_complete;
-    int c;
+    int value_num, result, parse_complete, c;
 
+    value_num = 0;
     parse_complete = 0;
     c = next_character(file);
     if (c == EOF) {log_warn("Unexpected EOF"); goto parse_failed;}
@@ -56,8 +55,7 @@ int json_parse_array(FILE* file, void* obj, bld_parse_func parse_func) {
 }
 
 int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys, bld_parse_func* parse_funcs) {
-    int exists, index, key_num = 0;
-    int result, parse_complete;
+    int exists, index, key_num, result, parse_complete;
     bld_string str;
     char c, *temp;
 
@@ -76,6 +74,7 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
         ungetc(c, file);
     }
 
+    key_num = 0;
     while (!parse_complete) {
         int i;
 
@@ -154,7 +153,7 @@ int json_parse_map(FILE* file, void* obj, int entries, int* parsed, char** keys,
 }
 
 int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
-    uintmax_t num = 0;
+    uintmax_t num;
     int c;
 
     c = next_character(file);
@@ -163,6 +162,7 @@ int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
         return -1;
     }
 
+    num = 0;
     while (c != EOF && isdigit(c)) {
         /* Warning: number is assumed to be valid, no overflow etc. */
         num = 10 * num + (c - '0');
@@ -175,7 +175,9 @@ int parse_uintmax(FILE* file, uintmax_t* num_ptr) {
 }
 
 int next_character(FILE* file) {
-    int c = getc(file);
+    int c;
+
+    c = getc(file);
     while (c != EOF && isspace(c)) {c = getc(file);}
     return c;
 }
