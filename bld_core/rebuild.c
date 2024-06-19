@@ -12,7 +12,9 @@ void                set_main_rebuild(bld_forward_project*, bld_path*);
 
 int run_new_build(bld_path* root, char* executable) {
     int result;
-    bld_path cmd = path_copy(root);
+    bld_path cmd;
+
+    cmd = path_copy(root);
     path_append_string(&cmd, executable);
 
     log_info("Running new build script");
@@ -24,16 +26,18 @@ int run_new_build(bld_path* root, char* executable) {
 }
 
 bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
-    bld_forward_project fbuild = project_forward_new(&root, &compiler, &linker);
+    bld_forward_project fbuild;
+    fbuild = project_forward_new(&root, &compiler, &linker);
     fbuild.rebuilding = 1;
     return fbuild;
 }
 
 void extract_names(int argc, char** argv, char** file, char** old_file) {
-    bld_path path = project_path_extract(argc, argv);
+    bld_path path;
     bld_string str;
     char* name;
     
+    path = project_path_extract(argc, argv);
     name = path_remove_last_string(&path);
     if (strncmp(name, "old_", 4) == 0) {
         name += 4;
@@ -62,7 +66,8 @@ char* infer_build_name(char* name) {
 }
 
 void set_main_rebuild(bld_forward_project* build, bld_path* path) {
-    bld_string str = string_new();
+    bld_string str;
+    str = string_new();
     string_append_string(&str, path_to_string(path));
     build->main_file_name = str;
 }
