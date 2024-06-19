@@ -37,9 +37,10 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
             flags = &file->info.linker_flags;
 
             if (flags->flags.size > 0) {
-                int first = 1;
+                int first;
                 printf("Flags:    [");
 
+                first = 1;
                 iter = iter_array(&flags->flags);
                 while (iter_next(&iter, (void**) &flag)) {
                     if (!first) {
@@ -80,7 +81,9 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
 
         iter = iter_array(&cmd->flags);
         while (iter_next(&iter, (void**) &flag)) {
-            bld_string temp = string_new();
+            bld_string temp;
+
+            temp = string_new();
             if (flag->is_switch) {
                 string_append_string(&temp, "-");
             } else {
@@ -103,7 +106,9 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
 
         iter = iter_array(&cmd->flags);
         while (iter_next(&iter, (void**) &flag)) {
-            bld_string temp = string_new();
+            bld_string temp;
+
+            temp = string_new();
             if (flag->is_switch) {
                 string_append_string(&temp, "-");
             } else {
