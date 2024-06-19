@@ -48,8 +48,9 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
 
     if (error) {
         bld_string* str;
-        bld_string err = string_new();
+        bld_string err;
 
+        err = string_new();
         if (errs.size <= 0) {log_fatal("application_command_parse: error but no error");}
 
         log_error("Error with: %d", handle->type);
@@ -78,13 +79,19 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
 }
 
 int application_command_execute(bld_application_command* cmd, bld_data* data) {
-    bld_handle_annotated* handle = set_get(&data->handles, cmd->type);
+    bld_handle_annotated* handle;
+
+    handle = set_get(&data->handles, cmd->type);
     if (handle == NULL) {log_fatal("application_command_execute: no handle");}
+
     return handle->execute(&cmd->as, data);
 }
 
 void application_command_free(bld_application_command* cmd, bld_data* data) {
-    bld_handle_annotated* handle = set_get(&data->handles, cmd->type);
+    bld_handle_annotated* handle;
+
+    handle = set_get(&data->handles, cmd->type);
     if (handle == NULL) {log_fatal("application_command_free: no handle");}
+
     handle->free(&cmd->as);
 }
