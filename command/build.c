@@ -188,6 +188,9 @@ int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
     } else if (data->target_config.files.info.compiler.type != BLD_COMPILER) {
         log_error("target has no base compiler, only compiler flags");
         return -1;
+    } else if (!data->target_config.linker_set) {
+        log_error("target has no base linker");
+        return -1;
     }
 
     error = 0;
