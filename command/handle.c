@@ -25,7 +25,9 @@ void handle_string_append_int(bld_string*, int);
 
 bld_handle handle_new(char* name) {
     bld_handle handle;
-    bld_string str = string_pack(name);
+    bld_string str;
+
+    str = string_pack(name);
     handle.name = string_copy(&str);
     handle.description_set = 0;
     handle.positional = array_new(sizeof(bld_handle_positional));
@@ -33,6 +35,7 @@ bld_handle handle_new(char* name) {
     handle.flag_start_index = -1;
     handle.flag_array = array_new(sizeof(bld_handle_flag));
     handle.flags = set_new(sizeof(size_t));
+
     return handle;
 }
 
@@ -76,7 +79,7 @@ void handle_string_append_int(bld_string* str, int number) {
 }
 
 void handle_positional_required(bld_handle* handle, char* description) {
-    bld_string str = string_pack(description);
+    bld_string str;
     bld_handle_positional arg, *prev;
     
     if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
@@ -92,13 +95,15 @@ void handle_positional_required(bld_handle* handle, char* description) {
         }
     }
 
+    str = string_pack(description);
     arg.type = BLD_HANDLE_POSITIONAL_REQUIRED;
     arg.description = string_copy(&str);
+
     array_push(&handle->positional, &arg);
 }
 
 void handle_positional_optional(bld_handle* handle, char* description) {
-    bld_string str = string_pack(description);
+    bld_string str;
     bld_handle_positional arg, *prev;
     
     if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
@@ -112,14 +117,15 @@ void handle_positional_optional(bld_handle* handle, char* description) {
         }
     }
 
-
+    str = string_pack(description);
     arg.type = BLD_HANDLE_POSITIONAL_OPTIONAL;
     arg.description = string_copy(&str);
+
     array_push(&handle->positional, &arg);
 }
 
 void handle_positional_vargs(bld_handle* handle, char* description) {
-    bld_string str = string_pack(description);
+    bld_string str;
     bld_handle_positional arg, *prev;
     
     if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
@@ -135,6 +141,7 @@ void handle_positional_vargs(bld_handle* handle, char* description) {
         }
     }
 
+    str = string_pack(description);
     arg.type = BLD_HANDLE_POSITIONAL_VARGS;
     arg.description = string_copy(&str);
 
@@ -142,24 +149,28 @@ void handle_positional_vargs(bld_handle* handle, char* description) {
 }
 
 void handle_positional_expect(bld_handle* handle, char* value) {
-    bld_string val = string_pack(value);
+    bld_string val;
     bld_handle_positional arg;
 
     if (handle->positional.size >= BLD_COMMAND_MAX_ARGS) {
         log_fatal("handle_positional_required: cannot exceed %d arguments.", BLD_COMMAND_MAX_ARGS);
     }
 
+    val = string_pack(value);
     arg.type = BLD_HANDLE_POSITIONAL_EXPECTED;
     arg.description = string_copy(&val);
+
     array_push(&handle->positional, &arg);
 }
 
 void handle_allow_arbitrary_flags(bld_handle* handle, char* description) {
-    bld_string str = string_pack(description);
+    bld_string str;
+
     if (handle->arbitrary_flags) {
         log_fatal("handle_allow_arbitrary_flags: attempting to allow arbitrary flags multiple times");
     }
 
+    str = string_pack(description);
     handle->arbitrary_flags = 1;
     handle->arbitray_flags_description = string_copy(&str);
 }
@@ -188,6 +199,7 @@ void handle_allow_flags(bld_handle* handle) {
 
 void handle_set_description(bld_handle* handle, char* description) {
     bld_string str;
+
     if (handle->description_set) {
         log_fatal("handle_add_description: Description of handle has already been set");
     }
@@ -201,6 +213,7 @@ void handle_flag(bld_handle* handle, char swtch, char* option, char* description
     size_t index = handle->flag_array.size;
     bld_string opt, desc;
     bld_handle_flag flag;
+
     opt = string_pack(option);
     desc = string_pack(description);
 
@@ -229,6 +242,7 @@ bld_command command_new(bld_handle* handle) {
     bld_command cmd;
     bld_iter iter;
     bld_handle_positional* arg;
+
     cmd.positional = array_new(sizeof(bld_command_positional));
     cmd.flags = set_new(sizeof(bld_command_flag));
     cmd.extra_flags = array_new(sizeof(bld_command_flag));
@@ -371,6 +385,7 @@ bld_handle_info handle_info_new(bld_handle* handle) {
     size_t index;
     bld_iter iter;
     bld_handle_positional* pos;
+
     info.positional_parsed = malloc(handle->positional.size * sizeof(int));
     if (info.positional_parsed == NULL) {
         log_fatal("handle_info_new: could not allocate parsed array of size %lu", handle->positional.size);
@@ -398,7 +413,7 @@ void handle_info_free(bld_handle_info* info) {
 }
 
 int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array* err) {
-    int error = 0, index, too_few;
+    int error, index, too_few;
     bld_string empty_switch, empty_option;
     bld_iter iter;
     bld_handle_info info;
@@ -408,6 +423,7 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
     *cmd = command_new(handle);
     info = handle_info_new(handle);
 
+    error = 0;
     empty_switch = string_pack("-");
     empty_option = string_pack("--");
     while (!args_empty(&args)) {
@@ -500,7 +516,7 @@ bld_command_error handle_parse_required(bld_string* arg, bld_handle_info* info, 
 }
 
 bld_command_error handle_parse_optional(bld_string* arg, bld_handle_info* info, bld_handle* handle, bld_command* cmd, bld_array* err) {
-    int error = 0;
+    int error;
     size_t* index;
     bld_handle_positional* expected;
     bld_command_positional* cmd_arg;
@@ -512,6 +528,7 @@ bld_command_error handle_parse_optional(bld_string* arg, bld_handle_info* info, 
         expected = NULL;
     }
 
+    error = 0;
     if (expected != NULL) {
         if (string_eq(arg, &expected->description)) {
             info->current_arg = *index;
@@ -547,10 +564,13 @@ bld_command_error handle_parse_expected(bld_string* arg, bld_handle_info* info, 
     info->current_expected += 1;
 
     if (!match) {
-        bld_string str = command_error_at(arg);
+        bld_string str;
+
+        str = command_error_at(arg);
         string_append_string(&str, "expected \"");
         string_append_string(&str, string_unpack(&expected->description));
         string_append_string(&str, "\"");
+
         array_push(err, &str);
     }
 
@@ -605,13 +625,19 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
     flag_str = string_pack(temp);
 
     if (*temp == '\0' && is_switch) {
-        bld_string str = command_error_at(arg);
+        bld_string str;
+
+        str = command_error_at(arg);
         string_append_string(&str, "empty switch");
+
         array_push(err, &str);
         return BLD_COMMAND_ERROR_FLAG_EMPTY;
     } else if (*temp == '\0' && !is_switch) {
-        bld_string str = command_error_at(arg);
+        bld_string str;
+
+        str = command_error_at(arg);
         string_append_string(&str, "empty flag");
+
         array_push(err, &str);
         return BLD_COMMAND_ERROR_FLAG_EMPTY;
     }    
@@ -625,8 +651,11 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
     }
 
     if (set_has(&cmd->flags, flag_hash)) {
-        bld_string str = command_error_at(arg);
+        bld_string str;
+
+        str = command_error_at(arg);
         string_append_string(&str, "duplicate flag");
+
         array_push(err, &str);
         return BLD_COMMAND_ERROR_FLAG_DUPLICATE;
     }
@@ -634,6 +663,7 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
     if (flag_exists) {
         size_t* flag_index;
         bld_handle_flag* handle_flag;
+
         flag_index = set_get(&handle->flags, flag_hash);
         handle_flag = array_get(&handle->flag_array, *flag_index);
 
@@ -645,8 +675,9 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
         flag.flag = string_copy(&flag_str);
         array_push(&cmd->extra_flags, &flag);
     } else {
-        bld_string str = command_error_at(arg);
+        bld_string str;
 
+        str = command_error_at(arg);
         if (is_switch) {
             string_append_string(&str, "unknown switch");
         } else {
@@ -663,10 +694,11 @@ bld_command_error handle_parse_flag(bld_string* arg, bld_handle_info* info, bld_
 bld_string handle_make_description(bld_handle* handle) {
     int index, npos;
     bld_iter iter;
-    bld_string description = string_new();
+    bld_string description;
     bld_handle_positional* pos;
     bld_handle_flag* flag;
 
+    description = string_new();
     string_append_string(&description, "usage: ");
     string_append_string(&description, string_unpack(&handle->name));
 
@@ -729,6 +761,7 @@ bld_string handle_make_description(bld_handle* handle) {
         string_append_string(&description, "\n\n");
         string_append_string(&description, "Positional Arguments:");
     }
+
     npos = 0;
     iter = iter_array(&handle->positional);
     while (iter_next(&iter, (void**) &pos)) {
