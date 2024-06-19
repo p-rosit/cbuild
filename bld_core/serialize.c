@@ -188,15 +188,17 @@ void serialize_file_mtime(FILE* cache, bld_file_identifier id) {
 }
 
 void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
-    int first = 1;
+    int first;
     bld_string* symbol;
-    bld_iter iter = iter_set(symbols);
+    bld_iter iter;
 
     fprintf(cache, "[");
     if (symbols->size > 1) {
         fprintf(cache, "\n");
     }
 
+    first = 1;
+    iter = iter_set(symbols);
     while (iter_next(&iter, (void**) &symbol)) {
         if (!first) {
             fprintf(cache, ",\n");
@@ -216,7 +218,7 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
 }
 
 void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
-    int first = 1;
+    int first;
     size_t i;
 
     fprintf(cache, "[");
@@ -224,6 +226,7 @@ void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
         fprintf(cache, "\n");
     }
 
+    first = 1;
     for (i = 0; i < includes->capacity + includes->max_offset; i++) {
         if (includes->offset[i] >= includes->max_offset) {continue;}
         if (!first) {
