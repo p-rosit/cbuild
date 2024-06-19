@@ -659,10 +659,3 @@ int incremental_compile_project(bld_project* project, char* name) {
     path_free(&executable_path);
     return result;
 }
-
-int incremental_test_project(bld_project* project, char* path) {
-    log_fatal("incremental_test_project: not implemented.");
-    (void)(project); /* Suppress unused parameter warning */
-    (void)(path);
-    return -1;
-}
