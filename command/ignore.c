@@ -8,13 +8,16 @@ const bld_string bld_command_string_ignore_flag_delete = STRING_COMPILE_TIME_PAC
 
 int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_iter iter;
-    bld_config_target* config = &data->target_config;
+    bld_config_target* config;
     bld_path path, *temp;
-    bld_set ignored_files = set_new(sizeof(bld_path));
+    bld_set ignored_files;
     uintmax_t added_id;
 
+    ignored_files = set_new(sizeof(bld_path));
+    config = &data->target_config;
     config_target_load(data, &cmd->target);
     if (!data->target_config_parsed) {log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));}
+
     log_info("Chosen target: \"%s\"", string_unpack(&cmd->target));
 
     iter = iter_array(&config->ignore_paths);
