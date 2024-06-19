@@ -8,11 +8,13 @@ const bld_string bld_command_string_add_flag_delete = STRING_COMPILE_TIME_PACK("
 
 int command_add(bld_command_add* cmd, bld_data* data) {
     bld_iter iter;
-    bld_config_target* config = &data->target_config;
+    bld_config_target* config;
     bld_path path, *temp;
-    bld_set added_files = set_new(sizeof(bld_path));
+    bld_set added_files;
     uintmax_t added_id;
 
+    config = &data->target_config;
+    added_files = set_new(sizeof(bld_path));
     config_target_load(data, &cmd->target);
     if (!data->target_config_parsed) {log_fatal("Could not parse config of target \"%s\"", string_unpack(&cmd->target));}
     log_info("Chosen target: \"%s\"", string_unpack(&cmd->target));
@@ -61,7 +63,9 @@ int command_add(bld_command_add* cmd, bld_data* data) {
             a = string_pack(path_to_string(path));
             iter = iter_array(&data->target_config.added_paths);
             while (iter_next(&iter, (void**) &p)) {
-                bld_string b = string_pack(path_to_string(p));
+                bld_string b;
+
+                b = string_pack(path_to_string(p));
                 if (string_eq(&a, &b)) {break;}
                 index += 1;
             }
