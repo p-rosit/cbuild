@@ -117,10 +117,11 @@ void linker_flags_add_flag(bld_linker_flags* linker, char* flag) {
 }
 
 uintmax_t linker_flags_hash(bld_linker_flags* linker_flags) {
-    uintmax_t seed = 335545;
+    uintmax_t seed;
     bld_iter iter;
     bld_string* flag;
 
+    seed = 335545;
     iter = iter_array(&linker_flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         seed = (seed << 7) + string_hash(string_unpack(flag));
@@ -174,7 +175,7 @@ void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
 
 void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
     bld_string* flag;
-    int first = 1;
+    int first;
     bld_iter iter;
 
     fprintf(cache, "[");
@@ -182,6 +183,7 @@ void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
         fprintf(cache, "\n");
     }
 
+    first = 1;
     iter = iter_array(&flags->flags);
     while (iter_next(&iter, (void**) &flag)) {
         if (!first) {fprintf(cache, ",\n");}
@@ -219,27 +221,30 @@ int parse_linker(FILE* file, bld_linker* linker) {
 
 int parse_linker_executable(FILE* file, bld_linker* linker) {
     bld_string str;
-    int result = string_parse(file, &str);
+    int error;
 
-    if (result) {
+    error = string_parse(file, &str);
+    if (error) {
         log_warn("Could not parse linker executable");
         return -1;
     }
 
     linker->executable = str;
-    return result;
+    return error;
 }
 
 int parse_linker_linker_flags(FILE* file, bld_linker* linker) {
     bld_linker_flags flags;
-    int result = parse_linker_flags(file, &flags);
-    if (result) {
+    int error;
+
+    error = parse_linker_flags(file, &flags);
+    if (error) {
         linker_flags_free(&flags);
         log_warn("Could not parse linker flags");
     }
 
     linker->flags = flags;
-    return result;
+    return error;
 }
 
 int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
@@ -258,13 +263,15 @@ int parse_linker_flags(FILE* file, bld_linker_flags* flags) {
 
 int parse_linker_flag(FILE* file, bld_linker_flags* flags) {
     bld_string str;
-    int result = string_parse(file, &str);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &str);
+    if (error) {
         log_warn("Could not parse linker flag");
         return -1;
     }
 
     array_push(&flags->flags, &str);
 
-    return result;
+    return error;
 }
