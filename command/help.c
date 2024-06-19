@@ -20,6 +20,7 @@ int command_help_target(bld_string*, bld_data*);
 int command_help(bld_command_help* help, bld_data* data) {
     if (help->has_command) {
         bld_command_type type;
+
         if (set_has(&data->targets, string_hash(string_unpack(&help->command)))) {
             return command_help_target(&help->command, data);
         } else if (string_eq(&help->command, &bld_command_string_add)) {
@@ -46,6 +47,7 @@ int command_help(bld_command_help* help, bld_data* data) {
             printf("'%s' is not a command or target\n", string_unpack(&help->command));
             return -1;
         }
+
         return command_help_command(type, data);
     } else {
         log_info("Available commands:");
@@ -63,8 +65,12 @@ int command_help(bld_command_help* help, bld_data* data) {
 }
 
 int command_help_command(bld_command_type type, bld_data* data) {
-    bld_handle_annotated* handle = set_get(&data->handles, type);
-    bld_string help = handle_make_description(&handle->handle);
+    bld_handle_annotated* handle;
+    bld_string help;
+
+    handle = set_get(&data->handles, type);
+    help = handle_make_description(&handle->handle);
+
     printf("%s\n", string_unpack(&help));
     string_free(&help);
     return 0;
