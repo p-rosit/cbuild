@@ -91,7 +91,9 @@ void set_clear(bld_set* set) {
 
 void set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
     void* value_ptr;
-    void* temp = malloc(set->value_size);
+    void* temp;
+
+    temp = malloc(set->value_size);
     if (temp == NULL) {log_fatal("Cannot swap values");}
 
     hash_swap_entry(target, set->offset, set->hash, offset, hash);
@@ -104,9 +106,10 @@ void set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* h
 }
 
 int set_add_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {
-    int error = -1;
+    int error;
     size_t i;
 
+    error = -1;
     if (*offset >= set->max_offset) {return 0;}
 
     for (i = target; i < set->capacity + set->max_offset; i++) {
@@ -121,7 +124,7 @@ int set_add_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* has
 }
 
 int set_set_capacity(bld_set* set, size_t capacity) {
-    int error = 0;
+    int error;
     size_t i, target, total_capacity, max_offset;
     size_t* offsets;
     bld_hash* hashes;
@@ -129,8 +132,9 @@ int set_set_capacity(bld_set* set, size_t capacity) {
     bld_set new_set;
     bld_offset offset;
     bld_hash hash;
-    void* value = malloc(set->value_size);
+    void* value;
 
+    value = malloc(set->value_size);
     max_offset = hash_compute_offset(capacity);
     total_capacity = capacity + max_offset;
     offsets = malloc(total_capacity * sizeof(bld_offset));
@@ -156,6 +160,7 @@ int set_set_capacity(bld_set* set, size_t capacity) {
         new_set.offset[i] = new_set.max_offset;
     }
 
+    error = 0;
     for (i = 0; i < set->capacity + set->max_offset; i++) {
         if (set->offset[i] >= set->max_offset) {continue;}
         offset = set->offset[i];
@@ -193,12 +198,14 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
     int error;
     size_t target;
     size_t new_capacity = set->capacity;
-    bld_offset offset = 0;
-    void* temp = malloc(set->value_size);
+    bld_offset offset;
+    void* temp;
 
+    temp = malloc(set->value_size);
     if (temp == NULL) {log_fatal("Cannot add value");}
     memcpy(temp, value, set->value_size);
 
+    offset = 0;
     if (set->capacity > 0) {
         error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
         target = hash_target(set->capacity, offset, hash);
@@ -251,12 +258,13 @@ int set_add(bld_set* set, bld_hash hash, void* value) {
 void* set_remove(bld_set* set, bld_hash hash) {
     int error;
     size_t target, i;
-    bld_offset offset = 0;
+    bld_offset offset;
 
     if (set->capacity <= 0) {
         return NULL;
     }
 
+    offset = 0;
     error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
     target = hash_target(set->capacity, offset, hash);
 
@@ -288,11 +296,13 @@ void* set_remove(bld_set* set, bld_hash hash) {
 
 void* set_get(const bld_set* set, bld_hash hash) {
     int error;
-    size_t offset = 0, target;
-    char* values = set->values;
+    size_t offset, target;
+    char* values;
 
     if (set->capacity == 0) {return NULL;}
 
+    offset = 0;
+    values = set->values;
     error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
     target = hash_target(set->capacity, offset, hash);
 
@@ -305,11 +315,12 @@ void* set_get(const bld_set* set, bld_hash hash) {
 
 int set_has(const bld_set* set, bld_hash hash) {
     size_t target;
-    bld_offset offset = 0;
+    bld_offset offset;
     int error;
 
     if (set->capacity == 0) {return 0;}
 
+    offset = 0;
     error = hash_find_entry(set->capacity, set->max_offset, set->offset, set->hash, &offset, &hash);
     if (!error) {
         target = hash_target(set->capacity, offset, hash);
