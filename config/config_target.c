@@ -74,13 +74,16 @@ void config_target_build_info_free(bld_target_build_information* info) {
 }
 
 void serialize_config_target(bld_path* path, bld_config_target* config) {
-    FILE* file = fopen(path_to_string(path), "w");
-    int depth = 1;
+    FILE* file;
+    int depth;
+
+    file = fopen(path_to_string(path), "w");
     if (file == NULL) {
         log_fatal("Could not open target config file \"%s\"", path_to_string(path));
         return;
     }
 
+    depth = 1;
     fprintf(file, "{\n");
 
     json_serialize_key(file, "main", depth);
@@ -91,7 +94,9 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
     {
         bld_iter iter;
         bld_path* path;
-        int first = 1;
+        int first;
+
+        first = 1;
         fprintf(file, "[");
         iter = iter_array(&config->added_paths);
         while (iter_next(&iter, (void**) &path)) {
@@ -113,7 +118,9 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
     {
         bld_iter iter;
         bld_path* path;
-        int first = 1;
+        int first;
+
+        first = 1;
         fprintf(file, "[");
         iter = iter_array(&config->ignore_paths);
         while (iter_next(&iter, (void**) &path)) {
@@ -129,7 +136,6 @@ void serialize_config_target(bld_path* path, bld_config_target* config) {
         }
         fprintf(file, "]");
     }
-
 
     if (config->linker_set) {
         fprintf(file, ",\n");
@@ -178,13 +184,16 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
     }
 
     if (info->files.size > 0) {
-        int first = 1;
-        bld_iter iter = iter_array(&info->files);
+        int first;
+        bld_iter iter;
         bld_target_build_information* temp;
 
         fprintf(file, ",\n");
+
         json_serialize_key(file, "files", depth);
         fprintf(file, "[\n");
+        first = 1;
+        iter = iter_array(&info->files);
         while (iter_next(&iter, (void**) &temp)) {
             if (!first) {
                 fprintf(file, ",\n");
@@ -203,7 +212,7 @@ void serialize_config_target_file(FILE* file, bld_target_build_information* info
 }
 
 int parse_config_target(bld_path* path, bld_config_target* config) {
-    FILE* file = fopen(path_to_string(path), "r");
+    FILE* file;
     int amount_parsed;
     int size = 5;
     int parsed[5];
@@ -216,6 +225,7 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         (bld_parse_func) parse_config_target_files,
     };
 
+    file = fopen(path_to_string(path), "r");
     if (file == NULL) {
         log_warn("Cannot read target config file with path: \"%s\"", path_to_string(path));
         return -1;
@@ -235,8 +245,10 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         }
 
         if (parsed[1]) {
-            bld_iter iter = iter_array(&config->added_paths);
+            bld_iter iter;
             bld_path* path;
+
+            iter = iter_array(&config->added_paths);
             while (iter_next(&iter, (void**) &path)) {
                 path_free(path);
             }
@@ -244,8 +256,10 @@ int parse_config_target(bld_path* path, bld_config_target* config) {
         }
 
         if (parsed[2]) {
-            bld_iter iter = iter_array(&config->ignore_paths);
+            bld_iter iter;
             bld_path* path;
+
+            iter = iter_array(&config->ignore_paths);
             while (iter_next(&iter, (void**) &path)) {
                 path_free(path);
             }
@@ -282,7 +296,6 @@ void config_target_extract_compiler_types(bld_config_target* config, bld_target_
     }
 
     set_add(&config->compiler_types, info->info.compiler.as.compiler.type, &info->info.compiler.as.compiler.type);
-
     not_adding_handle:
 
     iter = iter_array(&info->files);
@@ -293,8 +306,10 @@ void config_target_extract_compiler_types(bld_config_target* config, bld_target_
 
 int parse_config_target_main(FILE* file, bld_config_target* config) {
     bld_string path_main;
-    int result = string_parse(file, &path_main);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &path_main);
+    if (error) {
         log_warn("could not parse main file path");
         return -1;
     }
@@ -314,10 +329,14 @@ int parse_config_target_ignored_paths(FILE* file, bld_config_target* config) {
 }
 
 int parse_config_target_paths(FILE* file, bld_array* array) {
-    int amount_parsed = json_parse_array(file, array, (bld_parse_func) parse_config_target_path);
+    int amount_parsed;
+
+    amount_parsed = json_parse_array(file, array, (bld_parse_func) parse_config_target_path);
     if (amount_parsed < 0) {
-        bld_iter iter = iter_array(array);
+        bld_iter iter;
         bld_path* path;
+
+        iter = iter_array(array);
         while (iter_next(&iter, (void**) &path)) {
             path_free(path);
         }
@@ -330,8 +349,10 @@ int parse_config_target_paths(FILE* file, bld_array* array) {
 int parse_config_target_path(FILE* file, bld_array* array) {
     bld_string temp;
     bld_path path;
-    int result = string_parse(file, &temp);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &temp);
+    if (error) {
         return -1;
     }
 
@@ -343,8 +364,10 @@ int parse_config_target_path(FILE* file, bld_array* array) {
 
 int parse_config_target_linker(FILE* file, bld_config_target* config) {
     bld_linker linker;
-    int result = parse_linker(file, &linker);
-    if (result) {
+    int error;
+
+    error = parse_linker(file, &linker);
+    if (error) {
         log_warn("could not parse linker");
         return -1;
     }
@@ -356,8 +379,10 @@ int parse_config_target_linker(FILE* file, bld_config_target* config) {
 
 int parse_config_target_files(FILE* file, bld_config_target* config) {
     bld_target_build_information files;
-    int result = parse_target_build_info(file, &files);
-    if (result) {
+    int error;
+
+    error = parse_target_build_info(file, &files);
+    if (error) {
         log_warn("could not parse files");
         return -1;
     }
@@ -404,8 +429,10 @@ int parse_target_build_info(FILE* file, bld_target_build_information* files) {
         }
 
         if (parsed[4]) {
-            bld_iter iter = iter_array(&files->files);
+            bld_iter iter;
             bld_target_build_information* info;
+
+            iter = iter_array(&files->files);
             while (iter_next(&iter, (void**) &info)) {
                 config_target_build_info_free(info);
             }
@@ -419,26 +446,29 @@ int parse_target_build_info(FILE* file, bld_target_build_information* files) {
 
 int parse_target_build_info_file_name(FILE* file, bld_target_build_information* info) {
     bld_string name;
-    int result = string_parse(file, &name);
-    if (result) {
+    int error;
+
+    error = string_parse(file, &name);
+    if (error) {
         log_warn("could not parse file name");
         return -1;
     }
+
     info->name = name;
     return 0;
 }
 
 int parse_target_build_info_file_compiler(FILE* file, bld_target_build_information* info) {
     bld_compiler compiler;
-    int result;
+    int error;
 
     if (info->info.compiler_set) {
         log_warn("compiler has already been parsed");
         return -1;
     }
 
-    result = parse_compiler(file, &compiler);
-    if (result) {
+    error = parse_compiler(file, &compiler);
+    if (error) {
         log_warn("could not parse compiler");
         return -1;
     }
@@ -451,15 +481,15 @@ int parse_target_build_info_file_compiler(FILE* file, bld_target_build_informati
 
 int parse_target_build_info_file_compiler_flags(FILE* file, bld_target_build_information* info) {
     bld_compiler_flags flags;
-    int result;
+    int error;
 
     if (info->info.compiler_set) {
         log_warn("compiler has already been parsed");
         return -1;
     }
 
-    result = parse_compiler_flags(file, &flags);
-    if (result) {
+    error = parse_compiler_flags(file, &flags);
+    if (error) {
         log_warn("could not parse compiler flags");
     }
 
@@ -471,8 +501,10 @@ int parse_target_build_info_file_compiler_flags(FILE* file, bld_target_build_inf
 
 int parse_target_build_info_file_linker_flags(FILE* file, bld_target_build_information* info) {
     bld_linker_flags flags;
-    int result = parse_linker_flags(file, &flags);
-    if (result) {
+    int error;
+
+    error = parse_linker_flags(file, &flags);
+    if (error) {
         log_warn("could not parse linker flags");
         return -1;
     }
@@ -503,10 +535,10 @@ int parse_target_build_info_file_sub_files(FILE* file, bld_target_build_informat
 
 int parse_target_build_info_file_sub_file(FILE* file, bld_array* files) {
     bld_target_build_information info;
-    int result;
+    int error;
 
-    result = parse_target_build_info(file, &info);
-    if (result) {
+    error = parse_target_build_info(file, &info);
+    if (error) {
         log_warn("could not parse file");
         return -1;
     }
