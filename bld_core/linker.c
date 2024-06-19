@@ -15,24 +15,6 @@ bld_linker linker_new(char* executable) {
     return linker;
 }
 
-bld_linker linker_with_flags(char* executable, ...) {
-    bld_linker linker;
-    va_list args;
-    char* flag;
-
-    linker = linker_new(executable);
-
-    va_start(args, executable);
-    while (1) {
-        flag = va_arg(args, char*);
-        if (flag == NULL) {break;}
-
-        linker_add_flag(&linker, flag);
-    }
-
-    return linker;
-}
-
 void linker_free(bld_linker* linker) {
     string_free(&linker->executable);
     linker_flags_free(&linker->flags);
@@ -54,29 +36,6 @@ void linker_add_flag(bld_linker* linker, char* flag) {
 bld_linker_flags linker_flags_new(void) {
     bld_linker_flags flags;
     flags.flags = array_new(sizeof(bld_string));
-    return flags;
-}
-
-bld_linker_flags linker_flags_with_flags(char* first_flag, ...) {
-    bld_linker_flags flags;
-    va_list args;
-    char* flag;
-
-    flags = linker_flags_new();
-
-    if (first_flag == NULL) {
-        return flags;
-    }
-    linker_flags_add_flag(&flags, first_flag);
-
-    va_start(args, first_flag);
-    while (1) {
-        flag = va_arg(args, char*);
-        if (flag == NULL) {break;}
-
-        linker_flags_add_flag(&flags, flag);
-    }
-
     return flags;
 }
 
