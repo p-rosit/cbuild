@@ -248,8 +248,12 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
 
 void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
-    bld_path path = path_copy(&project->base.root);
-    bld_file root = file_directory_new(&path, ".");
+    bld_path path;
+    bld_file root;
+
+    path = path_copy(&project->base.root);
+    root = file_directory_new(&path, ".");
+
     root.build_info.compiler_set = 1;
     root.build_info.compiler.type = BLD_COMPILER;
     root.build_info.compiler.as.compiler = fproject->compiler;
@@ -261,11 +265,12 @@ void incremental_make_root(bld_project* project, bld_forward_project* fproject) 
 }
 
 void incremental_apply_main_file(bld_project* project, bld_forward_project* fproject) {
-    int match_found = 0;
+    int match_found;
     bld_iter iter;
     bld_path path;
     bld_file* file;
 
+    match_found = 0;
     path.str = fproject->main_file_name;
 
     if (fproject->rebuilding) {
@@ -524,7 +529,7 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
 
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     bld_iter iter;
-    int result = 0, any_compiled = 0, temp;
+    int result, any_compiled, temp;
     bld_path path;
     bld_file *file;
     bld_set changed_files;
@@ -539,6 +544,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     dependency_graph_extract_includes(&project->graph, &project->files);
     incremental_mark_changed_files(project, &changed_files);
 
+    any_compiled = 0;
     result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
     set_free(&changed_files);
     if (result) {
