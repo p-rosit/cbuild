@@ -71,7 +71,6 @@ void project_add_build(bld_forward_project* fproject, char* path) {
 
     fproject->base.standalone = 0;
     fproject->base.build = path_from_string(path);
-    project_ignore_path(fproject, path);
 }
 
 void project_add_path(bld_forward_project* fproject, char* path) {
