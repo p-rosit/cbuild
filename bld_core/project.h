@@ -32,7 +32,7 @@ typedef struct bld_forward_project {
     int rebuilding;
     int resolved;
     bld_project_base base;
-    bld_array extra_paths;
+    bld_set extra_paths;
     bld_set ignore_paths;
     bld_compiler compiler;
     bld_string main_file_name;

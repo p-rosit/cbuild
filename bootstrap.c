@@ -22,9 +22,8 @@ int main(int argc, char** argv) {
 
     fproject = project_new(project_path_extract(argc, argv), compiler, linker);
 
-    project_add_path(&fproject, "bld_core");
-    project_ignore_path(&fproject, "bld_core/test");
     project_add_build(&fproject, "bld_core");
+    project_ignore_path(&fproject, "bld_core/test");
     rebuild_builder(&fproject, argc, argv);
 
     project_load_cache(&fproject, ".build_cache");

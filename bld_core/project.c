@@ -47,7 +47,7 @@ bld_forward_project project_forward_new(bld_path* path, bld_compiler* compiler, 
     fproject.rebuilding = 0;
     fproject.resolved = 0;
     fproject.base = project_base_new(path, linker);
-    fproject.extra_paths = array_new(sizeof(bld_path));
+    fproject.extra_paths = set_new(0);
     fproject.ignore_paths = set_new(0);
     fproject.main_file_name.chars = NULL;
     fproject.compiler = *compiler;
@@ -71,11 +71,10 @@ void project_add_build(bld_forward_project* fproject, char* path) {
 
     fproject->base.standalone = 0;
     fproject->base.build = path_from_string(path);
-    project_ignore_path(fproject, path);
 }
 
 void project_add_path(bld_forward_project* fproject, char* path) {
-    bld_path test, extra;
+    bld_path test;
 
     if (fproject->resolved) {
         log_fatal("Trying to add path \"\" but forward project has already been resolved, perform all setup of project before resolving", path);
@@ -83,11 +82,9 @@ void project_add_path(bld_forward_project* fproject, char* path) {
 
     test = path_copy(&fproject->base.root);
     path_append_string(&test, path);
-    file_get_id(&test);
-    path_free(&test);
 
-    extra = path_from_string(path);
-    array_push(&fproject->extra_paths, &extra);
+    set_add(&fproject->extra_paths, file_get_id(&test), NULL);
+    path_free(&test);
 }
 
 void project_ignore_path(bld_forward_project* fproject, char* path) {
@@ -189,15 +186,9 @@ void project_free(bld_project* project) {
 
 void project_partial_free(bld_forward_project* fproject) {
     bld_iter iter;
-    bld_path* path;
     bld_string* str;
 
-    iter = iter_array(&fproject->extra_paths);
-    while (iter_next(&iter, (void**) &path)) {
-        path_free(path);
-    }
-    array_free(&fproject->extra_paths);
-
+    set_free(&fproject->extra_paths);
     set_free(&fproject->ignore_paths);
     string_free(&fproject->main_file_name);
 
