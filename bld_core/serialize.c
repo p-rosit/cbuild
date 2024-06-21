@@ -170,7 +170,7 @@ void serialize_file_type(FILE* cache, bld_file_type type) {
             fprintf(cache, "\"implementation\"");
         } break;
         case (BLD_FILE_INTERFACE): {
-            fprintf(cache, "\"header\"");
+            fprintf(cache, "\"interface\"");
         } break;
         case (BLD_FILE_TEST): {
             fprintf(cache, "\"test\"");

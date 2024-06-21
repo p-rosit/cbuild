@@ -407,7 +407,7 @@ int parse_file_type(FILE* file, bld_parsing_file* f) {
         f->file.type = BLD_FILE_IMPLEMENTATION;
         f->file.info.impl.undefined_symbols = set_new(sizeof(bld_string));
         f->file.info.impl.defined_symbols = set_new(sizeof(bld_string));
-    } else if (strcmp(temp, "header") == 0) {
+    } else if (strcmp(temp, "interface") == 0) {
         f->file.type = BLD_FILE_INTERFACE;
     } else if (strcmp(temp, "test") == 0) {
         f->file.type = BLD_FILE_TEST;
