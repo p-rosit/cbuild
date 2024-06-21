@@ -12,6 +12,7 @@ typedef struct bld_path {
 bld_path    path_new(void);
 bld_path    path_copy(bld_path*);
 void        path_free(bld_path*);
+int         path_eq(const bld_path*, const bld_path*);
 
 bld_path    path_from_string(char*);
 char*       path_to_string(bld_path*);

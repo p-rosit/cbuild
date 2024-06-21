@@ -18,6 +18,10 @@ void path_free(bld_path* path) {
     string_free(&path->str);
 }
 
+int path_eq(const bld_path* path1, const bld_path* path2) {
+    return string_eq(&path1->str, &path2->str);
+}
+
 bld_path path_from_string(char* str) {
     bld_path path;
     path = path_new();
