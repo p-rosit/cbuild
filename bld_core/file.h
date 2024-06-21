@@ -8,6 +8,9 @@
 #include "compiler.h"
 #include "linker.h"
 
+typedef uintmax_t bld_file_id;
+typedef uintmax_t bld_time;
+
 typedef enum bld_file_type {
     BLD_FILE_INVALID,
     BLD_FILE_DIRECTORY,
@@ -24,9 +27,9 @@ typedef struct bld_file_build_information {
 } bld_file_build_information;
 
 typedef struct bld_file_identifier {
-    uintmax_t id;
-    uintmax_t hash;
-    uintmax_t time;
+    bld_file_id id;
+    bld_hash hash;
+    bld_time time;
 } bld_file_identifier;
 
 typedef struct bld_file_directory {
@@ -57,7 +60,7 @@ typedef union bld_file_info {
 
 typedef struct bld_file {
     bld_file_type type;
-    uintmax_t parent_id;
+    bld_file_id parent_id;
     bld_file_identifier identifier;
     bld_path path;
     bld_string name;

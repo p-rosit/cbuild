@@ -16,8 +16,8 @@ void file_free_implementation(bld_file_implementation*);
 void file_free_interface(bld_file_interface*);
 void file_free_test(bld_file_test*);
 
-uintmax_t file_get_id(bld_path* path) {
-    uintmax_t id;
+bld_file_id file_get_id(bld_path* path) {
+    bld_file_id id;
 
     id = os_info_id(path_to_string(path));
     if (id == BLD_INVALID_IDENITIFIER) {
@@ -29,7 +29,8 @@ uintmax_t file_get_id(bld_path* path) {
 
 bld_file_identifier get_identifier(bld_path* path) {
     bld_file_identifier identifier;
-    uintmax_t id, mtime;
+    bld_file_id id;
+    bld_time mtime;
 
     id = os_info_id(path_to_string(path));
     mtime = os_info_mtime(path_to_string(path));
@@ -73,7 +74,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
 bld_file file_directory_new(bld_path* path, char* name) {
     bld_file dir;
     dir = make_file(BLD_FILE_DIRECTORY, path, name);
-    dir.info.dir.files = array_new(sizeof(uintmax_t));
+    dir.info.dir.files = array_new(sizeof(bld_file_id));
     return dir;
 }
 
@@ -239,8 +240,9 @@ void file_free_test(bld_file_test* test) {
     set_free(&test->undefined_symbols);
 }
 
-uintmax_t file_hash(bld_file* file, bld_set* files) {
-    uintmax_t seed, parent_id;
+bld_hash file_hash(bld_file* file, bld_set* files) {
+    bld_hash seed;
+    bld_file_id parent_id;
 
     seed = 3401;
     seed = (seed << 3) + file->identifier.id;
@@ -341,7 +343,7 @@ void file_dir_add_file(bld_file* dir, bld_file* file) {
 }
 
 void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compiler, bld_array* flags) {
-    uintmax_t parent_id;
+    bld_file_id parent_id;
 
     parent_id = file->identifier.id;
     *compiler = NULL;
@@ -374,7 +376,7 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compi
 }
 
 void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
-    uintmax_t parent_id;
+    bld_file_id parent_id;
 
     parent_id = file->identifier.id;
     *flags = array_new(sizeof(bld_linker_flags));
