@@ -81,14 +81,14 @@ bld_file file_directory_new(bld_path* path, char* name) {
 bld_file file_interface_new(bld_path* path, char* name) {
     bld_file header;
     header = make_file(BLD_FILE_INTERFACE, path, name);
-    header.info.header.includes = set_new(0);
+    header.info.header.includes = set_new(sizeof(bld_path));
     return header;
 }
 
 bld_file file_implementation_new(bld_path* path, char* name) {
     bld_file impl;
     impl = make_file(BLD_FILE_IMPLEMENTATION, path, name);
-    impl.info.impl.includes = set_new(0);
+    impl.info.impl.includes = set_new(sizeof(bld_path));
     impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
     impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
     return impl;
@@ -97,7 +97,7 @@ bld_file file_implementation_new(bld_path* path, char* name) {
 bld_file file_test_new(bld_path* path, char* name) {
     bld_file test;
     test = make_file(BLD_FILE_TEST, path, name);
-    test.info.test.includes = set_new(0);
+    test.info.test.includes = set_new(sizeof(bld_path));
     test.info.test.undefined_symbols = set_new(sizeof(bld_string));
     return test;
 }
@@ -206,8 +206,13 @@ void file_free_directory(bld_file_directory* dir) {
 
 void file_free_implementation(bld_file_implementation* impl) {
     bld_iter iter;
+    bld_path* include_path;
     bld_string* symbol;
 
+    iter = iter_set(&impl->includes);
+    while (iter_next(&iter, (void**) &include_path)) {
+        path_free(include_path);
+    }
     set_free(&impl->includes);
 
     iter = iter_set(&impl->undefined_symbols);
@@ -224,13 +229,25 @@ void file_free_implementation(bld_file_implementation* impl) {
 }
 
 void file_free_interface(bld_file_interface* header) {
+    bld_iter iter;
+    bld_path* include_path;
+
+    iter = iter_set(&header->includes);
+    while (iter_next(&iter, (void**) &include_path)) {
+        path_free(include_path);
+    }
     set_free(&header->includes);
 }
 
 void file_free_test(bld_file_test* test) {
     bld_iter iter;
+    bld_path* include_path;
     bld_string* symbol;
 
+    iter = iter_set(&test->includes);
+    while (iter_next(&iter, (void**) &include_path)) {
+        path_free(include_path);
+    }
     set_free(&test->includes);
 
     iter = iter_set(&test->undefined_symbols);
