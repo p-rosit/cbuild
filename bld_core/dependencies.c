@@ -5,7 +5,7 @@
 #include "graph.h"
 #include "dependencies.h"
 
-void parse_included_files(bld_file*);
+void parse_included_files(bld_file*, bld_set*);
 
 void parse_symbols(bld_file*, bld_path*);
 void generate_symbol_file(bld_file*, bld_path*, bld_path*);
@@ -60,7 +60,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
         }
         log_debug("Extracting includes of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->include_graph, file->identifier.id);
-        parse_included_files(file);
+        parse_included_files(file, files);
     }
 
     iter = iter_set(files);
@@ -75,7 +75,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
 
             includes = file_includes_get(to_file);
 
-            if (!set_has(includes, file->identifier.id)) {
+            if (!set_has(includes, string_hash(path_to_string(&file->path)))) {
                 continue;
             }
             graph_add_edge(&graph->include_graph, file->identifier.id, to_file->identifier.id);
@@ -283,12 +283,11 @@ int expect_string(FILE* file, char* str) {
     return 1;
 }
 
-void parse_included_files(bld_file* file) {
+void parse_included_files(bld_file* file, bld_set* files) {
     size_t line_number;
     bld_path parent_path;
     bld_path file_path;
     bld_string str;
-    uintmax_t include_id;
     FILE *f, *included_file;
     bld_set* includes;
     int c;
@@ -335,8 +334,14 @@ void parse_included_files(bld_file* file) {
         }
         fclose(included_file);
 
-        include_id = file_get_id(&file_path);
-        set_add(includes, include_id, &include_id);
+        {
+            bld_file* included_file;
+            bld_path path;
+
+            included_file = set_get(files, file_get_id(&file_path));
+            path = path_from_string(path_to_string(&included_file->path));
+            set_add(includes, string_hash(path_to_string(&path)), &path);
+        }
 
         path_free(&file_path);
         string_free(&str);
