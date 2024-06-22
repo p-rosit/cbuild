@@ -44,7 +44,6 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
 
 bld_forward_project project_forward_new(bld_path* path, bld_compiler* compiler, bld_linker* linker) {
     bld_forward_project fproject;
-    fproject.rebuilding = 0;
     fproject.resolved = 0;
     fproject.base = project_base_new(path, linker);
     fproject.extra_paths = set_new(0);
@@ -210,6 +209,7 @@ void project_partial_free(bld_forward_project* fproject) {
 bld_project_base project_base_new(bld_path* path, bld_linker* linker) {
     bld_project_base base;
 
+    base.rebuilding = 0;
     base.root = *path;
     base.standalone = 1;
     base.compiler_handles = set_new(sizeof(bld_compiler_type));

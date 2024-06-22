@@ -31,7 +31,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     incremental_make_root(&project, fproject);
 
-    if (fproject->rebuilding) {
+    if (fproject->base.rebuilding) {
         char* main_name;
         bld_path main_path;
         main_path.str = fproject->main_file_name;
@@ -260,7 +260,7 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
     match_found = 0;
     path.str = fproject->main_file_name;
 
-    if (fproject->rebuilding) {
+    if (fproject->base.rebuilding) {
         project->main_file = file_get_id(&path);
         return;
     }

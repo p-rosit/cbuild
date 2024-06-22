@@ -28,7 +28,7 @@ int run_new_build(bld_path* root, char* executable) {
 bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
     bld_forward_project fbuild;
     fbuild = project_forward_new(&root, &compiler, &linker);
-    fbuild.rebuilding = 1;
+    fbuild.base.rebuilding = 1;
     return fbuild;
 }
 

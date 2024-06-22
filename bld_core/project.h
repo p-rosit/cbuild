@@ -20,6 +20,7 @@ typedef struct bld_project_cache {
 } bld_project_cache;
 
 typedef struct bld_project_base {
+    int rebuilding;
     bld_path root;
     int standalone;
     bld_path build;
@@ -29,7 +30,6 @@ typedef struct bld_project_base {
 } bld_project_base;
 
 typedef struct bld_forward_project {
-    int rebuilding;
     int resolved;
     bld_project_base base;
     bld_set extra_paths;
