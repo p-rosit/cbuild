@@ -219,28 +219,27 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
 
 void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
     int first;
-    size_t i;
+    bld_iter iter;
+    bld_path* path;
 
     fprintf(cache, "[");
-    if (includes->size > 1) {
+    if (includes->size > 0) {
         fprintf(cache, "\n");
     }
 
     first = 1;
-    for (i = 0; i < includes->capacity + includes->max_offset; i++) {
-        if (includes->offset[i] >= includes->max_offset) {continue;}
+    iter = iter_set(includes);
+    while (iter_next(&iter, (void**) &path)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
             first = 0;
         }
-        if (includes->size > 1) {
-            fprintf(cache, "%*c", 2 * depth, ' ');
-        }
-        fprintf(cache, "%" PRIuMAX, includes->hash[i]);
+        fprintf(cache, "%*c", 2 * depth, ' ');
+        fprintf(cache, "\"%s\"", path_to_string(path));
     }
 
-    if (includes->size > 1) {
+    if (includes->size > 0) {
         fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
     }
     fprintf(cache, "]");

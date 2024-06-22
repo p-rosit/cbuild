@@ -342,10 +342,16 @@ int parse_file(FILE* file, bld_parsing_file* f) {
 
     if (parsed[BLD_PARSE_INCLUDES]) {
         bld_set* includes;
+        bld_iter iter;
+        bld_path* path;
 
         includes = file_includes_get(&f->file);
         if (includes == NULL) {goto includes_freed;}
 
+        iter = iter_set(includes);
+        while (iter_next(&iter, (void**) &path)) {
+            path_free(path);
+        }
         set_free(includes);
     }
     includes_freed:
@@ -534,7 +540,7 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
     int amount_parsed;
     bld_set *file_includes, includes;
 
-    includes = set_new(0);
+    includes = set_new(sizeof(bld_path));
     amount_parsed = json_parse_array(file, &includes, (bld_parse_func) parse_file_include);
     if (amount_parsed < 0) {
         set_free(&includes);
@@ -553,13 +559,17 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
 }
 
 int parse_file_include(FILE* file, bld_set* set) {
-    uintmax_t file_id;
     int error;
+    bld_string str;
+    bld_path path;
 
-    error = parse_uintmax(file, &file_id);
+    error = string_parse(file, &str);
     if (error) {return -1;}
 
-    set_add(set, file_id, NULL);
+    path = path_from_string(string_unpack(&str));
+    string_free(&str);
+
+    set_add(set, string_hash(path_to_string(&path)), &path);
     return 0;
 }
 
