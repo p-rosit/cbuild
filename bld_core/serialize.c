@@ -95,7 +95,6 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         includes = file_includes_get(file);
         if (includes == NULL) {goto no_serialize_includes;}
 
-
         fprintf(cache, ",\n");
         json_serialize_key(cache, "includes", depth);
         serialize_file_includes(cache, includes, depth + 1);
@@ -133,7 +132,10 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
 
         fprintf(cache, ",\n");
         json_serialize_key(cache, "files", depth);
-        fprintf(cache, "[\n");
+        fprintf(cache, "[");
+        if (file->info.dir.files.size > 0) {
+            fprintf(cache, "\n");
+        }
 
         iter = iter_array(&file->info.dir.files);
         while (iter_next(&iter, (void**) &child_id)) {
@@ -149,7 +151,9 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
             serialize_file(cache, child, files, depth + 2);
         }
 
-        fprintf(cache, "\n%*c", 2 * depth, ' ');
+        if (file->info.dir.files.size > 0) {
+            fprintf(cache, "\n%*c", 2 * depth, ' ');
+        }
         fprintf(cache, "]");
     }
 
