@@ -299,6 +299,33 @@ bld_hash file_hash(bld_file* file, bld_set* files) {
     return seed;
 }
 
+void file_includes_copy(bld_file* file, bld_file* from) {
+    bld_iter iter;
+    bld_path* path;
+    bld_set *includes, *from_includes;
+
+    if (file->type != from->type) {
+        log_fatal(LOG_FATAL_PREFIX "files do not have same type");
+    }
+
+    includes = file_includes_get(file);
+    from_includes = file_includes_get(from);
+
+    if ((includes == NULL) != (from_includes == NULL)) {
+        log_fatal(LOG_FATAL_PREFIX "unreachable error");
+    }
+    if (includes == NULL) {
+        return;
+    }
+
+    *includes = set_copy(from_includes);
+
+    iter = iter_set(includes);
+    while (iter_next(&iter, (void**) &path)) {
+        *path = path_copy(path);
+    }
+}
+
 void file_symbols_copy(bld_file* file, bld_file* from) {
     if (file->type != from->type) {
         log_fatal(LOG_FATAL_PREFIX "files do not have same type");
