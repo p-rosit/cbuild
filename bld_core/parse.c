@@ -16,18 +16,17 @@ typedef struct bld_parsing_file {
 
 typedef enum bld_file_fields {
     BLD_PARSE_TYPE = 0,
-    BLD_PARSE_ID = 1,
-    BLD_PARSE_MTIME = 2,
-    BLD_PARSE_HASH = 3,
-    BLD_PARSE_NAME = 4,
-    BLD_PARSE_COMPILER = 5,
-    BLD_PARSE_COMPILER_FLAGS = 6,
-    BLD_PARSE_LINKER_FLAGS = 7,
-    BLD_PARSE_INCLUDES = 8,
-    BLD_PARSE_DEFINED = 9,
-    BLD_PARSE_UNDEFINED = 10,
-    BLD_PARSE_FILES = 11,
-    BLD_TOTAL_FIELDS = 12
+    BLD_PARSE_MTIME = 1,
+    BLD_PARSE_HASH = 2,
+    BLD_PARSE_NAME = 3,
+    BLD_PARSE_COMPILER = 4,
+    BLD_PARSE_COMPILER_FLAGS = 5,
+    BLD_PARSE_LINKER_FLAGS = 6,
+    BLD_PARSE_INCLUDES = 7,
+    BLD_PARSE_DEFINED = 8,
+    BLD_PARSE_UNDEFINED = 9,
+    BLD_PARSE_FILES = 10,
+    BLD_TOTAL_FIELDS = 11
 } bld_file_fields;
 
 void ensure_directory_exists(bld_path*);
@@ -37,7 +36,6 @@ int parse_project_linker(FILE*, bld_project_cache*);
 int parse_project_files(FILE*, bld_project_cache*);
 int parse_file(FILE*, bld_parsing_file*);
 int parse_file_type(FILE*, bld_parsing_file*);
-int parse_file_id(FILE*, bld_parsing_file*);
 int parse_file_mtime(FILE*, bld_parsing_file*);
 int parse_file_hash(FILE*, bld_parsing_file*);
 int parse_file_name(FILE*, bld_parsing_file*);
@@ -194,7 +192,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     int parsed[BLD_TOTAL_FIELDS];
     char *keys[BLD_TOTAL_FIELDS] = {
         "type",
-        "id",
         "mtime",
         "hash",
         "name",
@@ -208,7 +205,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     };
     bld_parse_func funcs[BLD_TOTAL_FIELDS] = {
         (bld_parse_func) parse_file_type,
-        (bld_parse_func) parse_file_id,
         (bld_parse_func) parse_file_mtime,
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
@@ -234,11 +230,10 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     switch (f->file.type) {
         case (BLD_FILE_DIRECTORY): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_NAME]
+                !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_FILES]
             ) {
-                log_warn("Directory requires the following fields: [\"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_NAME], keys[BLD_PARSE_FILES]);
+                log_warn("Directory requires the following fields: [\"%s\", \"%s\"]", keys[BLD_PARSE_NAME], keys[BLD_PARSE_FILES]);
                 goto parse_failed;
             }
             if (
@@ -254,15 +249,14 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         } break;
         case (BLD_FILE_IMPLEMENTATION): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_MTIME]
+                !parsed[BLD_PARSE_MTIME]
                 || !parsed[BLD_PARSE_HASH]
                 || !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_INCLUDES]
                 || !parsed[BLD_PARSE_DEFINED]
                 || !parsed[BLD_PARSE_UNDEFINED]
             ) {
-                log_warn("Implementation file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
+                log_warn("Implementation file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
                 goto parse_failed;
             }
             if (
@@ -274,14 +268,13 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         } break;
         case (BLD_FILE_TEST): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_MTIME]
+                !parsed[BLD_PARSE_MTIME]
                 || !parsed[BLD_PARSE_HASH]
                 || !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_INCLUDES]
                 || !parsed[BLD_PARSE_UNDEFINED]
             ) {
-                log_warn("Test file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_UNDEFINED]);
+                log_warn("Test file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_UNDEFINED]);
                 goto parse_failed;
             }
             if (
@@ -294,13 +287,12 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         } break;
         case (BLD_FILE_INTERFACE): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_MTIME]
+                !parsed[BLD_PARSE_MTIME]
                 || !parsed[BLD_PARSE_HASH]
                 || !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_INCLUDES]
             ) {
-                log_warn("Header file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES]);
+                log_warn("Header file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES]);
                 goto parse_failed;
             }
             if (
@@ -425,20 +417,6 @@ int parse_file_type(FILE* file, bld_parsing_file* f) {
 
     string_free(&str);
     return error;
-}
-
-int parse_file_id(FILE* file, bld_parsing_file* f) {
-    uintmax_t num;
-    int error;
-
-    error = parse_uintmax(file, &num);
-    if (error) {
-        log_warn("Could not parse file id");
-        return -1;
-    }
-
-    f->file.identifier.id = num;
-    return 0;
 }
 
 int parse_file_mtime(FILE* file, bld_parsing_file* f) {

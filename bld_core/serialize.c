@@ -56,10 +56,6 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
     json_serialize_key(cache, "type", depth);
     serialize_file_type(cache, file->type);
 
-    fprintf(cache, ",\n");
-    json_serialize_key(cache, "id", depth);
-    serialize_file_id(cache, file->identifier);
-
     if (file->type != BLD_FILE_DIRECTORY) {
         fprintf(cache, ",\n");
         json_serialize_key(cache, "mtime", depth);
