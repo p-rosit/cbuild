@@ -39,6 +39,7 @@ bld_project project_resolve(bld_forward_project* fproject) {
         main_name = path_get_last_string(&main_path);
         incremental_index_possible_file(&project, project.root_dir, &main_path, main_name);
     }
+
     incremental_index_project(&project, fproject);
 
     incremental_apply_main_file(&project, fproject);
@@ -72,23 +73,13 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        bld_set *includes, *cached_includes;
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
         if (file->identifier.hash != cached->identifier.hash) {continue;}
-
-        includes = file_includes_get(file);
-        if (includes == NULL) {
-            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
-        }
-        cached_includes = file_includes_get(cached);
-        if (cached_includes == NULL) {
-            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
-        }
-        *includes = set_copy(cached_includes);
+        file_includes_copy(file, cached);
 
         switch (file->type) {
             case (BLD_FILE_IMPLEMENTATION): {
