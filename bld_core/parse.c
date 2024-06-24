@@ -12,6 +12,7 @@ typedef struct bld_parsing_file {
     bld_project_cache* cache;
     bld_file file;
     uintmax_t parent;
+    int is_rebuild_main;
 } bld_parsing_file;
 
 typedef enum bld_file_fields {
@@ -32,6 +33,7 @@ typedef enum bld_file_fields {
 void ensure_directory_exists(bld_path*);
 int parse_cache(bld_project_cache*, bld_path*);
 int parse_project_linker(FILE*, bld_project_cache*);
+int parse_project_rebuild_main(FILE*, bld_project_cache*);
 
 int parse_project_files(FILE*, bld_project_cache*);
 int parse_file(FILE*, bld_parsing_file*);
@@ -109,13 +111,13 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 }
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
-    int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"linker", "files"};
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"linker", "files", "rebuild_main"};
     bld_parse_func funcs[3] = {
         (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
+        (bld_parse_func) parse_project_rebuild_main,
     };
     bld_path path = path_copy(root);
     FILE* f;
@@ -124,9 +126,10 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
     path_append_string(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
-    amount_parsed = json_parse_map(f, cache, size, parsed, keys, funcs);
+    cache->root_file = BLD_INVALID_IDENITIFIER;
+    json_parse_map(f, cache, size, parsed, keys, funcs);
 
-    if (amount_parsed != size) {
+    if (!parsed[0] || !parsed[1] || (cache->base->rebuilding && !parsed[2])) {
         fclose(f);
         path_free(&path);
 
@@ -143,6 +146,10 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
                 file_free(file);
             }
             set_free(&cache->files);
+        }
+
+        if (parsed[2]) {
+            log_fatal(LOG_FATAL_PREFIX "free correctly");
         }
 
         return -1;
@@ -168,6 +175,7 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
 
     f.cache = cache;
     f.parent = BLD_INVALID_IDENITIFIER;
+    f.is_rebuild_main = 0;
 
     error = parse_file(file, &f);
     if (error) {
@@ -184,6 +192,7 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
         return -1;
     }
 
+    cache->root_file = f.file.identifier.id;
     return 0;
 }
 
@@ -685,11 +694,45 @@ int parse_file_sub_file(FILE* file, bld_parsing_file* f) {
 
     sub_file.cache = f->cache;
     sub_file.parent = f->file.identifier.id;
+    sub_file.is_rebuild_main = 0;
     error = parse_file(file, &sub_file);
     if (error) {
         return -1;
     }
 
     file_dir_add_file(&f->file, &sub_file.file);
+    return 0;
+}
+
+int parse_project_rebuild_main(FILE* file, bld_project_cache* cache) {
+    int error;
+    bld_file* root;
+    bld_parsing_file f;
+
+    if (!cache->base->rebuilding) {
+        log_error(LOG_FATAL_PREFIX "cache has rebuild main but is not rebuilding");
+        return -1;
+    }
+
+    if (cache->root_file == BLD_INVALID_IDENITIFIER) {
+        return -1;
+    }
+
+    root = set_get(&cache->files, cache->root_file);
+    if (root == NULL) {
+        log_error(LOG_FATAL_PREFIX "unreachable error");
+        return -1;
+    }
+
+    f.cache = cache;
+    f.parent = root->identifier.id;
+    f.parent_path = NULL;
+    f.is_rebuild_main = 1;
+    error = parse_file(file, &f);
+    if (error) {
+        return -1;
+    }
+
+    file_dir_add_file(root, &f.file);
     return 0;
 }
