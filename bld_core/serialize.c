@@ -3,8 +3,8 @@
 #include "project.h"
 #include "json.h"
 
-void serialize_files(FILE*, bld_file*, bld_set*, int);
-void serialize_file(FILE*, bld_file*, bld_set*, int);
+void serialize_files(FILE*, uintmax_t, bld_file*, bld_set*, int);
+void serialize_file(FILE*, uintmax_t, bld_file*, bld_set*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_mtime(FILE*, bld_file_identifier);
@@ -38,7 +38,7 @@ void project_save_cache(bld_project* project) {
 
     fprintf(cache, ",\n");
     json_serialize_key(cache, "files", depth);
-    serialize_files(cache, root, &project->files, depth + 1);
+    serialize_files(cache, project->main_file, root, &project->files, depth + 1);
 
     fprintf(cache, "\n}\n");
 
@@ -46,11 +46,11 @@ void project_save_cache(bld_project* project) {
     path_free(&cache_path);
 }
 
-void serialize_files(FILE* cache, bld_file* root, bld_set* files, int depth) {
-    serialize_file(cache, root, files, depth);
+void serialize_files(FILE* cache, uintmax_t main, bld_file* root, bld_set* files, int depth) {
+    serialize_file(cache, main, root, files, depth);
 }
 
-void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
+void serialize_file(FILE* cache, uintmax_t main, bld_file* file, bld_set* files, int depth) {
     fprintf(cache, "{\n");
 
     json_serialize_key(cache, "type", depth);
@@ -68,7 +68,11 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
 
     fprintf(cache, ",\n");
     json_serialize_key(cache, "name", depth);
-    fprintf(cache, "\"%s\"", string_unpack(&file->name));
+    if (file->identifier.id != main) {
+        fprintf(cache, "\"%s\"", string_unpack(&file->name));
+    } else {
+        fprintf(cache, "\"%s\"", path_to_string(&file->path));
+    }
 
     if (file->build_info.compiler_set) {
         fprintf(cache, ",\n");
@@ -141,6 +145,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         while (iter_next(&iter, (void**) &child_id)) {
             child = set_get(files, *child_id);
             if (child == NULL) {log_fatal("serialize_file: internal error");}
+            if (child->identifier.id == main) {continue;}
 
             if (!first) {
                 fprintf(cache, ",\n");
@@ -148,7 +153,7 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
                 first = 0;
             }
             fprintf(cache, "%*c", 2 * (depth + 1), ' ');
-            serialize_file(cache, child, files, depth + 2);
+            serialize_file(cache, main, child, files, depth + 2);
         }
 
         if (file->info.dir.files.size > 0) {
