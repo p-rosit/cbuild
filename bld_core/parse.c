@@ -46,7 +46,7 @@ int parse_file_defined_symbols(FILE*, bld_parsing_file*);
 int parse_file_undefined_symbols(FILE*, bld_parsing_file*);
 int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_parsing_file*);
-int parse_file_include(FILE*, bld_set*);
+int parse_file_include(FILE*, bld_array*);
 int parse_file_sub_files(FILE*, bld_parsing_file*);
 int parse_file_sub_file(FILE*, bld_parsing_file*);
 
@@ -516,27 +516,64 @@ int parse_file_linker_flags(FILE* file, bld_parsing_file* f) {
 
 int parse_file_includes(FILE* file, bld_parsing_file* f) {
     int amount_parsed;
-    bld_set *file_includes, includes;
+    bld_set *includes;
+    bld_array includes_array;
 
-    includes = set_new(sizeof(bld_path));
-    amount_parsed = json_parse_array(file, &includes, (bld_parse_func) parse_file_include);
+    includes_array = array_new(sizeof(bld_path));
+    amount_parsed = json_parse_array(file, &includes_array, (bld_parse_func) parse_file_include);
     if (amount_parsed < 0) {
-        set_free(&includes);
+        array_free(&includes_array);
         log_warn("Could not parse file includes");
         return -1;
     }
 
-    file_includes = file_includes_get(&f->file);
-    if (file_includes == NULL) {
+    includes = file_includes_get(&f->file);
+    if (includes == NULL) {
         log_fatal(LOG_FATAL_PREFIX "attempting to set includes of file which does not have includes");
     }
 
-    *file_includes = includes;
+    {
+        bld_set resolved_includes;
+        bld_path root;
+        bld_path* include_path;
+        bld_iter iter;
 
+        if (f->cache->base->rebuilding) {
+            root = path_copy(&f->cache->base->build_of->root);
+            log_error("Checking \"%s\"", path_to_string(&root));
+        } else {
+            root = path_new();
+        }
+        path_append_path(&root, &f->cache->base->root);
+        log_error("Adding \"%s\"", path_to_string(&f->cache->base->root));
+
+        resolved_includes = set_new(sizeof(bld_path));
+        iter = iter_array(&includes_array);
+        while (iter_next(&iter, (void**) &include_path)) {
+            bld_path temp;
+            bld_file_id file_id;
+
+            temp = path_copy(&root);
+            path_append_path(&temp, include_path);
+
+            log_error("include Checking: \"%s\"", path_to_string(&temp));
+            file_id = file_get_id(&temp);
+            log_warn("checked");
+            set_add(&resolved_includes, file_id, include_path);
+
+            path_free(&temp);
+        }
+
+        *includes = resolved_includes;
+
+        path_free(&root);
+    }
+
+    array_free(&includes_array);
     return 0;
 }
 
-int parse_file_include(FILE* file, bld_set* set) {
+int parse_file_include(FILE* file, bld_array* array) {
     int error;
     bld_string str;
     bld_path path;
@@ -547,7 +584,7 @@ int parse_file_include(FILE* file, bld_set* set) {
     path = path_from_string(string_unpack(&str));
     string_free(&str);
 
-    set_add(set, string_hash(path_to_string(&path)), &path);
+    array_push(array, &path);
     return 0;
 }
 
