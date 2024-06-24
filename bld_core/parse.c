@@ -98,6 +98,7 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
         fclose(file);
         log_debug("Found cache file, attempting to parse.");
+        fproject->base.cache.base = &fproject->base;
         error = parse_cache(&fproject->base.cache, &fproject->base.root);
 
         if (error) {
