@@ -335,12 +335,19 @@ void parse_included_files(bld_file* file, bld_set* files) {
         fclose(included_file);
 
         {
+            int exists;
             bld_file* included_file;
             bld_path path;
 
             included_file = set_get(files, file_get_id(&file_path));
+            if (included_file == NULL) {
+                log_fatal(LOG_FATAL_PREFIX "unreachable error");
+            }
             path = path_from_string(path_to_string(&included_file->path));
-            set_add(includes, string_hash(path_to_string(&path)), &path);
+            exists = set_add(includes, included_file->identifier.id, &path);
+            if (exists) {
+                log_warn("\"%s\" has duplicate import \"%s\"", path_to_string(&file->path), path_to_string(&included_file->path));
+            }
         }
 
         path_free(&file_path);
