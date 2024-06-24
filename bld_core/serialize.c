@@ -39,7 +39,15 @@ void project_save_cache(bld_project* project) {
 
     fprintf(cache, ",\n");
     json_serialize_key(cache, "files", depth);
-    serialize_files(cache, project->main_file, root, &project->files, depth + 1);
+    if (!project->base.rebuilding) {
+        serialize_files(cache, BLD_INVALID_IDENITIFIER, root, &project->files, depth + 1);
+    } else if (project->base.rebuilding) {
+        serialize_files(cache, project->main_file, root, &project->files, depth + 1);
+
+        fprintf(cache, ",\n");
+        json_serialize_key(cache, "rebuild_main", depth);
+        serialize_rebuild_main(cache, project, depth + 1);
+    }
 
     fprintf(cache, "\n}\n");
 
