@@ -482,7 +482,27 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
 
         f->file.path = path;
     }
+
+    {
+        bld_path path;
+        bld_file_id file_id;
+
+        if (!f->is_rebuild_main) {
+            path = path_copy(&f->cache->base->root);
+        } else {
+            path = path_copy(&f->cache->base->build_of->root);
+        }
+        path_append_path(&path, &f->file.path);
+
+        log_error("Checking: \"%s\"", path_to_string(&path));
+        file_id = file_get_id(&path);
+        log_warn("checked");
+        f->file.identifier.id = file_id;
+
+        path_free(&path);
+    }
     
+    log_warn("NAME FINE");
     f->file.name = str;
     return error;
 }
