@@ -3,6 +3,7 @@
 #include "project.h"
 #include "json.h"
 
+void serialize_rebuild_main(FILE*, bld_project*, int);
 void serialize_files(FILE*, uintmax_t, bld_file*, bld_set*, int);
 void serialize_file(FILE*, uintmax_t, bld_file*, bld_set*, int);
 void serialize_file_type(FILE*, bld_file_type);
@@ -44,6 +45,17 @@ void project_save_cache(bld_project* project) {
 
     fclose(cache);
     path_free(&cache_path);
+}
+
+void serialize_rebuild_main(FILE* cache, bld_project* project, int depth) {
+    bld_file* main;
+
+    main = set_get(&project->files, project->main_file);
+    if (main == NULL) {
+        log_fatal(LOG_FATAL_PREFIX "internal error");
+    }
+
+    serialize_file(cache, project->main_file, main, &project->files, depth);
 }
 
 void serialize_files(FILE* cache, uintmax_t main, bld_file* root, bld_set* files, int depth) {
