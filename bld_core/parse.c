@@ -12,6 +12,7 @@ typedef struct bld_parsing_file {
     bld_project_cache* cache;
     bld_file file;
     uintmax_t parent;
+    bld_path* parent_path;
     int is_rebuild_main;
 } bld_parsing_file;
 
@@ -119,9 +120,10 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
         (bld_parse_func) parse_project_files,
         (bld_parse_func) parse_project_rebuild_main,
     };
-    bld_path path = path_copy(root);
+    bld_path path;
     FILE* f;
 
+    path = path_copy(root);
     path_append_path(&path, &cache->root);
     path_append_string(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
@@ -175,6 +177,7 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
 
     f.cache = cache;
     f.parent = BLD_INVALID_IDENITIFIER;
+    f.parent_path = NULL;
     f.is_rebuild_main = 0;
 
     error = parse_file(file, &f);
@@ -227,7 +230,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     };
 
     f->file.type = BLD_FILE_INVALID;
-    f->file.path = path_new();
     f->file.build_info.compiler_set = 0;
     f->file.build_info.linker_set = 0;
 
@@ -465,6 +467,21 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
         log_warn("Could not parse file name");
         return -1;
     }
+
+    if (f->parent_path == NULL) {
+        if (!f->is_rebuild_main) {
+            f->file.path = path_from_string(".");
+        } else {
+            f->file.path = path_from_string(string_unpack(&str));
+        }
+    } else {
+        bld_path path;
+
+        path = path_copy(f->parent_path);
+        path_append_string(&path, string_unpack(&str));
+
+        f->file.path = path;
+    }
     
     f->file.name = str;
     return error;
@@ -694,6 +711,7 @@ int parse_file_sub_file(FILE* file, bld_parsing_file* f) {
 
     sub_file.cache = f->cache;
     sub_file.parent = f->file.identifier.id;
+    sub_file.parent_path = &f->file.path;
     sub_file.is_rebuild_main = 0;
     error = parse_file(file, &sub_file);
     if (error) {
