@@ -210,6 +210,7 @@ bld_project_base project_base_new(bld_path* path, bld_linker* linker) {
     bld_project_base base;
 
     base.rebuilding = 0;
+    base.build_of = NULL;
     base.root = *path;
     base.standalone = 1;
     base.compiler_handles = set_new(sizeof(bld_compiler_type));
