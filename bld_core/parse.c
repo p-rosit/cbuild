@@ -322,8 +322,11 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         }
     }
 
-    set_add(&f->cache->files, f->file.identifier.id, &f->file);
-
+    if (f->file.identifier.id != BLD_INVALID_IDENITIFIER) {
+        set_add(&f->cache->files, f->file.identifier.id, &f->file);
+    } else {
+        file_free(&f->file);
+    }
     return 0;
 
     parse_failed:
