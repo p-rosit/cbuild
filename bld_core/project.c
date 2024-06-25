@@ -277,7 +277,7 @@ bld_string extract_build_name(bld_path* root) {
     path = path_copy(root);
     path_remove_file_ending(&path);
     name = path_get_last_string(&path);
-    name += (4 * strncmp(name, "old_", 4) == 0);
+    name += 4 * (strncmp(name, "old_", 4) == 0);
 
     build_name = string_pack(name);
     build_name = string_copy(&build_name);
