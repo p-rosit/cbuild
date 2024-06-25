@@ -504,14 +504,13 @@ void incremental_mark_changed_files(bld_project* project, bld_set* changed_files
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
+        if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
         if (!project->base.cache.set) {
             *has_changed = 1;
             continue;
         }
 
         cache_file = set_get(&project->base.cache.files, file->identifier.id);
-
-        if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
 
         if (cache_file == NULL) {
             *has_changed = 1;
