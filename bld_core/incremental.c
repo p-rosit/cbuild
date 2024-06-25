@@ -6,8 +6,8 @@
 
 void    incremental_make_root(bld_project*, bld_forward_project*);
 void    incremental_index_project(bld_project*, bld_forward_project*);
-void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, char*);
-void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, char*, int);
+void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, bld_path*, char*);
+void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, bld_path*, char*, int);
 void    incremental_apply_main_file(bld_project*, bld_forward_project*);
 void    incremental_apply_compilers(bld_project*, bld_forward_project*);
 void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
@@ -106,28 +106,29 @@ void incremental_apply_cache(bld_project* project) {
 }
 
 
-void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, bld_path* path, char* name) {
+void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, bld_path* path, bld_path* relative_path, char* name) {
     int exists;
     char* file_ending;
-    bld_path file_path;
     bld_file file, *parent, *temp;
     bld_string packed_name;
 
     file_ending = strrchr(name, '.');
-    if (file_ending == NULL) {return;}
+    if (file_ending == NULL) {
+        path_free(relative_path);
+        return;
+    }
 
     packed_name = string_pack(name);
-    file_path = path_copy(path);
     if (compiler_file_is_implementation(&project->base.compiler_handles, &packed_name)) {
         if (strncmp(name, "test", 4) == 0) {
-            file = file_test_new(&file_path, name);
+            file = file_test_new(path, relative_path, name);
         } else {
-            file = file_implementation_new(&file_path, name);
+            file = file_implementation_new(path, relative_path, name);
         }
     } else if (compiler_file_is_header(&project->base.compiler_handles, &packed_name)) {
-        file = file_interface_new(&file_path, name);
+        file = file_interface_new(path, relative_path, name);
     } else {
-        path_free(&file_path);
+        path_free(relative_path);
         return;
     }
 
@@ -144,19 +145,19 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
     file_dir_add_file(parent, temp);
 }
 
-void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, char* name, int adding_files) {
-    char *str_path, *file_name;
+void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, bld_path* relative_path, char* name, int adding_files) {
+    char *file_name;
     uintmax_t directory_id;
-    bld_path dir_path, sub_path;
+    bld_path new_path;
     bld_os_dir* dir;
     bld_os_file* file_ptr;
 
-    str_path = path_to_string(path);
-    dir = os_dir_open(str_path);
+    dir = os_dir_open(path_to_string(path));
     if (dir == NULL && adding_files) {
-        incremental_index_possible_file(project, parent_id, path, name);
+        incremental_index_possible_file(project, parent_id, path, relative_path, name);
         return;
     } else if (dir == NULL && !adding_files) {
+        path_free(relative_path);
         return;
     }
 
@@ -166,19 +167,25 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
     }
 
+    if (relative_path == NULL) {
+        new_path = path_from_string(".");
+    } else if (name != NULL) {
+        new_path = *relative_path;
+    } else {
+        log_fatal(LOG_FATAL_PREFIX "unreachable error");
+    }
+
     if (name != NULL) {
         int exists;
         bld_file directory;
         bld_file* parent;
         bld_file* temp;
 
-        dir_path = path_copy(path);
-        directory = file_directory_new(&dir_path, name);
+        directory = file_directory_new(path, &new_path, name);
         exists = set_add(&project->files, directory.identifier.id, &directory);
         if (exists) {
-            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
-            file_free(&directory);
-            return;
+            log_fatal(LOG_FATAL_PREFIX "encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
+            return; /* unreachable */
         }
 
         temp = set_get(&project->files, directory.identifier.id);
@@ -205,6 +212,9 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
     }
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
+        bld_path sub_path;
+        bld_path temp;
+
         file_name = os_file_name(file_ptr);
         if (strcmp(file_name, ".") == 0 || strcmp(file_name, "..") == 0) {
             continue;
@@ -215,22 +225,33 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_name);
-        incremental_index_recursive(project, forward_project, directory_id, &sub_path, file_name, adding_files);
+        temp = path_copy(&new_path);
+        path_append_string(&temp, file_name);
+
+        incremental_index_recursive(project, forward_project, directory_id, &sub_path, &temp, file_name, adding_files);
+
         path_free(&sub_path);
     }
     
+    if (name == NULL) {
+        path_free(&new_path);
+    }
     os_dir_close(dir);
 }
 
 void incremental_index_project(bld_project* project, bld_forward_project* forward_project) {
     bld_os_dir* dir;
+    bld_path path;
 
-    dir = os_dir_open(path_to_string(&forward_project->base.root));
-    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&forward_project->base.root));}
+    path = path_copy(&project->base.root);
+    dir = os_dir_open(path_to_string(&path));
+    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&path));}
     os_dir_close(dir);
 
     log_info("Indexing project under root");
-    incremental_index_recursive(project, forward_project, project->root_dir, &forward_project->base.root, NULL, 1);
+    incremental_index_recursive(project, forward_project, project->root_dir, &path, NULL, NULL, 1);
+
+    path_free(&path);
 }
 
 void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
