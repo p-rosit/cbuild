@@ -50,9 +50,6 @@ int file_eq(bld_file* f1, bld_file* f2) {
     return f1->identifier.id == f2->identifier.id;
 }
 
-void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
-    sprintf(name, "%" PRIuMAX, (uintmax_t) file->identifier.id);
-}
 
 bld_file make_file(bld_file_type type, bld_path* total_path, bld_path* path, char* name) {
     bld_file file;

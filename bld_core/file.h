@@ -83,7 +83,6 @@ int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
 void        file_includes_copy(bld_file*, bld_file*);
 void        file_symbols_copy(bld_file*, bld_file*);
-void        serialize_identifier(char[FILENAME_MAX], bld_file*);
 
 void        file_dir_add_file(bld_file*, bld_file*);
 
