@@ -683,9 +683,17 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
 
 int incremental_compile_project(bld_project* project, char* name) {
     int result;
-    bld_path executable_path = path_copy(&project->base.root);
+    bld_path executable_path;
+
+    if (project->base.rebuilding) {
+        executable_path = path_copy(&project->base.build_of->root);
+    } else {
+        executable_path = path_copy(&project->base.root);
+    }
     path_append_string(&executable_path, name);
+
     result = incremental_compile_with_absolute_path(project, path_to_string(&executable_path));
+
     path_free(&executable_path);
     return result;
 }
