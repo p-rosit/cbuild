@@ -35,7 +35,7 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
 
     fproject = project_forward_new(&path, &compiler, &linker);
 
-    project_ignore_path(&fproject, path_to_string(&build_file_path));
+    project_ignore_path(&fproject, string_unpack(&build_file_name));
     path_free(&build_file_path);
     string_free(&build_file_name);
 
