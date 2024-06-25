@@ -630,17 +630,19 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
 }
 
 int incremental_compile_changed_files(bld_project* project, bld_set* changed_files, int* any_compiled) {
-    FILE* cached_file;
-    int *has_changed, result, temp;
-    char compiled_name[FILENAME_MAX];
+    int result;
     bld_iter iter;
-    bld_path path;
-    bld_string compiled_path;
     bld_file* file;
 
     result = 0;
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        int *has_changed, temp;
+        FILE* cached_file;
+        char compiled_name[FILENAME_MAX];
+        bld_string compiled_path;
+        bld_path path;
+
         if (file->type == BLD_FILE_INTERFACE || file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
