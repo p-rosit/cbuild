@@ -755,18 +755,18 @@ int parse_project_rebuild_main(FILE* file, bld_project_cache* cache) {
         return -1;
     }
 
-    root = set_get(&cache->files, cache->root_file);
-    if (root == NULL) {
-        log_error(LOG_FATAL_PREFIX "unreachable error");
-        return -1;
-    }
-
     f.cache = cache;
-    f.parent = root->identifier.id;
+    f.parent = cache->root_file;
     f.parent_path = NULL;
     f.is_rebuild_main = 1;
     error = parse_file(file, &f);
     if (error) {
+        return -1;
+    }
+
+    root = set_get(&cache->files, cache->root_file);
+    if (root == NULL) {
+        log_error(LOG_FATAL_PREFIX "unreachable error");
         return -1;
     }
 
