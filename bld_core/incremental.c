@@ -395,7 +395,6 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
-    char name[FILENAME_MAX];
     bld_string cmd, object_name;
     bld_compiler* compiler;
     bld_path path;
@@ -423,9 +422,7 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
         path_append_path(&path, &project->base.cache.root);
     }
 
-    serialize_identifier(name, file);
-    object_name = string_pack(name);
-    object_name = string_copy(&object_name);
+    object_name = file_object_name(file);
     string_append_string(&object_name, ".o");
 
     result = compile_to_object(compiler->type, &cmd, &path, &object_name);
@@ -439,7 +436,6 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
 
 int incremental_link_executable(bld_project* project, char* executable_name) {
     int result;
-    char name[FILENAME_MAX];
     bld_path path;
     bld_file *main_file, *file;
     bld_string cmd;
@@ -462,6 +458,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     linker_flags = array_new(sizeof(bld_linker_flags*));
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        bld_string object_name;
         bld_array file_flags;
         string_append_space(&cmd);
 
@@ -469,8 +466,8 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
         if (project->base.cache.loaded) {
             path_append_path(&path, &project->base.cache.root);
         }
-        serialize_identifier(name, file);
-        path_append_string(&path, name);
+        object_name = file_object_name(file);
+        path_append_string(&path, string_unpack(&object_name));
         
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o");
@@ -478,7 +475,9 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
 
         file_assemble_linker_flags(file, &project->files, &file_flags);
         linker_flags_expand(&cmd, &file_flags);
+
         array_free(&file_flags);
+        string_free(&object_name);
     }
 
     linker_flags_append(&cmd, &project->base.linker.flags);
@@ -605,20 +604,22 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         bld_path obj_path;
         bld_string str;
         bld_file* file;
-        char obj_name[FILENAME_MAX];
 
         iter = iter_set(&project->files);
         while (iter_next(&iter, (void**) &file)) {
+            bld_string object_name;
+
             if (file->type == BLD_FILE_INTERFACE) {continue;}
 
             obj_path = path_copy(&project->base.root);
-            serialize_identifier(obj_name, file);
-            path_append_string(&obj_path, obj_name);
+            object_name = file_object_name(file);
+            path_append_string(&obj_path, string_unpack(&object_name));
             str = obj_path.str;
             string_append_string(&str, ".o");
 
             remove(string_unpack(&str));
             string_free(&str);
+            string_free(&object_name);
         }
     }
 
@@ -639,7 +640,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     while (iter_next(&iter, (void**) &file)) {
         int *has_changed, temp;
         FILE* cached_file;
-        char compiled_name[FILENAME_MAX];
+        bld_string object_name;
         bld_string compiled_path;
         bld_path path;
 
@@ -652,8 +653,8 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
         if (project->base.cache.loaded) {
             path_append_path(&path, &project->base.cache.root);
         }
-        serialize_identifier(compiled_name, file);
-        path_append_string(&path, compiled_name);
+        object_name = file_object_name(file);
+        path_append_string(&path, string_unpack(&object_name));
 
         compiled_path = path.str;
         string_append_string(&compiled_path, ".o");
@@ -661,6 +662,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
         cached_file = fopen(string_unpack(&compiled_path), "r");
         if (cached_file != NULL) {fclose(cached_file);}
 
+        string_free(&object_name);
         string_free(&compiled_path);
 
         if (!*has_changed && cached_file != NULL) {continue;}

@@ -142,8 +142,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
 void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol_path) {
     int result;
     bld_string cmd;
+    bld_string object_name;
     bld_path path;
-    char name[FILENAME_MAX];
 
     cmd = string_new();
     fclose(fopen(path_to_string(symbol_path), "w"));
@@ -151,8 +151,8 @@ void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol
     string_append_string(&cmd, "nm ");
 
     path = path_copy(cache_path);
-    serialize_identifier(name, file);
-    path_append_string(&path, name);
+    object_name = file_object_name(file);
+    path_append_string(&path, string_unpack(&object_name));
     string_append_string(&cmd, path_to_string(&path));
     string_append_string(&cmd, ".o");
     path_free(&path);
@@ -165,6 +165,7 @@ void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol
         log_fatal(LOG_FATAL_PREFIX "unable to extract symbols from \"%s\"", path_to_string(&file->path));
     }
 
+    string_free(&object_name);
     string_free(&cmd);
 }
 
