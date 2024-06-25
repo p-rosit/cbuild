@@ -6,6 +6,7 @@
 #include "iter.h"
 #include "path.h"
 #include "file.h"
+#include "project_base.h"
 
 typedef struct bld_dependency_graph {
     bld_graph include_graph;
@@ -15,7 +16,7 @@ typedef struct bld_dependency_graph {
 bld_dependency_graph dependency_graph_new(void);
 void        dependency_graph_free(bld_dependency_graph*);
 
-void        dependency_graph_extract_includes(bld_dependency_graph*, bld_set*);
+void        dependency_graph_extract_includes(bld_dependency_graph*, bld_project_base*, bld_file_id, bld_set*);
 void        dependency_graph_extract_symbols(bld_dependency_graph*, bld_set*, bld_path*);
 
 bld_iter    dependency_graph_symbols_from(const bld_dependency_graph*, bld_file*);
