@@ -498,15 +498,12 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
         }
         path_append_path(&path, &f->file.path);
 
-        log_error("Checking: \"%s\"", path_to_string(&path));
         file_id = file_get_id(&path);
-        log_warn("checked");
         f->file.identifier.id = file_id;
 
         path_free(&path);
     }
     
-    log_warn("NAME FINE");
     f->file.name = str;
     return error;
 }
@@ -606,9 +603,7 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
             temp = path_copy(&root);
             path_append_path(&temp, include_path);
 
-            log_error("include Checking: \"%s\"", path_to_string(&temp));
             file_id = file_get_id(&temp);
-            log_warn("checked");
             set_add(&resolved_includes, file_id, include_path);
 
             path_free(&temp);
