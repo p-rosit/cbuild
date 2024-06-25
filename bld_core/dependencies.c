@@ -75,7 +75,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_
 
             includes = file_includes_get(to_file);
 
-            if (!set_has(includes, string_hash(path_to_string(&file->path)))) {
+            if (!set_has(includes, file->identifier.id)) {
                 continue;
             }
             graph_add_edge(&graph->include_graph, file->identifier.id, to_file->identifier.id);
