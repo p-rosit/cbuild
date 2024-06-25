@@ -408,7 +408,15 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, string_unpack(&compiler->executable));
     compiler_flags_expand(&cmd, &compiler_flags);
     string_append_space(&cmd);
-    string_append_string(&cmd, path_to_string(&file->path));
+
+    if (!project->base.rebuilding || file->identifier.id != project->main_file) {
+        path = path_copy(&project->base.root);
+    } else if (file->identifier.id == project->main_file) {
+        path = path_copy(&project->base.build_of->root);
+    }
+    path_append_path(&path, &file->path);
+    string_append_string(&cmd, path_to_string(&path));
+    path_free(&path);
 
     path = path_copy(&project->base.root);
     if (project->base.cache.loaded) {
