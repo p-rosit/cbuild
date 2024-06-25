@@ -5,7 +5,7 @@
 #include "graph.h"
 #include "dependencies.h"
 
-void parse_included_files(bld_file*, bld_set*);
+void parse_included_files(bld_project_base*, bld_file_id, bld_file*, bld_set*);
 
 void parse_symbols(bld_file*, bld_path*);
 void generate_symbol_file(bld_file*, bld_path*, bld_path*);
@@ -46,7 +46,7 @@ int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** 
     return has_next;
 }
 
-void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* files) {
+void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_base* base, bld_file_id main_id, bld_set* files) {
     bld_iter iter;
     bld_file *file;
     log_debug("Extracting includes, files in cache: %lu/%lu", graph->include_graph.edges.size, files->size);
@@ -60,7 +60,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_set* fil
         }
         log_debug("Extracting includes of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->include_graph, file->identifier.id);
-        parse_included_files(file, files);
+        parse_included_files(base, main_id, file, files);
     }
 
     iter = iter_set(files);
@@ -283,8 +283,9 @@ int expect_string(FILE* file, char* str) {
     return 1;
 }
 
-void parse_included_files(bld_file* file, bld_set* files) {
+void parse_included_files(bld_project_base* base, bld_file_id main_id, bld_file* file, bld_set* files) {
     size_t line_number;
+    bld_path root;
     bld_path parent_path;
     bld_path file_path;
     bld_string str;
@@ -301,10 +302,26 @@ void parse_included_files(bld_file* file, bld_set* files) {
         log_fatal(LOG_FATAL_PREFIX "attempting to parse includes of file which does not have includes: %d", file->type);
     }
 
-    f = fopen(path_to_string(&file->path), "r");
-    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "could not open file for reading: \"%s\"", string_unpack(&file->name));}
+    if (!base->rebuilding || file->identifier.id != main_id) {
+        root = path_copy(&base->root);
+    } else {
+        root = path_copy(&base->build_of->root);
+    }
 
-    parent_path = path_copy(&file->path);
+    {
+        bld_path temp;
+
+        temp = path_copy(&root);
+        path_append_path(&temp, &file->path);
+
+        f = fopen(path_to_string(&temp), "r");
+        if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "could not open file for reading: \"%s\"", string_unpack(&file->name));}
+
+        path_free(&temp);
+    }
+
+    parent_path = path_copy(&root);
+    path_append_path(&parent_path, &file->path);
     path_remove_last_string(&parent_path);
 
     line_number = 0;
@@ -347,6 +364,7 @@ void parse_included_files(bld_file* file, bld_set* files) {
             exists = set_add(includes, included_file->identifier.id, &path);
             if (exists) {
                 log_warn("\"%s\" has duplicate import \"%s\"", path_to_string(&file->path), path_to_string(&included_file->path));
+                path_free(&path);
             }
         }
 
@@ -358,6 +376,7 @@ void parse_included_files(bld_file* file, bld_set* files) {
         line_number++;
     }
 
+    path_free(&root);
     path_free(&parent_path);
     fclose(f);
 }
