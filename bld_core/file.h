@@ -68,10 +68,10 @@ typedef struct bld_file {
     bld_file_build_information build_info;
 } bld_file;
 
-bld_file    file_directory_new(bld_path*, char*);
-bld_file    file_interface_new(bld_path*, char*);
-bld_file    file_implementation_new(bld_path*, char*);
-bld_file    file_test_new(bld_path*, char*);
+bld_file    file_directory_new(bld_path*, bld_path*, char*);
+bld_file    file_interface_new(bld_path*, bld_path*, char*);
+bld_file    file_implementation_new(bld_path*, bld_path*, char*);
+bld_file    file_test_new(bld_path*, bld_path*, char*);
 void        file_free(bld_file*);
 void        file_build_info_free(bld_file_build_information*);
 

@@ -8,7 +8,7 @@
 #include "file.h"
 
 bld_file_identifier get_identifier(bld_path*);
-bld_file make_file(bld_file_type, bld_path*, char*);
+bld_file make_file(bld_file_type, bld_path*, bld_path*, char*);
 bld_set file_copy_symbol_set(const bld_set*);
 void file_free_base(bld_file*);
 void file_free_directory(bld_file_directory*);
@@ -54,7 +54,7 @@ void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
     sprintf(name, "%" PRIuMAX, (uintmax_t) file->identifier.id);
 }
 
-bld_file make_file(bld_file_type type, bld_path* path, char* name) {
+bld_file make_file(bld_file_type type, bld_path* total_path, bld_path* path, char* name) {
     bld_file file;
     bld_string str;
 
@@ -62,7 +62,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
 
     file.type = type;
     file.parent_id = BLD_INVALID_IDENITIFIER;
-    file.identifier = get_identifier(path);
+    file.identifier = get_identifier(total_path);
     file.name = string_copy(&str);
     file.path = *path;
     file.build_info.compiler_set = 0;
@@ -71,32 +71,32 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     return file;
 }
 
-bld_file file_directory_new(bld_path* path, char* name) {
+bld_file file_directory_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file dir;
-    dir = make_file(BLD_FILE_DIRECTORY, path, name);
+    dir = make_file(BLD_FILE_DIRECTORY, total_path, path, name);
     dir.info.dir.files = array_new(sizeof(bld_file_id));
     return dir;
 }
 
-bld_file file_interface_new(bld_path* path, char* name) {
+bld_file file_interface_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file header;
-    header = make_file(BLD_FILE_INTERFACE, path, name);
+    header = make_file(BLD_FILE_INTERFACE, total_path, path, name);
     header.info.header.includes = set_new(sizeof(bld_path));
     return header;
 }
 
-bld_file file_implementation_new(bld_path* path, char* name) {
+bld_file file_implementation_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file impl;
-    impl = make_file(BLD_FILE_IMPLEMENTATION, path, name);
+    impl = make_file(BLD_FILE_IMPLEMENTATION, total_path, path, name);
     impl.info.impl.includes = set_new(sizeof(bld_path));
     impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
     impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
     return impl;
 }
 
-bld_file file_test_new(bld_path* path, char* name) {
+bld_file file_test_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file test;
-    test = make_file(BLD_FILE_TEST, path, name);
+    test = make_file(BLD_FILE_TEST, total_path, path, name);
     test.info.test.includes = set_new(sizeof(bld_path));
     test.info.test.undefined_symbols = set_new(sizeof(bld_string));
     return test;
