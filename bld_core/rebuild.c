@@ -129,7 +129,23 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
 
     executable_path = path_copy(&fproject->base.root);
     path_append_string(&executable_path, executable);
-    rename(executable, old_executable);
+
+    {
+        bld_path temp1, temp2;
+
+        temp1 = path_copy(&fproject->base.root);
+        temp2 = path_copy(&fproject->base.root);
+
+        path_append_string(&temp1, executable);
+        path_append_string(&temp2, old_executable);
+
+        log_debug("Renaming old executable: %s -> %s", path_to_string(&temp1), path_to_string(&temp2));
+        rename(path_to_string(&temp1), path_to_string(&temp2));
+
+        path_free(&temp1);
+        path_free(&temp2);
+    }
+
     result = incremental_compile_with_absolute_path(&build, path_to_string(&executable_path));
 
     if (result > 0) {
