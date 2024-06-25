@@ -267,10 +267,13 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
 void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
     bld_path path;
+    bld_path relative;
     bld_file root;
 
     path = path_copy(&project->base.root);
-    root = file_directory_new(&path, ".");
+    relative = path_from_string(".");
+    root = file_directory_new(&path, &relative, ".");
+    path_free(&path);
 
     root.build_info.compiler_set = 1;
     root.build_info.compiler.type = BLD_COMPILER;
