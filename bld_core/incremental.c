@@ -33,11 +33,21 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     if (fproject->base.rebuilding) {
         char* main_name;
+        bld_path temp;
         bld_path main_path;
-        main_path.str = fproject->main_file_name;
+        bld_path main_relative_path;
 
-        main_name = path_get_last_string(&main_path);
-        incremental_index_possible_file(&project, project.root_dir, &main_path, main_name);
+        temp = path_from_string(string_unpack(&fproject->main_file_name));
+        main_name = path_get_last_string(&temp);
+
+        main_path = path_copy(&fproject->base.build_of->root);
+        path_append_string(&main_path, main_name);
+        main_relative_path = path_from_string(main_name);
+
+        incremental_index_possible_file(&project, project.root_dir, &main_path, &main_relative_path, main_name);
+
+        path_free(&main_path);
+        path_free(&temp);
     }
 
     incremental_index_project(&project, fproject);
