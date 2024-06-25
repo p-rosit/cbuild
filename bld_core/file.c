@@ -50,6 +50,22 @@ int file_eq(bld_file* f1, bld_file* f2) {
     return f1->identifier.id == f2->identifier.id;
 }
 
+bld_string file_object_name(bld_file* file) {
+    bld_path temp;
+    bld_string object_name;
+    char path_hash[FILENAME_MAX];
+
+    sprintf(path_hash, "%" PRIuMAX, string_hash(path_to_string(&file->path)));
+
+    temp = path_from_string(string_unpack(&file->name));
+    path_remove_file_ending(&temp);
+
+    object_name = temp.str;
+    string_append_char(&object_name, '_');
+    string_append_string(&object_name, path_hash);
+
+    return object_name;
+}
 
 bld_file make_file(bld_file_type type, bld_path* total_path, bld_path* path, char* name) {
     bld_file file;
