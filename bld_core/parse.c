@@ -581,18 +581,8 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
 
     {
         bld_set resolved_includes;
-        bld_path root;
         bld_path* include_path;
         bld_iter iter;
-
-        if (f->cache->base->rebuilding) {
-            root = path_copy(&f->cache->base->build_of->root);
-            log_error("Checking \"%s\"", path_to_string(&root));
-        } else {
-            root = path_new();
-        }
-        path_append_path(&root, &f->cache->base->root);
-        log_error("Adding \"%s\"", path_to_string(&f->cache->base->root));
 
         resolved_includes = set_new(sizeof(bld_path));
         iter = iter_array(&includes_array);
@@ -600,7 +590,7 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
             bld_path temp;
             bld_file_id file_id;
 
-            temp = path_copy(&root);
+            temp = path_copy(&f->cache->base->root);
             path_append_path(&temp, include_path);
 
             file_id = file_get_id(&temp);
@@ -610,8 +600,6 @@ int parse_file_includes(FILE* file, bld_parsing_file* f) {
         }
 
         *includes = resolved_includes;
-
-        path_free(&root);
     }
 
     array_free(&includes_array);
