@@ -330,9 +330,9 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     return 0;
 
     parse_failed:
-    path_free(&f->file.path);
     if (parsed[BLD_PARSE_NAME]) {
         string_free(&f->file.name);
+        path_free(&f->file.path);
     }
 
     if (parsed[BLD_PARSE_COMPILER]) {
