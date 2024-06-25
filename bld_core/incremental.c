@@ -448,7 +448,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
 
     main_file = set_get(&project->files, project->main_file);
     if (main_file == NULL) {
-        log_fatal("No main file has been set");
+        log_fatal(LOG_FATAL_PREFIX "No main file has been set");
         return 1;
     }
 
