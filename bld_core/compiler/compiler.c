@@ -35,7 +35,6 @@ bld_compiler_type compiler_get_mapping(bld_string* name) {
         log_fatal("compiler_get_mapping: internal error");
     }
 
-    set_new(sizeof(bld_compiler_type));
     for (i = 0; i < sizeof(types) / sizeof(*types); i++) {
         if (string_eq(name, compilers[i])) {
             return types[i];
