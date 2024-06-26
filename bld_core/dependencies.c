@@ -4,6 +4,7 @@
 #include "logging.h"
 #include "graph.h"
 #include "dependencies.h"
+#include "language/language.h"
 
 void parse_included_files(bld_project_base*, bld_file_id, bld_file*, bld_set*);
 
@@ -244,140 +245,21 @@ void add_symbol(bld_set* set, bld_string* str) {
     set_add(set, string_hash(string_unpack(str)), str);
 }
 
-int get_next(FILE*);
-int skip_line(FILE*);
-int expect_char(FILE*, char);
-int expect_string(FILE*, char*);
-
-int get_next(FILE* file) { /* Same as next_character... */
-    int c;
-
-    c = getc(file);
-    while (c != EOF && isspace(c)) {c = getc(file);}
-    return c;
-}
-
-int skip_line(FILE* file) {
-    int c;
-
-    c = getc(file);
-    while (c != EOF && c != '\n') {c = getc(file);}
-    return c == '\n';
-}
-
-int expect_char(FILE* file, char c) {
-    int file_char;
-
-    file_char = get_next(file);
-    return c == file_char;
-}
-
-int expect_string(FILE* file, char* str) {
-    char str_char;
-    int file_char;
-
-    while ((str_char = *str++) != '\0') {
-        file_char = getc(file);
-        if (file_char != str_char) {return 0;}
-    }
-
-    return 1;
-}
-
 void parse_included_files(bld_project_base* base, bld_file_id main_id, bld_file* file, bld_set* files) {
-    size_t line_number;
-    bld_path root;
-    bld_path parent_path;
-    bld_path file_path;
-    bld_string str;
-    FILE *f, *included_file;
-    bld_set* includes;
-    int c;
-
-    if (file->type == BLD_FILE_DIRECTORY) {
-        log_fatal(LOG_FATAL_PREFIX "cannot parse includes for directory \"%s\"", string_unpack(&file->name));
-    }
-
-    includes = file_includes_get(file);
-    if (includes == NULL) {
-        log_fatal(LOG_FATAL_PREFIX "attempting to parse includes of file which does not have includes: %d", file->type);
-    }
+    int error;
+    bld_path path;
 
     if (!base->rebuilding || file->identifier.id != main_id) {
-        root = path_copy(&base->root);
+        path = path_copy(&base->root);
     } else {
-        root = path_copy(&base->build_of->root);
+        path = path_copy(&base->build_of->root);
+    }
+    path_append_path(&path, &file->path);
+
+    error = language_get_includes(BLD_LANGUAGE_C, base, &path, file, files);
+    if (error) {
+        log_fatal("Could not open file \"%s\"", path_to_string(&path));
     }
 
-    {
-        bld_path temp;
-
-        temp = path_copy(&root);
-        path_append_path(&temp, &file->path);
-
-        f = fopen(path_to_string(&temp), "r");
-        if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "could not open file for reading: \"%s\"", string_unpack(&file->name));}
-
-        path_free(&temp);
-    }
-
-    parent_path = path_copy(&root);
-    path_append_path(&parent_path, &file->path);
-    path_remove_last_string(&parent_path);
-
-    line_number = 0;
-    while (1) {
-        if (!expect_char(f, '#')) {goto next_line;}
-        if (!expect_string(f, "include")) {goto next_line;}
-        if (!expect_char(f, '\"')) {goto next_line;}
-
-        str = string_new();
-        c = getc(f);
-        while (c != EOF && c != '\"' && c != '\n') {
-            string_append_char(&str, c);
-            c = getc(f);
-        }
-        if (c == EOF) {string_free(&str); break;}
-        if (c == '\n') {goto next_line;}
-
-        file_path = path_copy(&parent_path);
-        path_append_string(&file_path, string_unpack(&str));
-
-        included_file = fopen(path_to_string(&file_path), "r");
-        if (included_file == NULL) {
-            log_warn("%s:%lu - Included file \"%s\" is not accessible, ignoring.", path_to_string(&file->path), line_number, string_unpack(&str));
-            path_free(&file_path);
-            string_free(&str);
-            goto next_line;
-        }
-        fclose(included_file);
-
-        {
-            int exists;
-            bld_file* included_file;
-            bld_path path;
-
-            included_file = set_get(files, file_get_id(&file_path));
-            if (included_file == NULL) {
-                log_fatal(LOG_FATAL_PREFIX "unreachable error");
-            }
-            path = path_from_string(path_to_string(&included_file->path));
-            exists = set_add(includes, included_file->identifier.id, &path);
-            if (exists) {
-                log_warn("\"%s\" has duplicate import \"%s\"", path_to_string(&file->path), path_to_string(&included_file->path));
-                path_free(&path);
-            }
-        }
-
-        path_free(&file_path);
-        string_free(&str);
-
-        next_line:
-        if (!skip_line(f)) {break;}
-        line_number++;
-    }
-
-    path_free(&root);
-    path_free(&parent_path);
-    fclose(f);
+    path_free(&path);
 }
