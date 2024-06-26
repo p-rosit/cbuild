@@ -5,7 +5,7 @@
 #include "rebuild.h"
 
 int                 run_new_build(bld_path*, char*);
-bld_forward_project new_rebuild(bld_path, bld_compiler, bld_linker);
+bld_forward_project new_rebuild(bld_forward_project*, bld_path, bld_compiler, bld_linker);
 void                extract_names(int, char**, char**, char**);
 char*               infer_build_name(char*);
 void                set_main_rebuild(bld_forward_project*, bld_path*);
@@ -25,10 +25,11 @@ int run_new_build(bld_path* root, char* executable) {
     return result;
 }
 
-bld_forward_project new_rebuild(bld_path root, bld_compiler compiler, bld_linker linker) {
+bld_forward_project new_rebuild(bld_forward_project* fproject, bld_path root, bld_compiler compiler, bld_linker linker) {
     bld_forward_project fbuild;
     fbuild = project_forward_new(&root, &compiler, &linker);
-    fbuild.rebuilding = 1;
+    fbuild.base.rebuilding = 1;
+    fbuild.base.build_of = &fproject->base;
     return fbuild;
 }
 
@@ -115,7 +116,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     linker = linker_new("gcc");
     linker_add_flag(&linker, "-fsanitize=address");
 
-    fbuild = new_rebuild(build_root, compiler, linker);
+    fbuild = new_rebuild(fproject, build_root, compiler, linker);
     project_ignore_path(&fbuild, "./test");
 
     main = path_copy(&fproject->base.root);
@@ -128,7 +129,23 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
 
     executable_path = path_copy(&fproject->base.root);
     path_append_string(&executable_path, executable);
-    rename(executable, old_executable);
+
+    {
+        bld_path temp1, temp2;
+
+        temp1 = path_copy(&fproject->base.root);
+        temp2 = path_copy(&fproject->base.root);
+
+        path_append_string(&temp1, executable);
+        path_append_string(&temp2, old_executable);
+
+        log_debug("Renaming old executable: %s -> %s", path_to_string(&temp1), path_to_string(&temp2));
+        rename(path_to_string(&temp1), path_to_string(&temp2));
+
+        path_free(&temp1);
+        path_free(&temp2);
+    }
+
     result = incremental_compile_with_absolute_path(&build, path_to_string(&executable_path));
 
     if (result > 0) {

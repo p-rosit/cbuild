@@ -8,7 +8,7 @@
 #include "file.h"
 
 bld_file_identifier get_identifier(bld_path*);
-bld_file make_file(bld_file_type, bld_path*, char*);
+bld_file make_file(bld_file_type, bld_path*, bld_path*, char*);
 bld_set file_copy_symbol_set(const bld_set*);
 void file_free_base(bld_file*);
 void file_free_directory(bld_file_directory*);
@@ -16,8 +16,8 @@ void file_free_implementation(bld_file_implementation*);
 void file_free_interface(bld_file_interface*);
 void file_free_test(bld_file_test*);
 
-uintmax_t file_get_id(bld_path* path) {
-    uintmax_t id;
+bld_file_id file_get_id(bld_path* path) {
+    bld_file_id id;
 
     id = os_info_id(path_to_string(path));
     if (id == BLD_INVALID_IDENITIFIER) {
@@ -29,7 +29,8 @@ uintmax_t file_get_id(bld_path* path) {
 
 bld_file_identifier get_identifier(bld_path* path) {
     bld_file_identifier identifier;
-    uintmax_t id, mtime;
+    bld_file_id id;
+    bld_time mtime;
 
     id = os_info_id(path_to_string(path));
     mtime = os_info_mtime(path_to_string(path));
@@ -49,11 +50,24 @@ int file_eq(bld_file* f1, bld_file* f2) {
     return f1->identifier.id == f2->identifier.id;
 }
 
-void serialize_identifier(char name[FILENAME_MAX], bld_file* file) {
-    sprintf(name, "%" PRIuMAX, (uintmax_t) file->identifier.id);
+bld_string file_object_name(bld_file* file) {
+    bld_path temp;
+    bld_string object_name;
+    char path_hash[FILENAME_MAX];
+
+    sprintf(path_hash, "%" PRIuMAX, string_hash(path_to_string(&file->path)));
+
+    temp = path_from_string(string_unpack(&file->name));
+    path_remove_file_ending(&temp);
+
+    object_name = temp.str;
+    string_append_char(&object_name, '_');
+    string_append_string(&object_name, path_hash);
+
+    return object_name;
 }
 
-bld_file make_file(bld_file_type type, bld_path* path, char* name) {
+bld_file make_file(bld_file_type type, bld_path* total_path, bld_path* path, char* name) {
     bld_file file;
     bld_string str;
 
@@ -61,7 +75,7 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
 
     file.type = type;
     file.parent_id = BLD_INVALID_IDENITIFIER;
-    file.identifier = get_identifier(path);
+    file.identifier = get_identifier(total_path);
     file.name = string_copy(&str);
     file.path = *path;
     file.build_info.compiler_set = 0;
@@ -70,33 +84,33 @@ bld_file make_file(bld_file_type type, bld_path* path, char* name) {
     return file;
 }
 
-bld_file file_directory_new(bld_path* path, char* name) {
+bld_file file_directory_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file dir;
-    dir = make_file(BLD_FILE_DIRECTORY, path, name);
-    dir.info.dir.files = array_new(sizeof(uintmax_t));
+    dir = make_file(BLD_FILE_DIRECTORY, total_path, path, name);
+    dir.info.dir.files = array_new(sizeof(bld_file_id));
     return dir;
 }
 
-bld_file file_interface_new(bld_path* path, char* name) {
+bld_file file_interface_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file header;
-    header = make_file(BLD_FILE_INTERFACE, path, name);
-    header.info.header.includes = set_new(0);
+    header = make_file(BLD_FILE_INTERFACE, total_path, path, name);
+    header.info.header.includes = set_new(sizeof(bld_path));
     return header;
 }
 
-bld_file file_implementation_new(bld_path* path, char* name) {
+bld_file file_implementation_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file impl;
-    impl = make_file(BLD_FILE_IMPLEMENTATION, path, name);
-    impl.info.impl.includes = set_new(0);
+    impl = make_file(BLD_FILE_IMPLEMENTATION, total_path, path, name);
+    impl.info.impl.includes = set_new(sizeof(bld_path));
     impl.info.impl.defined_symbols = set_new(sizeof(bld_string));
     impl.info.impl.undefined_symbols = set_new(sizeof(bld_string));
     return impl;
 }
 
-bld_file file_test_new(bld_path* path, char* name) {
+bld_file file_test_new(bld_path* total_path, bld_path* path, char* name) {
     bld_file test;
-    test = make_file(BLD_FILE_TEST, path, name);
-    test.info.test.includes = set_new(0);
+    test = make_file(BLD_FILE_TEST, total_path, path, name);
+    test.info.test.includes = set_new(sizeof(bld_path));
     test.info.test.undefined_symbols = set_new(sizeof(bld_string));
     return test;
 }
@@ -205,8 +219,13 @@ void file_free_directory(bld_file_directory* dir) {
 
 void file_free_implementation(bld_file_implementation* impl) {
     bld_iter iter;
+    bld_path* include_path;
     bld_string* symbol;
 
+    iter = iter_set(&impl->includes);
+    while (iter_next(&iter, (void**) &include_path)) {
+        path_free(include_path);
+    }
     set_free(&impl->includes);
 
     iter = iter_set(&impl->undefined_symbols);
@@ -223,13 +242,25 @@ void file_free_implementation(bld_file_implementation* impl) {
 }
 
 void file_free_interface(bld_file_interface* header) {
+    bld_iter iter;
+    bld_path* include_path;
+
+    iter = iter_set(&header->includes);
+    while (iter_next(&iter, (void**) &include_path)) {
+        path_free(include_path);
+    }
     set_free(&header->includes);
 }
 
 void file_free_test(bld_file_test* test) {
     bld_iter iter;
+    bld_path* include_path;
     bld_string* symbol;
 
+    iter = iter_set(&test->includes);
+    while (iter_next(&iter, (void**) &include_path)) {
+        path_free(include_path);
+    }
     set_free(&test->includes);
 
     iter = iter_set(&test->undefined_symbols);
@@ -239,8 +270,9 @@ void file_free_test(bld_file_test* test) {
     set_free(&test->undefined_symbols);
 }
 
-uintmax_t file_hash(bld_file* file, bld_set* files) {
-    uintmax_t seed, parent_id;
+bld_hash file_hash(bld_file* file, bld_set* files) {
+    bld_hash seed;
+    bld_file_id parent_id;
 
     seed = 3401;
     seed = (seed << 3) + file->identifier.id;
@@ -278,6 +310,33 @@ uintmax_t file_hash(bld_file* file, bld_set* files) {
         seed = (seed << 3) + seed * linker_flags_hash(&parent->build_info.linker_flags);
     }
     return seed;
+}
+
+void file_includes_copy(bld_file* file, bld_file* from) {
+    bld_iter iter;
+    bld_path* path;
+    bld_set *includes, *from_includes;
+
+    if (file->type != from->type) {
+        log_fatal(LOG_FATAL_PREFIX "files do not have same type");
+    }
+
+    includes = file_includes_get(file);
+    from_includes = file_includes_get(from);
+
+    if ((includes == NULL) != (from_includes == NULL)) {
+        log_fatal(LOG_FATAL_PREFIX "unreachable error");
+    }
+    if (includes == NULL) {
+        return;
+    }
+
+    *includes = set_copy(from_includes);
+
+    iter = iter_set(includes);
+    while (iter_next(&iter, (void**) &path)) {
+        *path = path_copy(path);
+    }
 }
 
 void file_symbols_copy(bld_file* file, bld_file* from) {
@@ -341,7 +400,7 @@ void file_dir_add_file(bld_file* dir, bld_file* file) {
 }
 
 void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compiler, bld_array* flags) {
-    uintmax_t parent_id;
+    bld_file_id parent_id;
 
     parent_id = file->identifier.id;
     *compiler = NULL;
@@ -374,7 +433,7 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compi
 }
 
 void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
-    uintmax_t parent_id;
+    bld_file_id parent_id;
 
     parent_id = file->identifier.id;
     *flags = array_new(sizeof(bld_linker_flags));

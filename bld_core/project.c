@@ -35,7 +35,7 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
 
     fproject = project_forward_new(&path, &compiler, &linker);
 
-    project_ignore_path(&fproject, path_to_string(&build_file_path));
+    project_ignore_path(&fproject, string_unpack(&build_file_name));
     path_free(&build_file_path);
     string_free(&build_file_name);
 
@@ -44,7 +44,6 @@ bld_forward_project project_new(bld_path path, bld_compiler compiler, bld_linker
 
 bld_forward_project project_forward_new(bld_path* path, bld_compiler* compiler, bld_linker* linker) {
     bld_forward_project fproject;
-    fproject.rebuilding = 0;
     fproject.resolved = 0;
     fproject.base = project_base_new(path, linker);
     fproject.extra_paths = set_new(0);
@@ -210,6 +209,8 @@ void project_partial_free(bld_forward_project* fproject) {
 bld_project_base project_base_new(bld_path* path, bld_linker* linker) {
     bld_project_base base;
 
+    base.rebuilding = 0;
+    base.build_of = NULL;
     base.root = *path;
     base.standalone = 1;
     base.compiler_handles = set_new(sizeof(bld_compiler_type));
@@ -276,7 +277,7 @@ bld_string extract_build_name(bld_path* root) {
     path = path_copy(root);
     path_remove_file_ending(&path);
     name = path_get_last_string(&path);
-    name += (4 * strncmp(name, "old_", 4) == 0);
+    name += 4 * (strncmp(name, "old_", 4) == 0);
 
     build_name = string_pack(name);
     build_name = string_copy(&build_name);

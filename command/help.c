@@ -8,7 +8,6 @@
 #include "init.h"
 #include "linker.h"
 #include "invalidate.h"
-#include "linker.h"
 #include "remove.h"
 #include "status.h"
 #include "switch.h"

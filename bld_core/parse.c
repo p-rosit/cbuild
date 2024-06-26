@@ -12,32 +12,33 @@ typedef struct bld_parsing_file {
     bld_project_cache* cache;
     bld_file file;
     uintmax_t parent;
+    bld_path* parent_path;
+    int is_rebuild_main;
 } bld_parsing_file;
 
 typedef enum bld_file_fields {
     BLD_PARSE_TYPE = 0,
-    BLD_PARSE_ID = 1,
-    BLD_PARSE_MTIME = 2,
-    BLD_PARSE_HASH = 3,
-    BLD_PARSE_NAME = 4,
-    BLD_PARSE_COMPILER = 5,
-    BLD_PARSE_COMPILER_FLAGS = 6,
-    BLD_PARSE_LINKER_FLAGS = 7,
-    BLD_PARSE_INCLUDES = 8,
-    BLD_PARSE_DEFINED = 9,
-    BLD_PARSE_UNDEFINED = 10,
-    BLD_PARSE_FILES = 11,
-    BLD_TOTAL_FIELDS = 12
+    BLD_PARSE_MTIME = 1,
+    BLD_PARSE_HASH = 2,
+    BLD_PARSE_NAME = 3,
+    BLD_PARSE_COMPILER = 4,
+    BLD_PARSE_COMPILER_FLAGS = 5,
+    BLD_PARSE_LINKER_FLAGS = 6,
+    BLD_PARSE_INCLUDES = 7,
+    BLD_PARSE_DEFINED = 8,
+    BLD_PARSE_UNDEFINED = 9,
+    BLD_PARSE_FILES = 10,
+    BLD_TOTAL_FIELDS = 11
 } bld_file_fields;
 
 void ensure_directory_exists(bld_path*);
 int parse_cache(bld_project_cache*, bld_path*);
 int parse_project_linker(FILE*, bld_project_cache*);
+int parse_project_rebuild_main(FILE*, bld_project_cache*);
 
 int parse_project_files(FILE*, bld_project_cache*);
 int parse_file(FILE*, bld_parsing_file*);
 int parse_file_type(FILE*, bld_parsing_file*);
-int parse_file_id(FILE*, bld_parsing_file*);
 int parse_file_mtime(FILE*, bld_parsing_file*);
 int parse_file_hash(FILE*, bld_parsing_file*);
 int parse_file_name(FILE*, bld_parsing_file*);
@@ -48,7 +49,7 @@ int parse_file_defined_symbols(FILE*, bld_parsing_file*);
 int parse_file_undefined_symbols(FILE*, bld_parsing_file*);
 int parse_file_function(FILE*, bld_set*);
 int parse_file_includes(FILE*, bld_parsing_file*);
-int parse_file_include(FILE*, bld_set*);
+int parse_file_include(FILE*, bld_array*);
 int parse_file_sub_files(FILE*, bld_parsing_file*);
 int parse_file_sub_file(FILE*, bld_parsing_file*);
 
@@ -97,6 +98,7 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 
         fclose(file);
         log_debug("Found cache file, attempting to parse.");
+        fproject->base.cache.base = &fproject->base;
         error = parse_cache(&fproject->base.cache, &fproject->base.root);
 
         if (error) {
@@ -111,24 +113,26 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
 }
 
 int parse_cache(bld_project_cache* cache, bld_path* root) {
-    int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"linker", "files"};
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"linker", "files", "rebuild_main"};
     bld_parse_func funcs[3] = {
         (bld_parse_func) parse_project_linker,
         (bld_parse_func) parse_project_files,
+        (bld_parse_func) parse_project_rebuild_main,
     };
-    bld_path path = path_copy(root);
+    bld_path path;
     FILE* f;
 
+    path = path_copy(root);
     path_append_path(&path, &cache->root);
     path_append_string(&path, BLD_CACHE_NAME);
     f = fopen(path_to_string(&path), "r");
 
-    amount_parsed = json_parse_map(f, cache, size, parsed, keys, funcs);
+    cache->root_file = BLD_INVALID_IDENITIFIER;
+    json_parse_map(f, cache, size, parsed, keys, funcs);
 
-    if (amount_parsed != size) {
+    if (!parsed[0] || !parsed[1] || (cache->base->rebuilding && !parsed[2])) {
         fclose(f);
         path_free(&path);
 
@@ -145,6 +149,10 @@ int parse_cache(bld_project_cache* cache, bld_path* root) {
                 file_free(file);
             }
             set_free(&cache->files);
+        }
+
+        if (parsed[2]) {
+            log_fatal(LOG_FATAL_PREFIX "free correctly");
         }
 
         return -1;
@@ -170,6 +178,8 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
 
     f.cache = cache;
     f.parent = BLD_INVALID_IDENITIFIER;
+    f.parent_path = NULL;
+    f.is_rebuild_main = 0;
 
     error = parse_file(file, &f);
     if (error) {
@@ -186,6 +196,7 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
         return -1;
     }
 
+    cache->root_file = f.file.identifier.id;
     return 0;
 }
 
@@ -194,7 +205,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     int parsed[BLD_TOTAL_FIELDS];
     char *keys[BLD_TOTAL_FIELDS] = {
         "type",
-        "id",
         "mtime",
         "hash",
         "name",
@@ -208,7 +218,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     };
     bld_parse_func funcs[BLD_TOTAL_FIELDS] = {
         (bld_parse_func) parse_file_type,
-        (bld_parse_func) parse_file_id,
         (bld_parse_func) parse_file_mtime,
         (bld_parse_func) parse_file_hash,
         (bld_parse_func) parse_file_name,
@@ -222,7 +231,6 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     };
 
     f->file.type = BLD_FILE_INVALID;
-    f->file.path = path_new();
     f->file.build_info.compiler_set = 0;
     f->file.build_info.linker_set = 0;
 
@@ -234,11 +242,10 @@ int parse_file(FILE* file, bld_parsing_file* f) {
     switch (f->file.type) {
         case (BLD_FILE_DIRECTORY): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_NAME]
+                !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_FILES]
             ) {
-                log_warn("Directory requires the following fields: [\"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_NAME], keys[BLD_PARSE_FILES]);
+                log_warn("Directory requires the following fields: [\"%s\", \"%s\"]", keys[BLD_PARSE_NAME], keys[BLD_PARSE_FILES]);
                 goto parse_failed;
             }
             if (
@@ -254,15 +261,14 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         } break;
         case (BLD_FILE_IMPLEMENTATION): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_MTIME]
+                !parsed[BLD_PARSE_MTIME]
                 || !parsed[BLD_PARSE_HASH]
                 || !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_INCLUDES]
                 || !parsed[BLD_PARSE_DEFINED]
                 || !parsed[BLD_PARSE_UNDEFINED]
             ) {
-                log_warn("Implementation file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
+                log_warn("Implementation file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_DEFINED], keys[BLD_PARSE_UNDEFINED]);
                 goto parse_failed;
             }
             if (
@@ -274,14 +280,13 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         } break;
         case (BLD_FILE_TEST): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_MTIME]
+                !parsed[BLD_PARSE_MTIME]
                 || !parsed[BLD_PARSE_HASH]
                 || !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_INCLUDES]
                 || !parsed[BLD_PARSE_UNDEFINED]
             ) {
-                log_warn("Test file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_UNDEFINED]);
+                log_warn("Test file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES], keys[BLD_PARSE_UNDEFINED]);
                 goto parse_failed;
             }
             if (
@@ -294,13 +299,12 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         } break;
         case (BLD_FILE_INTERFACE): {
             if (
-                !parsed[BLD_PARSE_ID]
-                || !parsed[BLD_PARSE_MTIME]
+                !parsed[BLD_PARSE_MTIME]
                 || !parsed[BLD_PARSE_HASH]
                 || !parsed[BLD_PARSE_NAME]
                 || !parsed[BLD_PARSE_INCLUDES]
             ) {
-                log_warn("Header file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_ID], keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES]);
+                log_warn("Header file requires the following fields: [\"%s\", \"%s\", \"%s\", \"%s\"]", keys[BLD_PARSE_MTIME], keys[BLD_PARSE_HASH], keys[BLD_PARSE_NAME], keys[BLD_PARSE_INCLUDES]);
                 goto parse_failed;
             }
             if (
@@ -318,14 +322,17 @@ int parse_file(FILE* file, bld_parsing_file* f) {
         }
     }
 
-    set_add(&f->cache->files, f->file.identifier.id, &f->file);
-
+    if (f->file.identifier.id != BLD_INVALID_IDENITIFIER) {
+        set_add(&f->cache->files, f->file.identifier.id, &f->file);
+    } else {
+        file_free(&f->file);
+    }
     return 0;
 
     parse_failed:
-    path_free(&f->file.path);
     if (parsed[BLD_PARSE_NAME]) {
         string_free(&f->file.name);
+        path_free(&f->file.path);
     }
 
     if (parsed[BLD_PARSE_COMPILER]) {
@@ -342,10 +349,16 @@ int parse_file(FILE* file, bld_parsing_file* f) {
 
     if (parsed[BLD_PARSE_INCLUDES]) {
         bld_set* includes;
+        bld_iter iter;
+        bld_path* path;
 
         includes = file_includes_get(&f->file);
         if (includes == NULL) {goto includes_freed;}
 
+        iter = iter_set(includes);
+        while (iter_next(&iter, (void**) &path)) {
+            path_free(path);
+        }
         set_free(includes);
     }
     includes_freed:
@@ -407,7 +420,7 @@ int parse_file_type(FILE* file, bld_parsing_file* f) {
         f->file.type = BLD_FILE_IMPLEMENTATION;
         f->file.info.impl.undefined_symbols = set_new(sizeof(bld_string));
         f->file.info.impl.defined_symbols = set_new(sizeof(bld_string));
-    } else if (strcmp(temp, "header") == 0) {
+    } else if (strcmp(temp, "interface") == 0) {
         f->file.type = BLD_FILE_INTERFACE;
     } else if (strcmp(temp, "test") == 0) {
         f->file.type = BLD_FILE_TEST;
@@ -419,20 +432,6 @@ int parse_file_type(FILE* file, bld_parsing_file* f) {
 
     string_free(&str);
     return error;
-}
-
-int parse_file_id(FILE* file, bld_parsing_file* f) {
-    uintmax_t num;
-    int error;
-
-    error = parse_uintmax(file, &num);
-    if (error) {
-        log_warn("Could not parse file id");
-        return -1;
-    }
-
-    f->file.identifier.id = num;
-    return 0;
 }
 
 int parse_file_mtime(FILE* file, bld_parsing_file* f) {
@@ -471,6 +470,38 @@ int parse_file_name(FILE* file, bld_parsing_file* f) {
     if (error) {
         log_warn("Could not parse file name");
         return -1;
+    }
+
+    if (f->parent_path == NULL) {
+        if (!f->is_rebuild_main) {
+            f->file.path = path_from_string(".");
+        } else {
+            f->file.path = path_from_string(string_unpack(&str));
+        }
+    } else {
+        bld_path path;
+
+        path = path_copy(f->parent_path);
+        path_append_string(&path, string_unpack(&str));
+
+        f->file.path = path;
+    }
+
+    {
+        bld_path path;
+        bld_file_id file_id;
+
+        if (!f->is_rebuild_main) {
+            path = path_copy(&f->cache->base->root);
+        } else {
+            path = path_copy(&f->cache->base->build_of->root);
+        }
+        path_append_path(&path, &f->file.path);
+
+        file_id = file_get_id(&path);
+        f->file.identifier.id = file_id;
+
+        path_free(&path);
     }
     
     f->file.name = str;
@@ -532,34 +563,61 @@ int parse_file_linker_flags(FILE* file, bld_parsing_file* f) {
 
 int parse_file_includes(FILE* file, bld_parsing_file* f) {
     int amount_parsed;
-    bld_set *file_includes, includes;
+    bld_set *includes;
+    bld_array includes_array;
 
-    includes = set_new(0);
-    amount_parsed = json_parse_array(file, &includes, (bld_parse_func) parse_file_include);
+    includes_array = array_new(sizeof(bld_path));
+    amount_parsed = json_parse_array(file, &includes_array, (bld_parse_func) parse_file_include);
     if (amount_parsed < 0) {
-        set_free(&includes);
+        array_free(&includes_array);
         log_warn("Could not parse file includes");
         return -1;
     }
 
-    file_includes = file_includes_get(&f->file);
-    if (file_includes == NULL) {
+    includes = file_includes_get(&f->file);
+    if (includes == NULL) {
         log_fatal(LOG_FATAL_PREFIX "attempting to set includes of file which does not have includes");
     }
 
-    *file_includes = includes;
+    {
+        bld_set resolved_includes;
+        bld_path* include_path;
+        bld_iter iter;
 
+        resolved_includes = set_new(sizeof(bld_path));
+        iter = iter_array(&includes_array);
+        while (iter_next(&iter, (void**) &include_path)) {
+            bld_path temp;
+            bld_file_id file_id;
+
+            temp = path_copy(&f->cache->base->root);
+            path_append_path(&temp, include_path);
+
+            file_id = file_get_id(&temp);
+            set_add(&resolved_includes, file_id, include_path);
+
+            path_free(&temp);
+        }
+
+        *includes = resolved_includes;
+    }
+
+    array_free(&includes_array);
     return 0;
 }
 
-int parse_file_include(FILE* file, bld_set* set) {
-    uintmax_t file_id;
+int parse_file_include(FILE* file, bld_array* array) {
     int error;
+    bld_string str;
+    bld_path path;
 
-    error = parse_uintmax(file, &file_id);
+    error = string_parse(file, &str);
     if (error) {return -1;}
 
-    set_add(set, file_id, NULL);
+    path = path_from_string(string_unpack(&str));
+    string_free(&str);
+
+    array_push(array, &path);
     return 0;
 }
 
@@ -660,11 +718,46 @@ int parse_file_sub_file(FILE* file, bld_parsing_file* f) {
 
     sub_file.cache = f->cache;
     sub_file.parent = f->file.identifier.id;
+    sub_file.parent_path = &f->file.path;
+    sub_file.is_rebuild_main = 0;
     error = parse_file(file, &sub_file);
     if (error) {
         return -1;
     }
 
     file_dir_add_file(&f->file, &sub_file.file);
+    return 0;
+}
+
+int parse_project_rebuild_main(FILE* file, bld_project_cache* cache) {
+    int error;
+    bld_file* root;
+    bld_parsing_file f;
+
+    if (!cache->base->rebuilding) {
+        log_error(LOG_FATAL_PREFIX "cache has rebuild main but is not rebuilding");
+        return -1;
+    }
+
+    if (cache->root_file == BLD_INVALID_IDENITIFIER) {
+        return -1;
+    }
+
+    f.cache = cache;
+    f.parent = cache->root_file;
+    f.parent_path = NULL;
+    f.is_rebuild_main = 1;
+    error = parse_file(file, &f);
+    if (error) {
+        return -1;
+    }
+
+    root = set_get(&cache->files, cache->root_file);
+    if (root == NULL) {
+        log_error(LOG_FATAL_PREFIX "unreachable error");
+        return -1;
+    }
+
+    file_dir_add_file(root, &f.file);
     return 0;
 }

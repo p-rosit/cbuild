@@ -3,8 +3,9 @@
 #include "project.h"
 #include "json.h"
 
-void serialize_files(FILE*, bld_file*, bld_set*, int);
-void serialize_file(FILE*, bld_file*, bld_set*, int);
+void serialize_rebuild_main(FILE*, bld_project*, int);
+void serialize_files(FILE*, uintmax_t, bld_file*, bld_set*, int);
+void serialize_file(FILE*, uintmax_t, bld_file*, bld_set*, int);
 void serialize_file_type(FILE*, bld_file_type);
 void serialize_file_id(FILE*, bld_file_identifier);
 void serialize_file_mtime(FILE*, bld_file_identifier);
@@ -38,7 +39,15 @@ void project_save_cache(bld_project* project) {
 
     fprintf(cache, ",\n");
     json_serialize_key(cache, "files", depth);
-    serialize_files(cache, root, &project->files, depth + 1);
+    if (!project->base.rebuilding) {
+        serialize_files(cache, BLD_INVALID_IDENITIFIER, root, &project->files, depth + 1);
+    } else if (project->base.rebuilding) {
+        serialize_files(cache, project->main_file, root, &project->files, depth + 1);
+
+        fprintf(cache, ",\n");
+        json_serialize_key(cache, "rebuild_main", depth);
+        serialize_rebuild_main(cache, project, depth + 1);
+    }
 
     fprintf(cache, "\n}\n");
 
@@ -46,19 +55,26 @@ void project_save_cache(bld_project* project) {
     path_free(&cache_path);
 }
 
-void serialize_files(FILE* cache, bld_file* root, bld_set* files, int depth) {
-    serialize_file(cache, root, files, depth);
+void serialize_rebuild_main(FILE* cache, bld_project* project, int depth) {
+    bld_file* main;
+
+    main = set_get(&project->files, project->main_file);
+    if (main == NULL) {
+        log_fatal(LOG_FATAL_PREFIX "internal error");
+    }
+
+    serialize_file(cache, project->main_file, main, &project->files, depth);
 }
 
-void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
+void serialize_files(FILE* cache, uintmax_t main, bld_file* root, bld_set* files, int depth) {
+    serialize_file(cache, main, root, files, depth);
+}
+
+void serialize_file(FILE* cache, uintmax_t main, bld_file* file, bld_set* files, int depth) {
     fprintf(cache, "{\n");
 
     json_serialize_key(cache, "type", depth);
     serialize_file_type(cache, file->type);
-
-    fprintf(cache, ",\n");
-    json_serialize_key(cache, "id", depth);
-    serialize_file_id(cache, file->identifier);
 
     if (file->type != BLD_FILE_DIRECTORY) {
         fprintf(cache, ",\n");
@@ -72,7 +88,11 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
 
     fprintf(cache, ",\n");
     json_serialize_key(cache, "name", depth);
-    fprintf(cache, "\"%s\"", string_unpack(&file->name));
+    if (file->identifier.id != main) {
+        fprintf(cache, "\"%s\"", string_unpack(&file->name));
+    } else {
+        fprintf(cache, "\"%s\"", path_to_string(&file->path));
+    }
 
     if (file->build_info.compiler_set) {
         fprintf(cache, ",\n");
@@ -98,7 +118,6 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
         bld_set* includes;
         includes = file_includes_get(file);
         if (includes == NULL) {goto no_serialize_includes;}
-
 
         fprintf(cache, ",\n");
         json_serialize_key(cache, "includes", depth);
@@ -137,12 +156,16 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
 
         fprintf(cache, ",\n");
         json_serialize_key(cache, "files", depth);
-        fprintf(cache, "[\n");
+        fprintf(cache, "[");
+        if (file->info.dir.files.size > 0) {
+            fprintf(cache, "\n");
+        }
 
         iter = iter_array(&file->info.dir.files);
         while (iter_next(&iter, (void**) &child_id)) {
             child = set_get(files, *child_id);
             if (child == NULL) {log_fatal("serialize_file: internal error");}
+            if (child->identifier.id == main) {continue;}
 
             if (!first) {
                 fprintf(cache, ",\n");
@@ -150,10 +173,12 @@ void serialize_file(FILE* cache, bld_file* file, bld_set* files, int depth) {
                 first = 0;
             }
             fprintf(cache, "%*c", 2 * (depth + 1), ' ');
-            serialize_file(cache, child, files, depth + 2);
+            serialize_file(cache, main, child, files, depth + 2);
         }
 
-        fprintf(cache, "\n%*c", 2 * depth, ' ');
+        if (file->info.dir.files.size > 0) {
+            fprintf(cache, "\n%*c", 2 * depth, ' ');
+        }
         fprintf(cache, "]");
     }
 
@@ -170,7 +195,7 @@ void serialize_file_type(FILE* cache, bld_file_type type) {
             fprintf(cache, "\"implementation\"");
         } break;
         case (BLD_FILE_INTERFACE): {
-            fprintf(cache, "\"header\"");
+            fprintf(cache, "\"interface\"");
         } break;
         case (BLD_FILE_TEST): {
             fprintf(cache, "\"test\"");
@@ -219,28 +244,27 @@ void serialize_file_symbols(FILE* cache, bld_set* symbols, int depth) {
 
 void serialize_file_includes(FILE* cache, bld_set* includes, int depth) {
     int first;
-    size_t i;
+    bld_iter iter;
+    bld_path* path;
 
     fprintf(cache, "[");
-    if (includes->size > 1) {
+    if (includes->size > 0) {
         fprintf(cache, "\n");
     }
 
     first = 1;
-    for (i = 0; i < includes->capacity + includes->max_offset; i++) {
-        if (includes->offset[i] >= includes->max_offset) {continue;}
+    iter = iter_set(includes);
+    while (iter_next(&iter, (void**) &path)) {
         if (!first) {
             fprintf(cache, ",\n");
         } else {
             first = 0;
         }
-        if (includes->size > 1) {
-            fprintf(cache, "%*c", 2 * depth, ' ');
-        }
-        fprintf(cache, "%" PRIuMAX, includes->hash[i]);
+        fprintf(cache, "%*c", 2 * depth, ' ');
+        fprintf(cache, "\"%s\"", path_to_string(path));
     }
 
-    if (includes->size > 1) {
+    if (includes->size > 0) {
         fprintf(cache, "\n%*c", 2 * (depth - 1), ' ');
     }
     fprintf(cache, "]");

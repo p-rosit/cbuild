@@ -8,6 +8,9 @@
 #include "compiler.h"
 #include "linker.h"
 
+typedef uintmax_t bld_file_id;
+typedef uintmax_t bld_time;
+
 typedef enum bld_file_type {
     BLD_FILE_INVALID,
     BLD_FILE_DIRECTORY,
@@ -24,9 +27,9 @@ typedef struct bld_file_build_information {
 } bld_file_build_information;
 
 typedef struct bld_file_identifier {
-    uintmax_t id;
-    uintmax_t hash;
-    uintmax_t time;
+    bld_file_id id;
+    bld_hash hash;
+    bld_time time;
 } bld_file_identifier;
 
 typedef struct bld_file_directory {
@@ -57,7 +60,7 @@ typedef union bld_file_info {
 
 typedef struct bld_file {
     bld_file_type type;
-    uintmax_t parent_id;
+    bld_file_id parent_id;
     bld_file_identifier identifier;
     bld_path path;
     bld_string name;
@@ -65,10 +68,10 @@ typedef struct bld_file {
     bld_file_build_information build_info;
 } bld_file;
 
-bld_file    file_directory_new(bld_path*, char*);
-bld_file    file_interface_new(bld_path*, char*);
-bld_file    file_implementation_new(bld_path*, char*);
-bld_file    file_test_new(bld_path*, char*);
+bld_file    file_directory_new(bld_path*, bld_path*, char*);
+bld_file    file_interface_new(bld_path*, bld_path*, char*);
+bld_file    file_implementation_new(bld_path*, bld_path*, char*);
+bld_file    file_test_new(bld_path*, bld_path*, char*);
 void        file_free(bld_file*);
 void        file_build_info_free(bld_file_build_information*);
 
@@ -78,8 +81,9 @@ bld_set*    file_undefined_get(bld_file*);
 uintmax_t   file_hash(bld_file*, bld_set*);
 int         file_eq(bld_file*, bld_file*);
 uintmax_t   file_get_id(bld_path*);
+void        file_includes_copy(bld_file*, bld_file*);
 void        file_symbols_copy(bld_file*, bld_file*);
-void        serialize_identifier(char[FILENAME_MAX], bld_file*);
+bld_string  file_object_name(bld_file*);
 
 void        file_dir_add_file(bld_file*, bld_file*);
 

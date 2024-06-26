@@ -7,29 +7,11 @@
 #include "linker.h"
 #include "file.h"
 #include "dependencies.h"
+#include "project_base.h"
 
 #define BLD_CACHE_NAME "cache.json"
 
-typedef struct bld_project_cache {
-    int loaded;
-    int set;
-    int applied;
-    bld_path root;
-    bld_linker linker;
-    bld_set files;
-} bld_project_cache;
-
-typedef struct bld_project_base {
-    bld_path root;
-    int standalone;
-    bld_path build;
-    bld_set compiler_handles;
-    bld_linker linker;
-    bld_project_cache cache;
-} bld_project_base;
-
 typedef struct bld_forward_project {
-    int rebuilding;
     int resolved;
     bld_project_base base;
     bld_set extra_paths;

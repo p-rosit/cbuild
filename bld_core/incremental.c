@@ -6,8 +6,8 @@
 
 void    incremental_make_root(bld_project*, bld_forward_project*);
 void    incremental_index_project(bld_project*, bld_forward_project*);
-void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, char*);
-void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, char*, int);
+void    incremental_index_possible_file(bld_project*, uintmax_t, bld_path*, bld_path*, char*);
+void    incremental_index_recursive(bld_project*, bld_forward_project*, uintmax_t, bld_path*, bld_path*, char*, int);
 void    incremental_apply_main_file(bld_project*, bld_forward_project*);
 void    incremental_apply_compilers(bld_project*, bld_forward_project*);
 void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
@@ -31,14 +31,25 @@ bld_project project_resolve(bld_forward_project* fproject) {
 
     incremental_make_root(&project, fproject);
 
-    if (fproject->rebuilding) {
+    if (fproject->base.rebuilding) {
         char* main_name;
+        bld_path temp;
         bld_path main_path;
-        main_path.str = fproject->main_file_name;
+        bld_path main_relative_path;
 
-        main_name = path_get_last_string(&main_path);
-        incremental_index_possible_file(&project, project.root_dir, &main_path, main_name);
+        temp = path_from_string(string_unpack(&fproject->main_file_name));
+        main_name = path_get_last_string(&temp);
+
+        main_path = path_copy(&fproject->base.build_of->root);
+        path_append_string(&main_path, main_name);
+        main_relative_path = path_from_string(main_name);
+
+        incremental_index_possible_file(&project, project.root_dir, &main_path, &main_relative_path, main_name);
+
+        path_free(&main_path);
+        path_free(&temp);
     }
+
     incremental_index_project(&project, fproject);
 
     incremental_apply_main_file(&project, fproject);
@@ -72,23 +83,13 @@ void incremental_apply_cache(bld_project* project) {
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
-        bld_set *includes, *cached_includes;
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         cached = set_get(&project->base.cache.files, file->identifier.id);
         if (cached == NULL) {continue;}
 
         if (file->identifier.hash != cached->identifier.hash) {continue;}
-
-        includes = file_includes_get(file);
-        if (includes == NULL) {
-            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
-        }
-        cached_includes = file_includes_get(cached);
-        if (cached_includes == NULL) {
-            log_fatal(LOG_FATAL_PREFIX "copying cached includes of file which does not have includes");
-        }
-        *includes = set_copy(cached_includes);
+        file_includes_copy(file, cached);
 
         switch (file->type) {
             case (BLD_FILE_IMPLEMENTATION): {
@@ -115,28 +116,29 @@ void incremental_apply_cache(bld_project* project) {
 }
 
 
-void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, bld_path* path, char* name) {
+void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, bld_path* path, bld_path* relative_path, char* name) {
     int exists;
     char* file_ending;
-    bld_path file_path;
     bld_file file, *parent, *temp;
     bld_string packed_name;
 
     file_ending = strrchr(name, '.');
-    if (file_ending == NULL) {return;}
+    if (file_ending == NULL) {
+        path_free(relative_path);
+        return;
+    }
 
     packed_name = string_pack(name);
-    file_path = path_copy(path);
     if (compiler_file_is_implementation(&project->base.compiler_handles, &packed_name)) {
         if (strncmp(name, "test", 4) == 0) {
-            file = file_test_new(&file_path, name);
+            file = file_test_new(path, relative_path, name);
         } else {
-            file = file_implementation_new(&file_path, name);
+            file = file_implementation_new(path, relative_path, name);
         }
     } else if (compiler_file_is_header(&project->base.compiler_handles, &packed_name)) {
-        file = file_interface_new(&file_path, name);
+        file = file_interface_new(path, relative_path, name);
     } else {
-        path_free(&file_path);
+        path_free(relative_path);
         return;
     }
 
@@ -153,19 +155,19 @@ void incremental_index_possible_file(bld_project* project, uintmax_t parent_id, 
     file_dir_add_file(parent, temp);
 }
 
-void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, char* name, int adding_files) {
-    char *str_path, *file_name;
+void incremental_index_recursive(bld_project* project, bld_forward_project* forward_project, uintmax_t parent_id, bld_path* path, bld_path* relative_path, char* name, int adding_files) {
+    char *file_name;
     uintmax_t directory_id;
-    bld_path dir_path, sub_path;
+    bld_path new_path;
     bld_os_dir* dir;
     bld_os_file* file_ptr;
 
-    str_path = path_to_string(path);
-    dir = os_dir_open(str_path);
+    dir = os_dir_open(path_to_string(path));
     if (dir == NULL && adding_files) {
-        incremental_index_possible_file(project, parent_id, path, name);
+        incremental_index_possible_file(project, parent_id, path, relative_path, name);
         return;
     } else if (dir == NULL && !adding_files) {
+        path_free(relative_path);
         return;
     }
 
@@ -175,19 +177,25 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         log_debug("Searching under: \"%s\": named \"%s\"", path_to_string(path), name);
     }
 
+    if (relative_path == NULL) {
+        new_path = path_from_string(".");
+    } else if (name != NULL) {
+        new_path = *relative_path;
+    } else {
+        log_fatal(LOG_FATAL_PREFIX "unreachable error");
+    }
+
     if (name != NULL) {
         int exists;
         bld_file directory;
         bld_file* parent;
         bld_file* temp;
 
-        dir_path = path_copy(path);
-        directory = file_directory_new(&dir_path, name);
+        directory = file_directory_new(path, &new_path, name);
         exists = set_add(&project->files, directory.identifier.id, &directory);
         if (exists) {
-            log_error("encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
-            file_free(&directory);
-            return;
+            log_fatal(LOG_FATAL_PREFIX "encountered \"%s\" multiple times while indexing", string_unpack(&directory.name));
+            return; /* unreachable */
         }
 
         temp = set_get(&project->files, directory.identifier.id);
@@ -214,6 +222,9 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
     }
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
+        bld_path sub_path;
+        bld_path temp;
+
         file_name = os_file_name(file_ptr);
         if (strcmp(file_name, ".") == 0 || strcmp(file_name, "..") == 0) {
             continue;
@@ -224,31 +235,45 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
 
         sub_path = path_copy(path);
         path_append_string(&sub_path, file_name);
-        incremental_index_recursive(project, forward_project, directory_id, &sub_path, file_name, adding_files);
+        temp = path_copy(&new_path);
+        path_append_string(&temp, file_name);
+
+        incremental_index_recursive(project, forward_project, directory_id, &sub_path, &temp, file_name, adding_files);
+
         path_free(&sub_path);
     }
     
+    if (name == NULL) {
+        path_free(&new_path);
+    }
     os_dir_close(dir);
 }
 
 void incremental_index_project(bld_project* project, bld_forward_project* forward_project) {
     bld_os_dir* dir;
+    bld_path path;
 
-    dir = os_dir_open(path_to_string(&forward_project->base.root));
-    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&forward_project->base.root));}
+    path = path_copy(&project->base.root);
+    dir = os_dir_open(path_to_string(&path));
+    if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&path));}
     os_dir_close(dir);
 
     log_info("Indexing project under root");
-    incremental_index_recursive(project, forward_project, project->root_dir, &forward_project->base.root, NULL, 1);
+    incremental_index_recursive(project, forward_project, project->root_dir, &path, NULL, NULL, 1);
+
+    path_free(&path);
 }
 
 void incremental_make_root(bld_project* project, bld_forward_project* fproject) {
     int exists;
     bld_path path;
+    bld_path relative;
     bld_file root;
 
     path = path_copy(&project->base.root);
-    root = file_directory_new(&path, ".");
+    relative = path_from_string(".");
+    root = file_directory_new(&path, &relative, ".");
+    path_free(&path);
 
     root.build_info.compiler_set = 1;
     root.build_info.compiler.type = BLD_COMPILER;
@@ -269,7 +294,7 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
     match_found = 0;
     path.str = fproject->main_file_name;
 
-    if (fproject->rebuilding) {
+    if (fproject->base.rebuilding) {
         project->main_file = file_get_id(&path);
         return;
     }
@@ -370,7 +395,6 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
-    char name[FILENAME_MAX];
     bld_string cmd, object_name;
     bld_compiler* compiler;
     bld_path path;
@@ -383,16 +407,22 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&cmd, string_unpack(&compiler->executable));
     compiler_flags_expand(&cmd, &compiler_flags);
     string_append_space(&cmd);
-    string_append_string(&cmd, path_to_string(&file->path));
+
+    if (!project->base.rebuilding || file->identifier.id != project->main_file) {
+        path = path_copy(&project->base.root);
+    } else if (file->identifier.id == project->main_file) {
+        path = path_copy(&project->base.build_of->root);
+    }
+    path_append_path(&path, &file->path);
+    string_append_string(&cmd, path_to_string(&path));
+    path_free(&path);
 
     path = path_copy(&project->base.root);
     if (project->base.cache.loaded) {
         path_append_path(&path, &project->base.cache.root);
     }
 
-    serialize_identifier(name, file);
-    object_name = string_pack(name);
-    object_name = string_copy(&object_name);
+    object_name = file_object_name(file);
     string_append_string(&object_name, ".o");
 
     result = compile_to_object(compiler->type, &cmd, &path, &object_name);
@@ -406,7 +436,6 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
 
 int incremental_link_executable(bld_project* project, char* executable_name) {
     int result;
-    char name[FILENAME_MAX];
     bld_path path;
     bld_file *main_file, *file;
     bld_string cmd;
@@ -415,7 +444,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
 
     main_file = set_get(&project->files, project->main_file);
     if (main_file == NULL) {
-        log_fatal("No main file has been set");
+        log_fatal(LOG_FATAL_PREFIX "No main file has been set");
         return 1;
     }
 
@@ -429,6 +458,7 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     linker_flags = array_new(sizeof(bld_linker_flags*));
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
+        bld_string object_name;
         bld_array file_flags;
         string_append_space(&cmd);
 
@@ -436,8 +466,8 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
         if (project->base.cache.loaded) {
             path_append_path(&path, &project->base.cache.root);
         }
-        serialize_identifier(name, file);
-        path_append_string(&path, name);
+        object_name = file_object_name(file);
+        path_append_string(&path, string_unpack(&object_name));
         
         string_append_string(&cmd, path_to_string(&path));
         string_append_string(&cmd, ".o");
@@ -445,7 +475,9 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
 
         file_assemble_linker_flags(file, &project->files, &file_flags);
         linker_flags_expand(&cmd, &file_flags);
+
         array_free(&file_flags);
+        string_free(&object_name);
     }
 
     linker_flags_append(&cmd, &project->base.linker.flags);
@@ -471,14 +503,13 @@ void incremental_mark_changed_files(bld_project* project, bld_set* changed_files
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
+        if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
         if (!project->base.cache.set) {
             *has_changed = 1;
             continue;
         }
 
         cache_file = set_get(&project->base.cache.files, file->identifier.id);
-
-        if (has_changed == NULL) {log_fatal("File did not exist in changed_files set");}
 
         if (cache_file == NULL) {
             *has_changed = 1;
@@ -537,7 +568,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         set_add(&changed_files, file->identifier.id, &temp);
     }
 
-    dependency_graph_extract_includes(&project->graph, &project->files);
+    dependency_graph_extract_includes(&project->graph, &project->base, project->main_file, &project->files);
     incremental_mark_changed_files(project, &changed_files);
 
     any_compiled = 0;
@@ -573,20 +604,22 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         bld_path obj_path;
         bld_string str;
         bld_file* file;
-        char obj_name[FILENAME_MAX];
 
         iter = iter_set(&project->files);
         while (iter_next(&iter, (void**) &file)) {
+            bld_string object_name;
+
             if (file->type == BLD_FILE_INTERFACE) {continue;}
 
             obj_path = path_copy(&project->base.root);
-            serialize_identifier(obj_name, file);
-            path_append_string(&obj_path, obj_name);
+            object_name = file_object_name(file);
+            path_append_string(&obj_path, string_unpack(&object_name));
             str = obj_path.str;
             string_append_string(&str, ".o");
 
             remove(string_unpack(&str));
             string_free(&str);
+            string_free(&object_name);
         }
     }
 
@@ -598,17 +631,19 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
 }
 
 int incremental_compile_changed_files(bld_project* project, bld_set* changed_files, int* any_compiled) {
-    FILE* cached_file;
-    int *has_changed, result, temp;
-    char compiled_name[FILENAME_MAX];
+    int result;
     bld_iter iter;
-    bld_path path;
-    bld_string compiled_path;
     bld_file* file;
 
     result = 0;
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        int *has_changed, temp;
+        FILE* cached_file;
+        bld_string object_name;
+        bld_string compiled_path;
+        bld_path path;
+
         if (file->type == BLD_FILE_INTERFACE || file->type == BLD_FILE_DIRECTORY) {continue;}
 
         has_changed = set_get(changed_files, file->identifier.id);
@@ -618,8 +653,8 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
         if (project->base.cache.loaded) {
             path_append_path(&path, &project->base.cache.root);
         }
-        serialize_identifier(compiled_name, file);
-        path_append_string(&path, compiled_name);
+        object_name = file_object_name(file);
+        path_append_string(&path, string_unpack(&object_name));
 
         compiled_path = path.str;
         string_append_string(&compiled_path, ".o");
@@ -627,6 +662,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
         cached_file = fopen(string_unpack(&compiled_path), "r");
         if (cached_file != NULL) {fclose(cached_file);}
 
+        string_free(&object_name);
         string_free(&compiled_path);
 
         if (!*has_changed && cached_file != NULL) {continue;}
@@ -649,9 +685,17 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
 
 int incremental_compile_project(bld_project* project, char* name) {
     int result;
-    bld_path executable_path = path_copy(&project->base.root);
+    bld_path executable_path;
+
+    if (project->base.rebuilding) {
+        executable_path = path_copy(&project->base.build_of->root);
+    } else {
+        executable_path = path_copy(&project->base.root);
+    }
     path_append_string(&executable_path, name);
+
     result = incremental_compile_with_absolute_path(project, path_to_string(&executable_path));
+
     path_free(&executable_path);
     return result;
 }
