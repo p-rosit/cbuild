@@ -54,7 +54,7 @@ bld_string* compiler_get_string(bld_compiler_type type) {
         log_fatal("compiler_get_string: incorrect amount of strings");
     }
 
-    if (type < 0 || type == BLD_COMPILER_AMOUNT) {
+    if (type < 0 || type >= BLD_COMPILER_AMOUNT) {
         log_fatal("compiler_get_string: type %d cannot be converted to handle", type);
     }
 
