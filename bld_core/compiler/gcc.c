@@ -1,3 +1,4 @@
+#include "../logging.h"
 #include "gcc.h"
 
 bld_string bld_compiler_string_gcc = STRING_COMPILE_TIME_PACK("gcc");
@@ -71,4 +72,38 @@ int compiler_file_is_header_gcc(bld_string* name) {
     }
 
     return match;
+}
+
+bld_language_type compiler_file_language_gcc(bld_string* name) {
+    bld_language_type type;
+    bld_string file_extension;
+    size_t amount[9] = {3, 16, 2, 3, 18, 1, 2, 2, 3};
+    char* types[9][18] = {
+        {"c", "i", "h"}, /* C */
+        {"ii", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C", "hh", "H", "hp", "hxx", "hpp", "HPP", "h++", "tcc"}, /* C++ */
+        {"m", "mi"}, /* Objective-C */
+        {"mm", "M", "mii"}, /* Objecive-C++ */
+        {"f", "fi", "for", "fpp", "ftn", "f90", "f95", "f03", "f08", "fii", "F", "FOR", "FPP", "FTN", "F90", "F95", "F03", "F08"}, /* Fortran */
+        {"go"}, /* go */
+        {"d", "di"}, /* D */
+        {"adb", "ads"}, /* Ada */
+        {"s", "sx", "S"} /* Assembly */
+    };
+
+    file_extension = compiler_get_file_extension(name);
+
+    for (type = BLD_LANGUAGE_C; type < BLD_LANGUAGE_AMOUNT; type++) {
+        size_t i;
+        bld_string temp;
+
+        for (i = 0; i < amount[type]; i++) {
+            temp = string_pack(types[type][i]);
+            if (string_eq(&file_extension, &temp)) {
+                return type;
+            }
+        }
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "gcc could not determine language of \"%s\"", string_unpack(name));
+    return type;
 }
