@@ -256,7 +256,7 @@ void parse_included_files(bld_project_base* base, bld_file_id main_id, bld_file*
     }
     path_append_path(&path, &file->path);
 
-    error = language_get_includes(BLD_LANGUAGE_C, base, &path, file, files);
+    error = language_get_includes(file->language, &path, file, files);
     if (error) {
         log_fatal("Could not open file \"%s\"", path_to_string(&path));
     }
