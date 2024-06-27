@@ -141,3 +141,17 @@ int compiler_type_file_is_header(bld_compiler_type type, bld_string* name) {
     log_fatal("compiler_file_is_header: unknown type %d", type);
     return 0;
 }
+
+bld_language_type compiler_file_language(bld_compiler_type type, bld_string* name) {
+    switch (type) {
+        case (BLD_LANGUAGE_C):
+            return compiler_file_language_gcc(name);
+        case (BLD_LANGUAGE_CPP):
+            return compiler_file_language_clang(name);
+        case (BLD_LANGUAGE_AMOUNT):
+            log_fatal(LOG_FATAL_PREFIX "unknown language");
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "not in range");
+    return BLD_LANGUAGE_AMOUNT; /* unreachable */
+}
