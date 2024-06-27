@@ -1,3 +1,4 @@
+#include "../logging.h"
 #include "clang.h"
 
 bld_string bld_compiler_string_clang = STRING_COMPILE_TIME_PACK("clang");
@@ -64,4 +65,31 @@ int compiler_file_is_header_clang(bld_string* name) {
     }
 
     return match;
+}
+
+bld_language_type compiler_file_language_clang(bld_string* name) {
+    bld_language_type type;
+    bld_string file_extension;
+    size_t amount[2] = {3, 16};
+    char* types[2][16] = {
+        {"c", "i", "h"}, /* C */
+        {"ii", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C", "hh", "H", "hp", "hxx", "hpp", "HPP", "h++", "tcc"}, /* C++ */
+    };
+
+    file_extension = compiler_get_file_extension(name);
+
+    for (type = BLD_LANGUAGE_C; type < BLD_LANGUAGE_AMOUNT; type++) {
+        size_t i;
+        bld_string temp;
+
+        for (i = 0; i < amount[type]; i++) {
+            temp = string_pack(types[type][i]);
+            if (string_eq(&file_extension, &temp)) {
+                return type;
+            }
+        }
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "clang could not determine language of \"%s\"", string_unpack(name));
+    return type;
 }
