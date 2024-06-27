@@ -56,6 +56,17 @@ bld_project project_resolve(bld_forward_project* fproject) {
     incremental_apply_compilers(&project, fproject);
     incremental_apply_linker_flags(&project, fproject);
 
+    {
+        bld_file* root;
+
+        root = set_get(&project.files, project.root_dir);
+        if (root == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "internal error");
+        }
+
+        file_determine_all_languages_under(root, &project.files);
+    }
+
     iter = iter_set(&project.files);
     while (iter_next(&iter, (void**) &file)) {
         file->identifier.hash = file_hash(file, &project.files);

@@ -197,6 +197,18 @@ int parse_project_files(FILE* file, bld_project_cache* cache) {
     }
 
     cache->root_file = f.file.identifier.id;
+
+    {
+        bld_file* root;
+
+        root = set_get(&cache->files, cache->root_file);
+        if (root == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "internal error");
+        }
+
+        file_determine_all_languages_under(root, &cache->files);
+    }
+
     return 0;
 }
 
