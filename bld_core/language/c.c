@@ -4,7 +4,7 @@
 
 bld_string bld_language_string_c = STRING_COMPILE_TIME_PACK("c");
 
-int language_get_includes_c(bld_project_base* base, bld_path* path, bld_file* file, bld_set* files) {
+int language_get_includes_c(bld_path* path, bld_file* file, bld_set* files) {
     size_t line_number;
     FILE* f;
     bld_path parent_path;

@@ -13,6 +13,6 @@ bld_array language_get_available(void);
 bld_language_type language_get_mapping(bld_string*);
 bld_string* language_get_string(bld_language_type);
 
-int language_get_includes(bld_language_type, bld_project_base*, bld_path*, bld_file*, bld_set*);
+int language_get_includes(bld_language_type, bld_path*, bld_file*, bld_set*);
 
 #endif

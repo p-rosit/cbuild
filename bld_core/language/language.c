@@ -53,12 +53,12 @@ bld_string* language_get_string(bld_language_type type) {
     return languages[type];
 }
 
-int language_get_includes(bld_language_type type, bld_project_base* base, bld_path* path, bld_file* file, bld_set* files) {
+int language_get_includes(bld_language_type type, bld_path* path, bld_file* file, bld_set* files) {
     switch (type) {
         case (BLD_LANGUAGE_C):
-            return language_get_includes_c(base, path, file, files);
+            return language_get_includes_c(path, file, files);
         case (BLD_LANGUAGE_CPP):
-            return language_get_includes_cpp(base, path, file, files);
+            return language_get_includes_cpp(path, file, files);
         case (BLD_LANGUAGE_AMOUNT):
             log_fatal(LOG_FATAL_PREFIX "internal error");
     }
