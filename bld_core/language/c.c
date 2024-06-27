@@ -22,8 +22,7 @@ int language_get_includes_c(bld_project_base* base, bld_path* path, bld_file* fi
     f = fopen(path_to_string(path), "r");
     if (f == NULL) {return -1;}
 
-    parent_path = path_copy(&base->root);
-    path_append_path(&parent_path, &file->path);
+    parent_path = path_copy(path);
     path_remove_last_string(&parent_path);
 
     line_number = 0;
