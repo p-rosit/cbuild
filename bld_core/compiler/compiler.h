@@ -4,6 +4,7 @@
 #include "../path.h"
 #include "../array.h"
 #include "../set.h"
+#include "../language/language_types.h"
 
 typedef enum bld_compiler_type {
     BLD_COMPILER_GCC,
@@ -18,5 +19,6 @@ bld_string compiler_get_file_extension(bld_string*);
 int compile_to_object(bld_compiler_type, bld_string*, bld_path*, bld_string*);
 int compiler_file_is_implementation(bld_set*, bld_string*);
 int compiler_file_is_header(bld_set*, bld_string*);
+bld_language_type compiler_file_language(bld_compiler_type, bld_string*);
 
 #endif
