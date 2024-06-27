@@ -7,6 +7,7 @@
 #include "path.h"
 #include "compiler.h"
 #include "linker.h"
+#include "language/language_types.h"
 
 typedef uintmax_t bld_file_id;
 typedef uintmax_t bld_time;
@@ -60,6 +61,7 @@ typedef union bld_file_info {
 
 typedef struct bld_file {
     bld_file_type type;
+    bld_language_type language;
     bld_file_id parent_id;
     bld_file_identifier identifier;
     bld_path path;
@@ -87,6 +89,7 @@ bld_string  file_object_name(bld_file*);
 
 void        file_dir_add_file(bld_file*, bld_file*);
 
+void        file_determine_all_languages_under(bld_file*, bld_set*);
 void        file_assemble_compiler(bld_file*, bld_set*, bld_compiler**, bld_array*);
 void        file_assemble_linker_flags(bld_file*, bld_set*, bld_array*);
 

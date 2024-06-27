@@ -35,7 +35,6 @@ bld_compiler_type compiler_get_mapping(bld_string* name) {
         log_fatal("compiler_get_mapping: internal error");
     }
 
-    set_new(sizeof(bld_compiler_type));
     for (i = 0; i < sizeof(types) / sizeof(*types); i++) {
         if (string_eq(name, compilers[i])) {
             return types[i];
@@ -55,7 +54,7 @@ bld_string* compiler_get_string(bld_compiler_type type) {
         log_fatal("compiler_get_string: incorrect amount of strings");
     }
 
-    if (type < 0 || type == BLD_COMPILER_AMOUNT) {
+    if (type < 0 || type >= BLD_COMPILER_AMOUNT) {
         log_fatal("compiler_get_string: type %d cannot be converted to handle", type);
     }
 
@@ -141,4 +140,18 @@ int compiler_type_file_is_header(bld_compiler_type type, bld_string* name) {
 
     log_fatal("compiler_file_is_header: unknown type %d", type);
     return 0;
+}
+
+bld_language_type compiler_file_language(bld_compiler_type type, bld_string* name) {
+    switch (type) {
+        case (BLD_LANGUAGE_C):
+            return compiler_file_language_gcc(name);
+        case (BLD_LANGUAGE_CPP):
+            return compiler_file_language_clang(name);
+        case (BLD_LANGUAGE_AMOUNT):
+            log_fatal(LOG_FATAL_PREFIX "unknown language");
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "not in range");
+    return BLD_LANGUAGE_AMOUNT; /* unreachable */
 }

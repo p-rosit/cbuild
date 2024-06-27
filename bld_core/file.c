@@ -15,6 +15,7 @@ void file_free_directory(bld_file_directory*);
 void file_free_implementation(bld_file_implementation*);
 void file_free_interface(bld_file_interface*);
 void file_free_test(bld_file_test*);
+void file_determine_all_languages_under_recursive(bld_file*, bld_set*, bld_compiler*);
 
 bld_file_id file_get_id(bld_path* path) {
     bld_file_id id;
@@ -451,4 +452,42 @@ void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags
     }
 
     array_reverse(flags);
+}
+
+void file_determine_all_languages_under(bld_file* file, bld_set* files) {
+    bld_compiler* compiler;
+
+    if (!file->build_info.compiler_set) {
+        log_fatal(LOG_FATAL_PREFIX "missing root compiler at \"%s\"", string_unpack(&file->name));
+    }
+
+    if (file->build_info.compiler.type != BLD_COMPILER) {
+        log_fatal(LOG_FATAL_PREFIX "got compiler flags at root \"%s\"", string_unpack(&file->name));
+    }
+
+    compiler = &file->build_info.compiler.as.compiler;
+    file_determine_all_languages_under_recursive(file, files, compiler);
+}
+
+void file_determine_all_languages_under_recursive(bld_file* file, bld_set* files, bld_compiler* compiler) {
+    if (file->build_info.compiler_set) {
+        if (file->build_info.compiler.type == BLD_COMPILER) {
+            compiler = &file->build_info.compiler.as.compiler;
+        }
+    }
+
+    if (file->type != BLD_FILE_DIRECTORY) {
+        file->language = compiler_file_language(compiler->type, &file->name);
+    } else {
+        bld_iter iter;
+        uintmax_t* sub_file_id;
+
+        iter = iter_array(&file->info.dir.files);
+        while (iter_next(&iter, (void**) &sub_file_id)) {
+            bld_file* sub_file;
+
+            sub_file = set_get(files, *sub_file_id);
+            file_determine_all_languages_under_recursive(sub_file, files, compiler);
+        }
+    }
 }
