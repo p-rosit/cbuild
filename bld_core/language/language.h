@@ -6,12 +6,8 @@
 #include "../set.h"
 #include "../file.h"
 #include "../project_base.h"
+#include "language_types.h"
 
-typedef enum bld_language_type {
-    BLD_LANGUAGE_C,
-    BLD_LANGUAGE_CPP,
-    BLD_LANGUAGE_AMOUNT
-} bld_language_type;
 
 bld_array language_get_available(void);
 bld_language_type language_get_mapping(bld_string*);
