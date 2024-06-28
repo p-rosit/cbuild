@@ -44,7 +44,7 @@ int command_help(bld_command_help* help, bld_data* data) {
 
         iter = iter_array(&data->handle_order);
         while (iter_next(&iter, (void**) &type)) {
-            if (*type == BLD_COMMAND_INVALID) {continue;}
+            if (*type == BLD_COMMAND_INVALID || *type == BLD_COMMAND_BUILD) {continue;}
 
             handle = set_get(&data->handles, *type);
             if (handle == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
