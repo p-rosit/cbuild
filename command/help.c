@@ -110,7 +110,7 @@ bld_handle_annotated command_handle_help(char* name) {
     handle.type = BLD_COMMAND_HELP;
     handle.name = bld_command_string_help;
     handle.handle = handle_new(name);
-    handle_positional_expect(&handle.handle, "help");
+    handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_help));
     handle_positional_optional(&handle.handle, "the command or target to display help text for");
     handle_set_description(&handle.handle, "A help command!");
 
