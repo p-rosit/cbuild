@@ -33,7 +33,7 @@ int command_status_all(bld_command_status* status, bld_data* data) {
     bld_string* target;
     (void)(status);
 
-    log_info("Targets in project:");
+    printf("Targets in project:\n");
 
     iter = iter_set(&data->targets);
     while (iter_next(&iter, (void**) &target)) {
@@ -45,9 +45,9 @@ int command_status_all(bld_command_status* status, bld_data* data) {
         }
 
         if (is_default) {
-            log_info("  * %s", string_unpack(target));
+            printf("    * %s\n", string_unpack(target));
         } else {
-            log_info("    %s", string_unpack(target));
+            printf("      %s\n", string_unpack(target));
         }
     }
     return 0;
