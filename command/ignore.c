@@ -134,6 +134,7 @@ bld_handle_annotated command_handle_ignore(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_IGNORE;
+    handle.name = bld_command_string_ignore;
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "The target to modify.");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_ignore));

@@ -4,6 +4,8 @@
 #include "../bld_core/incremental.h"
 #include "build.h"
 
+bld_string bld_command_string_build = STRING_COMPILE_TIME_PACK("build");
+
 int command_build_verify_config(bld_command_build*, bld_data*);
 void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
 void command_build_apply_build_info(bld_forward_project*, bld_path*, bld_target_build_information*);
@@ -103,6 +105,7 @@ bld_handle_annotated command_handle_build(char* name) {
     handle_set_description(&handle.handle, "Build a target");
 
     handle.type = BLD_COMMAND_BUILD;
+    handle.name = bld_command_string_build;
     handle.convert = (bld_command_convert*) command_build_convert;
     handle.execute = (bld_command_execute*) command_build;
     handle.free = (bld_command_free*) command_build_free;

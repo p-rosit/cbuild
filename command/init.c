@@ -141,6 +141,7 @@ bld_handle_annotated command_handle_init(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_INIT;
+    handle.name = bld_command_string_init;
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_init));
     handle_positional_optional(&handle.handle, "New target to initialize");

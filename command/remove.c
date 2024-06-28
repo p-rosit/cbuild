@@ -36,6 +36,7 @@ bld_handle_annotated command_handle_remove(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_REMOVE;
+    handle.name = bld_command_string_remove;
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_remove));
     handle_positional_required(&handle.handle, "The target to remove");

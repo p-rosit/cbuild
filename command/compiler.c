@@ -380,6 +380,7 @@ bld_handle_annotated command_handle_compiler(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_COMPILER;
+    handle.name = bld_command_string_compiler;
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "Target to set compiler flags for");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_compiler));

@@ -93,6 +93,7 @@ bld_handle_annotated command_handle_status(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_STATUS;
+    handle.name = bld_command_string_status;
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_status));
     handle_positional_optional(&handle.handle, "The target to show the status of");
