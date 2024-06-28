@@ -6,11 +6,6 @@
 const bld_string bld_command_string_remove = STRING_COMPILE_TIME_PACK("remove");
 
 int command_remove(bld_command_remove* remove, bld_data* data) {
-    if (!data->has_root) {
-        printf("%s", string_unpack(&bld_command_init_missing_project));
-        return -1;
-    }
-
     if (data->config_parsed) {
         if (!data->config.active_target_configured) {
             if (string_eq(&remove->target, &data->config.active_target)) {
@@ -25,10 +20,19 @@ int command_remove(bld_command_remove* remove, bld_data* data) {
 }
 
 int command_remove_convert(bld_command* pre_cmd, bld_data* data, bld_command_remove* cmd, bld_command_invalid* invalid) {
+    bld_string err;
     bld_command_positional* arg;
     bld_command_positional_required* target;
-    (void)(data);
-    (void)(invalid);
+
+    if (!data->has_root) {
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 1);
     if (arg->type != BLD_HANDLE_POSITIONAL_REQUIRED) {log_fatal("command_switch_convert: missing first convert");}
@@ -36,6 +40,9 @@ int command_remove_convert(bld_command* pre_cmd, bld_data* data, bld_command_rem
 
     cmd->target = string_copy(&target->value);
     return 0;
+    parse_failed:
+    *invalid = command_invalid_new(-1, &err);
+    return -1;
 }
 
 bld_handle_annotated command_handle_remove(char* name) {
