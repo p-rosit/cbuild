@@ -49,7 +49,7 @@ int command_help(bld_command_help* help, bld_data* data) {
 
         printf(
             "\n"
-            "To see more information on each command separtely run\n"
+            "To see more information on each command separately run\n"
             "\n"
             "    bld help <command name>\n"
             "\n"
