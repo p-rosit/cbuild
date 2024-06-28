@@ -45,9 +45,9 @@ int command_status_all(bld_command_status* status, bld_data* data) {
         }
 
         if (is_default) {
-            printf("    * %s\n", string_unpack(target));
+            printf("  * %s\n", string_unpack(target));
         } else {
-            printf("      %s\n", string_unpack(target));
+            printf("    %s\n", string_unpack(target));
         }
     }
     return 0;
