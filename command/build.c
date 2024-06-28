@@ -112,10 +112,34 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
 }
 
 bld_handle_annotated command_handle_build(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
+
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "The target to build");
-    handle_set_description(&handle.handle, "Build a target");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "A target is a collection of compiler and linker information applied to the\n"
+        "files in this project which will generate an executable.\n"
+        "\n"
+        "This command will build a target, the compiler information which was set\n"
+        "with the compiler subcommand (see `bld help compiler`) and the linker\n"
+        "information which was set with the linker subcommand (see `bld help linker`)\n"
+        "will be applied to the files in the project and an executable will be\n"
+        "generated\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "A compiler and linker must be set at least for the root to start building.\n"
+        "After that there is an open world assumption on the code, i.e. dependencies\n"
+        "do not need to be explicitly stated and are assumed to possibly change at\n"
+        "at any point."
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.type = BLD_COMMAND_BUILD;
     handle.name = bld_command_string_build;
@@ -123,6 +147,7 @@ bld_handle_annotated command_handle_build(char* name) {
     handle.execute = (bld_command_execute*) command_build;
     handle.free = (bld_command_free*) command_build_free;
 
+    string_free(&temp);
     return handle;
 }
 
