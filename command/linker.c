@@ -248,6 +248,7 @@ int command_linker_convert(bld_command* pre_cmd, bld_data* data, bld_command_lin
 }
 
 bld_handle_annotated command_handle_linker(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_LINKER;
@@ -259,13 +260,39 @@ bld_handle_annotated command_handle_linker(char* name) {
     handle_positional_optional(&handle.handle, "Set linker with ll or add flags with ++");
     handle_allow_flags(&handle.handle);
     handle_positional_optional(&handle.handle, "The linker to set if the previous argument is ll");
-    handle_allow_arbitrary_flags(&handle.handle, "Passthrough linker flags");
-    handle_set_description(&handle.handle, "Set linker flags");
+    handle_allow_arbitrary_flags(&handle.handle, "Arbitrary flags can be specified which will be passed to the specified linker");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Set or view the linker flags of a file/directory. A file/directory\n"
+        "will inherit the linker flags of the directory it is in. When changing\n"
+        "the compiler information of a file there are two different modes:\n"
+        "\n"
+        "    `bld <target> linker <path> ll <linker> <flags...>`:\n"
+        "        Can only be used for the root directory, this will set the linker\n"
+        "        and when building the project this linker will be used to build\n"
+        "        the project.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "    `bld <target> linker <path> ++ <flags...>`:\n"
+        "        This will add linker flags to the path, the file/directory at\n"
+        "        this path will still inherit from the parent directory.\n"
+        "\n"
+        "To see what linker information a file/directory has run the command\n"
+        "\n"
+        "    bld <target> linker <path to file>"
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_linker_convert;
     handle.execute = (bld_command_execute*) command_linker;
     handle.free = (bld_command_free*) command_linker_free;
 
+    string_free(&temp);
     return handle;
 }
 
