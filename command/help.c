@@ -1,4 +1,5 @@
 #include "../bld_core/logging.h"
+#include "../bld_core/iter.h"
 #include "help.h"
 
 #include "add.h"
@@ -17,48 +18,50 @@ int command_help_command(bld_command_type, bld_data*);
 int command_help_target(bld_string*, bld_data*);
 
 int command_help(bld_command_help* help, bld_data* data) {
+    bld_iter iter;
+    bld_command_type* type;
+    bld_handle_annotated* handle;
+
     if (help->has_command) {
-        bld_command_type type;
+        int found;
+        bld_command_type result_type;
 
         if (set_has(&data->targets, string_hash(string_unpack(&help->command)))) {
             return command_help_target(&help->command, data);
-        } else if (string_eq(&help->command, &bld_command_string_add)) {
-            type = BLD_COMMAND_ADD;
-        } else if (string_eq(&help->command, &bld_command_string_compiler)) {
-            type = BLD_COMMAND_COMPILER;
-        } else if (string_eq(&help->command, &bld_command_string_linker)) {
-            type = BLD_COMMAND_LINKER;
-        } else if (string_eq(&help->command, &bld_command_string_help)) {
-            type = BLD_COMMAND_HELP;
-        } else if (string_eq(&help->command, &bld_command_string_ignore)) {
-            type = BLD_COMMAND_IGNORE;
-        } else if (string_eq(&help->command, &bld_command_string_init)) {
-            type = BLD_COMMAND_INIT;
-        } else if (string_eq(&help->command, &bld_command_string_invalidate)) {
-            type = BLD_COMMAND_INVALIDATE;
-        } else if (string_eq(&help->command, &bld_command_string_remove)) {
-            type = BLD_COMMAND_REMOVE;
-        } else if (string_eq(&help->command, &bld_command_string_status)) {
-            type = BLD_COMMAND_STATUS;
-        } else if (string_eq(&help->command, &bld_command_string_switch)) {
-            type = BLD_COMMAND_SWITCH;
-        } else {
+        }
+
+        found = 0;
+        iter = iter_array(&data->handle_order);
+        while (iter_next(&iter, (void**) &type)) {
+            if (*type == BLD_COMMAND_INVALID) {continue;}
+
+            handle = set_get(&data->handles, *type);
+            if (handle == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
+
+            if (string_eq(&help->command, &handle->name)) {
+                found = 1;
+                result_type = *type;
+            }
+        }
+
+        if (!found) {
             printf("'%s' is not a command or target\n", string_unpack(&help->command));
             return -1;
         }
 
-        return command_help_command(type, data);
+        return command_help_command(result_type, data);
     } else {
         log_info("Available commands:");
-        log_info("  %s", string_unpack(&bld_command_string_add));
-        log_info("  %s", string_unpack(&bld_command_string_compiler));
-        log_info("  %s", string_unpack(&bld_command_string_ignore));
-        log_info("  %s", string_unpack(&bld_command_string_init));
-        log_info("  %s", string_unpack(&bld_command_string_invalidate));
-        log_info("  %s", string_unpack(&bld_command_string_linker));
-        log_info("  %s", string_unpack(&bld_command_string_remove));
-        log_info("  %s", string_unpack(&bld_command_string_status));
-        log_info("  %s", string_unpack(&bld_command_string_switch));
+
+        iter = iter_array(&data->handle_order);
+        while (iter_next(&iter, (void**) &type)) {
+            if (*type == BLD_COMMAND_INVALID) {continue;}
+
+            handle = set_get(&data->handles, *type);
+            if (handle == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
+
+            log_info("  %s", string_unpack(&handle->name));
+        }
     }
     return 0;
 }
