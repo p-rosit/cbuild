@@ -51,6 +51,13 @@ int command_help(bld_command_help* help, bld_data* data) {
 
             printf("    %s\n", string_unpack(&handle->name));
         }
+
+        printf(
+            "\n"
+            "To see more information on each command separtely run\n"
+            "\n"
+            "    bld help <command name>\n"
+        );
     }
     return 0;
 }
