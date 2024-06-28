@@ -11,16 +11,6 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     bld_target_build_information flags;
     bld_target_build_information* file;
 
-    if (!data->has_root) {
-        printf("%s", string_unpack(&bld_command_init_missing_project));
-        return -1;
-    }
-
-    if (data->targets.size == 0) {
-        printf("%s", string_unpack(&bld_command_init_no_targets));
-        return -1;
-    }
-
     flags = command_compiler_initial_setup(cmd, data);
     utils_apply_build_information(data, &flags);
 
@@ -294,6 +284,16 @@ int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_c
     bld_command_positional_optional* target;
     bld_command_positional_optional* option;
     bld_command_positional_optional* compiler;
+
+    if (!data->has_root) {
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_compiler_convert: missing first optional");}
