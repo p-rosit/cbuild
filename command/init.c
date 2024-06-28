@@ -71,8 +71,12 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     bld_path path_main;
 
     if (!data->has_root) {
-        log_fatal("Build has not been initialized!");
-        return -1;
+        command_init_project(cmd, data);
+        data_free(data);
+        *data = data_extract("bld");
+        if (!data->has_root) {
+            log_fatal(LOG_FATAL_PREFIX "internal error");
+        }
     }
 
     if (set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
