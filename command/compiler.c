@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "compiler.h"
 
 const bld_string bld_command_string_compiler = STRING_COMPILE_TIME_PACK("compiler");
@@ -9,6 +10,16 @@ bld_target_build_information command_compiler_initial_setup(bld_command_compiler
 int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     bld_target_build_information flags;
     bld_target_build_information* file;
+
+    if (!data->has_root) {
+        printf("%s", string_unpack(&bld_command_init_missing_project));
+        return -1;
+    }
+
+    if (data->targets.size == 0) {
+        printf("%s", string_unpack(&bld_command_init_no_targets));
+        return -1;
+    }
 
     flags = command_compiler_initial_setup(cmd, data);
     utils_apply_build_information(data, &flags);
