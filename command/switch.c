@@ -70,7 +70,12 @@ bld_handle_annotated command_handle_switch(char* name) {
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_switch));
     handle_positional_required(&handle.handle, "The target to switch to");
-    handle_set_description(&handle.handle, "Switch to a new active target");
+    handle_set_description(
+        &handle.handle,
+        "Many commands act on a target, for those commands the target can be\n"
+        "omitted if an active target has been set, in that case the active\n"
+        "target is the one that the command will act on."
+    );
 
     handle.convert = (bld_command_convert*) command_switch_convert;
     handle.execute = (bld_command_execute*) command_switch;
