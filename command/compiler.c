@@ -405,7 +405,7 @@ bld_handle_annotated command_handle_compiler(char* name) {
     temp = string_new();
     string_append_string(
         &temp,
-        "Set or view the compiler flags of a file/directory. A file/directory\n"
+        "Set or view the compiler information of a file/directory. A file/directory\n"
         "will inherit the compiler and compiler flags of the directory it is in.\n"
         "When changing the compiler information of a file there are three different\n"
         "modes:\n"
