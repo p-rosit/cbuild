@@ -100,8 +100,17 @@ bld_handle_annotated command_handle_help(char* name) {
     handle.name = bld_command_string_help;
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_help));
-    handle_positional_optional(&handle.handle, "the command or target to display help text for");
-    handle_set_description(&handle.handle, "A help command!");
+    handle_positional_optional(&handle.handle, "the command to display help text for");
+    handle_set_description(
+        &handle.handle,
+        "To see which subcommands are available run\n"
+        "\n"
+        "    bld help\n"
+        "\n"
+        "For information on a single subcommand the help command can be\n"
+        "used by running `bld help <subcommand>`. The build command is handled\n"
+        "in a special way, for information on that run `bld help build`."
+    );
 
     handle.convert = (bld_command_convert*) command_help_convert;
     handle.execute = (bld_command_execute*) command_help;
