@@ -6,6 +6,9 @@
 
 const bld_string bld_command_string_ignore = STRING_COMPILE_TIME_PACK("ignore");
 const bld_string bld_command_string_ignore_flag_delete = STRING_COMPILE_TIME_PACK("delete");
+const bld_string bld_command_ignore_see_more = STRING_COMPILE_TIME_PACK(
+    "See `bld help ignore` for more information."
+);
 
 int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_iter iter;
@@ -13,6 +16,11 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_path path, *temp;
     bld_set ignored_files;
     uintmax_t added_id;
+
+    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
+        printf("'%s' is not a known target. %s\n", string_unpack(&cmd->target), string_unpack(&bld_command_ignore_see_more));
+        return -1;
+    }
 
     ignored_files = set_new(sizeof(bld_path));
     config = &data->target_config;
