@@ -250,6 +250,9 @@ int utils_get_target(bld_string* target, bld_string* err, bld_command_positional
             *err = string_copy(err);
             return 0;
         }
+    } else {
+        *err = string_copy(&bld_command_init_missing_project);
+        return 0;
     }
 
     return 1;
