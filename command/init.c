@@ -60,7 +60,7 @@ int command_init_project(bld_command_init* cmd, bld_data* data) {
     }
     printf("Created directory '%s'\n", path_to_string(&build_dir));
 
-    path_append_string(&build_dir, "config.json");
+    path_append_string(&build_dir, string_unpack(&bld_path_config));
     data->config_parsed = 1;
     data->config = config_new();
     serialize_config(&build_dir, &data->config);
