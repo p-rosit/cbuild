@@ -400,7 +400,7 @@ bld_handle_annotated command_handle_compiler(char* name) {
     handle_positional_optional(&handle.handle, "Set compiler with cc or add/remove flags with ++ or --");
     handle_allow_flags(&handle.handle);
     handle_positional_optional(&handle.handle, "The compiler to set if previous argument is cc");
-    handle_allow_arbitrary_flags(&handle.handle, "Passthrough compiler flags");
+    handle_allow_arbitrary_flags(&handle.handle, "Arbitrary flags can be specified which will be passed to the specified compiler");
 
     temp = string_new();
     string_append_string(
