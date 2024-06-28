@@ -69,7 +69,6 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     int error;
     bld_path target_path;
     bld_path path_main;
-    log_debug("Initializing target: \"%s\"", string_unpack(&cmd->target));
 
     if (!data->has_root) {
         log_fatal("Build has not been initialized!");
@@ -84,6 +83,7 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
         log_fatal("Specified main file '%s' is not a path to a file/directory", path_to_string(&cmd->path_main));
     }
 
+    log_debug("Initializing target: \"%s\"", string_unpack(&cmd->target));
     target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     error = os_dir_make(path_to_string(&target_path));
