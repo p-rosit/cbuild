@@ -40,7 +40,7 @@ int command_help(bld_command_help* help, bld_data* data) {
 
         return command_help_command(result_type, data);
     } else {
-        log_info("Available commands:");
+        printf("Available commands:\n");
 
         iter = iter_array(&data->handle_order);
         while (iter_next(&iter, (void**) &type)) {
@@ -49,7 +49,7 @@ int command_help(bld_command_help* help, bld_data* data) {
             handle = set_get(&data->handles, *type);
             if (handle == NULL) {log_fatal(LOG_FATAL_PREFIX "internal error");}
 
-            log_info("  %s", string_unpack(&handle->name));
+            printf("    %s\n", string_unpack(&handle->name));
         }
     }
     return 0;
