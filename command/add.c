@@ -6,6 +6,9 @@
 
 const bld_string bld_command_string_add = STRING_COMPILE_TIME_PACK("add");
 const bld_string bld_command_string_add_flag_delete = STRING_COMPILE_TIME_PACK("delete");
+const bld_string bld_command_add_see_more = STRING_COMPILE_TIME_PACK(
+    "See `bld help add` for more information."
+);
 
 int command_add(bld_command_add* cmd, bld_data* data) {
     bld_iter iter;
@@ -13,6 +16,11 @@ int command_add(bld_command_add* cmd, bld_data* data) {
     bld_path path, *temp;
     bld_set added_files;
     uintmax_t added_id;
+
+    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
+        printf("'%s' is not a known target. %s\n", string_unpack(&cmd->target), string_unpack(&bld_command_add_see_more));
+        return -1;
+    }
 
     config = &data->target_config;
     added_files = set_new(sizeof(bld_path));
