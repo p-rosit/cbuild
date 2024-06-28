@@ -109,7 +109,14 @@ bld_handle_annotated command_handle_status(char* name) {
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_status));
     handle_positional_optional(&handle.handle, "The target to show the status of");
-    handle_set_description(&handle.handle, "Status of target");
+    handle_set_description(
+        &handle.handle,
+        "If no target is supplied the list of existing targets will be printed\n"
+        "as well as which target, if selected, is active. See `bld help switch`\n"
+        "for more information about active targets.\n"
+        "\n"
+        "If a target is supplied the status of that target will be printed."
+    );
 
     handle.convert = (bld_command_convert*) command_status_convert;
     handle.execute = (bld_command_execute*) command_status;
