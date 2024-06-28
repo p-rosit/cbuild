@@ -40,7 +40,7 @@ int command_help(bld_command_help* help, bld_data* data) {
 
         return command_help_command(result_type, data);
     } else {
-        printf("Available commands:\n");
+        printf("Available sub commands:\n");
 
         iter = iter_array(&data->handle_order);
         while (iter_next(&iter, (void**) &type)) {
