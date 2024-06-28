@@ -9,6 +9,20 @@ int command_init_project(bld_command_init*, bld_data*);
 int command_init_target(bld_command_init*, bld_data*);
 
 const bld_string bld_command_string_init = STRING_COMPILE_TIME_PACK("init");
+const bld_string bld_command_init_missing_project = STRING_COMPILE_TIME_PACK(
+    "Project root could not be found in this directory or above. Please\n"
+    "initialize a project with\n"
+    "\n"
+    "    `bld init`\n"
+    "\n"
+    "or see `bld help init` for more information.\n"
+);
+const bld_string bld_command_init_no_targets = STRING_COMPILE_TIME_PACK(
+    "No targets have been set up in this project.\n"
+    "\n"
+    "To make a target run `bld init <target_name> <path to main file>`\n"
+    "or see `bld help init` for more information.\n"
+);
 
 int command_init(bld_command_init* cmd, bld_data* data) {
     if (cmd->init_project) {
