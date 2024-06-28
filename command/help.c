@@ -57,6 +57,12 @@ int command_help(bld_command_help* help, bld_data* data) {
             "To see more information on each command separtely run\n"
             "\n"
             "    bld help <command name>\n"
+            "\n"
+            "To run a build command run `bld <target name>` or\n"
+            "\n"
+            "    bld help build\n"
+            "\n"
+            "for more information on building.\n"
         );
     }
     return 0;
