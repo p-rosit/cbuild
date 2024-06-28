@@ -11,13 +11,13 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
 
     if (data->config.active_target_configured) {
         if (string_eq(&cmd->target, &data->config.active_target)) {
-            log_info("Target %s already active", string_unpack(&cmd->target));
+            printf("Target '%s' already active\n", string_unpack(&cmd->target));
             return 0;
         }
     }
 
     if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
-        log_error("%s is not a known target", string_unpack(&cmd->target));
+        printf("'%s' is not a known target\n", string_unpack(&cmd->target));
         return -1;
     }
 
