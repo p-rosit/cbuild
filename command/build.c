@@ -2,6 +2,7 @@
 #include "../bld_core/logging.h"
 #include "../bld_core/project.h"
 #include "../bld_core/incremental.h"
+#include "init.h"
 #include "build.h"
 
 bld_string bld_command_string_build = STRING_COMPILE_TIME_PACK("build");
@@ -82,6 +83,18 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
     bld_string err;
     bld_command_positional* arg;
     bld_command_positional_optional* opt;
+
+    if (!data->has_root) {
+        error = -1;
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        error = -1;
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_build_convert: missing first optional");}
