@@ -2,17 +2,6 @@
 #include "../bld_core/iter.h"
 #include "help.h"
 
-#include "add.h"
-#include "build.h"
-#include "compiler.h"
-#include "ignore.h"
-#include "init.h"
-#include "linker.h"
-#include "invalidate.h"
-#include "remove.h"
-#include "status.h"
-#include "switch.h"
-
 const bld_string bld_command_string_help = STRING_COMPILE_TIME_PACK("help");
 int command_help_command(bld_command_type, bld_data*);
 int command_help_target(bld_string*, bld_data*);
