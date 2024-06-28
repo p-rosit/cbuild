@@ -46,14 +46,27 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
         log_fatal("No subcommand could be matched");
     }
 
-    if (error) {
+    if (error && !data->has_root) {
+        bld_string* str;
+        bld_string err;
+
+        iter = iter_array(&errs);
+        while (iter_next(&iter, (void**) &str)) {
+            string_free(str);
+        }
+        array_free(&errs);
+
+        err = string_copy(&bld_command_init_missing_project);
+
+        app_command.type = BLD_COMMAND_INVALID;
+        app_command.as.invalid = command_invalid_new(-1, &err);
+    } else if (error) {
         bld_string* str;
         bld_string err;
 
         err = string_new();
         if (errs.size <= 0) {log_fatal("application_command_parse: error but no error");}
 
-        log_error("Error with: %d", handle->type);
         iter = iter_array(&errs);
         while (iter_next(&iter, (void**) &str)) {
             string_append_string(&err, string_unpack(str));
@@ -61,6 +74,11 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
             string_free(str);
         }
         array_free(&errs);
+
+        string_append_char(&err, '\n');
+        string_append_string(&err, "For help with this subcommand see `bld help ");
+        string_append_string(&err, string_unpack(&handle->name));
+        string_append_string(&err, "'\n");
         
         app_command.type = BLD_COMMAND_INVALID;
         app_command.as.invalid = command_invalid_new(-1, &err);

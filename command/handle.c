@@ -484,7 +484,6 @@ int handle_parse(bld_args args, bld_handle* handle, bld_command* cmd, bld_array*
             handle_string_append_int(&str, handle->positional.size);
             string_append_string(&str, " positional arguments to command, got ");
             handle_string_append_int(&str, info.current_arg);
-            string_append_string(&str, "\n");
             array_push(err, &str);
             error |= BLD_COMMAND_ERROR_ARGS_TOO_FEW;
 

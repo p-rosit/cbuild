@@ -1,10 +1,14 @@
 #include "../bld_core/os.h"
 #include "../bld_core/logging.h"
 #include "../bld_core/iter.h"
+#include "init.h"
 #include "ignore.h"
 
 const bld_string bld_command_string_ignore = STRING_COMPILE_TIME_PACK("ignore");
 const bld_string bld_command_string_ignore_flag_delete = STRING_COMPILE_TIME_PACK("delete");
+const bld_string bld_command_ignore_see_more = STRING_COMPILE_TIME_PACK(
+    "See `bld help ignore` for more information."
+);
 
 int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_iter iter;
@@ -12,6 +16,11 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_path path, *temp;
     bld_set ignored_files;
     uintmax_t added_id;
+
+    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
+        printf("'%s' is not a known target. %s\n", string_unpack(&cmd->target), string_unpack(&bld_command_ignore_see_more));
+        return -1;
+    }
 
     ignored_files = set_new(sizeof(bld_path));
     config = &data->target_config;
@@ -92,6 +101,18 @@ int command_ignore_convert(bld_command* pre_cmd, bld_data* data, bld_command_ign
     bld_command_positional_optional* opt;
     bld_command_positional_vargs* varg;
 
+    if (!data->has_root) {
+        error = -1;
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        error = -1;
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
+
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_ignore_convert: missing first optional");}
     opt = &arg->as.opt;
@@ -132,20 +153,44 @@ int command_ignore_convert(bld_command* pre_cmd, bld_data* data, bld_command_ign
 
 bld_handle_annotated command_handle_ignore(char* name) {
     bld_handle_annotated handle;
+    bld_string temp;
 
     handle.type = BLD_COMMAND_IGNORE;
+    handle.name = bld_command_string_ignore;
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "The target to modify.");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_ignore));
     handle_allow_flags(&handle.handle);
     handle_positional_vargs(&handle.handle, "The paths to ignore on the chosen the target");
     handle_flag(&handle.handle, *bld_command_string_ignore_flag_delete.chars, string_unpack(&bld_command_string_ignore_flag_delete), "Remove the specified paths from the ignored paths of the target");
-    handle_set_description(&handle.handle, "Ignores the specified paths in the specified target. If no target is supplied\nthe paths will be ignored by the currently active target.");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Ignores the specified paths to the specified target. If no target is\n"
+        "supplied the paths will be ignored by the currently active target.\n"
+        "\n"
+        "If a directory is ignored all the files under that directory will be\n"
+        "ignored in any future builds of the supplied target. To re-add a file/directory\n"
+        "under an ignored directory the `add` subcommand can be used.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "The paths that should be ignored must be existing paths. All paths under\n"
+        "the root of the project are added by default, they are no longer added if\n"
+        "they are located under an ignored directory.\n"
+        "\n"
+        "To instead add files/directories see the `add` subcommand."
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_ignore_convert;
     handle.execute = (bld_command_execute*) command_ignore;
     handle.free = (bld_command_free*) command_ignore_free;
 
+    string_free(&temp);
     return handle;
 }
 

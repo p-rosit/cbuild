@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "compiler.h"
 
 const bld_string bld_command_string_compiler = STRING_COMPILE_TIME_PACK("compiler");
@@ -284,6 +285,16 @@ int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_c
     bld_command_positional_optional* option;
     bld_command_positional_optional* compiler;
 
+    if (!data->has_root) {
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
+
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_compiler_convert: missing first optional");}
     target = &arg->as.opt;
@@ -377,9 +388,11 @@ int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_c
 }
 
 bld_handle_annotated command_handle_compiler(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_COMPILER;
+    handle.name = bld_command_string_compiler;
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "Target to set compiler flags for");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_compiler));
@@ -387,13 +400,48 @@ bld_handle_annotated command_handle_compiler(char* name) {
     handle_positional_optional(&handle.handle, "Set compiler with cc or add/remove flags with ++ or --");
     handle_allow_flags(&handle.handle);
     handle_positional_optional(&handle.handle, "The compiler to set if previous argument is cc");
-    handle_allow_arbitrary_flags(&handle.handle, "Passthrough compiler flags");
-    handle_set_description(&handle.handle, "Set compiler flags");
+    handle_allow_arbitrary_flags(&handle.handle, "Arbitrary flags can be specified which will be passed to the specified compiler");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Set or view the compiler information of a file/directory. A file/directory\n"
+        "will inherit the compiler and compiler flags of the directory it is in.\n"
+        "When changing the compiler information of a file there are three different\n"
+        "modes:\n"
+        "\n"
+        "    `bld <target> compiler <path> cc <compiler> <flags...>`:\n"
+        "        This will set the compiler of the file/directory at the specified\n"
+        "        path, that file/directory will then no longer inherit any compiler\n"
+        "        information from the parent directory.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "    `bld <target> compiler <path> ++ <flags...>`:\n"
+        "        This will add compiler flags to the path, the file/directory at\n"
+        "        this path will still inherit from the parent directory.\n"
+        "\n"
+        "    `bld <target> compiler <path> -- <flags...>`:\n"
+        "        This will remove compiler flags from the path, the file/directory\n"
+        "        at this path will still inherit the compiler and flags from the\n"
+        "        parent directory except for the flags that were removed.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "To see what compiler information a file/directory has run the command\n"
+        "\n"
+        "    bld <target> compiler <path to file>"
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_compiler_convert;
     handle.execute = (bld_command_execute*) command_compiler;
     handle.free = (bld_command_free*) command_compiler_free;
 
+    string_free(&temp);
     return handle;
 }
 

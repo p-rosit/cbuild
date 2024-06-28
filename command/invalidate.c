@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "invalidate.h"
 
 const bld_string bld_command_string_invalidate = STRING_COMPILE_TIME_PACK("invalidate");
@@ -26,6 +27,18 @@ int command_invalidate_convert(bld_command* pre_cmd, bld_data* data, bld_command
     bld_command_positional* arg;
     bld_command_positional_optional* target;
     bld_command_positional_vargs* paths;
+
+    if (!data->has_root) {
+        error = -1;
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        error = -1;
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_invalidate_convert: missing first optional");}
@@ -66,11 +79,20 @@ bld_handle_annotated command_handle_invalidate(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_INVALIDATE;
+    handle.name = bld_command_string_invalidate;
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "Target");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_invalidate));
     handle_positional_vargs(&handle.handle, "Path to invalidate");
-    handle_set_description(&handle.handle, "Invalidate paths");
+    handle_set_description(
+        &handle.handle,
+        "Invalidate the cache of any file for a specific target with this\n"
+        "subcommand. If a directory is specified all files in the directory\n"
+        "will be invalidated.\n"
+        "\n"
+        "If a file has been invalidated any existing cache of that file will\n"
+        "be ignored the next time the target is built."
+    );
 
     handle.convert = (bld_command_convert*) command_invalidate_convert;
     handle.execute = (bld_command_execute*) command_invalidate;

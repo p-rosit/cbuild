@@ -6,6 +6,8 @@
 #include "invalid.h"
 
 extern const bld_string bld_command_string_init;
+extern const bld_string bld_command_init_missing_project;
+extern const bld_string bld_command_init_no_targets;
 
 typedef struct bld_command_init {
     int init_project;

@@ -9,6 +9,7 @@
 
 extern const bld_string bld_path_build;
 extern const bld_string bld_path_target;
+extern const bld_string bld_path_config;
 
 typedef struct bld_data {
     int has_root;
@@ -43,6 +44,7 @@ typedef enum bld_command_type {
 
 typedef struct bld_handle_annotated {
     bld_command_type type;
+    bld_string name;
     bld_handle handle;
     bld_command_convert* convert;
     bld_command_execute* execute;

@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "status.h"
 
 const bld_string bld_command_string_status = STRING_COMPILE_TIME_PACK("status");
@@ -10,6 +11,16 @@ int command_status_all(bld_command_status*, bld_data*);
 int command_status_target(bld_command_status*, bld_data*);
 
 int command_status(bld_command_status* status, bld_data* data) {
+    if (!data->has_root) {
+        printf("%s", string_unpack(&bld_command_init_missing_project));
+        return -1;
+    }
+
+    if (data->targets.size == 0) {
+        printf("%s", string_unpack(&bld_command_init_no_targets));
+        return -1;
+    }
+
     if (status->target_status) {
         return command_status_target(status, data);
     } else {
@@ -21,7 +32,8 @@ int command_status_all(bld_command_status* status, bld_data* data) {
     bld_iter iter;
     bld_string* target;
     (void)(status);
-    log_info("Targets in project:");
+
+    printf("Targets in project:\n");
 
     iter = iter_set(&data->targets);
     while (iter_next(&iter, (void**) &target)) {
@@ -33,9 +45,9 @@ int command_status_all(bld_command_status* status, bld_data* data) {
         }
 
         if (is_default) {
-            log_info("  * %s", string_unpack(target));
+            printf("  * %s\n", string_unpack(target));
         } else {
-            log_info("    %s", string_unpack(target));
+            printf("    %s\n", string_unpack(target));
         }
     }
     return 0;
@@ -93,10 +105,18 @@ bld_handle_annotated command_handle_status(char* name) {
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_STATUS;
+    handle.name = bld_command_string_status;
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_status));
     handle_positional_optional(&handle.handle, "The target to show the status of");
-    handle_set_description(&handle.handle, "Status of target");
+    handle_set_description(
+        &handle.handle,
+        "If no target is supplied the list of existing targets will be printed\n"
+        "as well as which target, if selected, is active. See `bld help switch`\n"
+        "for more information about active targets.\n"
+        "\n"
+        "If a target is supplied the status of that target will be printed."
+    );
 
     handle.convert = (bld_command_convert*) command_status_convert;
     handle.execute = (bld_command_execute*) command_status;

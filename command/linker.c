@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "linker.h"
 
 const bld_string bld_command_string_linker = STRING_COMPILE_TIME_PACK("linker");
@@ -154,6 +155,16 @@ int command_linker_convert(bld_command* pre_cmd, bld_data* data, bld_command_lin
     bld_command_positional_optional* option;
     bld_command_positional_optional* linker;
 
+    if (!data->has_root) {
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
+
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_linker_convert: missing first optional");}
     target = &arg->as.opt;
@@ -237,9 +248,11 @@ int command_linker_convert(bld_command* pre_cmd, bld_data* data, bld_command_lin
 }
 
 bld_handle_annotated command_handle_linker(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_LINKER;
+    handle.name = bld_command_string_linker;
     handle.handle = handle_new(name);
     handle_positional_optional(&handle.handle, "Target to set linker for");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_linker));
@@ -247,13 +260,39 @@ bld_handle_annotated command_handle_linker(char* name) {
     handle_positional_optional(&handle.handle, "Set linker with ll or add flags with ++");
     handle_allow_flags(&handle.handle);
     handle_positional_optional(&handle.handle, "The linker to set if the previous argument is ll");
-    handle_allow_arbitrary_flags(&handle.handle, "Passthrough linker flags");
-    handle_set_description(&handle.handle, "Set linker flags");
+    handle_allow_arbitrary_flags(&handle.handle, "Arbitrary flags can be specified which will be passed to the specified linker");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Set or view the linker flags of a file/directory. A file/directory\n"
+        "will inherit the linker flags of the directory it is in. When changing\n"
+        "the compiler information of a file there are two different modes:\n"
+        "\n"
+        "    `bld <target> linker <path> ll <linker> <flags...>`:\n"
+        "        Can only be used for the root directory, this will set the linker\n"
+        "        and when building the project this linker will be used to build\n"
+        "        the project.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "    `bld <target> linker <path> ++ <flags...>`:\n"
+        "        This will add linker flags to the path, the file/directory at\n"
+        "        this path will still inherit from the parent directory.\n"
+        "\n"
+        "To see what linker information a file/directory has run the command\n"
+        "\n"
+        "    bld <target> linker <path to file>"
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_linker_convert;
     handle.execute = (bld_command_execute*) command_linker;
     handle.free = (bld_command_free*) command_linker_free;
 
+    string_free(&temp);
     return handle;
 }
 

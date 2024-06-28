@@ -9,6 +9,20 @@ int command_init_project(bld_command_init*, bld_data*);
 int command_init_target(bld_command_init*, bld_data*);
 
 const bld_string bld_command_string_init = STRING_COMPILE_TIME_PACK("init");
+const bld_string bld_command_init_missing_project = STRING_COMPILE_TIME_PACK(
+    "Project root could not be found in this directory or above. Please\n"
+    "initialize a project with\n"
+    "\n"
+    "    `bld init`\n"
+    "\n"
+    "or see `bld help init` for more information.\n"
+);
+const bld_string bld_command_init_no_targets = STRING_COMPILE_TIME_PACK(
+    "No targets have been set up in this project.\n"
+    "\n"
+    "To make a target run `bld init <target_name> <path to main file>`\n"
+    "or see `bld help init` for more information.\n"
+);
 
 int command_init(bld_command_init* cmd, bld_data* data) {
     if (cmd->init_project) {
@@ -19,14 +33,15 @@ int command_init(bld_command_init* cmd, bld_data* data) {
 }
 
 int command_init_project(bld_command_init* cmd, bld_data* data) {
+    int error;
     char cwd[FILENAME_MAX];
     bld_path new_root;
     bld_path build_dir;
-    log_debug("Initializing project");
+    printf("Initializing project\n");
     (void)(cmd);
 
     if (data->has_root) {
-        log_fatal("Build has already been initialized!");
+        printf("fatal: Build has already been initialized!\n");
         return -1;
     }
     if (data->config_parsed) {
@@ -39,12 +54,17 @@ int command_init_project(bld_command_init* cmd, bld_data* data) {
     build_dir = path_copy(&new_root);
     path_append_string(&build_dir, string_unpack(&bld_path_build));
 
-    os_dir_make(path_to_string(&build_dir));
+    error = os_dir_make(path_to_string(&build_dir));
+    if (error) {
+        log_fatal("command_init_target: mkdir returned error");
+    }
+    printf("Created directory '%s'\n", path_to_string(&build_dir));
 
-    path_append_string(&build_dir, "config.json");
+    path_append_string(&build_dir, string_unpack(&bld_path_config));
     data->config_parsed = 1;
     data->config = config_new();
     serialize_config(&build_dir, &data->config);
+    printf("Created project config '%s'\n", path_to_string(&build_dir));
 
     path_free(&new_root);
     path_free(&build_dir);
@@ -55,21 +75,28 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     int error;
     bld_path target_path;
     bld_path path_main;
-    log_debug("Initializing target: \"%s\"", string_unpack(&cmd->target));
 
     if (!data->has_root) {
-        log_fatal("Build has not been initialized!");
-        return -1;
+        command_init_project(cmd, data);
+        data_free(data);
+        *data = data_extract("bld");
+        if (!data->has_root) {
+            log_fatal(LOG_FATAL_PREFIX "internal error");
+        }
+
+        printf("\n");
     }
 
     if (set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
-        log_fatal("Target '%s' already exists", string_unpack(&cmd->target));
+        printf("fatal: target '%s' already exists\n", string_unpack(&cmd->target));
+        return -1;
     }
 
     if (!os_file_exists(path_to_string(&cmd->path_main))) {
         log_fatal("Specified main file '%s' is not a path to a file/directory", path_to_string(&cmd->path_main));
     }
 
+    printf("Initializing target '%s'\n", string_unpack(&cmd->target));
     target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     error = os_dir_make(path_to_string(&target_path));
@@ -85,6 +112,7 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     if (error) {
         log_fatal("command_init_target: mkdir returned error");
     }
+    printf("Created target directory '%s'\n", path_to_string(&target_path));
 
     path_append_string(&target_path, "config.json");
     path_main = path_copy(&cmd->path_main);
@@ -98,6 +126,7 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     }
 
     serialize_config_target(&target_path, &data->target_config);
+    printf("Created target config file '%s'\n", path_to_string(&target_path));
 
     path_free(&target_path);
     return 0;
@@ -138,19 +167,42 @@ int command_init_convert(bld_command* pre_cmd, bld_data* data, bld_command_init*
 }
 
 bld_handle_annotated command_handle_init(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_INIT;
+    handle.name = bld_command_string_init;
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_init));
     handle_positional_optional(&handle.handle, "New target to initialize");
     handle_positional_optional(&handle.handle, "Path to the main file of the target");
-    handle_set_description(&handle.handle, "Initialize project or target");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Initialize a project with `bld init`, this will initalize a project in\n"
+        "the current working directory.\n"
+        "\n"
+        "A target can be initialized with `bld init <target> <path to main file>`\n"
+        "which will create directories where a build cache will be stored.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "Once the project has been initialized and targets have been created the\n"
+        "compiler and linker information must be set at least for the root of the\n"
+        "project, see `bld help compiler` and `bld help linker`.\n"
+        "\n"
+        "Finally a target can be built with `bld <target>`, see `bld help build`."
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_init_convert;
     handle.execute = (bld_command_execute*) command_init;
     handle.free = (bld_command_free*) command_init_free;
 
+    string_free(&temp);
     return handle;
 }
 
