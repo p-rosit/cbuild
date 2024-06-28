@@ -28,6 +28,11 @@ int command_status_all(bld_command_status* status, bld_data* data) {
         return -1;
     }
 
+    if (data->targets.size == 0) {
+        printf("%s", string_unpack(&bld_command_init_no_targets));
+        return -1;
+    }
+
     log_info("Targets in project:");
 
     iter = iter_set(&data->targets);
