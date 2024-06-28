@@ -388,6 +388,7 @@ int command_compiler_convert(bld_command* pre_cmd, bld_data* data, bld_command_c
 }
 
 bld_handle_annotated command_handle_compiler(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_COMPILER;
@@ -400,12 +401,47 @@ bld_handle_annotated command_handle_compiler(char* name) {
     handle_allow_flags(&handle.handle);
     handle_positional_optional(&handle.handle, "The compiler to set if previous argument is cc");
     handle_allow_arbitrary_flags(&handle.handle, "Passthrough compiler flags");
-    handle_set_description(&handle.handle, "Set compiler flags");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Set or view the compiler flags of a file/directory. A file/directory\n"
+        "will inherit the compiler and compiler flags of the directory it is in.\n"
+        "When changing the compiler information of a file there are three different\n"
+        "modes:\n"
+        "\n"
+        "    `bld <target> compiler <path> cc <compiler> <flags...>`:\n"
+        "        This will set the compiler of the file/directory at the specified\n"
+        "        path, that file/directory will then no longer inherit any compiler\n"
+        "        information from the parent directory.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "    `bld <target> compiler <path> ++ <flags...>`:\n"
+        "        This will add compiler flags to the path, the file/directory at\n"
+        "        this path will still inherit from the parent directory.\n"
+        "\n"
+        "    `bld <target> compiler <path> -- <flags...>`:\n"
+        "        This will remove compiler flags from the path, the file/directory\n"
+        "        at this path will still inherit the compiler and flags from the\n"
+        "        parent directory except for the flags that were removed.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "To see what compiler information a file/directory has run the command\n"
+        "\n"
+        "    bld <target> compiler <path to file>"
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_compiler_convert;
     handle.execute = (bld_command_execute*) command_compiler;
     handle.free = (bld_command_free*) command_compiler_free;
 
+    string_free(&temp);
     return handle;
 }
 
