@@ -74,6 +74,11 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
             string_free(str);
         }
         array_free(&errs);
+
+        string_append_char(&err, '\n');
+        string_append_string(&err, "For help with this subcommand see `bld help ");
+        string_append_string(&err, string_unpack(&handle->name));
+        string_append_string(&err, "'\n");
         
         app_command.type = BLD_COMMAND_INVALID;
         app_command.as.invalid = command_invalid_new(-1, &err);
