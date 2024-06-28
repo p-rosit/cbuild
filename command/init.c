@@ -33,6 +33,7 @@ int command_init(bld_command_init* cmd, bld_data* data) {
 }
 
 int command_init_project(bld_command_init* cmd, bld_data* data) {
+    int error;
     char cwd[FILENAME_MAX];
     bld_path new_root;
     bld_path build_dir;
@@ -53,7 +54,10 @@ int command_init_project(bld_command_init* cmd, bld_data* data) {
     build_dir = path_copy(&new_root);
     path_append_string(&build_dir, string_unpack(&bld_path_build));
 
-    os_dir_make(path_to_string(&build_dir));
+    error = os_dir_make(path_to_string(&build_dir));
+    if (error) {
+        log_fatal("command_init_target: mkdir returned error");
+    }
 
     path_append_string(&build_dir, "config.json");
     data->config_parsed = 1;
