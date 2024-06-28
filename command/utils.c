@@ -246,7 +246,7 @@ int utils_get_target(bld_string* target, bld_string* err, bld_command_positional
             }
             *target = string_copy(&data->config.active_target);
         } else {
-            *err = string_pack("no target specified and no default target set up\n");
+            *err = string_pack("no target specified and no active target chosen, see `bld help switch`\n");
             *err = string_copy(err);
             return 0;
         }
