@@ -53,7 +53,11 @@ bld_handle_annotated command_handle_remove(char* name) {
     handle.handle = handle_new(name);
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_remove));
     handle_positional_required(&handle.handle, "The target to remove");
-    handle_set_description(&handle.handle, "Remove a target");
+    handle_set_description(
+        &handle.handle,
+        "Remove a target and its associated cache. The target can not\n"
+        "be recovered once removed."
+    );
 
     handle.convert = (bld_command_convert*) command_remove_convert;
     handle.execute = (bld_command_execute*) command_remove;
