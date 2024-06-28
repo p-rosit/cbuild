@@ -4,7 +4,6 @@
 
 const bld_string bld_command_string_help = STRING_COMPILE_TIME_PACK("help");
 int command_help_command(bld_command_type, bld_data*);
-int command_help_target(bld_string*, bld_data*);
 
 int command_help(bld_command_help* help, bld_data* data) {
     bld_iter iter;
@@ -14,10 +13,6 @@ int command_help(bld_command_help* help, bld_data* data) {
     if (help->has_command) {
         int found;
         bld_command_type result_type;
-
-        if (set_has(&data->targets, string_hash(string_unpack(&help->command)))) {
-            return command_help_target(&help->command, data);
-        }
 
         found = 0;
         iter = iter_array(&data->handle_order);
@@ -34,7 +29,7 @@ int command_help(bld_command_help* help, bld_data* data) {
         }
 
         if (!found) {
-            printf("'%s' is not a command or target\n", string_unpack(&help->command));
+            printf("'%s' is not a command.\n", string_unpack(&help->command));
             return -1;
         }
 
@@ -77,12 +72,6 @@ int command_help_command(bld_command_type type, bld_data* data) {
 
     printf("%s\n", string_unpack(&help));
     string_free(&help);
-    return 0;
-}
-
-int command_help_target(bld_string* target, bld_data* data) {
-    log_warn("Help with target: \"%s\"\n", string_unpack(target));
-    (void)(data);
     return 0;
 }
 
