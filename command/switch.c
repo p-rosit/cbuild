@@ -1,4 +1,5 @@
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "switch.h"
 
 const bld_string bld_command_string_switch = STRING_COMPILE_TIME_PACK("switch");
@@ -27,16 +28,28 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
     data->config.active_target_configured = 1;
     data->config.active_target = string_copy(&cmd->target);
     config_save(data);
-    log_info("Switched to %s", string_unpack(&cmd->target));
+    printf("Switched to '%s'\n", string_unpack(&cmd->target));
 
     return 0;
 }
 
 int command_switch_convert(bld_command* pre_cmd, bld_data* data, bld_command_switch* cmd, bld_command_invalid* invalid) {
+    int error;
+    bld_string err;
     bld_command_positional* arg;
     bld_command_positional_required* target;
-    (void)(data);
-    (void)(invalid);
+
+    if (!data->has_root) {
+        error = -1;
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        error = -1;
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 1);
     if (arg->type != BLD_HANDLE_POSITIONAL_REQUIRED) {log_fatal("command_switch_convert: missing first convert");}
@@ -44,6 +57,9 @@ int command_switch_convert(bld_command* pre_cmd, bld_data* data, bld_command_swi
 
     cmd->target = string_copy(&target->value);
     return 0;
+    parse_failed:
+    *invalid = command_invalid_new(error, &err);
+    return -1;
 }
 
 bld_handle_annotated command_handle_switch(char* name) {
