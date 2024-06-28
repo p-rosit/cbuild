@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "status.h"
 
 const bld_string bld_command_string_status = STRING_COMPILE_TIME_PACK("status");
@@ -21,6 +22,12 @@ int command_status_all(bld_command_status* status, bld_data* data) {
     bld_iter iter;
     bld_string* target;
     (void)(status);
+
+    if (!data->has_root) {
+        printf("%s", string_unpack(&bld_command_init_missing_project));
+        return -1;
+    }
+
     log_info("Targets in project:");
 
     iter = iter_set(&data->targets);
