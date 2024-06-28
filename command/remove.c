@@ -1,10 +1,16 @@
 #include "../bld_core/logging.h"
 #include "invalid.h"
+#include "init.h"
 #include "remove.h"
 
 const bld_string bld_command_string_remove = STRING_COMPILE_TIME_PACK("remove");
 
 int command_remove(bld_command_remove* remove, bld_data* data) {
+    if (!data->has_root) {
+        printf("%s", string_unpack(&bld_command_init_missing_project));
+        return -1;
+    }
+
     if (data->config_parsed) {
         if (!data->config.active_target_configured) {
             if (string_eq(&remove->target, &data->config.active_target)) {
