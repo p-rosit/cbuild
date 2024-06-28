@@ -167,6 +167,7 @@ int command_init_convert(bld_command* pre_cmd, bld_data* data, bld_command_init*
 }
 
 bld_handle_annotated command_handle_init(char* name) {
+    bld_string temp;
     bld_handle_annotated handle;
 
     handle.type = BLD_COMMAND_INIT;
@@ -175,12 +176,33 @@ bld_handle_annotated command_handle_init(char* name) {
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_init));
     handle_positional_optional(&handle.handle, "New target to initialize");
     handle_positional_optional(&handle.handle, "Path to the main file of the target");
-    handle_set_description(&handle.handle, "Initialize project or target");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Initialize a project with `bld init`, this will initalize a project in\n"
+        "the current working directory.\n"
+        "\n"
+        "A target can be initialized with `bld init <target> <path to main file>`\n"
+        "which will create directories where a build cache will be stored.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "Once the project has been initialized and targets have been created the\n"
+        "compiler and linker information must be set at least for the root of the\n"
+        "project, see `bld help compiler` and `bld help linker`.\n"
+        "\n"
+        "Finally a target can be built with `bld <target>`, see `bld help build`."
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_init_convert;
     handle.execute = (bld_command_execute*) command_init;
     handle.free = (bld_command_free*) command_init_free;
 
+    string_free(&temp);
     return handle;
 }
 
