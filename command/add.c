@@ -162,7 +162,18 @@ bld_handle_annotated command_handle_add(char* name) {
     handle_allow_flags(&handle.handle);
     handle_positional_vargs(&handle.handle, "The paths to add to the chosen target");
     handle_flag(&handle.handle, *bld_command_string_add_flag_delete.chars, string_unpack(&bld_command_string_add_flag_delete), "Remove the specified paths from paths added to target");
-    handle_set_description(&handle.handle, "Adds the specified paths to the specified target. If no target is supplied\nthe paths will be added to the currently active target.");
+    handle_set_description(
+        &handle.handle,
+        "Adds the specified paths to the specified target. If no target is supplied\n"
+        "the paths will be added to the currently active target.\n"
+        "\n"
+        "The paths that should be added must be existing paths. All paths under\n"
+        "the root of the project are added by default, they are no longer added if\n"
+        "they are located under an ignored file/directory. They can then be readded\n"
+        "by this command.\n"
+        "\n"
+        "To instead ignore files/directories see the `ignore` subcommand."
+    );
 
     handle.convert = (bld_command_convert*) command_add_convert;
     handle.execute = (bld_command_execute*) command_add;

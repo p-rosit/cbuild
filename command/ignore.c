@@ -153,6 +153,7 @@ int command_ignore_convert(bld_command* pre_cmd, bld_data* data, bld_command_ign
 
 bld_handle_annotated command_handle_ignore(char* name) {
     bld_handle_annotated handle;
+    bld_string temp;
 
     handle.type = BLD_COMMAND_IGNORE;
     handle.name = bld_command_string_ignore;
@@ -162,12 +163,34 @@ bld_handle_annotated command_handle_ignore(char* name) {
     handle_allow_flags(&handle.handle);
     handle_positional_vargs(&handle.handle, "The paths to ignore on the chosen the target");
     handle_flag(&handle.handle, *bld_command_string_ignore_flag_delete.chars, string_unpack(&bld_command_string_ignore_flag_delete), "Remove the specified paths from the ignored paths of the target");
-    handle_set_description(&handle.handle, "Ignores the specified paths in the specified target. If no target is supplied\nthe paths will be ignored by the currently active target.");
+
+    temp = string_new();
+    string_append_string(
+        &temp,
+        "Ignores the specified paths to the specified target. If no target is\n"
+        "supplied the paths will be ignored by the currently active target.\n"
+        "\n"
+        "If a directory is ignored all the files under that directory will be\n"
+        "ignored in any future builds of the supplied target. To re-add a file/directory\n"
+        "under an ignored directory the `add` subcommand can be used.\n"
+    );
+    string_append_string(
+        &temp,
+        "\n"
+        "The paths that should be ignored must be existing paths. All paths under\n"
+        "the root of the project are added by default, they are no longer added if\n"
+        "they are located under an ignored directory.\n"
+        "\n"
+        "To instead add files/directories see the `add` subcommand."
+    );
+
+    handle_set_description(&handle.handle, string_unpack(&temp));
 
     handle.convert = (bld_command_convert*) command_ignore_convert;
     handle.execute = (bld_command_execute*) command_ignore;
     handle.free = (bld_command_free*) command_ignore_free;
 
+    string_free(&temp);
     return handle;
 }
 
