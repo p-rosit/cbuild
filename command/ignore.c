@@ -1,6 +1,7 @@
 #include "../bld_core/os.h"
 #include "../bld_core/logging.h"
 #include "../bld_core/iter.h"
+#include "init.h"
 #include "ignore.h"
 
 const bld_string bld_command_string_ignore = STRING_COMPILE_TIME_PACK("ignore");
@@ -91,6 +92,18 @@ int command_ignore_convert(bld_command* pre_cmd, bld_data* data, bld_command_ign
     bld_command_positional* arg;
     bld_command_positional_optional* opt;
     bld_command_positional_vargs* varg;
+
+    if (!data->has_root) {
+        error = -1;
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        error = -1;
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_ignore_convert: missing first optional");}
