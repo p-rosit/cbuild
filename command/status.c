@@ -11,6 +11,16 @@ int command_status_all(bld_command_status*, bld_data*);
 int command_status_target(bld_command_status*, bld_data*);
 
 int command_status(bld_command_status* status, bld_data* data) {
+    if (!data->has_root) {
+        printf("%s", string_unpack(&bld_command_init_missing_project));
+        return -1;
+    }
+
+    if (data->targets.size == 0) {
+        printf("%s", string_unpack(&bld_command_init_no_targets));
+        return -1;
+    }
+
     if (status->target_status) {
         return command_status_target(status, data);
     } else {
@@ -22,16 +32,6 @@ int command_status_all(bld_command_status* status, bld_data* data) {
     bld_iter iter;
     bld_string* target;
     (void)(status);
-
-    if (!data->has_root) {
-        printf("%s", string_unpack(&bld_command_init_missing_project));
-        return -1;
-    }
-
-    if (data->targets.size == 0) {
-        printf("%s", string_unpack(&bld_command_init_no_targets));
-        return -1;
-    }
 
     log_info("Targets in project:");
 
