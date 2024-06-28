@@ -37,11 +37,11 @@ int command_init_project(bld_command_init* cmd, bld_data* data) {
     char cwd[FILENAME_MAX];
     bld_path new_root;
     bld_path build_dir;
-    log_debug("Initializing project");
+    printf("Initializing project\n");
     (void)(cmd);
 
     if (data->has_root) {
-        log_fatal("Build has already been initialized!");
+        printf("fatal: Build has already been initialized!\n");
         return -1;
     }
     if (data->config_parsed) {
@@ -58,11 +58,13 @@ int command_init_project(bld_command_init* cmd, bld_data* data) {
     if (error) {
         log_fatal("command_init_target: mkdir returned error");
     }
+    printf("Created directory '%s'\n", path_to_string(&build_dir));
 
     path_append_string(&build_dir, "config.json");
     data->config_parsed = 1;
     data->config = config_new();
     serialize_config(&build_dir, &data->config);
+    printf("Created project config '%s'\n", path_to_string(&build_dir));
 
     path_free(&new_root);
     path_free(&build_dir);
@@ -81,17 +83,20 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
         if (!data->has_root) {
             log_fatal(LOG_FATAL_PREFIX "internal error");
         }
+
+        printf("\n");
     }
 
     if (set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
-        log_fatal("Target '%s' already exists", string_unpack(&cmd->target));
+        printf("fatal: target '%s' already exists\n", string_unpack(&cmd->target));
+        return -1;
     }
 
     if (!os_file_exists(path_to_string(&cmd->path_main))) {
         log_fatal("Specified main file '%s' is not a path to a file/directory", path_to_string(&cmd->path_main));
     }
 
-    log_debug("Initializing target: \"%s\"", string_unpack(&cmd->target));
+    printf("Initializing target '%s'\n", string_unpack(&cmd->target));
     target_path = path_copy(&data->root);
     path_append_string(&target_path, string_unpack(&bld_path_build));
     error = os_dir_make(path_to_string(&target_path));
@@ -107,6 +112,7 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     if (error) {
         log_fatal("command_init_target: mkdir returned error");
     }
+    printf("Created target directory '%s'\n", path_to_string(&target_path));
 
     path_append_string(&target_path, "config.json");
     path_main = path_copy(&cmd->path_main);
@@ -120,6 +126,7 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
     }
 
     serialize_config_target(&target_path, &data->target_config);
+    printf("Created target config file '%s'\n", path_to_string(&target_path));
 
     path_free(&target_path);
     return 0;
