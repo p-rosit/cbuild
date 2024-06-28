@@ -1,5 +1,6 @@
 #include "../bld_core/iter.h"
 #include "../bld_core/logging.h"
+#include "init.h"
 #include "linker.h"
 
 const bld_string bld_command_string_linker = STRING_COMPILE_TIME_PACK("linker");
@@ -153,6 +154,16 @@ int command_linker_convert(bld_command* pre_cmd, bld_data* data, bld_command_lin
     bld_command_positional_optional* target;
     bld_command_positional_optional* option;
     bld_command_positional_optional* linker;
+
+    if (!data->has_root) {
+        err = string_copy(&bld_command_init_missing_project);
+        goto parse_failed;
+    }
+
+    if (data->targets.size == 0) {
+        err = string_copy(&bld_command_init_no_targets);
+        goto parse_failed;
+    }
 
     arg = array_get(&pre_cmd->positional, 0);
     if (arg->type != BLD_HANDLE_POSITIONAL_OPTIONAL) {log_fatal("command_linker_convert: missing first optional");}
