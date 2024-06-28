@@ -84,7 +84,15 @@ bld_handle_annotated command_handle_invalidate(char* name) {
     handle_positional_optional(&handle.handle, "Target");
     handle_positional_expect(&handle.handle, string_unpack(&bld_command_string_invalidate));
     handle_positional_vargs(&handle.handle, "Path to invalidate");
-    handle_set_description(&handle.handle, "Invalidate paths");
+    handle_set_description(
+        &handle.handle,
+        "Invalidate the cache of any file for a specific target with this\n"
+        "subcommand. If a directory is specified all files in the directory\n"
+        "will be invalidated.\n"
+        "\n"
+        "If a file has been invalidated any existing cache of that file will\n"
+        "be ignored the next time the target is built."
+    );
 
     handle.convert = (bld_command_convert*) command_invalidate_convert;
     handle.execute = (bld_command_execute*) command_invalidate;
