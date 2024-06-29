@@ -100,6 +100,8 @@ void incremental_apply_cache(bld_project* project) {
         if (cached == NULL) {continue;}
 
         if (file->identifier.hash != cached->identifier.hash) {continue;}
+        file->compile_successful = 1;
+
         file_includes_copy(file, cached);
 
         switch (file->type) {
@@ -685,8 +687,11 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
         *any_compiled = 1;
         *has_changed = 0;
         temp = incremental_compile_file(project, file);
-        if (temp) {
+        if (!temp) {
+            file->compile_successful = 1;
+        } else {
             log_warn("Compiled \"%s\" with errors", string_unpack(&file->name));
+            file->compile_successful = 0;
             result = temp;
         }
     }
