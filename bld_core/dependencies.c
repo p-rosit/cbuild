@@ -99,6 +99,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
     while (iter_next(&iter, (void**) &file)) {
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
         if (file->type == BLD_FILE_INTERFACE) {continue;}
+        if (!file->compile_successful) {continue;}
 
         if (graph_has_node(&graph->symbol_graph, file->identifier.id)) {
             continue;
