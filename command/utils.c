@@ -19,6 +19,7 @@
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
 const bld_string bld_path_config = STRING_COMPILE_TIME_PACK("config.json");
+const bld_string bld_handle_name_invalid = STRING_COMPILE_TIME_PACK("(fatal: command handle has no name)");
 
 int data_find_root(bld_path*);
 bld_set data_find_targets(bld_path*);

@@ -10,6 +10,7 @@
 extern const bld_string bld_path_build;
 extern const bld_string bld_path_target;
 extern const bld_string bld_path_config;
+extern const bld_string bld_handle_name_invalid;
 
 typedef struct bld_data {
     int has_root;
