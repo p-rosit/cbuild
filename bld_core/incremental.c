@@ -570,7 +570,6 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     bld_iter iter;
     int result, any_compiled, temp;
-    bld_path path;
     bld_file *file;
     bld_set changed_files;
 
@@ -588,13 +587,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
     set_free(&changed_files);
 
-    path = path_copy(&project->base.root);
-    if (project->base.cache.loaded) {
-        path_append_path(&path, &project->base.cache.root);
-    }
-
-    dependency_graph_extract_symbols(&project->graph, &project->files, &path);
-    path_free(&path);
+    dependency_graph_extract_symbols(&project->graph, &project->base, project->main_file, &project->files);
 
     if (result) {
         log_warn("Could not compile all files, no executable generated.");
