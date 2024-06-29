@@ -48,6 +48,7 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
 
     if (!matched) {
         log_fatal("No subcommand could be matched");
+        exit(-1); /* unreachable */
     }
 
     if (error && !data->has_root) {
