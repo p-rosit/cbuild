@@ -9,7 +9,6 @@
 void parse_included_files(bld_project_base*, bld_file_id, bld_file*, bld_set*);
 
 void parse_symbols(bld_file*, bld_path*);
-void generate_symbol_file(bld_file*, bld_path*, bld_path*);
 void add_symbol(bld_set*, bld_string*);
 
 bld_dependency_graph dependency_graph_new(void) {
