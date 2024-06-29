@@ -91,6 +91,98 @@ int language_get_includes_c(bld_path* path, bld_file* file, bld_set* files) {
     return 0;
 }
 
+int language_get_symbols_c(bld_project_base* base, bld_path* path, bld_file* file) {
+    FILE* f;
+    int c, symbol_type;
+    bld_string func;
+    bld_path symbol_path;
+    (void)(path);
+
+    symbol_path = path_copy(&base->root);
+    if (base->cache.loaded) {
+        path_append_path(&symbol_path, &base->cache.root);
+    }
+    path_append_string(&symbol_path, "symbols.txt");
+
+    {
+        int error;
+
+        error = generate_symbol_file(base, file, &symbol_path);
+        if (error) {
+            return -1;
+        }
+    }
+
+    f = fopen(path_to_string(&symbol_path), "r");
+    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "symbol file could not be opened");}
+
+    while (1) {
+        c = fgetc(f);
+        if (c == EOF) {
+            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
+            break;
+        }
+
+        while (c != EOF && c != ' ') {c = fgetc(f);}
+        if (c == EOF) {
+            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
+            break;
+        }
+        while (c != EOF && c == ' ') {c = fgetc(f);}
+        if (c == EOF) {
+            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
+            break;
+        }
+
+        symbol_type = c;
+        if (symbol_type != 'T' && symbol_type != 'B' && symbol_type != 'R' && symbol_type != 'D' && symbol_type != 'S' && symbol_type != 'U') {goto next_line;}
+
+        c = fgetc(f);
+        if (c != ' ') {
+            log_warn("Unexpected character \'%c\' when parsing symbols, expected \' \'", c);
+            goto next_line;
+        }
+
+        func = string_new();
+        c = fgetc(f);
+        while (c != '\n' && c != ' ' && c != EOF) {
+            string_append_char(&func, c);
+            c = fgetc(f);
+        }
+
+        if (symbol_type == 'T' || symbol_type == 'B' || symbol_type == 'R' || symbol_type == 'D' || symbol_type == 'S') {
+            bld_set* defined;
+            defined = file_defined_get(file);
+            if (defined != NULL) {
+                set_add(defined, string_hash(string_unpack(&func)), &func);
+            } else {
+                string_free(&func);
+            }
+        } else if (symbol_type == 'U') {
+            bld_set* undefined;
+            undefined = file_undefined_get(file);
+            if (undefined == NULL) {
+                log_fatal(LOG_FATAL_PREFIX "parsing symbols for file type %d which has no undefined symbols", file->type);
+            }
+
+            set_add(undefined, string_hash(string_unpack(&func)), &func);
+        } else {
+            log_fatal(LOG_FATAL_PREFIX "unreachable error");
+        }
+
+        next_line:
+        while (c != '\n' && c != EOF) {c = fgetc(f);}
+        c = fgetc(f);
+        if (c == EOF) {break;}
+    }
+
+    fclose(f);
+
+    remove(path_to_string(&symbol_path));
+    path_free(&symbol_path);
+    return 0;
+}
+
 int generate_symbol_file(bld_project_base* base, bld_file* file, bld_path* symbol_path) {
     FILE* sym;
     int error;
