@@ -14,6 +14,10 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
     bld_application_command app_command;
     bld_command_invalid invalid;
 
+    if (data->handle_order.size <= 0) {
+        log_fatal(LOG_FATAL_PREFIX "missing command handles");
+    }
+
     matched = 0;
     iter = iter_array(&data->handle_order);
     while (iter_next(&iter, (void**) &handle_id)) {
