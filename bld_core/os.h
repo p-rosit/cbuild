@@ -8,6 +8,7 @@ typedef void bld_os_dir;
 typedef void bld_os_file;
 
 int             os_cwd(char*, int);
+int             os_set_cwd(char*);
 
 int             os_dir_exists(char*);
 int             os_dir_make(char*);
