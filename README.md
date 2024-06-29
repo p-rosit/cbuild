@@ -10,3 +10,4 @@
 * Setting up a project and building is easy
 * Builds are frequent
 * Projects are shared between computers in version control
+* Testing is important
