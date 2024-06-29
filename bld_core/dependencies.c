@@ -7,6 +7,7 @@
 #include "language/language.h"
 
 void parse_included_files(bld_project_base*, bld_file_id, bld_file*, bld_set*);
+void parse_symbols(bld_project_base*, bld_file_id, bld_file*);
 
 bld_dependency_graph dependency_graph_new(void) {
     bld_dependency_graph graph;
@@ -82,14 +83,10 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_
     log_info("Generated include graph with %lu nodes", graph->include_graph.edges.size);
 }
 
-void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* files, bld_path* cache_path) {
-    bld_path symbol_path;
+void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project_base* base, bld_file_id main_id, bld_set* files) {
     bld_iter iter;
     bld_file* file;
     log_debug("Extracting symbols, files in cache: %lu/%lu", graph->symbol_graph.edges.size, files->size);
-
-    symbol_path = path_copy(cache_path);
-    path_append_string(&symbol_path, "symbols");
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
@@ -104,12 +101,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
         log_debug("Extracting symbols of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->symbol_graph, file->identifier.id);
 
-        generate_symbol_file(file, cache_path, &symbol_path);
-        parse_symbols(file, &symbol_path);
+        parse_symbols(base, main_id, file);
     }
-
-    remove(path_to_string(&symbol_path));
-    path_free(&symbol_path);
 
     iter = iter_set(files);
     while (iter_next(&iter, (void**) &file)) {
@@ -135,6 +128,25 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
     }
 
     log_info("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
+}
+
+void parse_symbols(bld_project_base* base, bld_file_id main_id, bld_file* file) {
+    int error;
+    bld_path path;
+
+    if (!base->rebuilding || file->identifier.id != main_id) {
+        path = path_copy(&base->root);
+    } else {
+        path = path_copy(&base->build_of->root);
+    }
+    path_append_path(&path, &file->path);
+
+    error = language_get_symbols(file->language, base, &path, file);
+    if (error) {
+        log_fatal("Could parse symbols of \"%s\"", path_to_string(&path));
+    }
+
+    path_free(&path);
 }
 
 void parse_included_files(bld_project_base* base, bld_file_id main_id, bld_file* file, bld_set* files) {
