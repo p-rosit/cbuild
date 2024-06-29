@@ -143,7 +143,7 @@ void parse_symbols(bld_project_base* base, bld_file_id main_id, bld_file* file) 
 
     error = language_get_symbols(file->language, base, &path, file);
     if (error) {
-        log_fatal("Could parse symbols of \"%s\"", path_to_string(&path));
+        log_fatal("Could not parse symbols of \"%s\"", path_to_string(&path));
     }
 
     path_free(&path);
