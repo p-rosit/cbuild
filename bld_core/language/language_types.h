@@ -4,6 +4,7 @@
 typedef enum bld_language_type {
     BLD_LANGUAGE_C,
     BLD_LANGUAGE_CPP,
+    BLD_LANGUAGE_ZIG,
     BLD_LANGUAGE_AMOUNT
 } bld_language_type;
 

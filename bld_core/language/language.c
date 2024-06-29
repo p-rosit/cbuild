@@ -2,6 +2,7 @@
 #include "language.h"
 #include "c.h"
 #include "cpp.h"
+#include "zig.h"
 
 bld_array language_get_available(void) {
     bld_array languages = array_new(sizeof(bld_string));
@@ -16,11 +17,13 @@ bld_language_type language_get_mapping(bld_string* language) {
     size_t i;
     bld_string* languages[] = {
         &bld_language_string_c,
-        &bld_language_string_cpp
+        &bld_language_string_cpp,
+        &bld_language_string_zig
     };
     bld_language_type types[] = {
         BLD_LANGUAGE_C,
-        BLD_LANGUAGE_CPP
+        BLD_LANGUAGE_CPP,
+        BLD_LANGUAGE_ZIG
     };
 
     if (sizeof(languages) / sizeof(*languages) != sizeof(types) / sizeof(*types)) {
@@ -39,7 +42,8 @@ bld_language_type language_get_mapping(bld_string* language) {
 bld_string* language_get_string(bld_language_type type) {
     bld_string* languages[] = {
         &bld_language_string_c,
-        &bld_language_string_cpp
+        &bld_language_string_cpp,
+        &bld_language_string_zig
     };
 
     if (sizeof(languages) / sizeof(*languages) != BLD_COMPILER_AMOUNT) {
@@ -59,6 +63,8 @@ int language_get_includes(bld_language_type type, bld_path* path, bld_file* file
             return language_get_includes_c(path, file, files);
         case (BLD_LANGUAGE_CPP):
             return language_get_includes_cpp(path, file, files);
+        case (BLD_LANGUAGE_ZIG):
+            return language_get_includes_zig(path, file, files);
         case (BLD_LANGUAGE_AMOUNT):
             log_fatal(LOG_FATAL_PREFIX "internal error");
     }
@@ -73,6 +79,8 @@ int language_get_symbols(bld_language_type type, bld_project_base* base, bld_pat
             return language_get_symbols_c(base, path, file);
         case (BLD_LANGUAGE_CPP):
             return language_get_symbols_cpp(base, path, file);
+        case (BLD_LANGUAGE_ZIG):
+            return language_get_symbols_zig(base, path, file);
         case (BLD_LANGUAGE_AMOUNT):
             log_fatal(LOG_FATAL_PREFIX "internal error");
     }
