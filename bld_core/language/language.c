@@ -66,3 +66,17 @@ int language_get_includes(bld_language_type type, bld_path* path, bld_file* file
     log_fatal(LOG_FATAL_PREFIX "unreachable error");
     return -1; /* unreachable */
 }
+
+int language_get_symbols(bld_language_type type, bld_project_base* base, bld_path* path, bld_file* file) {
+    switch (type) {
+        case (BLD_LANGUAGE_C):
+            return language_get_symbols_c(base, path, file);
+        case (BLD_LANGUAGE_CPP):
+            return language_get_symbols_cpp(base, path, file);
+        case (BLD_LANGUAGE_AMOUNT):
+            log_fatal(LOG_FATAL_PREFIX "internal error");
+    }
+
+    log_fatal(LOG_FATAL_PREFIX "unreachable error");
+    return -1; /* unreachable */
+}
