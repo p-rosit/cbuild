@@ -8,9 +8,6 @@
 
 void parse_included_files(bld_project_base*, bld_file_id, bld_file*, bld_set*);
 
-void parse_symbols(bld_file*, bld_path*);
-void add_symbol(bld_set*, bld_string*);
-
 bld_dependency_graph dependency_graph_new(void) {
     bld_dependency_graph graph;
 
@@ -138,111 +135,6 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_set* file
     }
 
     log_info("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
-}
-
-void generate_symbol_file(bld_file* file, bld_path* cache_path, bld_path* symbol_path) {
-    int result;
-    bld_string cmd;
-    bld_string object_name;
-    bld_path path;
-
-    cmd = string_new();
-    fclose(fopen(path_to_string(symbol_path), "w"));
-
-    string_append_string(&cmd, "nm ");
-
-    path = path_copy(cache_path);
-    object_name = file_object_name(file);
-    path_append_string(&path, string_unpack(&object_name));
-    string_append_string(&cmd, path_to_string(&path));
-    string_append_string(&cmd, ".o");
-    path_free(&path);
-
-    string_append_string(&cmd, " >> ");
-    string_append_string(&cmd, path_to_string(symbol_path));
-
-    result = system(string_unpack(&cmd));
-    if (result) {
-        log_fatal(LOG_FATAL_PREFIX "unable to extract symbols from \"%s\"", path_to_string(&file->path));
-    }
-
-    string_free(&object_name);
-    string_free(&cmd);
-}
-
-void parse_symbols(bld_file* file, bld_path* symbol_path) {
-    FILE* f;
-    int c, symbol_type;
-    bld_string func;
-
-    f = fopen(path_to_string(symbol_path), "r");
-    if (f == NULL) {log_fatal(LOG_FATAL_PREFIX "symbol file could not be opened");}
-
-    while (1) {
-        c = fgetc(f);
-        if (c == EOF) {
-            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
-            break;
-        }
-
-        while (c != EOF && c != ' ') {c = fgetc(f);}
-        if (c == EOF) {
-            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
-            break;
-        }
-        while (c != EOF && c == ' ') {c = fgetc(f);}
-        if (c == EOF) {
-            log_warn("Unexpected EOF when parsing symbols of \"%s\"", path_to_string(&file->path));
-            break;
-        }
-
-        symbol_type = c;
-        if (symbol_type != 'T' && symbol_type != 'B' && symbol_type != 'R' && symbol_type != 'D' && symbol_type != 'S' && symbol_type != 'U') {goto next_line;}
-
-        c = fgetc(f);
-        if (c != ' ') {
-            log_warn("Unexpected character \'%c\' when parsing symbols, expected \' \'", c);
-            goto next_line;
-        }
-
-        func = string_new();
-        c = fgetc(f);
-        while (c != '\n' && c != ' ' && c != EOF) {
-            string_append_char(&func, c);
-            c = fgetc(f);
-        }
-
-        if (symbol_type == 'T' || symbol_type == 'B' || symbol_type == 'R' || symbol_type == 'D' || symbol_type == 'S') {
-            bld_set* defined;
-            defined = file_defined_get(file);
-            if (defined != NULL) {
-                add_symbol(&file->info.impl.defined_symbols, &func);
-            } else {
-                string_free(&func);
-            }
-        } else if (symbol_type == 'U') {
-            bld_set* undefined;
-            undefined = file_undefined_get(file);
-            if (undefined == NULL) {
-                log_fatal(LOG_FATAL_PREFIX "parsing symbols for file type %d which has no undefined symbols", file->type);
-            }
-
-            add_symbol(undefined, &func);
-        } else {
-            log_fatal(LOG_FATAL_PREFIX "unreachable error");
-        }
-
-        next_line:
-        while (c != '\n' && c != EOF) {c = fgetc(f);}
-        c = fgetc(f);
-        if (c == EOF) {break;}
-    }
-
-    fclose(f);
-}
-
-void add_symbol(bld_set* set, bld_string* str) {
-    set_add(set, string_hash(string_unpack(str)), str);
 }
 
 void parse_included_files(bld_project_base* base, bld_file_id main_id, bld_file* file, bld_set* files) {
