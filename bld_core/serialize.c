@@ -166,6 +166,7 @@ void serialize_file(FILE* cache, uintmax_t main, bld_file* file, bld_set* files,
             child = set_get(files, *child_id);
             if (child == NULL) {log_fatal("serialize_file: internal error");}
             if (child->identifier.id == main) {continue;}
+            if ((child->type == BLD_FILE_IMPLEMENTATION || child->type == BLD_FILE_TEST) && !child->compile_successful) {continue;}
 
             if (!first) {
                 fprintf(cache, ",\n");
