@@ -18,6 +18,7 @@ bld_handle_annotated command_handle_invalid(char* name) {
     bld_handle_annotated handle;
     (void)(name);
     handle.type = BLD_COMMAND_INVALID;
+    handle.name = bld_handle_name_invalid;
     handle.convert = NULL;
     handle.execute = (bld_command_execute*) command_invalid;
     handle.free = (bld_command_free*) command_invalid_free;
