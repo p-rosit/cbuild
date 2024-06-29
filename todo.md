@@ -13,8 +13,8 @@
 - [x] write project with c89
 - [x] allow using compiler different from default in linking step
 - [ ] handle project with .so files
-- [ ] allow setting compiler for all files under directory
-- [ ] represent project files as tree
+- [x] allow setting compiler for all files under directory
+- [x] represent project files as tree
 - [x] figure out how to handle special cases for the rebuilder
 - [ ] remove tiny mallocs from set and array
 - [x] add prototypes to private functions
