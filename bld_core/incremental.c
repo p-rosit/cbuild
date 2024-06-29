@@ -587,10 +587,6 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     any_compiled = 0;
     result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
     set_free(&changed_files);
-    if (result) {
-        log_warn("Could not compile all files, no executable generated.");
-        return result;
-    }
 
     path = path_copy(&project->base.root);
     if (project->base.cache.loaded) {
@@ -599,6 +595,11 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
 
     dependency_graph_extract_symbols(&project->graph, &project->files, &path);
     path_free(&path);
+
+    if (result) {
+        log_warn("Could not compile all files, no executable generated.");
+        return result;
+    }
 
     if (!any_compiled) {
         log_debug("Entire project existed in cache, generating executable");
