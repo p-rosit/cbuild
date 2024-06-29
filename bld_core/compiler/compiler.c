@@ -4,6 +4,7 @@
 #include "compiler.h"
 #include "gcc.h"
 #include "clang.h"
+#include "zig.h"
 
 int compiler_type_file_is_implementation(bld_compiler_type, bld_string*);
 int compiler_type_file_is_header(bld_compiler_type, bld_string*);
@@ -14,6 +15,7 @@ bld_array compiler_get_available(void) {
     array_push(&compilers, &bld_compiler_string_gcc);
     array_push(&compilers, &bld_compiler_string_gpp);
     array_push(&compilers, &bld_compiler_string_clang);
+    array_push(&compilers, &bld_compiler_string_zig);
 
     return compilers;
 }
@@ -23,12 +25,14 @@ bld_compiler_type compiler_get_mapping(bld_string* name) {
     bld_string* compilers[] = {
         &bld_compiler_string_gcc,
         &bld_compiler_string_gpp,
-        &bld_compiler_string_clang
+        &bld_compiler_string_clang,
+        &bld_compiler_string_zig
     };
     bld_compiler_type types[] = {
         BLD_COMPILER_GCC,
         BLD_COMPILER_GCC,
-        BLD_COMPILER_CLANG
+        BLD_COMPILER_CLANG,
+        BLD_COMPILER_ZIG
     };
 
     if (sizeof(compilers) / sizeof(*compilers) != sizeof(types) / sizeof(*types)) {
@@ -47,7 +51,8 @@ bld_compiler_type compiler_get_mapping(bld_string* name) {
 bld_string* compiler_get_string(bld_compiler_type type) {
     bld_string* compilers[] = {
         &bld_compiler_string_gcc,
-        &bld_compiler_string_clang
+        &bld_compiler_string_clang,
+        &bld_compiler_string_zig
     };
 
     if (sizeof(compilers) / sizeof(*compilers) != BLD_COMPILER_AMOUNT) {
@@ -106,6 +111,8 @@ int compile_to_object(bld_compiler_type type, bld_string* compiler, bld_string* 
             return compile_to_object_gcc(compiler, flags, file_path, object_path);
         case (BLD_COMPILER_CLANG):
             return compile_to_object_clang(compiler, flags, file_path, object_path);
+        case (BLD_COMPILER_ZIG):
+            return compile_to_object_zig(compiler, flags, file_path, object_path);
         case (BLD_COMPILER_AMOUNT):
             break;
     }
@@ -120,6 +127,8 @@ int compiler_type_file_is_implementation(bld_compiler_type type, bld_string* nam
             return compiler_file_is_implementation_gcc(name);
         case (BLD_COMPILER_CLANG):
             return compiler_file_is_implementation_clang(name);
+        case (BLD_COMPILER_ZIG):
+            return compiler_file_is_implementation_zig(name);
         case (BLD_COMPILER_AMOUNT):
             break;
     }
@@ -134,6 +143,8 @@ int compiler_type_file_is_header(bld_compiler_type type, bld_string* name) {
             return compiler_file_is_header_gcc(name);
         case (BLD_COMPILER_CLANG):
             return compiler_file_is_header_clang(name);
+        case (BLD_COMPILER_ZIG):
+            return compiler_file_is_header_zig(name);
         case (BLD_COMPILER_AMOUNT):
             break;
     }
@@ -148,6 +159,8 @@ bld_language_type compiler_file_language(bld_compiler_type type, bld_string* nam
             return compiler_file_language_gcc(name);
         case (BLD_LANGUAGE_CPP):
             return compiler_file_language_clang(name);
+        case (BLD_COMPILER_ZIG):
+            return compiler_file_language_zig(name);
         case (BLD_LANGUAGE_AMOUNT):
             log_fatal(LOG_FATAL_PREFIX "unknown language");
     }

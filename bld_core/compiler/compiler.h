@@ -9,6 +9,7 @@
 typedef enum bld_compiler_type {
     BLD_COMPILER_GCC,
     BLD_COMPILER_CLANG,
+    BLD_COMPILER_ZIG,
     BLD_COMPILER_AMOUNT
 } bld_compiler_type;
 
