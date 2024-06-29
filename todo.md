@@ -1,4 +1,4 @@
-- [ ] rename header to interface
+- [x] rename header to interface
 - [ ] write unit tests
 - [x] never serialize inode number
 - [x] make new function to copy string with (use `string_pack` to put `char*` in `bld_string` without allocation)
