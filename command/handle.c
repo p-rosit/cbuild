@@ -68,7 +68,7 @@ void handle_free(bld_handle* handle) {
 }
 
 void handle_string_append_int(bld_string* str, int number) {
-    char num[BLD_COMMAND_MAX_ARGS_LEN];
+    char num[10 + BLD_COMMAND_MAX_ARGS_LEN];
 
     if (number < 0 || number > BLD_COMMAND_MAX_ARGS) {
         log_fatal("handle_string_append_int: number not in range [0, %d]", BLD_COMMAND_MAX_ARGS, number);
