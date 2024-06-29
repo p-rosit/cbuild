@@ -75,6 +75,7 @@ bld_file make_file(bld_file_type type, bld_path* total_path, bld_path* path, cha
     str = string_pack(name);
 
     file.type = type;
+    file.compile_successful = 0;
     file.parent_id = BLD_INVALID_IDENITIFIER;
     file.identifier = get_identifier(total_path);
     file.name = string_copy(&str);

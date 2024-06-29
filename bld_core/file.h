@@ -62,6 +62,7 @@ typedef union bld_file_info {
 typedef struct bld_file {
     bld_file_type type;
     bld_language_type language;
+    int compile_successful;
     bld_file_id parent_id;
     bld_file_identifier identifier;
     bld_path path;
