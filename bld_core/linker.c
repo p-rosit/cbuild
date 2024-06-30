@@ -4,11 +4,12 @@
 #include "logging.h"
 #include "json.h"
 
-bld_linker linker_new(char* executable) {
+bld_linker linker_new(bld_linker_type type, char* executable) {
     bld_linker linker;
     bld_string str;
 
     str = string_pack(executable);
+    linker.type = type;
     linker.executable = string_copy(&str);
     linker.flags = linker_flags_new();
     
@@ -23,6 +24,7 @@ void linker_free(bld_linker* linker) {
 bld_linker linker_copy(bld_linker* linker) {
     bld_linker cpy;
 
+    cpy.type = linker->type;
     cpy.executable = string_copy(&linker->executable);
     cpy.flags = linker_flags_copy(&linker->flags);
 
@@ -119,6 +121,10 @@ void linker_flags_append(bld_string* str, bld_linker_flags* flags) {
 void serialize_linker(FILE* cache, bld_linker* linker, int depth) {
     fprintf(cache, "{\n");
 
+    json_serialize_key(cache, "type", depth);
+    fprintf(cache, "\"%s\"", string_unpack(linker_get_string(linker->type)));
+
+    fprintf(cache, ",\n");
     json_serialize_key(cache, "executable", depth);
     fprintf(cache, "\"%s\"", string_unpack(&linker->executable));
 
@@ -161,10 +167,11 @@ void serialize_linker_flags(FILE* cache, bld_linker_flags* flags, int depth) {
 
 int parse_linker(FILE* file, bld_linker* linker) {
     int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"executable", "flags"};
-    bld_parse_func funcs[2] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"type", "executable", "flags"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_linker_type,
         (bld_parse_func) parse_linker_executable,
         (bld_parse_func) parse_linker_linker_flags,
     };
@@ -172,10 +179,26 @@ int parse_linker(FILE* file, bld_linker* linker) {
     linker->flags = linker_flags_new();
     amount_parsed = json_parse_map(file, linker, size, parsed, (char**) keys, funcs);
 
-    if (amount_parsed < size && !parsed[0]) {
+    if (amount_parsed < size && !(parsed[0] && parsed[1])) {
+        log_fatal(LOG_FATAL_PREFIX "free correctly");
         return -1;
     }
     return 0;
+}
+
+int parse_linker_type(FILE* file, bld_linker* linker) {
+    bld_string str;
+    int error;
+
+    error = string_parse(file, &str);
+    if (error) {
+        log_warn("Could not parse linker executable");
+        return -1;
+    }
+
+    linker->type = linker_get_mapping(&str);
+    string_free(&str);
+    return linker->type == BLD_LINKER_AMOUNT;
 }
 
 int parse_linker_executable(FILE* file, bld_linker* linker) {
