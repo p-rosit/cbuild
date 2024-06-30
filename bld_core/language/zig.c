@@ -41,7 +41,8 @@ int language_get_includes_zig(bld_path* path, bld_file* file, bld_set* files) {
         } while (c != '\n' && c != '=' && c != EOF);
         if (c != '=') {goto next_line;}
 
-        if (!expect_string(f, "@import")) {goto next_line;}
+        if (!expect_char(f, '@')) {goto next_line;}
+        if (!expect_string(f, "import")) {goto next_line;}
         if (!expect_char(f, '(')) {goto next_line;}
         if (!expect_char(f, '\"')) {goto next_line;}
 
