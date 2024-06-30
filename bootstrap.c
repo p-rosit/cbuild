@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     compiler_add_flag(&compiler, "-pedantic");
     compiler_add_flag(&compiler, "-Wmissing-prototypes");
 
-    linker = linker_new("clang");
+    linker = linker_new(BLD_LINKER_CLANG, "clang");
     linker_add_flag(&linker, "-fsanitize=address");
 
     fproject = project_new(project_path_extract(argc, argv), compiler, linker);

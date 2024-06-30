@@ -3,6 +3,7 @@
 #include "os.h"
 #include "logging.h"
 #include "incremental.h"
+#include "linker/linker.h"
 
 void    incremental_make_root(bld_project*, bld_forward_project*);
 void    incremental_index_project(bld_project*, bld_forward_project*);
@@ -448,59 +449,72 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
 
 int incremental_link_executable(bld_project* project, char* executable_name) {
     int result;
-    bld_path path;
-    bld_file *main_file, *file;
-    bld_string cmd;
-    bld_array linker_flags;
     bld_iter iter;
+    bld_path root;
+    bld_array flags;
+    bld_array files;
+    bld_file* main_file;
+    bld_file* file;
+    bld_path executable;
 
+    root = path_copy(&project->base.root);
+    if (project->base.cache.loaded) {
+        path_append_path(&root, &project->base.cache.root);
+    }
+
+    if (project->main_file == BLD_INVALID_IDENITIFIER) {
+        log_fatal(LOG_FATAL_PREFIX "no main file set");
+    }
     main_file = set_get(&project->files, project->main_file);
     if (main_file == NULL) {
-        log_fatal(LOG_FATAL_PREFIX "No main file has been set");
-        return 1;
+        log_fatal(LOG_FATAL_PREFIX "main file does not exist");
+        return -1; /* unreachable */
     }
 
-    cmd = string_new();
-    string_append_string(&cmd, string_unpack(&project->base.linker.executable));
-    string_append_space(&cmd);
+    flags = array_new(sizeof(bld_string));
+    files = array_new(sizeof(bld_file));
 
-    string_append_string(&cmd, "-o ");
-    string_append_string(&cmd, executable_name);
-
-    linker_flags = array_new(sizeof(bld_linker_flags*));
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
-        bld_string object_name;
         bld_array file_flags;
-        string_append_space(&cmd);
+        bld_string f;
 
-        path = path_copy(&project->base.root);
-        if (project->base.cache.loaded) {
-            path_append_path(&path, &project->base.cache.root);
-        }
-        object_name = file_object_name(file);
-        path_append_string(&path, string_unpack(&object_name));
-        
-        string_append_string(&cmd, path_to_string(&path));
-        string_append_string(&cmd, ".o");
-        path_free(&path);
+        array_push(&files, file);
 
         file_assemble_linker_flags(file, &project->files, &file_flags);
-        linker_flags_expand(&cmd, &file_flags);
+        f = string_new();
+        linker_flags_expand(&f, &file_flags);
 
+        array_push(&flags, &f);
         array_free(&file_flags);
-        string_free(&object_name);
     }
 
-    linker_flags_append(&cmd, &project->base.linker.flags);
-    array_free(&linker_flags);
+    {
+        bld_string* last_flags;
 
-    result = system(string_unpack(&cmd));
+        last_flags = array_get(&flags, flags.size - 1);
+        linker_flags_append(last_flags, &project->base.linker.flags);
+    }
+
+    executable = path_from_string(executable_name);
+    result = linker_executable_make(project->base.linker.type, &project->base.linker.executable, &root, &files, &flags, &executable);
     if (result < 0) {
-        log_fatal("Expected return value of compiler to be non-negative.");
+        log_fatal(LOG_FATAL_PREFIX "Expected return value of compiler to be non-negative.");
     }
 
-    string_free(&cmd);
+    {
+        bld_string* file_flags;
+
+        iter = iter_array(&flags);
+        while (iter_next(&iter, (void**) &file_flags)) {
+            string_free(file_flags);
+        }
+    }
+
+    path_free(&root);
+    array_free(&flags);
+    array_free(&files);
+    path_free(&executable);
     return result;
 }
 

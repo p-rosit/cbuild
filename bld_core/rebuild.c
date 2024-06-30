@@ -113,7 +113,7 @@ void rebuild_builder(bld_forward_project* fproject, int argc, char** argv) {
     compiler_add_flag(&compiler, "-pedantic");
     compiler_add_flag(&compiler, "-Wmissing-prototypes");
 
-    linker = linker_new("gcc");
+    linker = linker_new(BLD_LINKER_GCC, "gcc");
     linker_add_flag(&linker, "-fsanitize=address");
 
     fbuild = new_rebuild(fproject, build_root, compiler, linker);

@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
     bld_project project;
     bld_linker linker;
 
-    linker = linker_new("gcc");
+    linker = linker_new(BLD_LINKER_GCC, "gcc");
     linker_add_flag(&linker, "-lstdc++");
 
     fproject = project_new(

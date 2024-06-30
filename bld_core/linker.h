@@ -4,17 +4,19 @@
 #include <stdio.h>
 #include "dstr.h"
 #include "array.h"
+#include "linker/linker.h"
 
 typedef struct bld_linker_flags {
     bld_array flags;
 } bld_linker_flags;
 
 typedef struct bld_linker {
+    bld_linker_type type;
     bld_string executable;
     bld_linker_flags flags;
 } bld_linker;
 
-bld_linker          linker_new(char*);
+bld_linker          linker_new(bld_linker_type, char*);
 bld_linker          linker_copy(bld_linker*);
 void                linker_free(bld_linker*);
 uintmax_t           linker_hash(bld_linker*);
@@ -33,6 +35,7 @@ void                serialize_linker(FILE*, bld_linker*, int);
 void                serialize_linker_flags(FILE*, bld_linker_flags*, int);
 
 int                 parse_linker(FILE*, bld_linker*);
+int                 parse_linker_type(FILE*, bld_linker*);
 int                 parse_linker_executable(FILE*, bld_linker*);
 int                 parse_linker_linker_flags(FILE*, bld_linker*);
 int                 parse_linker_flags(FILE*, bld_linker_flags*);

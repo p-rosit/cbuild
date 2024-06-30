@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
     compiler_add_flag(&compiler, "-Wextra");
     compiler_add_flag(&compiler, "-pedantic");
 
-    forward_project = project_new(project_path_extract(argc, argv), compiler, linker_new("gcc"));
+    forward_project = project_new(project_path_extract(argc, argv), compiler, linker_new(BLD_LINKER_GCC, "gcc"));
 
     project_add_build(&forward_project, "../..");
     rebuild_builder(&forward_project, argc, argv);
