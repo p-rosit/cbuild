@@ -76,9 +76,13 @@ int command_linker(bld_command_linker* cmd, bld_data* data) {
         }
 
         data->target_config.linker_set = 1;
-        *linker = linker_new(string_unpack(&cmd->linker));
+        *linker = linker_new(linker_get_mapping(&cmd->linker), string_unpack(&cmd->linker));
         file->info.linker_set = 1;
         file->info.linker_flags = linker_flags_new();
+
+        if (linker->type == BLD_LINKER_AMOUNT) {
+            log_fatal(LOG_FATAL_PREFIX "allow custom linker");
+        }
 
         iter = iter_array(&cmd->flags);
         while (iter_next(&iter, (void**) &flag)) {
