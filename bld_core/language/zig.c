@@ -55,6 +55,16 @@ int language_get_includes_zig(bld_path* path, bld_file* file, bld_set* files) {
         if (c == EOF) {string_free(&str); break;}
         if (c == '\n') {goto next_line;}
 
+        {
+            bld_string std;
+
+            std = string_pack("std");
+            if (string_eq(&str, &std)) {
+                string_free(&str);
+                goto next_line;
+            }
+        }
+
         file_path = path_copy(&parent_path);
         path_append_string(&file_path, string_unpack(&str));
 
