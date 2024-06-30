@@ -408,41 +408,40 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
-    bld_string cmd, object_name;
+    bld_string flags, object_name;
     bld_compiler* compiler;
-    bld_path path;
+    bld_path file_path;
+    bld_path object_path;
     bld_array compiler_flags;
     log_info("Compiling: \"%s\"", string_unpack(&file->name));
 
     file_assemble_compiler(file, &project->files, &compiler, &compiler_flags);
 
-    cmd = string_new();
-    string_append_string(&cmd, string_unpack(&compiler->executable));
-    compiler_flags_expand(&cmd, &compiler_flags);
-    string_append_space(&cmd);
+    flags = string_new();
+    compiler_flags_expand(&flags, &compiler_flags);
 
     if (!project->base.rebuilding || file->identifier.id != project->main_file) {
-        path = path_copy(&project->base.root);
+        file_path = path_copy(&project->base.root);
     } else if (file->identifier.id == project->main_file) {
-        path = path_copy(&project->base.build_of->root);
+        file_path = path_copy(&project->base.build_of->root);
     }
-    path_append_path(&path, &file->path);
-    string_append_string(&cmd, path_to_string(&path));
-    path_free(&path);
+    path_append_path(&file_path, &file->path);
 
-    path = path_copy(&project->base.root);
+    object_path = path_copy(&project->base.root);
     if (project->base.cache.loaded) {
-        path_append_path(&path, &project->base.cache.root);
+        path_append_path(&object_path, &project->base.cache.root);
     }
 
     object_name = file_object_name(file);
     string_append_string(&object_name, ".o");
+    path_append_string(&object_path, string_unpack(&object_name));
 
-    result = compile_to_object(compiler->type, &cmd, &path, &object_name);
+    result = compile_to_object(compiler->type, &compiler->executable, &flags, &file_path, &object_path);
 
-    path_free(&path);
+    path_free(&object_path);
+    path_free(&file_path);
     string_free(&object_name);
-    string_free(&cmd);
+    string_free(&flags);
     array_free(&compiler_flags);
     return result;
 }

@@ -23,6 +23,10 @@ int os_file_exists(char* path) {
         return getcwd(buffer, length) != NULL;
     }
 
+    int os_set_cwd(char* path) {
+        return chdir(path);
+    }
+
     int os_dir_exists(char* path) {
         bld_os_dir* dir;
 

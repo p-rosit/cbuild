@@ -3,19 +3,23 @@
 
 bld_string bld_compiler_string_clang = STRING_COMPILE_TIME_PACK("clang");
 
-int compile_to_object_clang(bld_string* cmd, bld_path* location, bld_string* name) {
+int compile_to_object_clang(bld_string* compiler, bld_string* flags, bld_path* file_path, bld_path* object_path) {
     int code;
-    bld_path file;
+    bld_string cmd;
 
-    file = path_copy(location);
-    path_append_string(&file, string_unpack(name));
+    cmd = string_copy(compiler);
+    string_append_space(&cmd);
 
-    string_append_string(cmd, " -c -o ");
-    string_append_string(cmd, path_to_string(&file));
+    string_append_string(&cmd, string_unpack(flags));
+    string_append_space(&cmd);
 
-    code = system(string_unpack(cmd));
+    string_append_string(&cmd, path_to_string(file_path));
+    string_append_string(&cmd, " -c -o ");
+    string_append_string(&cmd, path_to_string(object_path));
 
-    path_free(&file);
+    code = system(string_unpack(&cmd));
+
+    string_free(&cmd);
     return code;
 }
 
