@@ -706,7 +706,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     return result;
 }
 
-int incremental_compile_project(bld_project* project, char* name) {
+int incremental_compile_executable(bld_project* project, char* name) {
     int result;
     bld_path executable_path;
 
