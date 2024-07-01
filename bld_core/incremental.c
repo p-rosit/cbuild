@@ -579,29 +579,15 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
     return exists && !new_options;
 }
 
-
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     bld_iter iter;
-    int result, any_compiled, temp;
+    int result;
+    int temp;
+    int any_compiled;
     bld_file *file;
     bld_set changed_files;
 
-    temp = 0;
-    changed_files = set_new(sizeof(int));
-    iter = iter_set(&project->files);
-    while (iter_next(&iter, (void**) &file)) {
-        set_add(&changed_files, file->identifier.id, &temp);
-    }
-
-    dependency_graph_extract_includes(&project->graph, &project->base, project->main_file, &project->files);
-    incremental_mark_changed_files(project, &changed_files);
-
-    any_compiled = 0;
-    result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
-    set_free(&changed_files);
-
-    dependency_graph_extract_symbols(&project->graph, &project->base, project->main_file, &project->files);
-
+    result = incremental_compile_project(project, &any_compiled);
     if (result) {
         log_warn("Could not compile all files, no executable generated.");
         return result;
