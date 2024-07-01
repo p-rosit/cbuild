@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
     project = project_resolve(&fproject);
 
-    result = incremental_compile_project(&project, "bld.out");
+    result = incremental_compile_executable(&project, "bld.out");
     if (result > 0) {
         log_warn("Could not compile project");
     } else if (result < 0) {

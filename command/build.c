@@ -65,7 +65,7 @@ int command_build(bld_command_build* cmd, bld_data* data) {
 
     name_executable = string_copy(&cmd->target);
     string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
-    result = incremental_compile_project(&project, string_unpack(&name_executable));
+    result = incremental_compile_executable(&project, string_unpack(&name_executable));
 
     project_save_cache(&project);
 
