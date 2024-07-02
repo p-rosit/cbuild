@@ -580,12 +580,9 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
 }
 
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
-    bld_iter iter;
     int result;
     int temp;
     int any_compiled;
-    bld_file *file;
-    bld_set changed_files;
 
     result = incremental_compile_project(project, &any_compiled);
     if (result) {
