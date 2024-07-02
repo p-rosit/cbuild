@@ -11,7 +11,6 @@ const bld_string bld_command_test_see_more = STRING_COMPILE_TIME_PACK(
 );
 
 int command_test(bld_command_test* cmd, bld_data* data) {
-    int error;
     bld_forward_project fproject;
     bld_project project;
     bld_array test_files;
@@ -23,11 +22,6 @@ int command_test(bld_command_test* cmd, bld_data* data) {
 
     fproject = command_build_project_new(&cmd->target, data);
     project = project_resolve(&fproject);
-
-    error = project_test_files(&project, &test_files);
-    if (error) {
-        log_fatal(LOG_FATAL_PREFIX "No test files");
-    }
 
     if (test_files.size == 0) {
         printf("No test files found under '%s'", path_to_string(&cmd->test_path));
