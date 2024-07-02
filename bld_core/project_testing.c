@@ -24,7 +24,7 @@ int project_test_files(bld_project* project, bld_array* files) {
         }
     }
 
-    log_info("Test result: %lu/%lu", total_succeded, files->size);
+    printf("Test result: %lu/%lu\n", total_succeded, files->size);
     return error;
 }
 
@@ -47,9 +47,9 @@ int project_test_file(bld_project* project, bld_file* file) {
     remove(path_to_string(&test_path));
 
     if (!error) {
-        log_info("Test '%s' ok", path_to_string(&file->path));
+        printf("Test '%s' ok\n", path_to_string(&file->path));
     } else {
-        log_warn("Test '%s' did not succeed");
+        printf("Test '%s' did not succeed\n", path_to_string(&file->path));
     }
     string_free(&test_name);
     path_free(&test_path);
