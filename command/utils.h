@@ -40,7 +40,8 @@ typedef enum bld_command_type {
     BLD_COMMAND_IGNORE,
     BLD_COMMAND_INVALIDATE,
     BLD_COMMAND_LINKER,
-    BLD_COMMAND_STATUS
+    BLD_COMMAND_STATUS,
+    BLD_COMMAND_TEST
 } bld_command_type;
 
 typedef struct bld_handle_annotated {

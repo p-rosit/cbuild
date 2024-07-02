@@ -15,6 +15,7 @@
 #include "status.h"
 #include "build.h"
 #include "invalid.h"
+#include "command_test.h"
 
 const bld_string bld_path_build = STRING_COMPILE_TIME_PACK(".bld");
 const bld_string bld_path_target = STRING_COMPILE_TIME_PACK("target");
@@ -118,6 +119,7 @@ bld_data data_extract(char* name) {
     data_add_handle(&data, command_handle_remove(name));
     data_add_handle(&data, command_handle_invalidate(name));
     data_add_handle(&data, command_handle_status(name));
+    data_add_handle(&data, command_handle_test(name));
     data_add_handle(&data, command_handle_init(name));
     data_add_handle(&data, command_handle_build(name));
     data_add_handle(&data, command_handle_invalid(name));
