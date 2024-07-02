@@ -7,6 +7,7 @@ int parse_config_default_target(FILE*, bld_config*);
 
 bld_config config_new(void) {
     bld_config config;
+    config.log_level = BLD_INFO;
     config.text_editor_configured = 0;
     config.active_target_configured = 0;
     return config;
