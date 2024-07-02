@@ -43,7 +43,7 @@ int project_test_file(bld_project* project, bld_file* file) {
     path_append_string(&test_path, string_unpack(&test_name));
 
     project->main_file = file->identifier.id;
-    error = incremental_compile_executable(project, path_to_string(&test_path));
+    error = incremental_link_executable(project, path_to_string(&test_path));
     if (error > 0) {
         log_warn("Test: '%s', could not compile project", path_to_string(&file->path));
     }
