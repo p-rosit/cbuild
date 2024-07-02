@@ -16,6 +16,8 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     bld_project project;
     bld_string name_executable;
 
+    set_log_level(data->config.log_level);
+
     fproject = command_build_project_new(&cmd->target, data);
     project = project_resolve(&fproject);
 

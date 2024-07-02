@@ -1,5 +1,6 @@
 #ifndef LOGGING_H
 #define LOGGING_H
+#include "dstr.h"
 
 #define LOG_PANIC_EVAL(x) LOG_PANIC_EVAL_(x)
 #define LOG_PANIC_EVAL_(x) #x
@@ -17,6 +18,8 @@ typedef enum bld_log_level {
 extern int log_level;
 
 bld_log_level set_log_level(bld_log_level);
+bld_string* log_level_to_string(bld_log_level);
+bld_log_level log_level_from_string(bld_string*);
 
 void log_debug(const char*, ...);
 void log_info(const char*, ...);

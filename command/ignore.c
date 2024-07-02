@@ -17,6 +17,8 @@ int command_ignore(bld_command_ignore* cmd, bld_data* data) {
     bld_set ignored_files;
     uintmax_t added_id;
 
+    set_log_level(data->config.log_level);
+
     if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
         printf("'%s' is not a known target. %s\n", string_unpack(&cmd->target), string_unpack(&bld_command_ignore_see_more));
         return -1;

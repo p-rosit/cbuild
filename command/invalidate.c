@@ -9,6 +9,8 @@ int command_invalidate(bld_command_invalidate* cmd, bld_data* data) {
     bld_iter iter;
     bld_path* path;
     (void)(data);
+
+    set_log_level(data->config.log_level);
     
     log_info("Invalidating target \"%s\"", string_unpack(&cmd->target));
     iter = iter_array(&cmd->paths);

@@ -6,6 +6,8 @@
 const bld_string bld_command_string_remove = STRING_COMPILE_TIME_PACK("remove");
 
 int command_remove(bld_command_remove* remove, bld_data* data) {
+    set_log_level(data->config.log_level);
+
     if (data->config_parsed) {
         if (!data->config.active_target_configured) {
             if (string_eq(&remove->target, &data->config.active_target)) {

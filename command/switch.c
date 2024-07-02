@@ -9,6 +9,8 @@ int command_switch(bld_command_switch* cmd, bld_data* data) {
         log_fatal("command_switch: config not parsed");
     }
 
+    set_log_level(data->config.log_level);
+
     if (data->config.active_target_configured) {
         if (string_eq(&cmd->target, &data->config.active_target)) {
             printf("Target '%s' already active\n", string_unpack(&cmd->target));

@@ -15,6 +15,8 @@ int command_test(bld_command_test* cmd, bld_data* data) {
     bld_project project;
     bld_array test_files;
 
+    set_log_level(data->config.log_level);
+
     if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
         printf("'%s' is not a known target. %s\n", string_unpack(&cmd->target), string_unpack(&bld_command_test_see_more));
         return -1;
