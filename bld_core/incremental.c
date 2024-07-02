@@ -14,7 +14,6 @@ void    incremental_apply_compilers(bld_project*, bld_forward_project*);
 void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
 
 int     incremental_compile_file(bld_project*, bld_file*);
-int     incremental_link_executable(bld_project*, char*);
 int     incremental_compile_with_absolute_path(bld_project*, char*);
 
 void    incremental_mark_changed_files(bld_project*, bld_set*);
@@ -579,29 +578,12 @@ int incremental_cached_compilation(bld_project* project, bld_file* file) {
     return exists && !new_options;
 }
 
-
 int incremental_compile_with_absolute_path(bld_project* project, char* name) {
-    bld_iter iter;
-    int result, any_compiled, temp;
-    bld_file *file;
-    bld_set changed_files;
+    int result;
+    int temp;
+    int any_compiled;
 
-    temp = 0;
-    changed_files = set_new(sizeof(int));
-    iter = iter_set(&project->files);
-    while (iter_next(&iter, (void**) &file)) {
-        set_add(&changed_files, file->identifier.id, &temp);
-    }
-
-    dependency_graph_extract_includes(&project->graph, &project->base, project->main_file, &project->files);
-    incremental_mark_changed_files(project, &changed_files);
-
-    any_compiled = 0;
-    result = incremental_compile_changed_files(project, &changed_files, &any_compiled);
-    set_free(&changed_files);
-
-    dependency_graph_extract_symbols(&project->graph, &project->base, project->main_file, &project->files);
-
+    result = incremental_compile_project(project, &any_compiled);
     if (result) {
         log_warn("Could not compile all files, no executable generated.");
         return result;
@@ -706,7 +688,37 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     return result;
 }
 
-int incremental_compile_project(bld_project* project, char* name) {
+int incremental_compile_project(bld_project* project, int* any_compiled) {
+    int temp;
+    int result;
+    bld_set changed_files;
+    bld_file* file;
+    bld_iter iter;
+
+    temp = 0;
+    changed_files = set_new(sizeof(int));
+    iter = iter_set(&project->files);
+    while (iter_next(&iter, (void**) &file)) {
+        set_add(&changed_files, file->identifier.id, &temp);
+    }
+
+    dependency_graph_extract_includes(&project->graph, &project->base, project->main_file, &project->files);
+    incremental_mark_changed_files(project, &changed_files);
+
+    *any_compiled = 0;
+    result = incremental_compile_changed_files(project, &changed_files, any_compiled);
+    set_free(&changed_files);
+
+    dependency_graph_extract_symbols(&project->graph, &project->base, project->main_file, &project->files);
+
+    if (result) {
+        log_warn("Could not compile all files, no executable generated.");
+    }
+
+    return result;
+}
+
+int incremental_compile_executable(bld_project* project, char* name) {
     int result;
     bld_path executable_path;
 

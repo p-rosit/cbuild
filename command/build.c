@@ -1,76 +1,31 @@
 #include "../bld_core/os.h"
 #include "../bld_core/logging.h"
-#include "../bld_core/project.h"
 #include "../bld_core/incremental.h"
 #include "init.h"
 #include "build.h"
 
 bld_string bld_command_string_build = STRING_COMPILE_TIME_PACK("build");
 
-int command_build_verify_config(bld_command_build*, bld_data*);
-void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
+int command_build_verify_config(bld_string*, bld_data*);
+void command_build_apply_config(bld_forward_project* , bld_data*);
 void command_build_apply_build_info(bld_forward_project*, bld_path*, bld_target_build_information*);
 
 int command_build(bld_command_build* cmd, bld_data* data) {
     int result;
     bld_forward_project fproject;
     bld_project project;
-    bld_compiler temp_c;
-    bld_linker temp_l;
-    bld_path path_cache, path_root;
     bld_string name_executable;
 
-    if (!data->config_parsed) {
-        log_fatal("Config has not been parsed");
-        return -1; /* Unreachable */
-    }
-
-    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
-        log_fatal("'%s' is not a target", string_unpack(&cmd->target));
-        return -1; /* Unreachable */
-    }
-
-    config_target_load(data, &cmd->target);
-    if (command_build_verify_config(cmd, data)) {
-        return -1;
-    }
-
-    log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
-    temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
-    temp_l = linker_copy(&data->target_config.linker);
-    if (data->target_config.files.info.linker_set) {
-        if (temp_l.flags.flags.size > 0) {
-            log_fatal("Internal error... default linker should have no flags");
-        }
-        linker_flags_free(&temp_l.flags);
-        temp_l.flags = linker_flags_copy(&data->target_config.files.info.linker_flags);
-    }
-
-    path_root = path_copy(&data->root);
-    fproject = project_forward_new(&path_root, &temp_c, &temp_l);
-
-    path_cache = path_from_string(".bld");
-    path_append_string(&path_cache, "target");
-    path_append_string(&path_cache, string_unpack(&cmd->target));
-    path_append_string(&path_cache, "cache");
-    log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
-    project_load_cache(&fproject, path_to_string(&path_cache));
-
-    log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
-    project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
-
-    command_build_apply_config(&fproject, cmd, data);
-
+    fproject = command_build_project_new(&cmd->target, data);
     project = project_resolve(&fproject);
 
     name_executable = string_copy(&cmd->target);
     string_append_string(&name_executable, "." BLD_EXECUTABLE_FILE_ENDING);
-    result = incremental_compile_project(&project, string_unpack(&name_executable));
+    result = incremental_compile_executable(&project, string_unpack(&name_executable));
 
     project_save_cache(&project);
 
     string_free(&name_executable);
-    path_free(&path_cache);
     project_free(&project);
 
     if (result < 0) {result = 0;}
@@ -109,6 +64,59 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
     parse_failed:
     *invalid = command_invalid_new(error, &err);
     return -1;
+}
+
+bld_forward_project command_build_project_new(bld_string* target, bld_data* data) {
+    bld_path path_cache;
+    bld_path path_root;
+    bld_compiler temp_c;
+    bld_linker temp_l;
+    bld_forward_project fproject;
+
+    if (!data->config_parsed) {
+        log_fatal("Config has not been parsed");
+        return project_forward_new(NULL, NULL, NULL); /* Unreachable */
+    }
+
+    if (!set_has(&data->targets, string_hash(string_unpack(target)))) {
+        log_fatal("'%s' is not a target", string_unpack(target));
+        return project_forward_new(NULL, NULL, NULL); /* Unreachable */
+    }
+
+    config_target_load(data, target);
+    if (command_build_verify_config(target, data)) {
+        exit(-1);
+    }
+
+    log_debug("Building target: \"%s\"", string_unpack(target));
+    temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
+    temp_l = linker_copy(&data->target_config.linker);
+    if (data->target_config.files.info.linker_set) {
+        if (temp_l.flags.flags.size > 0) {
+            log_fatal("Internal error... default linker should have no flags");
+        }
+        linker_flags_free(&temp_l.flags);
+        temp_l.flags = linker_flags_copy(&data->target_config.files.info.linker_flags);
+    }
+
+    path_root = path_copy(&data->root);
+    fproject = project_forward_new(&path_root, &temp_c, &temp_l);
+
+    path_cache = path_from_string(".bld");
+    path_append_string(&path_cache, "target");
+    path_append_string(&path_cache, string_unpack(target));
+    path_append_string(&path_cache, "cache");
+    log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
+    project_load_cache(&fproject, path_to_string(&path_cache));
+
+    command_build_apply_config(&fproject, data);
+
+    log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
+    project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
+
+
+    path_free(&path_cache);
+    return fproject;
 }
 
 bld_handle_annotated command_handle_build(char* name) {
@@ -155,21 +163,20 @@ void command_build_free(bld_command_build* build) {
     string_free(&build->target);
 }
 
-void command_build_apply_config(bld_forward_project* fproject, bld_command_build* cmd, bld_data* data) {
+void command_build_apply_config(bld_forward_project* fproject, bld_data* data) {
     bld_iter iter;
     bld_path* path, temp;
     bld_target_build_information* child;
-    (void)(cmd);
 
     iter = iter_array(&data->target_config.added_paths);
     while (iter_next(&iter, (void**) &path)) {
-        log_warn("Adding: %s", path_to_string(path));
+        log_debug("Adding: %s", path_to_string(path));
         project_add_path(fproject, path_to_string(path));
     }
 
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
-        log_warn("Ignoring: %s", path_to_string(path));
+        log_debug("Ignoring: %s", path_to_string(path));
         project_ignore_path(fproject, path_to_string(path));
     }
 
@@ -210,13 +217,13 @@ void command_build_apply_build_info(bld_forward_project* fproject, bld_path* pat
     path_free(&sub_path);
 }
 
-int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
+int command_build_verify_config(bld_string* target, bld_data* data) {
     int error;
     bld_iter iter;
     bld_path* path;
 
     if (!data->target_config_parsed) {
-        log_error("Config for target '%s' has not been parsed", string_unpack(&cmd->target));
+        log_error("Config for target '%s' has not been parsed", string_unpack(target));
         return -1;
     }
 
