@@ -46,7 +46,14 @@ bld_application_command application_command_parse(bld_args* args, bld_data* data
         array_free(&errs);
     }
 
-    if (!matched) {
+    if (!matched && !data->has_root) {
+        bld_string err;
+
+        err = string_copy(&bld_command_init_missing_project);
+        app_command.type = BLD_COMMAND_INVALID;
+        app_command.as.invalid = command_invalid_new(-1, &err);
+        return app_command;
+    } else if (!matched) {
         log_fatal("No subcommand could be matched");
         exit(-1); /* unreachable */
     }
