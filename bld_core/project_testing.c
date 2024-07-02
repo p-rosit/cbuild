@@ -29,10 +29,12 @@ int project_test_files(bld_project* project, bld_array* files) {
 }
 
 int project_test_file(bld_project* project, bld_file* file) {
+    bld_log_level log_level;
     int error;
     bld_path test_path;
     bld_string test_name;
 
+    log_level = set_log_level(BLD_WARN);
     test_name = file_object_name(file);
     test_path = path_from_string(".");
     path_append_string(&test_path, string_unpack(&test_name));
@@ -45,6 +47,7 @@ int project_test_file(bld_project* project, bld_file* file) {
 
     error = system(path_to_string(&test_path));
     remove(path_to_string(&test_path));
+    set_log_level(log_level);
 
     if (!error) {
         printf("Test '%s' ok\n", path_to_string(&file->path));
