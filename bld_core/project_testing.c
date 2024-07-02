@@ -39,7 +39,7 @@ int project_test_file(bld_project* project, bld_file* file) {
 
     project->main_file = file->identifier.id;
     error = incremental_compile_executable(project, path_to_string(&test_path));
-    if (error) {
+    if (error > 0) {
         log_warn("Test: '%s', could not compile project", path_to_string(&file->path));
     }
 
