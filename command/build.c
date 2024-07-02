@@ -1,6 +1,5 @@
 #include "../bld_core/os.h"
 #include "../bld_core/logging.h"
-#include "../bld_core/project.h"
 #include "../bld_core/incremental.h"
 #include "init.h"
 #include "build.h"
