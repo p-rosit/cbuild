@@ -5,10 +5,13 @@
 void project_tests_under_recursive(bld_array*, bld_file*, bld_set*);
 
 int project_test_files(bld_project* project, bld_array* files) {
+    int any_compiled;
     int error;
     size_t total_succeded;
     bld_iter iter;
     bld_file* file;
+
+    incremental_compile_project(project, &any_compiled);
 
     error = 0;
     total_succeded = 0;
