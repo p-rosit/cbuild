@@ -7,8 +7,8 @@
 
 bld_string bld_command_string_build = STRING_COMPILE_TIME_PACK("build");
 
-int command_build_verify_config(bld_command_build*, bld_data*);
-void command_build_apply_config(bld_forward_project* ,bld_command_build*, bld_data*);
+int command_build_verify_config(bld_string*, bld_data*);
+void command_build_apply_config(bld_forward_project* , bld_data*);
 void command_build_apply_build_info(bld_forward_project*, bld_path*, bld_target_build_information*);
 
 int command_build(bld_command_build* cmd, bld_data* data) {
@@ -155,21 +155,20 @@ void command_build_free(bld_command_build* build) {
     string_free(&build->target);
 }
 
-void command_build_apply_config(bld_forward_project* fproject, bld_command_build* cmd, bld_data* data) {
+void command_build_apply_config(bld_forward_project* fproject, bld_data* data) {
     bld_iter iter;
     bld_path* path, temp;
     bld_target_build_information* child;
-    (void)(cmd);
 
     iter = iter_array(&data->target_config.added_paths);
     while (iter_next(&iter, (void**) &path)) {
-        log_warn("Adding: %s", path_to_string(path));
+        log_debug("Adding: %s", path_to_string(path));
         project_add_path(fproject, path_to_string(path));
     }
 
     iter = iter_array(&data->target_config.ignore_paths);
     while (iter_next(&iter, (void**) &path)) {
-        log_warn("Ignoring: %s", path_to_string(path));
+        log_debug("Ignoring: %s", path_to_string(path));
         project_ignore_path(fproject, path_to_string(path));
     }
 
@@ -210,13 +209,13 @@ void command_build_apply_build_info(bld_forward_project* fproject, bld_path* pat
     path_free(&sub_path);
 }
 
-int command_build_verify_config(bld_command_build* cmd, bld_data* data) {
+int command_build_verify_config(bld_string* target, bld_data* data) {
     int error;
     bld_iter iter;
     bld_path* path;
 
     if (!data->target_config_parsed) {
-        log_error("Config for target '%s' has not been parsed", string_unpack(&cmd->target));
+        log_error("Config for target '%s' has not been parsed", string_unpack(target));
         return -1;
     }
 
