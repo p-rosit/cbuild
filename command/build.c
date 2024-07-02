@@ -14,51 +14,12 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     int result;
     bld_forward_project fproject;
     bld_project project;
-    bld_compiler temp_c;
-    bld_linker temp_l;
-    bld_path path_cache, path_root;
     bld_string name_executable;
 
-    if (!data->config_parsed) {
-        log_fatal("Config has not been parsed");
-        return -1; /* Unreachable */
-    }
-
-    if (!set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
-        log_fatal("'%s' is not a target", string_unpack(&cmd->target));
-        return -1; /* Unreachable */
-    }
-
-    config_target_load(data, &cmd->target);
-    if (command_build_verify_config(cmd, data)) {
-        return -1;
-    }
-
-    log_debug("Building target: \"%s\"", string_unpack(&cmd->target));
-    temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
-    temp_l = linker_copy(&data->target_config.linker);
-    if (data->target_config.files.info.linker_set) {
-        if (temp_l.flags.flags.size > 0) {
-            log_fatal("Internal error... default linker should have no flags");
-        }
-        linker_flags_free(&temp_l.flags);
-        temp_l.flags = linker_flags_copy(&data->target_config.files.info.linker_flags);
-    }
-
-    path_root = path_copy(&data->root);
-    fproject = project_forward_new(&path_root, &temp_c, &temp_l);
-
-    path_cache = path_from_string(".bld");
-    path_append_string(&path_cache, "target");
-    path_append_string(&path_cache, string_unpack(&cmd->target));
-    path_append_string(&path_cache, "cache");
-    log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
-    project_load_cache(&fproject, path_to_string(&path_cache));
+    fproject = command_build_project_new(&cmd->target, data);
 
     log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
     project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
-
-    command_build_apply_config(&fproject, cmd, data);
 
     project = project_resolve(&fproject);
 
@@ -69,7 +30,6 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     project_save_cache(&project);
 
     string_free(&name_executable);
-    path_free(&path_cache);
     project_free(&project);
 
     if (result < 0) {result = 0;}
@@ -108,6 +68,55 @@ int command_build_convert(bld_command* pre_cmd, bld_data* data, bld_command_buil
     parse_failed:
     *invalid = command_invalid_new(error, &err);
     return -1;
+}
+
+bld_forward_project command_build_project_new(bld_string* target, bld_data* data) {
+    bld_path path_cache;
+    bld_path path_root;
+    bld_compiler temp_c;
+    bld_linker temp_l;
+    bld_forward_project fproject;
+
+    if (!data->config_parsed) {
+        log_fatal("Config has not been parsed");
+        return project_forward_new(NULL, NULL, NULL); /* Unreachable */
+    }
+
+    if (!set_has(&data->targets, string_hash(string_unpack(target)))) {
+        log_fatal("'%s' is not a target", string_unpack(target));
+        return project_forward_new(NULL, NULL, NULL); /* Unreachable */
+    }
+
+    config_target_load(data, target);
+    if (command_build_verify_config(target, data)) {
+        exit(-1);
+    }
+
+    log_debug("Building target: \"%s\"", string_unpack(target));
+    temp_c = compiler_copy(&data->target_config.files.info.compiler.as.compiler);
+    temp_l = linker_copy(&data->target_config.linker);
+    if (data->target_config.files.info.linker_set) {
+        if (temp_l.flags.flags.size > 0) {
+            log_fatal("Internal error... default linker should have no flags");
+        }
+        linker_flags_free(&temp_l.flags);
+        temp_l.flags = linker_flags_copy(&data->target_config.files.info.linker_flags);
+    }
+
+    path_root = path_copy(&data->root);
+    fproject = project_forward_new(&path_root, &temp_c, &temp_l);
+
+    path_cache = path_from_string(".bld");
+    path_append_string(&path_cache, "target");
+    path_append_string(&path_cache, string_unpack(target));
+    path_append_string(&path_cache, "cache");
+    log_debug("Path to cache: \"%s\"", path_to_string(&path_cache));
+    project_load_cache(&fproject, path_to_string(&path_cache));
+
+    command_build_apply_config(&fproject, data);
+
+    path_free(&path_cache);
+    return fproject;
 }
 
 bld_handle_annotated command_handle_build(char* name) {
