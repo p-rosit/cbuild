@@ -31,6 +31,9 @@ int command_test(bld_command_test* cmd, bld_data* data) {
     }
 
     project_test_files(&project, &test_files);
+
+    project_save_cache(&project);
+
     array_free(&test_files);
     return 0;
 }
