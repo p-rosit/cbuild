@@ -2,6 +2,7 @@
 #include "../bld_core/json.h"
 #include "config.h"
 
+int parse_config_log_level(FILE*, bld_config*);
 int parse_config_text_editor(FILE*, bld_config*);
 int parse_config_default_target(FILE*, bld_config*);
 
@@ -58,10 +59,11 @@ void serialize_config(bld_path* path, bld_config* config) {
 int parse_config(bld_path* path, bld_config* config) {
     FILE* file;
     int amount_parsed;
-    int size = 2;
-    int parsed[2];
-    char *keys[2] = {"text_editor", "default_target"};
-    bld_parse_func funcs[2] = {
+    int size = 3;
+    int parsed[3];
+    char *keys[3] = {"log_level", "text_editor", "default_target"};
+    bld_parse_func funcs[3] = {
+        (bld_parse_func) parse_config_log_level,
         (bld_parse_func) parse_config_text_editor,
         (bld_parse_func) parse_config_default_target,
     };
@@ -75,13 +77,29 @@ int parse_config(bld_path* path, bld_config* config) {
     config->text_editor_configured = 0;
     config->active_target_configured = 0;
     amount_parsed = json_parse_map(file, config, size, parsed, keys, funcs);
-    if (amount_parsed < 0) {
+    if (amount_parsed < 0 || !parsed[0]) {
         log_warn("Could not parse project config");
         return -1;
     }
 
     fclose(file);
     return 0;
+}
+
+int parse_config_log_level(FILE* file, bld_config* config) {
+    bld_string level;
+    int error;
+
+    error = string_parse(file, &level);
+    if (error) {
+        log_warn("Could not parse log level");
+        return -1;
+    }
+
+    config->log_level = log_level_from_string(&level);
+
+    string_free(&level);
+    return config->log_level < 0;
 }
 
 int parse_config_text_editor(FILE* file, bld_config* config) {
