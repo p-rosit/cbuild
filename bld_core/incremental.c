@@ -14,7 +14,6 @@ void    incremental_apply_compilers(bld_project*, bld_forward_project*);
 void    incremental_apply_linker_flags(bld_project*, bld_forward_project*);
 
 int     incremental_compile_file(bld_project*, bld_file*);
-int     incremental_link_executable(bld_project*, char*);
 int     incremental_compile_with_absolute_path(bld_project*, char*);
 
 void    incremental_mark_changed_files(bld_project*, bld_set*);
