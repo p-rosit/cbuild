@@ -87,6 +87,8 @@ int command_init_target(bld_command_init* cmd, bld_data* data) {
         printf("\n");
     }
 
+    set_log_level(data->config.log_level);
+
     if (set_has(&data->targets, string_hash(string_unpack(&cmd->target)))) {
         printf("fatal: target '%s' already exists\n", string_unpack(&cmd->target));
         return -1;

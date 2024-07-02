@@ -11,6 +11,8 @@ int command_compiler(bld_command_compiler* cmd, bld_data* data) {
     bld_target_build_information flags;
     bld_target_build_information* file;
 
+    set_log_level(data->config.log_level);
+
     flags = command_compiler_initial_setup(cmd, data);
     utils_apply_build_information(data, &flags);
 

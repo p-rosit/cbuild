@@ -16,6 +16,8 @@ int command_status(bld_command_status* status, bld_data* data) {
         return -1;
     }
 
+    set_log_level(data->config.log_level);
+
     if (data->targets.size == 0) {
         printf("%s", string_unpack(&bld_command_init_no_targets));
         return -1;
