@@ -17,10 +17,6 @@ int command_build(bld_command_build* cmd, bld_data* data) {
     bld_string name_executable;
 
     fproject = command_build_project_new(&cmd->target, data);
-
-    log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
-    project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
-
     project = project_resolve(&fproject);
 
     name_executable = string_copy(&cmd->target);
@@ -114,6 +110,10 @@ bld_forward_project command_build_project_new(bld_string* target, bld_data* data
     project_load_cache(&fproject, path_to_string(&path_cache));
 
     command_build_apply_config(&fproject, data);
+
+    log_debug("Main file: \"%s\"", path_to_string(&data->target_config.path_main));
+    project_set_main_file(&fproject, path_to_string(&data->target_config.path_main));
+
 
     path_free(&path_cache);
     return fproject;
