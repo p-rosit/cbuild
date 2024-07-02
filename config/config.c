@@ -25,7 +25,6 @@ void config_free(bld_config* config) {
 void serialize_config(bld_path* path, bld_config* config) {
     FILE* file;
     int depth;
-    int first;
 
     file = fopen(path_to_string(path), "w");
     if (file == NULL) {
@@ -34,26 +33,22 @@ void serialize_config(bld_path* path, bld_config* config) {
     }
 
     depth = 1;
-    first = 1;
 
     fprintf(file, "{\n");
 
-    if (config->text_editor_configured) {
-        if (!first) {fprintf(file, ",\n");}
+    json_serialize_key(file, "log_level", depth);
+    fprintf(file, "\"%s\"", string_unpack(log_level_to_string(config->log_level)));
 
+    if (config->text_editor_configured) {
+        fprintf(file, ",\n");
         json_serialize_key(file, "text_editor", depth);
         fprintf(file, "\"%s\"", string_unpack(&config->text_editor));
-
-        first = 0;
     }
 
     if (config->active_target_configured) {
-        if (!first) {fprintf(file, ",\n");}
-
+        fprintf(file, ",\n");
         json_serialize_key(file, "default_target", depth);
         fprintf(file, "\"%s\"", string_unpack(&config->active_target));
-
-        first = 0;
     }
 
     fprintf(file, "\n}");
