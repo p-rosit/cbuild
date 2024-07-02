@@ -12,8 +12,8 @@ int project_test_files(bld_project* project, bld_array* files) {
 
     error = 0;
     total_succeded = 0;
-    iter = iter_set(&project->files);
-    while (iter_next(&iter, (void**) & file)) {
+    iter = iter_array(files);
+    while (iter_next(&iter, (void**) &file)) {
         int temp;
 
         temp = project_test_file(project, file);
