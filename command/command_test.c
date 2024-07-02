@@ -23,6 +23,7 @@ int command_test(bld_command_test* cmd, bld_data* data) {
     fproject = command_build_project_new(&cmd->target, data);
     project = project_resolve(&fproject);
 
+    test_files = project_tests_under(&project, &cmd->test_path);
     if (test_files.size == 0) {
         printf("No test files found under '%s'", path_to_string(&cmd->test_path));
         return -1;
