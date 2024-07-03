@@ -101,7 +101,7 @@ void array_insert(bld_array* array, size_t index, void* value) {
     ptr += index * array->value_size;
 
     if (index < array->size) {
-        memmove(ptr + array->value_size, ptr, (array->size - index - 1) * array->value_size);
+        memmove(ptr + array->value_size, ptr, (array->size - index) * array->value_size);
     }
 
     array->size += 1;
