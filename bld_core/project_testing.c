@@ -54,9 +54,9 @@ int project_test_file(bld_project* project, bld_file* file) {
     remove(path_to_string(&test_path));
 
     if (!error) {
-        printf("Test '%s' ok\n", path_to_string(&file->path));
+        printf("Test ok: '%s'\n", path_to_string(&file->path));
     } else {
-        printf("Test '%s' did not succeed\n", path_to_string(&file->path));
+        printf("Test did not succeed '%s'\n", path_to_string(&file->path));
     }
     string_free(&test_name);
     path_free(&test_path);
