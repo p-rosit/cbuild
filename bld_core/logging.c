@@ -26,6 +26,7 @@
 int log_level = BLD_DEBUG;
 
 bld_string bld_log_level_debug = STRING_COMPILE_TIME_PACK("debug");
+bld_string bld_log_level_dinfo = STRING_COMPILE_TIME_PACK("dinfo");
 bld_string bld_log_level_info = STRING_COMPILE_TIME_PACK("info");
 bld_string bld_log_level_warn = STRING_COMPILE_TIME_PACK("warn");
 bld_string bld_log_level_deprecated = STRING_COMPILE_TIME_PACK("deprecrated");
@@ -42,6 +43,8 @@ bld_string* log_level_to_string(bld_log_level level) {
     switch (level) {
         case (BLD_DEBUG):
             return &bld_log_level_debug;
+        case (BLD_DEBUG_INFO):
+            return &bld_log_level_dinfo;
         case (BLD_INFO):
             return &bld_log_level_info;
         case (BLD_WARN):
@@ -62,6 +65,7 @@ bld_log_level log_level_from_string(bld_string* str) {
     bld_log_level i;
     bld_string* level[] = {
         &bld_log_level_debug,
+        &bld_log_level_dinfo,
         &bld_log_level_info,
         &bld_log_level_warn,
         &bld_log_level_deprecated,
@@ -81,6 +85,13 @@ bld_log_level log_level_from_string(bld_string* str) {
 void log_debug(const char* fmt, ...) {
     if (log_level > BLD_DEBUG) {return;}
     BLD_LOG_COL("[DEBUG] ", BLD_BLUE);
+    BLD_LOG_STRING(fmt);
+    printf("\n");
+}
+
+void log_dinfo(const char* fmt, ...) {
+    if (log_level > BLD_DEBUG_INFO) {return;}
+    printf(     "[DINFO] ");
     BLD_LOG_STRING(fmt);
     printf("\n");
 }

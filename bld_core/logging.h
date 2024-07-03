@@ -8,6 +8,7 @@
 
 typedef enum bld_log_level {
     BLD_DEBUG,
+    BLD_DEBUG_INFO,
     BLD_INFO,
     BLD_WARN,
     BLD_DEPRECATED,
@@ -22,6 +23,7 @@ bld_string* log_level_to_string(bld_log_level);
 bld_log_level log_level_from_string(bld_string*);
 
 void log_debug(const char*, ...);
+void log_dinfo(const char*, ...);
 void log_info(const char*, ...);
 void log_warn(const char*, ...);
 void log_deprecated(const char*, ...);
