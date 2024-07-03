@@ -201,14 +201,23 @@ void command_build_apply_build_info(bld_forward_project* fproject, bld_path* pat
 
     if (info->info.compiler_set) {
         if (info->info.compiler.type == BLD_COMPILER) {
-            project_set_compiler(fproject, path_to_string(&sub_path), info->info.compiler.as.compiler);
+            bld_compiler compiler;
+
+            compiler = compiler_copy(&info->info.compiler.as.compiler);
+            project_set_compiler(fproject, path_to_string(&sub_path), compiler);
         } else {
-            project_set_compiler_flags(fproject, path_to_string(&sub_path), info->info.compiler.as.flags);
+            bld_compiler_flags flags;
+
+            flags = compiler_flags_copy(&info->info.compiler.as.flags);
+            project_set_compiler_flags(fproject, path_to_string(&sub_path), flags);
         }
     }
 
     if (info->info.linker_set) {
-        project_set_linker_flags(fproject, path_to_string(&sub_path), info->info.linker_flags);
+        bld_linker_flags flags;
+
+        flags = linker_flags_copy(&info->info.linker_flags);
+        project_set_linker_flags(fproject, path_to_string(&sub_path), flags);
     }
 
     iter = iter_array(&info->files);
