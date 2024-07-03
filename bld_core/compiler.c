@@ -192,7 +192,7 @@ void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
             hash = string_hash(string_unpack(str));
 
             amount = set_get(&flags_removed, hash);
-            if (amount != NULL) {
+            if (amount == NULL) {
                 int new = 1;
                 set_add(&flags_removed, hash, &new);
             } else {
