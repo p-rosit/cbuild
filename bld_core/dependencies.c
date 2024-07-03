@@ -80,7 +80,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_
         }
     }
 
-    log_info("Generated include graph with %lu nodes", graph->include_graph.edges.size);
+    log_dinfo("Generated include graph with %lu nodes", graph->include_graph.edges.size);
 }
 
 void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project_base* base, bld_file_id main_id, bld_set* files) {
@@ -127,7 +127,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project_b
         }
     }
 
-    log_info("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
+    log_dinfo("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
 }
 
 void parse_symbols(bld_project_base* base, bld_file_id main_id, bld_file* file) {

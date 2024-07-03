@@ -104,7 +104,7 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
         if (error) {
             log_warn("Could not parse cache, ignoring.");
         } else {
-            log_info("Loaded cache.");
+            log_dinfo("Loaded cache.");
             fproject->base.cache.set = 1;
         }
     }

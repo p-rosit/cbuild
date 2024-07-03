@@ -271,7 +271,7 @@ void incremental_index_project(bld_project* project, bld_forward_project* forwar
     if (dir == NULL) {log_fatal("Could not open project root \"%s\"", path_to_string(&path));}
     os_dir_close(dir);
 
-    log_info("Indexing project under root");
+    log_dinfo("Indexing project under root");
     incremental_index_recursive(project, forward_project, project->root_dir, &path, NULL, NULL, 1);
 
     path_free(&path);
