@@ -60,7 +60,16 @@ char* path_get_last_string(bld_path* path) {
 char* path_remove_last_string(bld_path* path) {
     char* name;
     name = path_get_last_string(path);
-    path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    if (name != path->str.chars) {
+        path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    } else {
+        string_append_char(&path->str, '\0');
+        memmove(path->str.chars + 1, path->str.chars, path->str.size - 1);
+
+        name = path->str.chars + 1;
+        path->str.size = 0;
+    }
+
     path->str.chars[path->str.size] = '\0';
     return name;
 }
