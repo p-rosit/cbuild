@@ -44,6 +44,7 @@ void test_set_add(void) {
     assert(set.size == 1);
     assert(set.value_size == sizeof(int));
     assert(set.max_offset > 0);
+    assert(set.offset != NULL);
     assert(set.hash != NULL);
     assert(set.values != NULL);
 
@@ -106,6 +107,7 @@ void test_set_copy(void) {
     assert(copy_set.size == set.size);
     assert(copy_set.value_size == set.value_size);
     assert(copy_set.max_offset > 0);
+    assert(copy_set.offset != NULL);
     assert(copy_set.hash != NULL);
     assert(copy_set.values != NULL);
 
@@ -143,6 +145,7 @@ void test_set_clear(void) {
     set_clear(&set);
     assert(set.size == 0);
     assert(set.capacity == capacity);
+    assert(set.offset != NULL);
     assert(set.values != NULL);
     assert(set.hash != NULL);
 
