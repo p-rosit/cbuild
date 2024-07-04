@@ -97,7 +97,7 @@ void path_remove_file_ending(bld_path* path) {
 
     sep_len = sizeof(BLD_PATH_SEP) - 1;
     for (i = path->str.size; 0 < i; i--) {
-        if (strncmp(path->str.chars, BLD_PATH_SEP, sep_len) == 0) {
+        if (strncmp(&path->str.chars[i - 1], BLD_PATH_SEP, sep_len) == 0) {
             return;
         }
         if (path->str.chars[i - 1] == '.') {
