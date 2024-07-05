@@ -11,3 +11,4 @@
 * Builds are frequent
 * Projects are shared between computers in version control
 * Testing is important
+* Programmers are already familliar with the command line, i.e. git
