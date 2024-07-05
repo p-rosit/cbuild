@@ -49,3 +49,41 @@ bld <target name>
 
 See `bld help build` for more information on building. This command generates an executable in the  project root named `<target name>.out`
 
+# Installation
+
+So far only Linux is supported (only Ubuntu tested) but Windows and MacOs will hopefully also be supported in the future.
+
+For "maximum portability" this build system has been written in ansi C. At the moment there are no binaries to download which means that building from source is the only option. To do this you need to clone this repo with:
+
+```bash
+git clone <path>
+```
+
+then navigate into the source folder:
+
+```bash
+cd <name>
+```
+
+Once situated in the root of the git repo the bootstrap script can be compiled which will compile the final executable:
+
+```bash
+<ansi C compiler> ./bld_core/*.c ./bld_core/linker/*.c ./bld_core/compiler/*.c ./bld_core/language/*.c ./bootstrap.c -o ./bootstrap.out
+```
+
+If this compilation step worked you can then run the executable that was generated to compile the build system:
+
+```bash
+./bootstrap.out
+```
+
+This will, if successful, generate the `bld.out` executable which is the build system. This executable can then be put on the path, to start out you can run `bld help` and `bld help init` to see how to start a project.
+
+# Supported os/compiler
+
+The following operating systems are supported:
+* Ubuntu
+
+The following compilers are supported
+* gcc
+* clang
