@@ -54,14 +54,22 @@ char* path_get_last_string(bld_path* path) {
         }
     }
 
-    log_fatal("path_get_last_string: directory contains only one name...");
-    return NULL; /* Unreachable */
+    return path->str.chars;
 }
 
 char* path_remove_last_string(bld_path* path) {
     char* name;
     name = path_get_last_string(path);
-    path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    if (name != path->str.chars) {
+        path->str.size = name - path->str.chars - sizeof(BLD_PATH_SEP) + 1;
+    } else {
+        string_append_char(&path->str, '\0');
+        memmove(path->str.chars + 1, path->str.chars, path->str.size - 1);
+
+        name = path->str.chars + 1;
+        path->str.size = 0;
+    }
+
     path->str.chars[path->str.size] = '\0';
     return name;
 }
@@ -89,7 +97,7 @@ void path_remove_file_ending(bld_path* path) {
 
     sep_len = sizeof(BLD_PATH_SEP) - 1;
     for (i = path->str.size; 0 < i; i--) {
-        if (strncmp(path->str.chars, BLD_PATH_SEP, sep_len) == 0) {
+        if (strncmp(&path->str.chars[i - 1], BLD_PATH_SEP, sep_len) == 0) {
             return;
         }
         if (path->str.chars[i - 1] == '.') {

@@ -84,9 +84,12 @@ void set_free(bld_set* set) {
 
 void set_clear(bld_set* set) {
     size_t i;
+
     for (i = 0; i < set->capacity + set->max_offset; i++) {
         set->offset[i] = set->max_offset;
     }
+
+    set->size = 0;
 }
 
 void set_swap_value(bld_set* set, size_t target, bld_offset* offset, bld_hash* hash, void* value) {

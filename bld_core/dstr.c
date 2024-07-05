@@ -22,8 +22,8 @@ bld_string string_new(void) {
 bld_string string_pack(char* char_ptr) {
     bld_string str;
 
-    str.capacity = strlen(char_ptr);
-    str.size = str.capacity;
+    str.size = strlen(char_ptr);
+    str.capacity = str.size + 1;
     str.chars = char_ptr;
     return str;
 }
