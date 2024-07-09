@@ -3,9 +3,11 @@
 #include "path.h"
 #include "set.h"
 #include "file.h"
+#include "project_base.h"
 #include "compiler.h"
 
 typedef struct bld_cache_handle {
+    bld_project_base* base;
     bld_path root;
     bld_set files;
     bld_set loaded_files;

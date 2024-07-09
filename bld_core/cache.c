@@ -26,10 +26,11 @@ typedef struct bld_cache_file_info {
 void cache_handle_purge(bld_cache_handle*);
 int cache_handle_parse(bld_cache_handle*);
 
-bld_cache_handle cache_handle_new(bld_path* root) {
+bld_cache_handle cache_handle_new(bld_project_base* base, bld_path* root) {
     int error;
     bld_cache_handle cache;
 
+    cache.base = base;
     cache.root = *root;
     cache.files = set_new(sizeof(bld_cache_entry));
     cache.loaded_files = set_new(sizeof(bld_cache_file));
