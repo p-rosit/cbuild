@@ -12,7 +12,7 @@
 
 #define BLD_CACHE_NAME "cache.json"
 
-typedef struct bld_forward_project {
+struct bld_forward_project {
     int resolved;
     bld_project_base base;
     bld_set extra_paths;
@@ -23,15 +23,15 @@ typedef struct bld_forward_project {
     bld_array linker_flags_file_names;
     bld_array file_compilers;
     bld_array file_linker_flags;
-} bld_forward_project;
+};
 
-typedef struct bld_project {
+struct bld_project {
     bld_project_base base;
     uintmax_t main_file;
     uintmax_t root_dir;
     bld_set files;
     bld_dependency_graph graph;
-} bld_project;
+};
 
 bld_path    project_path_extract(int, char**);
 bld_forward_project project_new(bld_path, bld_compiler, bld_linker);

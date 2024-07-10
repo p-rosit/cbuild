@@ -6,7 +6,10 @@
 #include "linker.h"
 
 typedef struct bld_project_cache bld_project_cache;
+typedef struct bld_cache_handle bld_cache_handle;
 typedef struct bld_project_base bld_project_base;
+typedef struct bld_forward_project bld_forward_project;
+typedef struct bld_project bld_project;
 
 struct bld_project_cache {
     int loaded;
@@ -19,13 +22,13 @@ struct bld_project_cache {
     bld_set files;
 };
 
-typedef struct bld_cache_handle {
+struct bld_cache_handle {
     int loaded;
     bld_project_base* base;
     bld_path root;
     bld_set files;
     bld_set loaded_files;
-} bld_cache_handle;
+};
 
 struct bld_project_base {
     int rebuilding;
