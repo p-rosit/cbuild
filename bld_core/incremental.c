@@ -575,7 +575,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
     int temp;
     int any_compiled;
 
-    result = incremental_compile_project(project, &any_compiled);
+    result = incremental_project_dependencies(project, &any_compiled);
     if (result) {
         log_warn("Could not compile all files, no executable generated.");
         return result;
@@ -680,7 +680,7 @@ int incremental_compile_changed_files(bld_project* project, bld_set* changed_fil
     return result;
 }
 
-int incremental_compile_project(bld_project* project, int* any_compiled) {
+int incremental_project_dependencies(bld_project* project, int* any_compiled) {
     int temp;
     int result;
     bld_set changed_files;
