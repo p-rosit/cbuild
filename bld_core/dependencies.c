@@ -4,6 +4,7 @@
 #include "logging.h"
 #include "graph.h"
 #include "dependencies.h"
+#include "project.h"
 #include "language/language.h"
 
 void parse_included_files(bld_project_base*, bld_file_id, bld_file*, bld_set*);
@@ -44,12 +45,12 @@ int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** 
     return has_next;
 }
 
-void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_base* base, bld_file_id main_id, bld_set* files) {
+void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project* project) {
     bld_iter iter;
     bld_file *file;
-    log_debug("Extracting includes, files in cache: %lu/%lu", graph->include_graph.edges.size, files->size);
+    log_debug("Extracting includes, files in cache: %lu/%lu", graph->include_graph.edges.size, project->files.size);
 
-    iter = iter_set(files);
+    iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
@@ -58,15 +59,15 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_
         }
         log_debug("Extracting includes of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->include_graph, file->identifier.id);
-        parse_included_files(base, main_id, file, files);
+        parse_included_files(&project->base, project->main_file, file, &project->files);
     }
 
-    iter = iter_set(files);
+    iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
         bld_file *to_file;
 
-        iter = iter_set(files);
+        iter = iter_set(&project->files);
         while (iter_next(&iter, (void**) &to_file)) {
             bld_set* includes;
             if (to_file->type == BLD_FILE_DIRECTORY) {continue;}
@@ -83,12 +84,12 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project_
     log_dinfo("Generated include graph with %lu nodes", graph->include_graph.edges.size);
 }
 
-void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project_base* base, bld_file_id main_id, bld_set* files) {
+void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project* project) {
     bld_iter iter;
     bld_file* file;
-    log_debug("Extracting symbols, files in cache: %lu/%lu", graph->symbol_graph.edges.size, files->size);
+    log_debug("Extracting symbols, files in cache: %lu/%lu", graph->symbol_graph.edges.size, project->files.size);
 
-    iter = iter_set(files);
+    iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
         if (file->type == BLD_FILE_INTERFACE) {continue;}
@@ -101,10 +102,10 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project_b
         log_debug("Extracting symbols of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->symbol_graph, file->identifier.id);
 
-        parse_symbols(base, main_id, file);
+        parse_symbols(&project->base, project->main_file, file);
     }
 
-    iter = iter_set(files);
+    iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         bld_iter iter;
         bld_file* to_file;
@@ -113,7 +114,7 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project_b
         undefined = file_undefined_get(file);
         if (undefined == NULL) {continue;}
 
-        iter = iter_set(files);
+        iter = iter_set(&project->files);
         while (iter_next(&iter, (void**) &to_file)) {
             bld_set* defined;
 

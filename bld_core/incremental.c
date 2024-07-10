@@ -697,14 +697,14 @@ int incremental_project_dependencies(bld_project* project, int* any_compiled) {
         }
     }
 
-    dependency_graph_extract_includes(&project->graph, &project->base, project->main_file, &project->files);
+    dependency_graph_extract_includes(&project->graph, project);
     incremental_mark_changed_files(project, &changed_files);
 
     *any_compiled = 0;
     result = incremental_compile_changed_files(project, &changed_files, any_compiled);
     set_free(&changed_files);
 
-    dependency_graph_extract_symbols(&project->graph, &project->base, project->main_file, &project->files);
+    dependency_graph_extract_symbols(&project->graph, project);
 
     if (result) {
         log_warn("Could not compile all files, no executable generated.");
