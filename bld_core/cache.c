@@ -19,6 +19,8 @@ typedef struct bld_cache_file {
     bld_set defined_symbols;
 } bld_cache_file;
 
+void cache_entry_free(bld_cache_entry*);
+
 void cache_handle_purge(bld_cache_handle*);
 int cache_handle_parse(bld_cache_handle*);
 
@@ -64,6 +66,13 @@ void cache_handle_free(bld_cache_handle* cache) {
 }
 
 void cache_handle_purge(bld_cache_handle* cache) {
+    (void)(cache);
+    log_error(LOG_FATAL_PREFIX "don't forget to purge cache");
+}
+
+void cache_entry_free(bld_cache_entry* entry) {
+    string_free(&entry->dir_name);
+    path_free(&entry->path);
 }
 
 int cache_handle_parse(bld_cache_handle* cache) {
