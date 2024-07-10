@@ -216,6 +216,7 @@ bld_project_base project_base_new(bld_path* path, bld_linker* linker) {
     base.compiler_handles = set_new(sizeof(bld_compiler_type));
     base.linker = *linker;
     base.cache = project_cache_new();
+    base.cache_.loaded = 0;
 
     return base;
 }
@@ -228,6 +229,7 @@ void project_base_free(bld_project_base* base) {
     set_free(&base->compiler_handles);
     linker_free(&base->linker);
     project_cache_free(&base->cache);
+    cache_handle_free(&base->cache_);
 }
 
 bld_project_cache project_cache_new(void) {
