@@ -22,6 +22,7 @@ typedef struct bld_cache_file {
 } bld_cache_file;
 
 void cache_entry_free(bld_cache_entry*);
+void cache_file_free(bld_cache_file*);
 
 void cache_handle_purge(bld_cache_handle*);
 int cache_handle_parse(bld_cache_handle*);
