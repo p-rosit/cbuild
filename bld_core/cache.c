@@ -3,25 +3,21 @@
 #include "cache.h"
 
 typedef struct bld_cache_entry {
-    bld_string name;
     int referenced;
+    bld_string dir_name;
     int builds_since_access;
+    bld_path path;
+    bld_time mtime;
 } bld_cache_entry;
 
 typedef struct bld_cache_file {
-    bld_path path;
-    bld_time mtime;
-    bld_array files;
-} bld_cache_file;
-
-typedef struct bld_cache_file_info {
     bld_string name;
     bld_linker linker;
     bld_compiler_or_flags compiler;
     bld_set includes;
     bld_set undefined_symbols;
     bld_set defined_symbols;
-} bld_cache_file_info;
+} bld_cache_file;
 
 void cache_handle_purge(bld_cache_handle*);
 int cache_handle_parse(bld_cache_handle*);
