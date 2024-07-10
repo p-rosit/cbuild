@@ -16,7 +16,9 @@ typedef struct bld_cache_file {
     bld_string name;
     bld_linker linker;
     bld_compiler_or_flags compiler;
+    int includes_parsed;
     bld_set includes;
+    int symbols_parsed;
     bld_set undefined_symbols;
     bld_set defined_symbols;
 } bld_cache_file;
