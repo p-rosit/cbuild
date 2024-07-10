@@ -44,6 +44,25 @@ bld_cache_handle cache_handle_new(bld_project_base* base, bld_path* root) {
     return cache;
 }
 
+void cache_handle_free(bld_cache_handle* cache) {
+    bld_iter iter;
+    bld_cache_entry* entry;
+
+    if (!cache->loaded) {
+        return;
+    }
+
+    path_free(&cache->root);
+
+    iter = iter_set(&cache->files);
+    while (iter_next(&iter, (void**) &entry)) {
+        cache_entry_free(entry);
+    }
+    set_free(&cache->files);
+
+    set_free(&cache->loaded_files);
+}
+
 void cache_handle_purge(bld_cache_handle* cache) {
 }
 
