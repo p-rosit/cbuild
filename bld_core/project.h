@@ -8,6 +8,7 @@
 #include "file.h"
 #include "dependencies.h"
 #include "project_base.h"
+#include "cache.h"
 
 #define BLD_CACHE_NAME "cache.json"
 

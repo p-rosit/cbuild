@@ -91,6 +91,15 @@ void project_load_cache(bld_forward_project* fproject, char* cache_path) {
     fproject->base.cache.root = path_from_string(cache_path);
     fproject->base.cache.files = set_new(sizeof(bld_file));
 
+    {
+        bld_path temp;
+
+        temp = path_from_string(cache_path);
+        path_append_string(&temp, "cache");
+        log_error(LOG_FATAL_PREFIX "LOADING CACHE \"%s\"", path_to_string(&temp));
+        fproject->base.cache_ = cache_handle_new(&fproject->base, &temp);
+    }
+
     if (file == NULL) {
         log_debug("No cache file found.");
     } else {
