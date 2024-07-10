@@ -6,13 +6,6 @@
 #include "project_base.h"
 #include "compiler.h"
 
-typedef struct bld_cache_handle {
-    bld_project_base* base;
-    bld_path root;
-    bld_set files;
-    bld_set loaded_files;
-} bld_cache_handle;
-
 bld_cache_handle cache_handle_new(bld_project_base*, bld_path*);
 void cache_handle_free(bld_cache_handle*);
 int cache_object_get(bld_cache_handle*, bld_file*, bld_compiler*, bld_path*);

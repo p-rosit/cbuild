@@ -19,6 +19,14 @@ struct bld_project_cache {
     bld_set files;
 };
 
+typedef struct bld_cache_handle {
+    int loaded;
+    bld_project_base* base;
+    bld_path root;
+    bld_set files;
+    bld_set loaded_files;
+} bld_cache_handle;
+
 struct bld_project_base {
     int rebuilding;
     bld_project_base* build_of;
@@ -28,6 +36,7 @@ struct bld_project_base {
     bld_set compiler_handles;
     bld_linker linker;
     bld_project_cache cache;
+    bld_cache_handle cache_;
 };
 
 #endif
