@@ -36,6 +36,9 @@ int parse_cache_handle_file_builds(FILE*, bld_cache_entry*);
 int parse_cache_handle_file_path(FILE*, bld_cache_entry*);
 int parse_cache_handle_file_mtime(FILE*, bld_cache_entry*);
 
+void serialize_cache_handle(bld_cache_handle*);
+void serialize_cache_handle_loaded_files(bld_cache_handle*);
+
 bld_cache_handle cache_handle_new(bld_project_base* base, bld_path* root) {
     int error;
     bld_cache_handle cache;
