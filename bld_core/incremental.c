@@ -3,6 +3,7 @@
 #include "os.h"
 #include "logging.h"
 #include "incremental.h"
+#include "compiler/compiler.h"
 #include "linker/linker.h"
 
 void    incremental_make_root(bld_project*, bld_forward_project*);
@@ -401,16 +402,12 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
 int incremental_compile_file(bld_project* project, bld_file* file) {
     int result;
     bld_string flags, object_name;
-    bld_compiler* compiler;
+    bld_compiler compiler;
     bld_path file_path;
     bld_path object_path;
-    bld_array compiler_flags;
     log_info("Compiling: \"%s\"", string_unpack(&file->name));
 
-    file_assemble_compiler(file, &project->files, &compiler, &compiler_flags);
-
-    flags = string_new();
-    compiler_flags_expand(&flags, &compiler_flags);
+    compiler = file_assemble_compiler(file, &project->files);
 
     if (!project->base.rebuilding || file->identifier.id != project->main_file) {
         file_path = path_copy(&project->base.root);
@@ -428,13 +425,13 @@ int incremental_compile_file(bld_project* project, bld_file* file) {
     string_append_string(&object_name, ".o");
     path_append_string(&object_path, string_unpack(&object_name));
 
-    result = compile_to_object(compiler->type, &compiler->executable, &flags, &file_path, &object_path);
+    result = compile_to_object(&compiler, &file_path, &object_path);
 
+    compiler_assembled_free(&compiler);
     path_free(&object_path);
     path_free(&file_path);
     string_free(&object_name);
     string_free(&flags);
-    array_free(&compiler_flags);
     return result;
 }
 
