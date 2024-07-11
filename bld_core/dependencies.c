@@ -99,13 +99,15 @@ int dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project* 
     return 0;
 }
 
-void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project* project) {
+int dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project* project) {
     bld_iter iter;
     bld_file* file;
-    log_debug("Extracting symbols, files in cache: %lu/%lu", graph->symbol_graph.edges.size, project->files.size);
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        int error;
+        bld_compiler compiler;
+
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
         if (file->type == BLD_FILE_INTERFACE) {continue;}
         if (!file->compile_successful) {continue;}
@@ -117,7 +119,15 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project* 
         log_debug("Extracting symbols of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->symbol_graph, file->identifier.id);
 
-        parse_symbols(&project->base, project->main_file, file);
+        compiler = file_assemble_compiler(file, &project->files);
+
+        error = cache_symbols_get(&project->base.cache_, &compiler, file, project->main_file);
+        if (error) {
+            log_error(LOG_FATAL_PREFIX "could not extract symbols of \"%s\"", path_to_string(&file->path));
+            return error;
+        }
+
+        compiler_assembled_free(&compiler);
     }
 
     iter = iter_set(&project->files);
@@ -144,6 +154,8 @@ void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project* 
     }
 
     log_dinfo("Generated symbol graph with %lu nodes", graph->symbol_graph.edges.size);
+
+    return 0;
 }
 
 void parse_symbols(bld_project_base* base, bld_file_id main_id, bld_file* file) {
