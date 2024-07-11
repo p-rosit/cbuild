@@ -400,12 +400,15 @@ void file_dir_add_file(bld_file* dir, bld_file* file) {
     array_push(&dir->info.dir.files, &file->identifier.id);
 }
 
-void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compiler, bld_array* flags) {
+bld_compiler file_assemble_compiler(bld_file* file, bld_set* files) {
     bld_file_id parent_id;
+    bld_compiler compiler;
+    bld_array flags;
+    int compiler_found;
 
     parent_id = file->identifier.id;
-    *compiler = NULL;
-    *flags = array_new(sizeof(bld_compiler_flags));
+    compiler_found = 0;
+    flags = array_new(sizeof(bld_compiler_flags));
 
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent;
@@ -416,21 +419,28 @@ void file_assemble_compiler(bld_file* file, bld_set* files, bld_compiler** compi
         if (!parent->build_info.compiler_set) {continue;}
 
         if (parent->build_info.compiler.type == BLD_COMPILER) {
-            *compiler = &parent->build_info.compiler.as.compiler;
-            array_push(flags, &parent->build_info.compiler.as.compiler.flags);
+            bld_compiler* temp;
+
+            temp = &parent->build_info.compiler.as.compiler;
+            compiler.type = temp->type;
+            compiler.executable = temp->executable;
+            array_push(&flags, &temp->flags);
             break;
         } else if (parent->build_info.compiler.type == BLD_COMPILER_FLAGS) {
-            array_push(flags, &parent->build_info.compiler.as.flags);
+            array_push(&flags, &parent->build_info.compiler.as.flags);
         } else {
             log_fatal(LOG_FATAL_PREFIX "internal error");
         }
     }
 
-    array_reverse(flags);
-
-    if (*compiler == NULL) {
+    if (!compiler_found) {
         log_fatal(LOG_FATAL_PREFIX "no compiler was encountered while assembling compiler associated with file, only compiler flags. Root has no associated compiler");
     }
+
+    array_reverse(&flags);
+    compiler.flags = compiler_flags_expand(&flags);
+
+    return compiler;
 }
 
 void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
