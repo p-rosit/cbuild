@@ -3,6 +3,7 @@
 #include "json.h"
 #include "os.h"
 #include "cache.h"
+#include "language/language.h"
 
 typedef struct bld_cache_entry {
     int referenced;
@@ -88,6 +89,87 @@ void cache_handle_purge(bld_cache_handle* cache) {
 void cache_entry_free(bld_cache_entry* entry) {
     string_free(&entry->dir_name);
     path_free(&entry->path);
+}
+
+int cache_includes_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file* file, bld_set* files, uintmax_t main_id) {
+    int error;
+    int cached;
+
+    error = 0;
+    cached = 0;
+    if (set_has(&cache->files, file->identifier.id)) {
+        bld_set* includes;
+        includes = file_includes_get(file);
+        if (includes == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "file does not have includes");
+        }
+
+        if (set_has(&cache->loaded_files, file->identifier.id)) {
+            error = 0;
+            // TODO: copy cached includes
+        } else {
+            // TODO: load cache entry
+        }
+    }
+
+    if (!cached) {
+        bld_path path;
+
+        if (!cache->base->rebuilding || file->identifier.id != main_id) {
+            path = path_copy(&cache->base->root);
+        } else {
+            path = path_copy(&cache->base->build_of->root);
+        }
+
+        (void)(compiler);  /* TODO: use compiler to determine includes? */
+        error = language_get_includes(file->language, &path, file, files);
+
+        path_free(&path);
+    }
+
+    return error;
+}
+
+int cache_symbols_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file* file, uintmax_t main_id) {
+    int error;
+    int cached;
+
+    error = 0;
+    cached = 0;
+    if (set_has(&cache->files, file->identifier.id)) {
+        bld_set* defined_symbols;
+        bld_set* undefined_symbols;
+
+        defined_symbols = file_defined_get(file);
+        undefined_symbols = file_undefined_get(file);
+        if (defined_symbols == NULL && undefined_symbols == NULL) {
+            log_fatal(LOG_FATAL_PREFIX "file does not have symbols");
+        }
+
+        if (set_has(&cache->loaded_files, file->identifier.id)) {
+            error = 0;
+            // TODO: copy cached symbols
+        } else {
+            // TODO: load cache entry
+        }
+    }
+
+    if (!cached) {
+        bld_path path;
+
+        if (!cache->base->rebuilding || file->identifier.id != main_id) {
+            path = path_copy(&cache->base->root);
+        } else {
+            path = path_copy(&cache->base->build_of->root);
+        }
+
+        (void)(compiler);  /* TODO: use compiler to determine symb? */
+        error = language_get_symbols(file->language, cache->base, &path, file);
+
+        path_free(&path);
+    }
+
+    return error;
 }
 
 int cache_handle_parse(bld_cache_handle* cache) {
