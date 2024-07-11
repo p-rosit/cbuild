@@ -5,7 +5,13 @@
 #include "dstr.h"
 #include "array.h"
 #include "set.h"
-#include "compiler/compiler.h"
+
+typedef enum bld_compiler_type {
+    BLD_COMPILER_GCC,
+    BLD_COMPILER_CLANG,
+    BLD_COMPILER_ZIG,
+    BLD_COMPILER_AMOUNT
+} bld_compiler_type;
 
 typedef struct bld_compiler_flags {
     bld_array flags;

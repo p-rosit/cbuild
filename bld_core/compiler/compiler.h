@@ -4,14 +4,8 @@
 #include "../path.h"
 #include "../array.h"
 #include "../set.h"
+#include "../compiler.h"
 #include "../language/language_types.h"
-
-typedef enum bld_compiler_type {
-    BLD_COMPILER_GCC,
-    BLD_COMPILER_CLANG,
-    BLD_COMPILER_ZIG,
-    BLD_COMPILER_AMOUNT
-} bld_compiler_type;
 
 bld_array compiler_get_available(void);
 bld_compiler_type compiler_get_mapping(bld_string*);
