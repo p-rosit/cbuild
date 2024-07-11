@@ -23,6 +23,14 @@ void compiler_free(bld_compiler* compiler) {
     compiler_flags_free(&compiler->flags);
 }
 
+void compiler_assembled_free(bld_compiler* compiler) {
+    if (compiler == NULL) {return;}
+
+    array_free(&compiler->flags.flags);
+    set_free(&compiler->flags.flag_hash);
+    set_free(&compiler->flags.removed);
+}
+
 bld_compiler compiler_copy(bld_compiler* compiler) {
     bld_compiler cpy;
 
