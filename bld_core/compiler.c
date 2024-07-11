@@ -163,7 +163,8 @@ void compiler_flags_remove_flag(bld_compiler_flags* flags, char* flag) {
     }
 }
 
-void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
+bld_compiler_flags compiler_flags_expand(bld_array* flags) {
+    bld_compiler_flags result;
     bld_array flags_added;
     bld_set flags_removed;
     bld_iter iter;
@@ -212,15 +213,18 @@ void compiler_flags_expand(bld_string* cmd, bld_array* flags) {
     }
     array_reverse(flags);
 
+    result = compiler_flags_new();
     array_reverse(&flags_added);
     iter = iter_array(&flags_added);
     while (iter_next(&iter, (void**) &str)) {
-        string_append_space(cmd);
-        string_append_string(cmd, string_unpack(str));
+        array_push(&result.flags, str);
+        set_add(&result.flag_hash, string_hash(string_unpack(str)), NULL);
     }
 
     array_free(&flags_added);
     set_free(&flags_removed);
+
+    return result;
 }
 
 void serialize_compiler(FILE* cache, bld_compiler* compiler, int depth) {

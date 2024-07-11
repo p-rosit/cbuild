@@ -54,7 +54,7 @@ uintmax_t           compiler_flags_hash(bld_compiler_flags*);
 void                compiler_flags_add_flag(bld_compiler_flags*, char*);
 void                compiler_flags_remove_flag(bld_compiler_flags*, char*);
 
-void                compiler_flags_expand(bld_string*, bld_array*);
+bld_compiler_flags  compiler_flags_expand(bld_array*);
 
 void                serialize_compiler(FILE*, bld_compiler*, int);
 void                serialize_compiler_flags(FILE*, bld_compiler_flags*, int);
