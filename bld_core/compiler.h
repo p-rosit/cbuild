@@ -43,6 +43,7 @@ typedef struct bld_compiler_or_flags {
 bld_compiler        compiler_new(bld_compiler_type, char*);
 bld_compiler        compiler_copy(bld_compiler*);
 void                compiler_free(bld_compiler*);
+void                compiler_assembled_free(bld_compiler*);
 uintmax_t           compiler_hash(bld_compiler*);
 void                compiler_add_flag(bld_compiler*, char*);
 void                compiler_remove_flag(bld_compiler*, char*);
