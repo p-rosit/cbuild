@@ -88,9 +88,9 @@ void        file_includes_copy(bld_file*, bld_file*);
 void        file_symbols_copy(bld_file*, bld_file*);
 bld_string  file_object_name(bld_file*);
 
-void        file_dir_add_file(bld_file*, bld_file*);
+void         file_dir_add_file(bld_file*, bld_file*);
 
-void        file_determine_all_languages_under(bld_file*, bld_set*);
+void         file_determine_all_languages_under(bld_file*, bld_set*);
 bld_compiler file_assemble_compiler(bld_file*, bld_set*);
 bld_linker_flags file_assemble_linker_flags(bld_file*, bld_set*);
 
