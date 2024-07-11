@@ -31,10 +31,11 @@ void                linker_add_flag(bld_linker*, char*);
 bld_linker_flags    linker_flags_new(void);
 bld_linker_flags    linker_flags_copy(bld_linker_flags*);
 void                linker_flags_free(bld_linker_flags*);
+void                linker_flags_assembled_free(bld_linker_flags*);
 uintmax_t           linker_flags_hash(bld_linker_flags*);
 void                linker_flags_add_flag(bld_linker_flags*, char*);
 
-void                linker_flags_expand(bld_string*, bld_array*);
+bld_linker_flags    linker_flags_expand(bld_array*);
 void                linker_flags_append(bld_string*, bld_linker_flags*);
 
 void                serialize_linker(FILE*, bld_linker*, int);

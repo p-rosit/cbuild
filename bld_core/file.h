@@ -92,6 +92,6 @@ void        file_dir_add_file(bld_file*, bld_file*);
 
 void        file_determine_all_languages_under(bld_file*, bld_set*);
 bld_compiler file_assemble_compiler(bld_file*, bld_set*);
-void        file_assemble_linker_flags(bld_file*, bld_set*, bld_array*);
+bld_linker_flags file_assemble_linker_flags(bld_file*, bld_set*);
 
 #endif
