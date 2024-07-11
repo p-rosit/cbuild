@@ -2,4 +2,4 @@
 
 extern bld_string bld_linker_string_gcc;
 
-int linker_executable_make_gcc(bld_string*, bld_path*, bld_array*, bld_array*, bld_path*);
+int linker_executable_make_gcc(bld_linker*, bld_path*, bld_array*, bld_array*, bld_path*);

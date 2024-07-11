@@ -5,17 +5,17 @@
 
 bld_string bld_linker_string_zig = STRING_COMPILE_TIME_PACK("zig");
 
-int linker_executable_make_zig(bld_string* linker, bld_path* root, bld_array* files, bld_array* flags, bld_path* name) {
+int linker_executable_make_zig(bld_linker* linker, bld_path* root, bld_array* files, bld_array* flags, bld_path* name) {
     int error;
     bld_string cmd;
     bld_iter iter_files;
     bld_iter iter_flags;
     bld_file* file;
-    bld_string* file_flags;
+    bld_linker_flags* file_flags;
     bld_path executable_dir;
     bld_string executable_name;
 
-    cmd = string_copy(linker);
+    cmd = string_copy(&linker->executable);
     string_append_string(&cmd, " build-exe");
 
     if (files->size != flags->size) {
@@ -40,7 +40,19 @@ int linker_executable_make_zig(bld_string* linker, bld_path* root, bld_array* fi
         path_free(&object_path);
 
         string_append_space(&cmd);
+        // TODO: append flags
         string_append_string(&cmd, string_unpack(file_flags));
+    }
+
+    {
+        int exists;
+
+        exists = iter_next(&iter_flags, (void**) &file_flags);
+        if (!exists) {
+            log_fatal(LOG_FATAL_PREFIX "missing final entry");
+        }
+
+        // TODO: append flags
     }
 
     {

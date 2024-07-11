@@ -5,15 +5,15 @@
 
 bld_string bld_linker_string_gcc = STRING_COMPILE_TIME_PACK("gcc");
 
-int linker_executable_make_gcc(bld_string* linker, bld_path* root, bld_array* files, bld_array* flags, bld_path* name) {
+int linker_executable_make_gcc(bld_linker* linker, bld_path* root, bld_array* files, bld_array* flags, bld_path* name) {
     int error;
     bld_string cmd;
     bld_iter iter_files;
     bld_iter iter_flags;
     bld_file* file;
-    bld_string* file_flags;
+    bld_linker_flags* file_flags;
 
-    cmd = string_copy(linker);
+    cmd = string_copy(&linker->executable);
 
     if (files->size != flags->size) {
         log_fatal(LOG_FATAL_PREFIX "equal amounts of file and flag entires required");
@@ -37,7 +37,19 @@ int linker_executable_make_gcc(bld_string* linker, bld_path* root, bld_array* fi
         path_free(&object_path);
 
         string_append_space(&cmd);
+        // TODO: append flags
         string_append_string(&cmd, string_unpack(file_flags));
+    }
+
+    {
+        int exists;
+
+        exists = iter_next(&iter_flags, (void**) &file_flags);
+        if (!exists) {
+            log_fatal(LOG_FATAL_PREFIX "missing final entry");
+        }
+
+        // TODO: append flags
     }
 
     string_append_string(&cmd, " -o ");

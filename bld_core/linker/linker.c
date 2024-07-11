@@ -58,8 +58,8 @@ bld_string* linker_get_string(bld_linker_type type) {
     return linkers[type];
 }
 
-int linker_executable_make(bld_linker_type type, bld_string* linker, bld_path* root, bld_array* files, bld_array* flags, bld_path* path) {
-    switch (type) {
+int linker_executable_make(bld_linker* linker, bld_path* root, bld_array* files, bld_array* flags, bld_path* path) {
+    switch (linker->type) {
         case (BLD_LINKER_GCC):
             return linker_executable_make_gcc(linker, root, files, flags, path);
         case (BLD_LINKER_CLANG):
