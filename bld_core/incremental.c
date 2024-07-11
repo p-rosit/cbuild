@@ -445,10 +445,12 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
     bld_file* file;
     bld_path executable;
 
-    root = path_copy(&project->base.root);
-    if (project->base.cache.loaded) {
-        path_append_path(&root, &project->base.cache.root);
+    if (!project->base.cache.loaded) {
+        log_fatal(LOG_FATAL_PREFIX "cache has not been loaded");
     }
+
+    root = path_copy(&project->base.root);
+    path_append_path(&root, &project->base.cache.root);
 
     if (project->main_file == BLD_INVALID_IDENITIFIER) {
         log_fatal(LOG_FATAL_PREFIX "no main file set");
@@ -588,30 +590,6 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
         result = temp;
     } else {
         log_info("Compiled executable: \"%s\"", name);
-    }
-
-    if (!project->base.cache.loaded) {
-        bld_iter iter;
-        bld_path obj_path;
-        bld_string str;
-        bld_file* file;
-
-        iter = iter_set(&project->files);
-        while (iter_next(&iter, (void**) &file)) {
-            bld_string object_name;
-
-            if (file->type == BLD_FILE_INTERFACE) {continue;}
-
-            obj_path = path_copy(&project->base.root);
-            object_name = file_object_name(file);
-            path_append_string(&obj_path, string_unpack(&object_name));
-            str = obj_path.str;
-            string_append_string(&str, ".o");
-
-            remove(string_unpack(&str));
-            string_free(&str);
-            string_free(&object_name);
-        }
     }
 
     if (!any_compiled && !result) {
