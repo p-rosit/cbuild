@@ -18,7 +18,7 @@ int linker_executable_make_zig(bld_linker* linker, bld_path* root, bld_array* fi
     cmd = string_copy(&linker->executable);
     string_append_string(&cmd, " build-exe");
 
-    if (files->size != flags->size) {
+    if (files->size != flags->size + 1) {
         log_fatal(LOG_FATAL_PREFIX "equal amounts of file and flag entires required");
     }
 
