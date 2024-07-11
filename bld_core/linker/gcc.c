@@ -22,8 +22,10 @@ int linker_executable_make_gcc(bld_linker* linker, bld_path* root, bld_array* fi
     iter_files = iter_array(files);
     iter_flags = iter_array(flags);
     while (iter_next(&iter_files, (void**) &file) && iter_next(&iter_flags, (void**) &file_flags)) {
+        bld_iter iter;
         bld_path object_path;
         bld_string object_name;
+        bld_string* flag;
 
         object_path = path_copy(root);
         object_name = file_object_name(file);
@@ -36,12 +38,16 @@ int linker_executable_make_gcc(bld_linker* linker, bld_path* root, bld_array* fi
         string_append_string(&cmd, path_to_string(&object_path));
         path_free(&object_path);
 
-        string_append_space(&cmd);
-        // TODO: append flags
-        string_append_string(&cmd, string_unpack(file_flags));
+        iter = iter_array(&file_flags->flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            string_append_space(&cmd);
+            string_append_string(&cmd, string_unpack(flag));
+        }
     }
 
     {
+        bld_iter iter;
+        bld_string* flag;
         int exists;
 
         exists = iter_next(&iter_flags, (void**) &file_flags);
@@ -49,7 +55,11 @@ int linker_executable_make_gcc(bld_linker* linker, bld_path* root, bld_array* fi
             log_fatal(LOG_FATAL_PREFIX "missing final entry");
         }
 
-        // TODO: append flags
+        iter = iter_array(&file_flags->flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            string_append_space(&cmd);
+            string_append_string(&cmd, string_unpack(flag));
+        }
     }
 
     string_append_string(&cmd, " -o ");
