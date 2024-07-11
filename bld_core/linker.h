@@ -4,7 +4,13 @@
 #include <stdio.h>
 #include "dstr.h"
 #include "array.h"
-#include "linker/linker.h"
+
+typedef enum bld_linker_type {
+    BLD_LINKER_GCC,
+    BLD_LINKER_CLANG,
+    BLD_LINKER_ZIG,
+    BLD_LINKER_AMOUNT
+} bld_linker_type;
 
 typedef struct bld_linker_flags {
     bld_array flags;
