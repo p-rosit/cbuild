@@ -1,18 +1,27 @@
 #include "../logging.h"
+#include "../iter.h"
 #include "gcc.h"
 
 bld_string bld_compiler_string_gcc = STRING_COMPILE_TIME_PACK("gcc");
 bld_string bld_compiler_string_gpp = STRING_COMPILE_TIME_PACK("g++");
 
-int compile_to_object_gcc(bld_string* compiler, bld_string* flags, bld_path* file_path, bld_path* object_path) {
+int compile_to_object_gcc(bld_compiler* compiler, bld_path* file_path, bld_path* object_path) {
     int code;
     bld_string cmd;
 
-    cmd = string_copy(compiler);
+    cmd = string_copy(&compiler->executable);
     string_append_space(&cmd);
 
-    string_append_string(&cmd, string_unpack(flags));
-    string_append_space(&cmd);
+    {
+        bld_iter iter;
+        bld_string* flag;
+
+        iter = iter_array(&compiler->flags.flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            string_append_string(&cmd, string_unpack(flag));
+            string_append_space(&cmd);
+        }
+    }
 
     string_append_string(&cmd, path_to_string(file_path));
     string_append_string(&cmd, " -c -o ");

@@ -105,19 +105,19 @@ int compiler_file_is_header(bld_set* handles, bld_string* name) {
     return match;
 }
 
-int compile_to_object(bld_compiler_type type, bld_string* compiler, bld_string* flags, bld_path* file_path, bld_path* object_path) {
-    switch (type) {
+int compile_to_object(bld_compiler* compiler, bld_path* file_path, bld_path* object_path) {
+    switch (compiler->type) {
         case (BLD_COMPILER_GCC):
-            return compile_to_object_gcc(compiler, flags, file_path, object_path);
+            return compile_to_object_gcc(compiler, file_path, object_path);
         case (BLD_COMPILER_CLANG):
-            return compile_to_object_clang(compiler, flags, file_path, object_path);
+            return compile_to_object_clang(compiler, file_path, object_path);
         case (BLD_COMPILER_ZIG):
-            return compile_to_object_zig(compiler, flags, file_path, object_path);
+            return compile_to_object_zig(compiler, file_path, object_path);
         case (BLD_COMPILER_AMOUNT):
             break;
     }
 
-    log_fatal("compile_to_object: unknown type %d", type);
+    log_fatal("compile_to_object: unknown type %d", compiler->type);
     return 0;
 }
 
