@@ -277,7 +277,6 @@ bld_hash file_hash(bld_file* file, bld_set* files) {
     bld_file_id parent_id;
 
     seed = 3401;
-    seed = (seed << 3) + file->identifier.id;
     seed = (seed << 4) + seed + file->identifier.time;
 
     parent_id = file->identifier.id;
