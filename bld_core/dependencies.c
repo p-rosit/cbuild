@@ -45,14 +45,14 @@ int dependency_graph_next_file(bld_iter* iter, const bld_set* files, bld_file** 
     return has_next;
 }
 
-void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project* project) {
+int dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project* project) {
     bld_iter iter;
     bld_file *file;
-    log_debug("Extracting includes, files in cache: %lu/%lu", graph->include_graph.edges.size, project->files.size);
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
         int error;
+        bld_compiler compiler;
 
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
@@ -63,13 +63,15 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project*
         log_debug("Extracting includes of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->include_graph, file->identifier.id);
 
-        /*
-            parse_included_files(&project->base, project->main_file, file, &project->files);
-        */
-        error = cache_includes_get(&project->base.cache_, file);
+        compiler = file_assemble_compiler(file, &project->files);
+
+        error = cache_includes_get(&project->base.cache_, &compiler, file, &project->files, project->main_file);
         if (error) {
-            log_fatal(LOG_FATAL_PREFIX "could not extract includes of \"%s\"", path_to_string(&file->path));
+            log_error(LOG_FATAL_PREFIX "could not extract includes of \"%s\"", path_to_string(&file->path));
+            return error;
         }
+
+        compiler_assembled_free(&compiler);
     }
 
     iter = iter_set(&project->files);
@@ -93,6 +95,8 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project*
     }
 
     log_dinfo("Generated include graph with %lu nodes", graph->include_graph.edges.size);
+
+    return 0;
 }
 
 void dependency_graph_extract_symbols(bld_dependency_graph* graph, bld_project* project) {
