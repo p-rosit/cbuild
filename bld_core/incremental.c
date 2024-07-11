@@ -461,43 +461,39 @@ int incremental_link_executable(bld_project* project, char* executable_name) {
         return -1; /* unreachable */
     }
 
-    flags = array_new(sizeof(bld_string));
+    flags = array_new(sizeof(bld_linker_flags));
     files = array_new(sizeof(bld_file));
 
     iter = dependency_graph_symbols_from(&project->graph, main_file);
     while (dependency_graph_next_file(&iter, &project->files, &file)) {
-        bld_array file_flags;
-        bld_string f;
+        bld_linker_flags temp;
 
         array_push(&files, file);
 
-        file_assemble_linker_flags(file, &project->files, &file_flags);
-        f = string_new();
-        linker_flags_expand(&f, &file_flags);
-
-        array_push(&flags, &f);
-        array_free(&file_flags);
+        temp = file_assemble_linker_flags(file, &project->files);
+        array_push(&flags, &temp);
     }
 
-    {
-        bld_string* last_flags;
-
-        last_flags = array_get(&flags, flags.size - 1);
-        linker_flags_append(last_flags, &project->base.linker.flags);
-    }
+    array_push(&flags, &project->base.linker.flags);
 
     executable = path_from_string(executable_name);
-    result = linker_executable_make(project->base.linker.type, &project->base.linker.executable, &root, &files, &flags, &executable);
+    result = linker_executable_make(&project->base.linker, &root, &files, &flags, &executable);
     if (result < 0) {
         log_fatal(LOG_FATAL_PREFIX "Expected return value of compiler to be non-negative.");
     }
 
     {
-        bld_string* file_flags;
+        int index;
+        bld_linker_flags* file_flags;
 
+        index = 0;
         iter = iter_array(&flags);
         while (iter_next(&iter, (void**) &file_flags)) {
-            string_free(file_flags);
+            if (index == flags.size - 1) {
+                continue;
+            }
+
+            linker_flags_assembled_free(file_flags);
         }
     }
 
