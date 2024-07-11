@@ -52,14 +52,24 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project*
 
     iter = iter_set(&project->files);
     while (iter_next(&iter, (void**) &file)) {
+        int error;
+
         if (file->type == BLD_FILE_DIRECTORY) {continue;}
 
         if (graph_has_node(&graph->include_graph, file->identifier.id)) {
             continue;
         }
+
         log_debug("Extracting includes of \"%s\"", string_unpack(&file->name));
         graph_add_node(&graph->include_graph, file->identifier.id);
-        parse_included_files(&project->base, project->main_file, file, &project->files);
+
+        /*
+            parse_included_files(&project->base, project->main_file, file, &project->files);
+        */
+        error = cache_includes_get(&project->base.cache_, file);
+        if (error) {
+            log_fatal(LOG_FATAL_PREFIX "could not extract includes of \"%s\"", path_to_string(&file->path));
+        }
     }
 
     iter = iter_set(&project->files);
@@ -77,6 +87,7 @@ void dependency_graph_extract_includes(bld_dependency_graph* graph, bld_project*
             if (!set_has(includes, file->identifier.id)) {
                 continue;
             }
+
             graph_add_edge(&graph->include_graph, file->identifier.id, to_file->identifier.id);
         }
     }
