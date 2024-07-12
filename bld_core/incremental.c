@@ -329,7 +329,6 @@ void incremental_apply_main_file(bld_project* project, bld_forward_project* fpro
 }
 
 void incremental_apply_compilers(bld_project* project, bld_forward_project* fproject) {
-    size_t index;
     bld_iter name_iter, compiler_iter;
     bld_string* file_name;
     bld_compiler_or_flags* compiler;
@@ -338,7 +337,6 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
         log_fatal("incremental_apply_compilers: internal error, there is not an equal amount of files and compilers");
     }
 
-    index = 0;
     name_iter = iter_array(&fproject->compiler_file_names);
     compiler_iter = iter_array(&fproject->file_compilers);
     while (iter_next(&name_iter, (void**) &file_name) && iter_next(&compiler_iter, (void**) &compiler)) {
@@ -362,13 +360,10 @@ void incremental_apply_compilers(bld_project* project, bld_forward_project* fpro
         }
 
         path_free(&path);
-
-        index++;
     }
 }
 
 void incremental_apply_linker_flags(bld_project* project, bld_forward_project* fproject) {
-    size_t index;
     bld_iter name_iter, linker_flags_iter;
     bld_string* file_name;
     bld_linker_flags* flags;
@@ -377,7 +372,6 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
         log_fatal("incremental_apply_linker_flags: internal error, there is not an equal amount of files and linker flags");
     }
 
-    index = 0;
     name_iter = iter_array(&fproject->linker_flags_file_names);
     linker_flags_iter = iter_array(&fproject->file_linker_flags);
     while (iter_next(&name_iter, (void**) &file_name) && iter_next(&linker_flags_iter, (void**) &flags)) {
@@ -401,8 +395,6 @@ void incremental_apply_linker_flags(bld_project* project, bld_forward_project* f
         }
 
         path_free(&path);
-
-        index++;
     }
 }
 
