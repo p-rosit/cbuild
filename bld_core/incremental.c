@@ -175,6 +175,18 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
     bld_os_dir* dir;
     bld_os_file* file_ptr;
 
+    if (adding_files) {
+        if (set_has(&forward_project->ignore_paths, file_get_id(path))) {
+            log_debug("Ignoring files under: \"%s\"", path_to_string(path));
+            adding_files = 0;
+        }
+    } else {
+        if (set_has(&forward_project->extra_paths, file_get_id(path))) {
+            log_debug("Adding files under: \"%s\"", path_to_string(path));
+            adding_files = 1;
+        }
+    }
+
     dir = os_dir_open(path_to_string(path));
     if (dir == NULL && adding_files) {
         incremental_index_possible_file(project, parent_id, path, relative_path, name);
@@ -220,18 +232,6 @@ void incremental_index_recursive(bld_project* project, bld_forward_project* forw
         file_dir_add_file(parent, temp);
     } else {
         directory_id = parent_id;
-    }
-
-    if (adding_files) {
-        if (set_has(&forward_project->ignore_paths, directory_id)) {
-            log_debug("Ignoring files under: \"%s\"", path_to_string(path));
-            adding_files = 0;
-        }
-    } else {
-        if (set_has(&forward_project->extra_paths, directory_id)) {
-            log_debug("Adding files under: \"%s\"", path_to_string(path));
-            adding_files = 1;
-        }
     }
 
     while ((file_ptr = os_dir_read(dir)) != NULL) {
