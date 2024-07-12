@@ -91,6 +91,11 @@ void cache_entry_free(bld_cache_entry* entry) {
     path_free(&entry->path);
 }
 
+int cache_any_compiled(bld_cache_handle* cache) {
+    (void)(cache);
+    return 1;
+}
+
 int cache_object_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file* file, bld_path* path, uintmax_t main_id) {
     int error;
     int cached;
