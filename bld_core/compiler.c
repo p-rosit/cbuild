@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "json.h"
 #include "compiler.h"
+#include "compiler/compiler.h"
 
 bld_compiler compiler_new(bld_compiler_type type, char* executable) {
     bld_compiler compiler;

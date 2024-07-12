@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include "dstr.h"
 #include "linker.h"
+#include "linker/linker.h"
 #include "logging.h"
 #include "json.h"
 

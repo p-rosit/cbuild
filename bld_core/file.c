@@ -4,6 +4,7 @@
 #include "os.h"
 #include "logging.h"
 #include "iter.h"
+#include "compiler/compiler.h"
 #include "linker.h"
 #include "file.h"
 
