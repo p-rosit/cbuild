@@ -53,6 +53,10 @@ void linker_flags_free(bld_linker_flags* flags) {
     array_free(&flags->flags);
 }
 
+void linker_flags_assembled_free(bld_linker_flags* flags) {
+    array_free(&flags->flags);
+}
+
 bld_linker_flags linker_flags_copy(bld_linker_flags* flags) {
     bld_string str;
     bld_string *flag;
