@@ -11,7 +11,7 @@ int project_test_files(bld_project* project, bld_array* files) {
     bld_iter iter;
     bld_file* file;
 
-    error = incremental_compile_project(project, &any_compiled);
+    error = incremental_project_dependencies(project);
     if  (error) {
         printf("Some files could not be compiled, aborting\n");
         return error;
