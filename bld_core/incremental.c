@@ -572,8 +572,7 @@ int incremental_compile_with_absolute_path(bld_project* project, char* name) {
 
     result = incremental_project_dependencies(project);
     if (result) {
-        log_warn("Could not compile all files, no executable generated.");
-        return result;
+        log_warn("Could not compile all files, attempting to generate executable anyway.");
     }
 
     any_compiled = cache_any_compiled(&project->base.cache_);
