@@ -138,12 +138,12 @@ int cache_includes_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file
             log_fatal(LOG_FATAL_PREFIX "file does not have includes");
         }
 
-        if (set_has(&cache->loaded_files, file->identifier.id)) {
-            error = 0;
-            // TODO: copy cached includes
-        } else {
+        if (!set_has(&cache->loaded_files, file->identifier.id)) {
             // TODO: load cache entry
         }
+
+        error = 0;
+        // TODO: copy cached includes
     }
 
     if (!cached) {
@@ -158,6 +158,7 @@ int cache_includes_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file
         (void)(compiler);  /* TODO: use compiler to determine includes? */
         error = language_get_includes(file->language, &path, file, files);
 
+        // TODO: update cache
         path_free(&path);
     }
 
@@ -180,12 +181,12 @@ int cache_symbols_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file*
             log_fatal(LOG_FATAL_PREFIX "file does not have symbols");
         }
 
-        if (set_has(&cache->loaded_files, file->identifier.id)) {
-            error = 0;
-            // TODO: copy cached symbols
-        } else {
+        if (!set_has(&cache->loaded_files, file->identifier.id)) {
             // TODO: load cache entry
         }
+
+        error = 0;
+        // TODO: copy cached symbols
     }
 
     if (!cached) {
@@ -197,9 +198,10 @@ int cache_symbols_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file*
             path = path_copy(&cache->base->build_of->root);
         }
 
-        (void)(compiler);  /* TODO: use compiler to determine symb? */
+        (void)(compiler);  /* TODO: use compiler to determine symbols? */
         error = language_get_symbols(file->language, cache->base, &path, file);
 
+        // TODO: update cache
         path_free(&path);
     }
 
