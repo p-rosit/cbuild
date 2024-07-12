@@ -444,11 +444,13 @@ bld_compiler file_assemble_compiler(bld_file* file, bld_set* files) {
     return compiler;
 }
 
-void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags) {
+bld_linker_flags file_assemble_linker_flags(bld_file* file, bld_set* files) {
     bld_file_id parent_id;
+    bld_linker_flags result;
+    bld_array flags;
 
     parent_id = file->identifier.id;
-    *flags = array_new(sizeof(bld_linker_flags));
+    flags = array_new(sizeof(bld_linker_flags));
 
     while (parent_id != BLD_INVALID_IDENITIFIER) {
         bld_file* parent;
@@ -459,10 +461,15 @@ void file_assemble_linker_flags(bld_file* file, bld_set* files, bld_array* flags
         parent_id = parent->parent_id;
         if (!parent->build_info.linker_set) {continue;}
 
-        array_push(flags, &parent->build_info.linker_flags);
+        array_push(&flags, &parent->build_info.linker_flags);
     }
 
-    array_reverse(flags);
+    array_reverse(&flags);
+
+    result = linker_flags_expand(&flags);
+    array_free(&flags);
+
+    return result;
 }
 
 void file_determine_all_languages_under(bld_file* file, bld_set* files) {
