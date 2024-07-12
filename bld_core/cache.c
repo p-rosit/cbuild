@@ -91,6 +91,40 @@ void cache_entry_free(bld_cache_entry* entry) {
     path_free(&entry->path);
 }
 
+int cache_object_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file* file, bld_path* path, uintmax_t main_id) {
+    int error;
+    int cached;
+
+    error = 0;
+    cached = 0;
+    if (set_has(&cache->files, file->identifier.id)) {
+        bld_set* includes;
+
+        if (set_has(&cache->loaded_files, file->identifier.id)) {
+            error = 0;
+            // TODO: get path from cache
+        } else {
+            // TODO: load cache entry
+        }
+    }
+
+    if (!cached) {
+        bld_path path;
+
+        if (!cache->base->rebuilding || file->identifier.id != main_id) {
+            path = path_copy(&cache->base->root);
+        } else {
+            path = path_copy(&cache->base->build_of->root);
+        }
+
+        error = compile_to_object(compiler, &path, &object_path);
+
+        path_free(&path);
+    }
+
+    return error;
+}
+
 int cache_includes_get(bld_cache_handle* cache, bld_compiler* compiler, bld_file* file, bld_set* files, uintmax_t main_id) {
     int error;
     int cached;
