@@ -96,17 +96,25 @@ uintmax_t linker_flags_hash(bld_linker_flags* linker_flags) {
     return seed;
 }
 
-void linker_flags_expand(bld_string* str, bld_array* linker_flags) {
+bld_linker_flags linker_flags_expand(bld_array* linker_flags) {
     bld_iter iter;
+    bld_linker_flags result;
     bld_linker_flags* flags;
-    array_reverse(linker_flags);
+
+    result = linker_flags_new();
 
     iter = iter_array(linker_flags);
     while (iter_next(&iter, (void**) &flags)) {
-        linker_flags_append(str, flags);
+        bld_iter iter;
+        bld_string* flag;
+
+        iter = iter_array(&flags->flags);
+        while (iter_next(&iter, (void**) &flag)) {
+            array_push(&result.flags, flag);
+        }
     }
 
-    array_reverse(linker_flags);
+    return result;
 }
 
 void linker_flags_append(bld_string* str, bld_linker_flags* flags) {
