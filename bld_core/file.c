@@ -421,6 +421,7 @@ bld_compiler file_assemble_compiler(bld_file* file, bld_set* files) {
 
         if (parent->build_info.compiler.type == BLD_COMPILER) {
             bld_compiler* temp;
+            compiler_found = 1;
 
             temp = &parent->build_info.compiler.as.compiler;
             compiler.type = temp->type;
